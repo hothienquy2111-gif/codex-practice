@@ -3,99 +3,194 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TV House - Cửa hàng TV</title>
+  <meta name="description" content="ANH MINH STORE - Cửa hàng tivi chính hãng, hỗ trợ thu cũ đổi mới và trả góp tại Đà Nẵng.">
+  <title>ANH MINH STORE | Tivi chính hãng tại Đà Nẵng</title>
   <link rel="stylesheet" href="styles.css">
 </head>
-<body>
-  <header class="banner">
-    <nav class="navbar" aria-label="Thanh điều hướng chính">
-      <h1>TV House</h1>
-      <a href="#contact">Liên hệ</a>
-    </nav>
+<body class="theme-rose">
+  <div class="site-backdrop" aria-hidden="true">
+    <span class="orb orb-rose"></span>
+    <span class="orb orb-cyan"></span>
+    <span class="jelly jelly-one"></span>
+    <span class="jelly jelly-two"></span>
+  </div>
 
-    <div class="banner-content">
-      <p class="eyebrow">Ưu đãi mùa hè</p>
-      <h2>TV sắc nét cho mọi phòng khách</h2>
-      <p>Khám phá các mẫu TV 4K, OLED và Smart TV với giá tốt, giao hàng nhanh toàn quốc.</p>
-      <a class="button" href="#products">Xem sản phẩm</a>
-    </div>
+  <header class="site-header" id="top">
+    <nav class="nav-shell" aria-label="Thanh điều hướng chính">
+      <a class="brand" href="#trang-chu" aria-label="Về trang chủ Anh Minh Store">
+        <span class="brand-mark">AM</span>
+        <span class="brand-text">CÔNG TY KỸ THUẬT ĐIỆN TỬ ANH MINH STORE</span>
+      </a>
+
+      <button class="menu-toggle" type="button" aria-label="Mở menu điều hướng" aria-controls="primary-menu" aria-expanded="false">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
+      <ul class="nav-menu" id="primary-menu">
+        <li><a class="nav-link active" href="#trang-chu">Trang chủ</a></li>
+        <li><a class="nav-link" href="#cac-dong-tivi">Các dòng tivi</a></li>
+        <li><a class="nav-link" href="#thu-cu-doi-moi">Thu cũ đổi mới</a></li>
+        <li><a class="nav-link" href="#tra-gop">Hỗ trợ trả góp</a></li>
+        <li><a class="nav-link" href="#lien-he">Liên hệ</a></li>
+      </ul>
+    </nav>
   </header>
 
   <main>
-    <section id="products" class="products-section" aria-labelledby="products-title">
-      <p class="section-label">Sản phẩm nổi bật</p>
-      <h2 id="products-title">3 lựa chọn đáng mua</h2>
+    <section class="hero section-panel" id="trang-chu" data-theme="rose" aria-labelledby="hero-title">
+      <div class="hero-content reveal-on-scroll">
+        <p class="eyebrow">Showroom tivi chính hãng tại Đà Nẵng</p>
+        <h1 id="hero-title">Nâng tầm không gian giải trí cùng Anh Minh Store</h1>
+        <p class="hero-subtitle">Chuyên tivi chính hãng, tư vấn tận tâm, hỗ trợ thu cũ đổi mới và trả góp linh hoạt tại Đà Nẵng.</p>
 
-      <div class="product-grid">
-        <article class="product-card">
-          <div class="tv-screen led">LED</div>
-          <h3>VisionPro LED 43&quot;</h3>
-          <p>TV Full HD gọn nhẹ, phù hợp phòng ngủ hoặc căn hộ nhỏ.</p>
-          <ul>
-            <li>Độ phân giải Full HD</li>
-            <li>Âm thanh Dolby</li>
-            <li>Bảo hành 24 tháng</li>
-          </ul>
+        <div class="hero-actions" aria-label="Hành động chính">
+          <a class="btn btn-primary" href="#cac-dong-tivi">Xem các dòng tivi</a>
+          <a class="btn btn-secondary" href="#lien-he">Liên hệ tư vấn</a>
+        </div>
+
+        <ul class="trust-badges" aria-label="Cam kết dịch vụ">
+          <li>Hàng chính hãng</li>
+          <li>Hỗ trợ trả góp</li>
+          <li>Thu cũ đổi mới</li>
+          <li>Giao hàng nhanh</li>
+        </ul>
+      </div>
+
+      <div class="hero-showcase reveal-on-scroll" aria-label="Mô phỏng tivi cao cấp">
+        <div class="premium-tv">
+          <div class="tv-glass">
+            <span class="tv-shine"></span>
+            <span class="tv-logo">ANH MINH STORE</span>
+          </div>
+          <div class="tv-neck"></div>
+          <div class="tv-base"></div>
+        </div>
+        <div class="showcase-card card-top">
+          <strong>4K • OLED • QLED</strong>
+          <span>Tư vấn theo không gian</span>
+        </div>
+        <div class="showcase-card card-bottom">
+          <strong>0905111223</strong>
+          <span>Gọi để nhận giá tốt</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-panel products-section" id="cac-dong-tivi" data-theme="blue" aria-labelledby="products-title">
+      <div class="section-heading reveal-on-scroll">
+        <p class="eyebrow">Các dòng tivi</p>
+        <h2 id="products-title">Thương hiệu nổi bật cho mọi không gian sống</h2>
+        <p>Dễ dàng cập nhật giá thật sau này trong từng thẻ sản phẩm hoặc chuyển sang dữ liệu JavaScript khi cần mở rộng.</p>
+      </div>
+
+      <div class="brand-grid" aria-label="Danh sách thương hiệu tivi">
+        <article class="brand-card reveal-on-scroll">
+          <div class="mini-tv samsung"><span>Samsung</span></div>
+          <h3>Samsung</h3>
+          <p>Thiết kế hiện đại, màu sắc rực rỡ, phù hợp phòng khách cao cấp và giải trí gia đình.</p>
+          <strong>Liên hệ để nhận giá tốt</strong>
+          <a class="card-link" href="#lien-he">Xem thêm</a>
         </article>
 
-        <article class="product-card featured-card">
-          <div class="tv-screen qled">4K</div>
-          <h3>BrightView QLED 55&quot;</h3>
-          <p>Màu sắc rực rỡ, hình ảnh 4K chi tiết cho phim ảnh và thể thao.</p>
-          <ul>
-            <li>Màn hình QLED 4K</li>
-            <li>Điều khiển giọng nói</li>
-            <li>Tặng giá treo tường</li>
-          </ul>
+        <article class="brand-card reveal-on-scroll">
+          <div class="mini-tv lg"><span>LG</span></div>
+          <h3>LG</h3>
+          <p>Lựa chọn nổi bật cho OLED, Smart TV mượt mà và trải nghiệm xem phim sống động.</p>
+          <strong>Giá đang cập nhật</strong>
+          <a class="card-link" href="#lien-he">Xem thêm</a>
         </article>
 
-        <article class="product-card">
-          <div class="tv-screen oled">OLED</div>
-          <h3>CinemaMax OLED 65&quot;</h3>
-          <p>Trải nghiệm rạp phim tại nhà với màu đen sâu và thiết kế siêu mỏng.</p>
-          <ul>
-            <li>Màn hình OLED 120Hz</li>
-            <li>Smart TV tích hợp app</li>
-            <li>Miễn phí lắp đặt</li>
-          </ul>
+        <article class="brand-card reveal-on-scroll">
+          <div class="mini-tv sony"><span>Sony</span></div>
+          <h3>Sony</h3>
+          <p>Hình ảnh điện ảnh, âm thanh chi tiết, tối ưu cho phim, thể thao và nội dung 4K.</p>
+          <strong>Liên hệ để nhận giá tốt</strong>
+          <a class="card-link" href="#lien-he">Xem thêm</a>
+        </article>
+
+        <article class="brand-card reveal-on-scroll">
+          <div class="mini-tv toshiba"><span>Toshiba</span></div>
+          <h3>Toshiba</h3>
+          <p>Bền bỉ, dễ sử dụng, nhiều kích thước phù hợp căn hộ, phòng ngủ và gia đình trẻ.</p>
+          <strong>Giá đang cập nhật</strong>
+          <a class="card-link" href="#lien-he">Xem thêm</a>
+        </article>
+
+        <article class="brand-card reveal-on-scroll">
+          <div class="mini-tv hisense"><span>Hisense</span></div>
+          <h3>Hisense</h3>
+          <p>Cân bằng giữa công nghệ, kích thước lớn và ngân sách hợp lý cho nhu cầu nâng cấp.</p>
+          <strong>Liên hệ để nhận giá tốt</strong>
+          <a class="card-link" href="#lien-he">Xem thêm</a>
+        </article>
+
+        <article class="brand-card reveal-on-scroll">
+          <div class="mini-tv tcl"><span>TCL</span></div>
+          <h3>TCL</h3>
+          <p>Smart TV đa dạng, màn hình lớn, nhiều lựa chọn cho giải trí trực tuyến hằng ngày.</p>
+          <strong>Giá đang cập nhật</strong>
+          <a class="card-link" href="#lien-he">Xem thêm</a>
+        </article>
+
+        <article class="brand-card reveal-on-scroll">
+          <div class="mini-tv panasonic"><span>Panasonic</span></div>
+          <h3>Panasonic</h3>
+          <p>Màu sắc tự nhiên, vận hành ổn định, thích hợp cho gia đình yêu sự bền đẹp.</p>
+          <strong>Liên hệ để nhận giá tốt</strong>
+          <a class="card-link" href="#lien-he">Xem thêm</a>
         </article>
       </div>
     </section>
 
-    <section class="price-section" aria-labelledby="price-title">
-      <div>
-        <p class="section-label">Bảng giá</p>
-        <h2 id="price-title">Giá khởi điểm dễ chọn</h2>
-        <p>Chọn TV theo nhu cầu của bạn. Tất cả giá đã bao gồm VAT và hỗ trợ trả góp 0%.</p>
+    <section class="section-panel service-section" id="thu-cu-doi-moi" data-theme="blue" aria-labelledby="trade-title">
+      <div class="service-copy reveal-on-scroll">
+        <p class="eyebrow">Dịch vụ nâng cấp</p>
+        <h2 id="trade-title">Thu cũ đổi mới</h2>
+        <p>Anh Minh Store hỗ trợ thu tivi cũ, tư vấn đổi lên đời tivi mới phù hợp với nhu cầu và ngân sách.</p>
+        <a class="btn btn-primary" href="#lien-he">Nhận tư vấn thu đổi</a>
       </div>
+      <ol class="step-list reveal-on-scroll">
+        <li><span>01</span>Gửi thông tin tivi cũ</li>
+        <li><span>02</span>Nhận tư vấn định giá</li>
+        <li><span>03</span>Đổi lên tivi mới</li>
+      </ol>
+    </section>
 
-      <div class="price-list">
-        <div class="price-item">
-          <span>VisionPro LED 43&quot;</span>
-          <strong>6.990.000đ</strong>
-        </div>
-        <div class="price-item highlight-price">
-          <span>BrightView QLED 55&quot;</span>
-          <strong>12.990.000đ</strong>
-        </div>
-        <div class="price-item">
-          <span>CinemaMax OLED 65&quot;</span>
-          <strong>24.990.000đ</strong>
-        </div>
+    <section class="section-panel installment-section" id="tra-gop" data-theme="blue" aria-labelledby="installment-title">
+      <div class="section-heading reveal-on-scroll">
+        <p class="eyebrow">Mua sắm linh hoạt</p>
+        <h2 id="installment-title">Hỗ trợ trả góp linh hoạt</h2>
+        <p>Tư vấn phương án trả góp phù hợp, thủ tục đơn giản, hỗ trợ khách hàng chọn sản phẩm đúng nhu cầu.</p>
       </div>
+      <div class="benefit-grid">
+        <article class="benefit-card reveal-on-scroll"><span>⚡</span><h3>Tư vấn nhanh</h3></article>
+        <article class="benefit-card reveal-on-scroll"><span>✓</span><h3>Thủ tục đơn giản</h3></article>
+        <article class="benefit-card reveal-on-scroll"><span>▣</span><h3>Nhiều lựa chọn sản phẩm</h3></article>
+        <article class="benefit-card reveal-on-scroll"><span>◇</span><h3>Phù hợp ngân sách</h3></article>
+      </div>
+      <a class="btn btn-secondary reveal-on-scroll" href="#lien-he">Tư vấn trả góp</a>
     </section>
   </main>
 
-  <footer id="contact" class="contact-footer">
-    <div>
-      <h2>TV House</h2>
-      <p>Cửa hàng TV chính hãng, tư vấn tận tâm cho gia đình bạn.</p>
+  <footer class="contact-section" id="lien-he" data-theme="blue" aria-labelledby="contact-title">
+    <div class="contact-card reveal-on-scroll">
+      <p class="eyebrow">Liên hệ showroom</p>
+      <h2 id="contact-title">CÔNG TY KỸ THUẬT ĐIỆN TỬ ANH MINH STORE</h2>
+      <address>
+        <strong>Điện thoại:</strong> <a href="tel:0905111223">0905111223</a><br>
+        <strong>Cơ sở 1:</strong> 100 Tiểu La, Hải Châu, Đà Nẵng<br>
+        <strong>Cơ sở 2:</strong> 540B Nguyễn Hữu Thọ, Đà Nẵng
+      </address>
+      <div class="contact-actions">
+        <a class="btn btn-primary" href="tel:0905111223">Gọi ngay</a>
+        <a class="btn btn-secondary" href="https://zalo.me/0905111223" aria-label="Nhắn Zalo cho Anh Minh Store">Nhắn Zalo</a>
+        <a class="btn btn-ghost" href="https://www.google.com/maps/search/?api=1&query=100+Ti%E1%BB%83u+La%2C+H%E1%BA%A3i+Ch%C3%A2u%2C+%C4%90%C3%A0+N%E1%BA%B5ng" target="_blank" rel="noopener">Xem địa chỉ</a>
+      </div>
     </div>
-    <address>
-      123 Đường Công Nghệ, Quận 1, TP. Hồ Chí Minh<br>
-      Hotline: <a href="tel:+84901234567">090 123 4567</a><br>
-      Email: <a href="mailto:hello@tvhouse.vn">hello@tvhouse.vn</a>
-    </address>
   </footer>
+
+  <script src="script.js" defer></script>
 </body>
 </html>
