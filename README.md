@@ -1,135 +1,138 @@
-# ANH MINH STORE - Website cửa hàng tivi/điện tử
+# ANH MINH STORE - Website showroom tivi neon cao cấp
 
-Đây là website landing page tĩnh cho **ANH MINH STORE**, hiển thị tên công ty **CÔNG TY KỸ THUẬT ĐIỆN TỬ ANH MINH STORE**. Trang được xây dựng bằng HTML, CSS và JavaScript thuần, không dùng React, Vue, Bootstrap, Tailwind hay framework bên ngoài.
-
-Mục tiêu của dự án là tạo một giao diện showroom điện tử cao cấp: nền tối sang trọng, hiệu ứng neon hồng ở phần đầu trang, chuyển dần sang nền xanh cyan kiểu đại dương/sứa khi người dùng kéo xuống các phần sản phẩm và dịch vụ.
+Dự án này là website giới thiệu **CÔNG TY KỸ THUẬT ĐIỆN TỬ ANH MINH STORE** tại Đà Nẵng. Giao diện được nâng cấp theo phong cách showroom tivi cao cấp: nền tối, kính bóng, neon tím hồng, pha lê thạch anh trong hero và chuyển cảnh sang đại dương sứa neon xanh ở phần thương hiệu tivi.
 
 ## Cấu trúc file
 
 ```text
 .
-├── index.html   # Nội dung, bố cục và các section của website
-├── styles.css   # Toàn bộ giao diện, responsive, hiệu ứng neon/glassmorphism
-├── script.js    # Tương tác menu, cuộn mượt, active menu và đổi theme khi scroll
-└── README.md    # Tài liệu hướng dẫn cho người mới bắt đầu
+├── index.html   # Cấu trúc nội dung, các section, menu, thẻ thương hiệu và liên hệ
+├── styles.css   # Toàn bộ giao diện, responsive, glassmorphism và animation CSS
+├── script.js    # Hamburger menu, smooth scroll, active menu, đổi theme khi cuộn
+└── README.md    # Tài liệu hướng dẫn chỉnh sửa, chạy local và triển khai
 ```
 
-## File `index.html` làm gì?
+Website chỉ dùng **HTML, CSS và JavaScript thuần**, không dùng React, Vue, Bootstrap, Tailwind hoặc thư viện animation nặng.
 
-`index.html` chứa cấu trúc HTML5 của website:
+## Các section chính
 
-- Header cố định/sticky với logo chữ **AM** và tên công ty.
-- Menu điều hướng gồm: Trang chủ, Các dòng tivi, Thu cũ đổi mới, Hỗ trợ trả góp, Liên hệ.
-- Hero section với tiêu đề chính, mô tả, nút kêu gọi hành động và mô phỏng tivi bằng CSS.
-- Section thương hiệu tivi: Samsung, LG, Sony, Toshiba, Hisense, TCL, Panasonic.
-- Section dịch vụ **Thu cũ đổi mới** với 3 bước đơn giản.
-- Section **Hỗ trợ trả góp linh hoạt** với các lợi ích chính.
-- Footer/liên hệ với số điện thoại, 2 cơ sở tại Đà Nẵng và các nút hành động.
+1. **Trang chủ**: hero tivi cao cấp với khung màn hình, pha lê thạch anh CSS-only, tiêu đề và nút CTA.
+2. **Các dòng tivi**: nền đại dương neon xanh, các thẻ logo thương hiệu Samsung, LG, Sony, Toshiba, Hisense, TCL, Panasonic.
+3. **Thu cũ đổi mới**: quy trình 3 bước gồm gửi thông tin tivi cũ, nhận tư vấn định giá, đổi lên tivi mới.
+4. **Hỗ trợ trả góp**: các lợi ích tư vấn nhanh, thủ tục đơn giản, phù hợp ngân sách, nhiều lựa chọn sản phẩm.
+5. **Liên hệ**: số điện thoại, hai cơ sở tại Đà Nẵng và nút gọi, Zalo, bản đồ.
 
-## File `styles.css` làm gì?
+## Pha lê thạch anh trong hero hoạt động như thế nào?
 
-`styles.css` quyết định toàn bộ phần nhìn của website:
+Hero dùng các phần tử HTML rỗng trong `.quartz-composition`, ví dụ `.quartz-main`, `.quartz-left`, `.quartz-right`, `.quartz-ice` và `.quartz-small`.
 
-- Khai báo CSS variables trong `:root` cho màu sắc, spacing, bo góc, bóng đổ và theme.
-- Tạo giao diện dark premium, neon rose, neon cyan và glassmorphism.
-- Vẽ mockup tivi bằng CSS, không cần ảnh nặng.
-- Tạo card thương hiệu, card lợi ích, step list và contact card.
-- Tạo hover effect, focus state để dễ dùng bằng bàn phím.
-- Tạo responsive layout cho desktop, tablet và mobile bằng media queries.
-- Có hỗ trợ `prefers-reduced-motion` để giảm chuyển động cho người dùng cần hạn chế animation.
+Trong `styles.css`, mỗi mảnh pha lê được dựng bằng:
 
-## File `script.js` làm gì?
+- `clip-path: polygon(...)` để tạo hình tinh thể sắc cạnh.
+- `linear-gradient(...)` để tạo lớp kính, ánh tím hồng, ánh băng xanh và phản xạ trắng.
+- `box-shadow` và `filter` để tạo hào quang quảng cáo cao cấp.
+- Pseudo-element `::after` chạy animation `shineSweep` để tạo vệt sáng quét qua bề mặt.
+- Các chấm `.crystal-spark` dùng animation `sparkTwinkle` để tạo hiệu ứng lấp lánh nhẹ.
 
-`script.js` xử lý các tương tác nhẹ:
+Toàn bộ visual này là **CSS-only**, không cần ảnh nền hoặc video nặng.
 
-- Mở/đóng hamburger menu.
-- Đổi trạng thái `aria-expanded` và `aria-label` để menu thân thiện hơn với trình đọc màn hình.
-- Cuộn mượt tới đúng section khi bấm menu hoặc nút CTA.
-- Tự đóng menu sau khi chọn một mục.
-- Cập nhật menu item đang active khi người dùng cuộn trang.
-- Đổi class theme trên `<body>` từ `theme-rose` sang `theme-blue` bằng `IntersectionObserver`.
-- Thêm hiệu ứng xuất hiện nhẹ cho các khối nội dung khi cuộn tới.
+## Chủ đề đại dương sứa neon hoạt động như thế nào?
 
-## Hamburger menu hoạt động như thế nào?
+Phần nền toàn trang có `.scene-backdrop` chứa hai lớp:
 
-Trong HTML, nút hamburger là phần tử `<button class="menu-toggle">` có 3 dòng `<span>`. Khi bấm nút:
+- `.rose-scene`: chủ đề hồng tím, orb neon và pha lê mờ cho khu vực đầu trang.
+- `.ocean-scene`: chủ đề xanh đại dương, ánh nước, sứa neon và silhouette san hô.
 
-1. JavaScript kiểm tra menu đang mở hay đóng.
-2. Nếu đóng, script thêm class `is-open` vào `.nav-menu` và class `is-active` vào nút.
-3. Nếu mở, script xóa các class đó.
-4. CSS dùng các class này để hiển thị dropdown menu và biến 3 dòng thành biểu tượng đóng.
-5. Khi bấm phím `Escape`, menu cũng tự đóng.
+Các con sứa được tạo bằng CSS:
 
-## Smooth scroll hoạt động như thế nào?
+- Thân sứa dùng gradient trong `.jellyfish` và `.panel-jelly`.
+- Tua sứa dùng `::before`, `::after` và thẻ `<i>` bên trong.
+- Animation `jellyFloat` làm sứa trôi chậm lên xuống để giữ cảm giác premium, không quá trẻ con.
+- San hô dùng `clip-path` để tạo silhouette mềm ở đáy nền.
 
-Mỗi link menu trỏ tới một `id` của section, ví dụ:
+## Chuyển theme khi cuộn hoạt động như thế nào?
 
-```html
-<a href="#cac-dong-tivi">Các dòng tivi</a>
-```
-
-Khi người dùng bấm link, `script.js` chặn hành vi mặc định, tìm section tương ứng, tính vị trí cần cuộn có trừ chiều cao header, rồi gọi:
-
-```js
-window.scrollTo({ top: targetPosition, behavior: 'smooth' });
-```
-
-Nhờ vậy trang cuộn mượt và không bị header che tiêu đề section.
-
-## Background theme đổi khi scroll như thế nào?
-
-Mỗi section có thuộc tính `data-theme`, ví dụ:
+Mỗi section chính có thuộc tính `data-theme`, ví dụ:
 
 ```html
 <section id="trang-chu" data-theme="rose">
 <section id="cac-dong-tivi" data-theme="blue">
 ```
 
-`script.js` dùng `IntersectionObserver` để theo dõi section đang xuất hiện trong vùng nhìn. Khi section có `data-theme="blue"` xuất hiện, script thêm class `theme-blue` vào `<body>` và xóa `theme-rose`. CSS sẽ chuyển gradient, glow và các hình sứa neon tương ứng.
+Trong `script.js`, hàm `updateScrollScene()` tính tiến trình cuộn từ hero đến section thương hiệu. Khi người dùng cuộn xuống đủ xa, script chuyển class trên `<body>`:
 
-## Cách cập nhật thương hiệu và giá sau này
+- `theme-rose`: ưu tiên nền rose/purple quartz.
+- `theme-blue`: làm `.rose-scene` mờ và trượt lên, đồng thời đưa `.ocean-scene` hiện ra.
 
-Hiện tại giá được đặt bằng chữ giữ chỗ như **Giá đang cập nhật** hoặc **Liên hệ để nhận giá tốt**.
+Nhờ vậy chuyển cảnh có cảm giác **di chuyển và tan lớp cảnh**, không chỉ đổi màu tĩnh.
 
-Để sửa trong HTML:
+## Hamburger menu hoạt động như thế nào?
 
-1. Mở `index.html`.
-2. Tìm section `id="cac-dong-tivi"`.
-3. Mỗi thương hiệu nằm trong một thẻ:
+Nút `.menu-toggle` có `aria-controls="primary-menu"` và `aria-expanded`. Khi bấm:
 
-```html
-<article class="brand-card">
+1. `script.js` thêm hoặc xóa class `.is-active` trên nút.
+2. Menu `.nav-menu` nhận hoặc mất class `.is-open`.
+3. `<body>` nhận class `.menu-open` để tránh cuộn nền khi menu mobile đang mở.
+4. `aria-expanded` và `aria-label` được cập nhật để thân thiện hơn với trình đọc màn hình.
+5. Khi chọn một link hoặc bấm phím `Escape`, menu tự đóng.
+
+## Smooth scroll và active menu
+
+Các link điều hướng trỏ tới id của section, ví dụ `#cac-dong-tivi`. JavaScript chặn hành vi mặc định, tính vị trí cuộn đã trừ chiều cao header cố định, rồi gọi:
+
+```js
+window.scrollTo({ top: targetPosition, behavior: 'smooth' });
 ```
 
-4. Sửa tên thương hiệu trong `<h3>`, mô tả trong `<p>`, và giá/ghi chú trong `<strong>`.
+Hàm `updateActiveLink()` theo dõi vị trí cuộn hiện tại và gắn class `.active` cho menu item tương ứng.
 
-Nếu sau này muốn quản lý bằng JavaScript, có thể tạo một mảng dữ liệu trong `script.js`, ví dụ `const brands = [...]`, rồi render card tự động vào `.brand-grid`.
+## Cách cập nhật logo thương hiệu sau này
 
-## Thông tin liên hệ hiện tại
+Hiện tại logo được dựng bằng chữ kiểu logo trong các thẻ `.logo-tile` để không phụ thuộc ảnh bên ngoài. Khi có file logo chính thức:
 
-- Điện thoại: `0905111223`
-- Cơ sở 1: `100 Tiểu La, Hải Châu, Đà Nẵng`
-- Cơ sở 2: `540B Nguyễn Hữu Thọ, Đà Nẵng`
-
-Nút **Gọi ngay** dùng link:
+1. Đặt file vào thư mục mới, ví dụ `assets/logos/samsung.svg`.
+2. Trong `index.html`, tìm section `id="cac-dong-tivi"`.
+3. Thay nội dung trong `.logo-tile`:
 
 ```html
-href="tel:0905111223"
+<div class="logo-tile logo-samsung" aria-label="Logo Samsung">
+  <img src="assets/logos/samsung.svg" alt="Samsung">
+</div>
 ```
 
-Nút **Nhắn Zalo** hiện dùng:
+4. Có thể giữ class `.logo-tile` để tiếp tục dùng nền kính, glow và hover effect.
+
+## Cách cập nhật giá thật sau này
+
+Mỗi thẻ thương hiệu có một dòng giá hoặc ghi chú trong thẻ `<strong>`:
 
 ```html
-href="https://zalo.me/0905111223"
+<strong>Giá đang cập nhật</strong>
 ```
 
-Nếu doanh nghiệp dùng Zalo OA hoặc link Zalo khác, hãy thay giá trị `href` này trong `index.html` bằng đường dẫn chính thức.
+Khi có giá thật, sửa trực tiếp dòng này, ví dụ:
+
+```html
+<strong>Từ 6.990.000đ</strong>
+```
+
+Nếu danh sách sản phẩm nhiều hơn, có thể chuyển dữ liệu sang mảng JavaScript trong `script.js`, ví dụ `const brands = [...]`, rồi render tự động vào `.brand-grid`.
+
+## Cách cập nhật link Zalo
+
+Nút **Nhắn Zalo** hiện dùng link giữ chỗ theo số điện thoại:
+
+```html
+https://zalo.me/0905111223
+```
+
+Nếu doanh nghiệp có link Zalo OA hoặc link Zalo chính thức khác, mở `index.html`, tìm nút **Nhắn Zalo** trong section `id="lien-he"` và thay giá trị `href` bằng link mới.
 
 ## Cách chạy website trên máy tính
 
-Cách nhanh nhất: mở trực tiếp file `index.html` bằng trình duyệt.
+Cách nhanh nhất là mở trực tiếp file `index.html` bằng trình duyệt.
 
-Cách khuyến nghị với local server:
+Cách khuyến nghị là chạy local server tại thư mục dự án:
 
 ```bash
 python3 -m http.server 8000
@@ -143,18 +146,18 @@ http://localhost:8000
 
 ## Cách deploy bằng GitHub Pages
 
-1. Đưa toàn bộ file `index.html`, `styles.css`, `script.js`, `README.md` lên một repository GitHub.
+1. Đẩy các file `index.html`, `styles.css`, `script.js`, `README.md` lên repository GitHub.
 2. Vào repository trên GitHub.
 3. Chọn **Settings**.
 4. Chọn **Pages**.
-5. Ở phần **Build and deployment**, chọn source là nhánh chứa code, thường là `main`.
-6. Chọn thư mục `/root` nếu file `index.html` nằm ở gốc repository.
+5. Ở phần **Build and deployment**, chọn source là nhánh chứa code, ví dụ `main`.
+6. Chọn thư mục `/root` nếu `index.html` nằm ở gốc repository.
 7. Bấm **Save**.
-8. Chờ GitHub tạo đường dẫn Pages, sau đó mở link được cung cấp để xem website.
+8. Chờ GitHub Pages tạo đường dẫn public và mở link để kiểm tra website.
 
-## Gợi ý chỉnh sửa nhanh
+## Gợi ý bảo trì nhanh
 
-- Muốn đổi màu neon: sửa các biến `--color-rose`, `--color-cyan`, `--color-blue` trong `styles.css`.
-- Muốn thêm thương hiệu: copy một khối `<article class="brand-card">` trong `index.html`, dán vào `.brand-grid`, rồi sửa nội dung.
-- Muốn đổi địa chỉ: sửa phần `<address>` trong footer `id="lien-he"`.
-- Muốn đổi link bản đồ: sửa nút **Xem địa chỉ** trong `index.html`.
+- Đổi màu chủ đạo: sửa các biến trong `:root` của `styles.css`, ví dụ `--color-rose`, `--color-purple`, `--color-cyan`.
+- Thêm thương hiệu: copy một khối `<article class="brand-card">` trong `index.html`, dán vào `.brand-grid`, rồi sửa logo, mô tả và giá.
+- Đổi địa chỉ: sửa nội dung `<address>` trong section `id="lien-he"`.
+- Đổi link bản đồ: sửa `href` của nút **Xem địa chỉ** trong `index.html`.
