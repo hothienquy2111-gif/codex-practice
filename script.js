@@ -1,17 +1,18 @@
-const body = document.body;
 const header = document.querySelector('.site-header');
 const menuToggle = document.querySelector('.menu-toggle');
-const navMenu = document.querySelector('#primary-menu');
+const navMenu = document.querySelector('.nav-menu');
 const navLinks = Array.from(document.querySelectorAll('.nav-link'));
-const sectionTargets = Array.from(document.querySelectorAll('[data-theme]'));
-const revealTargets = Array.from(document.querySelectorAll('.reveal-on-scroll'));
+const sections = navLinks
+  .map((link) => document.querySelector(link.getAttribute('href')))
+  .filter(Boolean);
+const revealItems = document.querySelectorAll('.reveal-on-scroll');
 
 const closeMenu = () => {
   if (!menuToggle || !navMenu) return;
 
-  menuToggle.classList.remove('is-active');
+  menuToggle.classList.remove('is-open');
   navMenu.classList.remove('is-open');
-  body.classList.remove('menu-open');
+  document.body.classList.remove('menu-open');
   menuToggle.setAttribute('aria-expanded', 'false');
   menuToggle.setAttribute('aria-label', 'Mở menu điều hướng');
 };
@@ -19,46 +20,33 @@ const closeMenu = () => {
 const openMenu = () => {
   if (!menuToggle || !navMenu) return;
 
-  menuToggle.classList.add('is-active');
+  menuToggle.classList.add('is-open');
   navMenu.classList.add('is-open');
-  body.classList.add('menu-open');
+  document.body.classList.add('menu-open');
   menuToggle.setAttribute('aria-expanded', 'true');
   menuToggle.setAttribute('aria-label', 'Đóng menu điều hướng');
 };
 
+const toggleMenu = () => {
+  const isOpen = menuToggle?.classList.contains('is-open');
+  if (isOpen) {
+    closeMenu();
+  } else {
+    openMenu();
+  }
+};
+
 const updateHeaderState = () => {
-  body.classList.toggle('is-scrolled', window.scrollY > 24);
+  header?.classList.toggle('is-scrolled', window.scrollY > 8);
 };
 
-const setTheme = (theme) => {
-  body.classList.toggle('theme-blue', theme === 'blue');
-  body.classList.toggle('theme-rose', theme !== 'blue');
-};
+const setActiveLink = () => {
+  const offset = (header?.offsetHeight || 0) + 120;
+  let currentId = sections[0]?.id;
 
-const updateScrollScene = () => {
-  const hero = document.querySelector('#trang-chu');
-  const products = document.querySelector('#cac-dong-tivi');
-
-  if (!hero || !products) return;
-
-  const start = hero.offsetTop + hero.offsetHeight * 0.4;
-  const end = products.offsetTop + products.offsetHeight * 0.2;
-  const progress = Math.min(Math.max((window.scrollY - start) / (end - start), 0), 1);
-
-  body.style.setProperty('--scroll-progress', progress.toFixed(3));
-  body.style.setProperty('--rose-shift', `${(-70 * progress).toFixed(1)}px`);
-  body.style.setProperty('--rose-scale', (1 - 0.02 * progress).toFixed(3));
-  body.style.setProperty('--ocean-shift', `${(60 - 60 * progress).toFixed(1)}px`);
-  body.style.setProperty('--ocean-scale', (1.04 - 0.04 * progress).toFixed(3));
-  setTheme(progress > 0.35 ? 'blue' : 'rose');
-};
-
-const updateActiveLink = () => {
-  const headerOffset = header ? header.offsetHeight + 80 : 120;
-  let currentId = 'trang-chu';
-
-  sectionTargets.forEach((section) => {
-    if (window.scrollY + headerOffset >= section.offsetTop) {
+  sections.forEach((section) => {
+    const top = section.getBoundingClientRect().top + window.scrollY - offset;
+    if (window.scrollY >= top) {
       currentId = section.id;
     }
   });
@@ -68,28 +56,23 @@ const updateActiveLink = () => {
   });
 };
 
-menuToggle?.addEventListener('click', () => {
-  const isOpen = menuToggle.getAttribute('aria-expanded') === 'true';
-  isOpen ? closeMenu() : openMenu();
-});
+menuToggle?.addEventListener('click', toggleMenu);
 
 navLinks.forEach((link) => {
   link.addEventListener('click', (event) => {
-    const targetId = link.getAttribute('href');
-    const target = targetId ? document.querySelector(targetId) : null;
-
+    const target = document.querySelector(link.getAttribute('href'));
     if (!target) return;
 
     event.preventDefault();
-    const headerOffset = header ? header.offsetHeight + 10 : 90;
-    const targetPosition = target.getBoundingClientRect().top + window.scrollY - headerOffset;
+    closeMenu();
+
+    const headerHeight = header?.offsetHeight || 0;
+    const targetTop = target.getBoundingClientRect().top + window.scrollY - headerHeight + 1;
 
     window.scrollTo({
-      top: targetPosition,
+      top: targetTop,
       behavior: 'smooth',
     });
-
-    closeMenu();
   });
 });
 
@@ -99,42 +82,34 @@ document.addEventListener('keydown', (event) => {
   }
 });
 
-const revealObserver = 'IntersectionObserver' in window
-  ? new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('is-visible');
-          revealObserver.unobserve(entry.target);
-        }
-      });
-    }, { threshold: 0.16 })
-  : null;
-
-if (revealObserver) {
-  revealTargets.forEach((target) => revealObserver.observe(target));
-} else {
-  revealTargets.forEach((target) => target.classList.add('is-visible'));
-}
-
-let ticking = false;
-const handleScroll = () => {
-  if (ticking) return;
-
-  window.requestAnimationFrame(() => {
-    updateHeaderState();
-    updateScrollScene();
-    updateActiveLink();
-    ticking = false;
-  });
-
-  ticking = true;
-};
-
-window.addEventListener('scroll', handleScroll, { passive: true });
-window.addEventListener('resize', handleScroll);
-window.addEventListener('load', () => {
-  revealTargets.slice(0, 2).forEach((target) => target.classList.add('is-visible'));
-  handleScroll();
+window.addEventListener('resize', () => {
+  if (window.innerWidth > 780) {
+    closeMenu();
+  }
 });
 
-handleScroll();
+window.addEventListener('scroll', () => {
+  updateHeaderState();
+  setActiveLink();
+}, { passive: true });
+
+if ('IntersectionObserver' in window) {
+  const revealObserver = new IntersectionObserver((entries, observer) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('is-visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, {
+    threshold: 0.16,
+    rootMargin: '0px 0px -40px 0px',
+  });
+
+  revealItems.forEach((item) => revealObserver.observe(item));
+} else {
+  revealItems.forEach((item) => item.classList.add('is-visible'));
+}
+
+updateHeaderState();
+setActiveLink();
