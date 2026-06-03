@@ -561,7 +561,7 @@ h3 {
   margin-bottom: 38px;
 }
 
-/* ------------------------- Premium TV quartz hero ------------------------- */
+/* ------------------------- Premium TV image hero ------------------------- */
 .hero-stage {
   position: relative;
   min-height: 570px;
@@ -636,6 +636,11 @@ h3 {
     radial-gradient(circle at 70% 32%, rgba(32,231,255,0.13), transparent 22%),
     linear-gradient(145deg, #01040c 0%, #071224 31%, #13091d 58%, #02111f 100%);
   border: 1px solid rgba(255,255,255,0.11);
+  box-shadow:
+    inset 0 0 46px rgba(0,0,0,0.72),
+    inset 0 0 0 1px rgba(191,246,255,0.08),
+    0 0 38px rgba(32,231,255,0.16),
+    0 18px 44px rgba(0,0,0,0.42);
 }
 
 .tv-screen::before {
@@ -682,145 +687,48 @@ h3 {
   mix-blend-mode: screen;
 }
 
-.quartz-composition {
+.screen-media {
   position: absolute;
   inset: 0;
-  display: grid;
-  place-items: center;
-  transform-style: preserve-3d;
-}
-
-.quartz-composition::before {
-  position: absolute;
-  width: 72%;
-  height: 48%;
-  bottom: 15%;
-  content: "";
-  border-radius: 50%;
-  background: radial-gradient(ellipse, rgba(12,20,38,0.72), rgba(32,231,255,0.13) 46%, transparent 72%);
-  filter: blur(10px);
-  transform: rotateX(62deg);
-}
-
-.quartz-composition::after {
-  position: absolute;
-  width: 58%;
-  height: 58%;
-  content: "";
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(191,246,255,0.16), rgba(154,90,255,0.13) 38%, transparent 68%);
-  filter: blur(18px);
-  mix-blend-mode: screen;
-}
-
-.quartz {
-  position: absolute;
-  display: block;
-  clip-path: polygon(49% 0, 67% 9%, 88% 31%, 100% 62%, 72% 100%, 31% 95%, 0 58%, 12% 24%, 31% 8%);
+  z-index: 1;
+  overflow: hidden;
   background:
-    linear-gradient(102deg, transparent 0 12%, rgba(255,255,255,0.68) 13%, transparent 19% 100%),
-    linear-gradient(151deg, transparent 0 43%, rgba(255,255,255,0.44) 44%, transparent 51% 100%),
-    linear-gradient(36deg, transparent 0 62%, rgba(32,231,255,0.28) 63%, transparent 72% 100%),
-    radial-gradient(circle at 42% 28%, rgba(255,255,255,0.5), transparent 18%),
-    linear-gradient(118deg, rgba(255,255,255,0.72), rgba(191,246,255,0.2) 25%, rgba(122,82,180,0.13) 49%, rgba(32,231,255,0.3) 72%, rgba(255,255,255,0.52));
-  border: 1px solid rgba(232,252,255,0.72);
-  opacity: 0.88;
-  box-shadow:
-    inset 16px 0 30px rgba(255,255,255,0.24),
-    inset -22px -8px 36px rgba(32,231,255,0.18),
-    inset 0 0 42px rgba(157,114,255,0.12),
-    0 0 34px rgba(191,246,255,0.18),
-    0 26px 42px rgba(0,0,0,0.28);
-  backdrop-filter: blur(1px);
-  animation: crystalShine 6.4s ease-in-out infinite alternate;
+    radial-gradient(circle at 50% 45%, rgba(32,231,255,0.14), transparent 38%),
+    linear-gradient(145deg, rgba(2,4,12,0.86), rgba(13,5,22,0.78));
 }
 
-.quartz::before,
-.quartz::after {
+.screen-media img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  object-position: center;
+  filter: saturate(1.08) contrast(1.05) brightness(0.88);
+}
+
+.screen-media::before,
+.screen-media::after {
   position: absolute;
+  inset: 0;
   content: "";
   pointer-events: none;
 }
 
-.quartz::before {
-  inset: 7% 9%;
-  clip-path: polygon(48% 0, 62% 11%, 50% 100%, 30% 12%);
+.screen-media::before {
+  z-index: 1;
   background:
-    linear-gradient(90deg, rgba(255,255,255,0.52), transparent 34%),
-    linear-gradient(180deg, rgba(191,246,255,0.18), rgba(167,104,255,0.16));
-  border-left: 1px solid rgba(255,255,255,0.52);
-  border-right: 1px solid rgba(191,246,255,0.28);
+    radial-gradient(circle at 50% 46%, transparent 28%, rgba(1,4,12,0.16) 54%, rgba(0,0,0,0.58) 100%),
+    linear-gradient(180deg, rgba(255,255,255,0.06), transparent 34%, rgba(0,0,0,0.28));
+  mix-blend-mode: multiply;
+}
+
+.screen-media::after {
+  z-index: 2;
+  background:
+    radial-gradient(circle at 50% 48%, rgba(32,231,255,0.14), transparent 36%),
+    linear-gradient(115deg, rgba(255,139,207,0.12), transparent 32% 68%, rgba(32,231,255,0.12));
   mix-blend-mode: screen;
 }
-
-.quartz::after {
-  inset: -35% -80%;
-  background: linear-gradient(105deg, transparent 42%, rgba(255,255,255,0.86), rgba(191,246,255,0.44) 50%, transparent 58%);
-  transform: translateX(-40%) rotate(8deg);
-  animation: shineSweep 4.2s ease-in-out infinite;
-  mix-blend-mode: screen;
-}
-
-.quartz-main {
-  width: 190px;
-  height: 326px;
-  z-index: 3;
-  transform: translateY(-12px) rotate(-7deg) translateZ(28px);
-}
-
-.quartz-left {
-  width: 138px;
-  height: 258px;
-  z-index: 2;
-  opacity: 0.72;
-  transform: translate(-126px, 28px) rotate(-25deg) scale(0.92) translateZ(4px);
-  animation-delay: -1s;
-}
-
-.quartz-right {
-  width: 154px;
-  height: 286px;
-  z-index: 2;
-  opacity: 0.78;
-  transform: translate(128px, 20px) rotate(18deg) scale(0.96) translateZ(10px);
-  animation-delay: -2s;
-}
-
-.quartz-ice {
-  width: 108px;
-  height: 205px;
-  z-index: 4;
-  opacity: 0.82;
-  transform: translate(22px, -48px) rotate(17deg) scale(0.76) translateZ(46px);
-  background:
-    linear-gradient(110deg, rgba(255,255,255,0.78), transparent 23%, rgba(191,246,255,0.4) 47%, rgba(154,90,255,0.14) 66%, rgba(255,255,255,0.56)),
-    linear-gradient(34deg, rgba(255,255,255,0.16), rgba(32,231,255,0.3));
-  animation-delay: -3s;
-}
-
-.quartz-small {
-  width: 82px;
-  height: 146px;
-  z-index: 5;
-  opacity: 0.76;
-  transform: translate(-24px, 94px) rotate(34deg) scale(0.72) translateZ(72px);
-  animation-delay: -4s;
-}
-
-.crystal-spark {
-  position: absolute;
-  z-index: 6;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: white;
-  box-shadow: 0 0 14px white, 0 0 34px var(--color-cyan), 0 0 52px rgba(166,93,255,0.58);
-  animation: sparkTwinkle 2.8s ease-in-out infinite;
-}
-
-.spark-one { left: 31%; top: 27%; }
-.spark-two { right: 29%; top: 44%; animation-delay: -0.8s; }
-.spark-three { left: 52%; bottom: 24%; animation-delay: -1.7s; }
 
 .screen-caption {
   position: absolute;
@@ -1212,22 +1120,6 @@ h3 {
   to { transform: rotate(360deg); }
 }
 
-@keyframes crystalShine {
-  from { filter: saturate(0.95) brightness(1) contrast(1); }
-  to { filter: saturate(1.14) brightness(1.16) contrast(1.08); }
-}
-
-@keyframes shineSweep {
-  0%, 28% { transform: translateX(-55%) rotate(8deg); opacity: 0; }
-  45% { opacity: 1; }
-  78%, 100% { transform: translateX(65%) rotate(8deg); opacity: 0; }
-}
-
-@keyframes sparkTwinkle {
-  0%, 100% { transform: scale(0.6); opacity: 0.35; }
-  50% { transform: scale(1.25); opacity: 1; }
-}
-
 /* ------------------------- Responsive ------------------------- */
 @media (max-width: 1080px) {
   .brand-grid,
@@ -1349,11 +1241,6 @@ h3 {
     min-height: 250px;
   }
 
-  .quartz-main { width: 130px; height: 230px; }
-  .quartz-left { width: 96px; height: 180px; transform: translate(-78px, 20px) rotate(-24deg) scale(0.9); }
-  .quartz-right { width: 102px; height: 190px; transform: translate(82px, 16px) rotate(18deg) scale(0.95); }
-  .quartz-ice { width: 76px; height: 140px; transform: translate(18px, -32px) rotate(18deg) scale(0.76); }
-  .quartz-small { width: 58px; height: 104px; transform: translate(-16px, 68px) rotate(35deg) scale(0.72); }
 
   .screen-caption {
     left: 18px;
