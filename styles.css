@@ -630,6 +630,7 @@ h3 {
   min-height: 372px;
   border-radius: 18px;
   overflow: hidden;
+  isolation: isolate;
   background:
     radial-gradient(circle at 53% 48%, rgba(216,250,255,0.18), transparent 18%),
     radial-gradient(circle at 36% 48%, rgba(166,93,255,0.16), transparent 30%),
@@ -646,23 +647,25 @@ h3 {
 .tv-screen::before {
   position: absolute;
   inset: -34%;
+  z-index: 0;
   content: "";
+  pointer-events: none;
   background:
-    conic-gradient(from 90deg, transparent, rgba(255,255,255,0.055), transparent, rgba(32,231,255,0.12), transparent),
-    linear-gradient(105deg, transparent 34%, rgba(255,255,255,0.08) 43%, transparent 53%);
+    conic-gradient(from 90deg, transparent, rgba(255,255,255,0.028), transparent, rgba(32,231,255,0.055), transparent),
+    linear-gradient(105deg, transparent 38%, rgba(255,255,255,0.035) 45%, transparent 55%);
   animation: screenAura 18s linear infinite;
 }
 
 .tv-screen::after {
   position: absolute;
   inset: 0;
-  z-index: 2;
+  z-index: 3;
   content: "";
   pointer-events: none;
-  opacity: 0.22;
-  background-image: radial-gradient(circle, rgba(255,255,255,0.22) 0 1px, transparent 1.4px);
+  opacity: 0.08;
+  background-image: radial-gradient(circle, rgba(255,255,255,0.12) 0 1px, transparent 1.5px);
   background-size: 5px 5px;
-  mix-blend-mode: overlay;
+  mix-blend-mode: screen;
 }
 
 .screen-vignette,
@@ -674,36 +677,40 @@ h3 {
 }
 
 .screen-vignette {
+  z-index: 4;
   box-shadow:
-    inset 0 0 90px rgba(0,0,0,0.72),
-    inset 0 -36px 72px rgba(0,0,0,0.58),
-    inset 0 18px 38px rgba(255,255,255,0.05);
+    inset 0 0 38px rgba(0,0,0,0.28),
+    inset 0 -18px 32px rgba(0,0,0,0.18),
+    inset 0 12px 24px rgba(255,255,255,0.035);
 }
 
 .screen-reflection {
+  z-index: 5;
+  opacity: 0.46;
   background:
-    linear-gradient(112deg, rgba(255,255,255,0.28), rgba(255,255,255,0.07) 16%, transparent 27% 62%, rgba(191,246,255,0.12) 78%, transparent),
-    linear-gradient(18deg, transparent 0 62%, rgba(255,255,255,0.11) 63%, transparent 70%);
+    linear-gradient(112deg, rgba(255,255,255,0.16), rgba(255,255,255,0.04) 14%, transparent 24% 68%, rgba(191,246,255,0.055) 80%, transparent),
+    linear-gradient(18deg, transparent 0 66%, rgba(255,255,255,0.045) 67%, transparent 73%);
   mix-blend-mode: screen;
 }
 
 .screen-media {
   position: absolute;
   inset: 0;
-  z-index: 1;
+  z-index: 2;
   overflow: hidden;
   background:
-    radial-gradient(circle at 50% 45%, rgba(32,231,255,0.14), transparent 38%),
-    linear-gradient(145deg, rgba(2,4,12,0.86), rgba(13,5,22,0.78));
+    radial-gradient(circle at 50% 45%, rgba(32,231,255,0.08), transparent 40%),
+    linear-gradient(145deg, rgba(2,4,12,0.18), rgba(13,5,22,0.12));
 }
 
-.screen-media img {
+.tv-screen-image {
   width: 100%;
   height: 100%;
-  display: block;
   object-fit: cover;
   object-position: center;
-  filter: saturate(1.08) contrast(1.05) brightness(0.88);
+  display: block;
+  opacity: 1;
+  filter: saturate(1.08) contrast(1.05) brightness(1);
 }
 
 .screen-media::before,
@@ -717,16 +724,17 @@ h3 {
 .screen-media::before {
   z-index: 1;
   background:
-    radial-gradient(circle at 50% 46%, transparent 28%, rgba(1,4,12,0.16) 54%, rgba(0,0,0,0.58) 100%),
-    linear-gradient(180deg, rgba(255,255,255,0.06), transparent 34%, rgba(0,0,0,0.28));
+    radial-gradient(circle at 50% 48%, transparent 58%, rgba(0,0,0,0.12) 100%),
+    linear-gradient(180deg, rgba(255,255,255,0.025), transparent 46%, rgba(0,0,0,0.06));
   mix-blend-mode: multiply;
 }
 
 .screen-media::after {
   z-index: 2;
+  opacity: 0.36;
   background:
-    radial-gradient(circle at 50% 48%, rgba(32,231,255,0.14), transparent 36%),
-    linear-gradient(115deg, rgba(255,139,207,0.12), transparent 32% 68%, rgba(32,231,255,0.12));
+    radial-gradient(circle at 50% 48%, rgba(32,231,255,0.06), transparent 38%),
+    linear-gradient(115deg, rgba(255,139,207,0.045), transparent 34% 70%, rgba(32,231,255,0.05));
   mix-blend-mode: screen;
 }
 

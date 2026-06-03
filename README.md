@@ -16,21 +16,22 @@ Màn hình tivi trong hero hiện dùng file ảnh có sẵn **`tivi.svg`**. Ả
 Cấu trúc chính nằm trong `index.html`:
 
 ```html
-<div class="screen-media" aria-hidden="true">
-  <img src="tivi.svg" alt="" loading="eager" decoding="async">
+<div class="screen-media">
+  <img class="tv-screen-image" src="tivi.svg" alt="Hình ảnh tivi hiển thị nội dung sắc nét tại Anh Minh Store" loading="eager" decoding="async">
 </div>
 ```
 
-Phần CSS trong `styles.css` giúp ảnh vừa khít màn hình bằng `object-fit: cover`, giữ tỷ lệ ảnh không bị méo và cắt gọn phần thừa nếu tỷ lệ ảnh khác tỷ lệ màn hình TV.
+Phần CSS trong `styles.css` dùng class `.tv-screen-image` để ảnh vừa khít màn hình bằng `object-fit: cover`, giữ tỷ lệ ảnh không bị méo, hiển thị rõ với độ sáng đầy đủ và cắt gọn phần thừa nếu tỷ lệ ảnh khác tỷ lệ màn hình TV.
 
 ## Hiệu ứng màn hình TV
 
 Khung TV premium vẫn được giữ lại, đồng thời màn hình có thêm các lớp CSS để tạo cảm giác kính đen cao cấp:
 
-- Lớp ảnh sản phẩm `tivi.svg` nằm trong `.screen-media`.
+- Lớp ảnh sản phẩm `tivi.svg` nằm trong `.screen-media` và được gắn class `.tv-screen-image`.
 - `object-fit: cover` giúp ảnh phủ kín màn hình mà không bị kéo giãn.
-- Lớp vignette làm tối viền màn hình để giống dark-glass.
-- Lớp phản chiếu chéo tạo độ bóng kính bằng CSS.
+- `.screen-media` có z-index đủ cao để ảnh nằm trên nền màn hình TV.
+- Lớp vignette chỉ làm tối viền rất nhẹ, không che hoặc làm đen ảnh.
+- Lớp phản chiếu chéo được giảm cường độ để giữ độ bóng kính premium nhưng vẫn để ảnh hiển thị rõ.
 - Bóng đổ, glow cyan nhẹ và inner shadow giúp màn hình có chiều sâu hơn.
 
 ## Cách thay `tivi.svg` sau này
@@ -41,15 +42,16 @@ Nếu muốn thay hình hiển thị trong màn hình TV, có hai cách:
 2. **Đổi sang đường dẫn khác:** sửa thuộc tính `src` trong `index.html` tại khối `.screen-media`, ví dụ:
 
 ```html
-<img src="duong-dan/anh-moi.svg" alt="" loading="eager" decoding="async">
+<img class="tv-screen-image" src="duong-dan/anh-moi.svg" alt="Hình ảnh tivi hiển thị nội dung sắc nét tại Anh Minh Store" loading="eager" decoding="async">
 ```
 
-Nếu cần tinh chỉnh cách ảnh nằm trong màn hình, sửa trong `styles.css` tại selector `.screen-media img`:
+Nếu cần tinh chỉnh cách ảnh nằm trong màn hình, sửa trong `styles.css` tại selector `.tv-screen-image`:
 
 ```css
-.screen-media img {
+.tv-screen-image {
   object-fit: cover;
   object-position: center;
+  opacity: 1;
 }
 ```
 
