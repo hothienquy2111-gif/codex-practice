@@ -1,98 +1,51 @@
-# ANH MINH STORE - Website showroom tivi neon cao cấp
+# ANH MINH STORE - Landing page showroom tivi cao cấp
 
-Dự án này là website giới thiệu **CÔNG TY KỸ THUẬT ĐIỆN TỬ ANH MINH STORE** tại Đà Nẵng. Giao diện được nâng cấp theo phong cách showroom tivi cao cấp: nền tối, kính bóng, neon tím hồng, pha lê thạch anh trong hero và chuyển cảnh sang đại dương sứa neon xanh ở phần thương hiệu tivi.
+Website tĩnh cho **CÔNG TY KỸ THUẬT ĐIỆN TỬ ANH MINH STORE** tại Đà Nẵng. Giao diện dùng HTML, CSS và JavaScript thuần, tập trung vào cảm giác showroom điện tử cao cấp với hero tivi điện ảnh, pha lê thạch anh trong suốt và khu vực thương hiệu dạng kính.
 
-## Cấu trúc file
+## Thông tin chính
 
-```text
-.
-├── index.html   # Cấu trúc nội dung, các section, menu, thẻ thương hiệu và liên hệ
-├── styles.css   # Toàn bộ giao diện, responsive, glassmorphism và animation CSS
-├── script.js    # Hamburger menu, smooth scroll, active menu, đổi theme khi cuộn
-└── README.md    # Tài liệu hướng dẫn chỉnh sửa, chạy local và triển khai
-```
+- **Tên công ty:** CÔNG TY KỸ THUẬT ĐIỆN TỬ ANH MINH STORE
+- **Số điện thoại:** 0905111223
+- **Cơ sở 1:** 100 Tiểu La, Hải Châu, Đà Nẵng
+- **Cơ sở 2:** 540B Nguyễn Hữu Thọ, Đà Nẵng
 
-Website chỉ dùng **HTML, CSS và JavaScript thuần**, không dùng React, Vue, Bootstrap, Tailwind hoặc thư viện animation nặng.
+## Nội dung đã thay đổi về mặt hình ảnh
 
-## Các section chính
+- Nâng cấp hero thành một cảnh tivi quảng cáo cao cấp, tối hơn, nhiều chiều sâu hơn và gần phong cách TV premium/OLED demo.
+- Làm mỏng khung tivi, giảm cảm giác hoạt hình, thêm viền kim loại tối, mặt kính đen, phản chiếu chéo và bóng đổ dưới chân đế.
+- Điều chỉnh nền showroom từ tím hồng rực sang **dark navy, đen, deep plum, rose glow mềm và cyan highlight** để sang trọng hơn.
+- Thêm light beams, phản chiếu mềm và lớp grain/noise bằng CSS để tránh nền phẳng.
+- Làm mượt chuyển cảnh khi cuộn từ khu vực pha lê sang khu vực đại dương sứa neon.
+- Tinh chỉnh phần thương hiệu thành các thẻ logo kính cao cấp, logo nằm giữa tile, có highlight và glow khi hover.
 
-1. **Trang chủ**: hero tivi cao cấp với khung màn hình, pha lê thạch anh CSS-only, tiêu đề và nút CTA.
-2. **Các dòng tivi**: nền đại dương neon xanh, các thẻ logo thương hiệu Samsung, LG, Sony, Toshiba, Hisense, TCL, Panasonic.
-3. **Thu cũ đổi mới**: quy trình 3 bước gồm gửi thông tin tivi cũ, nhận tư vấn định giá, đổi lên tivi mới.
-4. **Hỗ trợ trả góp**: các lợi ích tư vấn nhanh, thủ tục đơn giản, phù hợp ngân sách, nhiều lựa chọn sản phẩm.
-5. **Liên hệ**: số điện thoại, hai cơ sở tại Đà Nẵng và nút gọi, Zalo, bản đồ.
+## Hiệu ứng pha lê thạch anh đã được cải thiện như thế nào?
 
-## Pha lê thạch anh trong hero hoạt động như thế nào?
+Hero cũ có các mảng pha lê hồng/tím khá đặc và dễ tạo cảm giác nhựa. Phiên bản mới chuyển sang cảm giác **quartz/ice glass trong suốt** bằng CSS:
 
-Hero dùng các phần tử HTML rỗng trong `.quartz-composition`, ví dụ `.quartz-main`, `.quartz-left`, `.quartz-right`, `.quartz-ice` và `.quartz-small`.
+- Dùng nhiều lớp tinh thể: tinh thể phía sau, lớp giữa, mảnh trước và bóng phản chiếu ở đáy.
+- Giảm các mảng magenta đặc; thay bằng gradient trong suốt, trắng băng, xanh cyan và phản xạ tím/cyan nhẹ.
+- Thêm facet bằng `linear-gradient`, `radial-gradient`, `clip-path`, border sáng và pseudo-element để tạo mặt cắt sắc.
+- Thêm highlight trắng mảnh trên cạnh tinh thể, hiệu ứng ánh sáng quét qua và các spark nhỏ.
+- Thêm inner glow, bóng đổ và reflection để tinh thể trông như nằm bên trong màn hình TV kính tối.
+- Thêm noise overlay nhẹ trên màn hình để cảnh giống quảng cáo TV cao cấp hơn, không bị phẳng như vector cartoon.
 
-Trong `styles.css`, mỗi mảnh pha lê được dựng bằng:
+## Chủ đề đại dương sứa neon
 
-- `clip-path: polygon(...)` để tạo hình tinh thể sắc cạnh.
-- `linear-gradient(...)` để tạo lớp kính, ánh tím hồng, ánh băng xanh và phản xạ trắng.
-- `box-shadow` và `filter` để tạo hào quang quảng cáo cao cấp.
-- Pseudo-element `::after` chạy animation `shineSweep` để tạo vệt sáng quét qua bề mặt.
-- Các chấm `.crystal-spark` dùng animation `sparkTwinkle` để tạo hiệu ứng lấp lánh nhẹ.
+Khi cuộn xuống section **Các dòng tivi**, nền chuyển dần sang đại dương xanh sâu:
 
-Toàn bộ visual này là **CSS-only**, không cần ảnh nền hoặc video nặng.
+- Nền dùng deep ocean blue, cyan glow và các dải phản chiếu nước.
+- Sứa neon được tạo bằng CSS, trôi chậm để giữ cảm giác premium và nhẹ hiệu năng.
+- Có silhouette san hô ở đáy panel, ánh nước và glow xanh giống cảnh demo Mini LED/OLED.
 
-## Chủ đề đại dương sứa neon hoạt động như thế nào?
+## Thương hiệu tivi
 
-Phần nền toàn trang có `.scene-backdrop` chứa hai lớp:
+Các thương hiệu được trình bày dưới dạng **premium glass logo tiles** thay vì text thường:
 
-- `.rose-scene`: chủ đề hồng tím, orb neon và pha lê mờ cho khu vực đầu trang.
-- `.ocean-scene`: chủ đề xanh đại dương, ánh nước, sứa neon và silhouette san hô.
+- Logo-style typography cho Samsung, LG, Sony, Toshiba, Hisense, TCL và Panasonic.
+- Tile kính có border trong, reflection, glow và hover highlight.
+- Khi có file logo chính thức, có thể thay text trong `.logo-tile` bằng ảnh SVG/PNG mà vẫn giữ hiệu ứng kính.
 
-Các con sứa được tạo bằng CSS:
-
-- Thân sứa dùng gradient trong `.jellyfish` và `.panel-jelly`.
-- Tua sứa dùng `::before`, `::after` và thẻ `<i>` bên trong.
-- Animation `jellyFloat` làm sứa trôi chậm lên xuống để giữ cảm giác premium, không quá trẻ con.
-- San hô dùng `clip-path` để tạo silhouette mềm ở đáy nền.
-
-## Chuyển theme khi cuộn hoạt động như thế nào?
-
-Mỗi section chính có thuộc tính `data-theme`, ví dụ:
-
-```html
-<section id="trang-chu" data-theme="rose">
-<section id="cac-dong-tivi" data-theme="blue">
-```
-
-Trong `script.js`, hàm `updateScrollScene()` tính tiến trình cuộn từ hero đến section thương hiệu. Khi người dùng cuộn xuống đủ xa, script chuyển class trên `<body>`:
-
-- `theme-rose`: ưu tiên nền rose/purple quartz.
-- `theme-blue`: làm `.rose-scene` mờ và trượt lên, đồng thời đưa `.ocean-scene` hiện ra.
-
-Nhờ vậy chuyển cảnh có cảm giác **di chuyển và tan lớp cảnh**, không chỉ đổi màu tĩnh.
-
-## Hamburger menu hoạt động như thế nào?
-
-Nút `.menu-toggle` có `aria-controls="primary-menu"` và `aria-expanded`. Khi bấm:
-
-1. `script.js` thêm hoặc xóa class `.is-active` trên nút.
-2. Menu `.nav-menu` nhận hoặc mất class `.is-open`.
-3. `<body>` nhận class `.menu-open` để tránh cuộn nền khi menu mobile đang mở.
-4. `aria-expanded` và `aria-label` được cập nhật để thân thiện hơn với trình đọc màn hình.
-5. Khi chọn một link hoặc bấm phím `Escape`, menu tự đóng.
-
-## Smooth scroll và active menu
-
-Các link điều hướng trỏ tới id của section, ví dụ `#cac-dong-tivi`. JavaScript chặn hành vi mặc định, tính vị trí cuộn đã trừ chiều cao header cố định, rồi gọi:
-
-```js
-window.scrollTo({ top: targetPosition, behavior: 'smooth' });
-```
-
-Hàm `updateActiveLink()` theo dõi vị trí cuộn hiện tại và gắn class `.active` cho menu item tương ứng.
-
-## Cách cập nhật logo thương hiệu sau này
-
-Hiện tại logo được dựng bằng chữ kiểu logo trong các thẻ `.logo-tile` để không phụ thuộc ảnh bên ngoài. Khi có file logo chính thức:
-
-1. Đặt file vào thư mục mới, ví dụ `assets/logos/samsung.svg`.
-2. Trong `index.html`, tìm section `id="cac-dong-tivi"`.
-3. Thay nội dung trong `.logo-tile`:
+Ví dụ thay logo sau này:
 
 ```html
 <div class="logo-tile logo-samsung" aria-label="Logo Samsung">
@@ -100,64 +53,61 @@ Hiện tại logo được dựng bằng chữ kiểu logo trong các thẻ `.lo
 </div>
 ```
 
-4. Có thể giữ class `.logo-tile` để tiếp tục dùng nền kính, glow và hover effect.
+## Cấu trúc file
 
-## Cách cập nhật giá thật sau này
-
-Mỗi thẻ thương hiệu có một dòng giá hoặc ghi chú trong thẻ `<strong>`:
-
-```html
-<strong>Giá đang cập nhật</strong>
+```text
+.
+├── index.html   # Nội dung và cấu trúc website
+├── styles.css   # Toàn bộ giao diện, responsive, pha lê, TV, đại dương và logo tiles
+├── script.js    # Menu mobile, active nav, reveal-on-scroll và chuyển theme khi cuộn
+└── README.md    # Tài liệu tiếng Việt
 ```
-
-Khi có giá thật, sửa trực tiếp dòng này, ví dụ:
-
-```html
-<strong>Từ 6.990.000đ</strong>
-```
-
-Nếu danh sách sản phẩm nhiều hơn, có thể chuyển dữ liệu sang mảng JavaScript trong `script.js`, ví dụ `const brands = [...]`, rồi render tự động vào `.brand-grid`.
-
-## Cách cập nhật link Zalo
-
-Nút **Nhắn Zalo** hiện dùng link giữ chỗ theo số điện thoại:
-
-```html
-https://zalo.me/0905111223
-```
-
-Nếu doanh nghiệp có link Zalo OA hoặc link Zalo chính thức khác, mở `index.html`, tìm nút **Nhắn Zalo** trong section `id="lien-he"` và thay giá trị `href` bằng link mới.
 
 ## Cách chạy website trên máy tính
 
-Cách nhanh nhất là mở trực tiếp file `index.html` bằng trình duyệt.
-
-Cách khuyến nghị là chạy local server tại thư mục dự án:
+Mở trực tiếp `index.html` bằng trình duyệt hoặc chạy local server tại thư mục dự án:
 
 ```bash
 python3 -m http.server 8000
 ```
 
-Sau đó mở trình duyệt và truy cập:
+Sau đó truy cập:
 
 ```text
 http://localhost:8000
 ```
 
-## Cách deploy bằng GitHub Pages
+## Những gì đã kiểm tra
 
-1. Đẩy các file `index.html`, `styles.css`, `script.js`, `README.md` lên repository GitHub.
-2. Vào repository trên GitHub.
-3. Chọn **Settings**.
-4. Chọn **Pages**.
-5. Ở phần **Build and deployment**, chọn source là nhánh chứa code, ví dụ `main`.
-6. Chọn thư mục `/root` nếu `index.html` nằm ở gốc repository.
-7. Bấm **Save**.
-8. Chờ GitHub Pages tạo đường dẫn public và mở link để kiểm tra website.
+- Kiểm tra cú pháp JavaScript bằng Node:
+
+```bash
+node --check script.js
+```
+
+- Kiểm tra số lượng dấu ngoặc `{}` trong CSS để phát hiện lỗi đóng/mở block:
+
+```bash
+python3 - <<'PY'
+from pathlib import Path
+s = Path('styles.css').read_text()
+print(s.count('{'), s.count('}'))
+PY
+```
+
+- Chạy local server để phục vụ website tĩnh và dùng `curl` kiểm tra HTML trả về:
+
+```bash
+python3 -m http.server 8000
+curl -I http://127.0.0.1:8000/
+```
+
+- Đã thử dùng Playwright để chụp màn hình, nhưng môi trường bị chặn tải package từ npm registry nên không thể tạo screenshot tự động trong container này.
 
 ## Gợi ý bảo trì nhanh
 
 - Đổi màu chủ đạo: sửa các biến trong `:root` của `styles.css`, ví dụ `--color-rose`, `--color-purple`, `--color-cyan`.
 - Thêm thương hiệu: copy một khối `<article class="brand-card">` trong `index.html`, dán vào `.brand-grid`, rồi sửa logo, mô tả và giá.
 - Đổi địa chỉ: sửa nội dung `<address>` trong section `id="lien-he"`.
-- Đổi link bản đồ: sửa `href` của nút **Xem địa chỉ** trong `index.html`.
+- Đổi link bản đồ hoặc Zalo: sửa các nút trong section `id="lien-he"` của `index.html`.
+- Nếu thêm ảnh/logo chính thức, ưu tiên SVG để logo sắc nét trên màn hình lớn.
