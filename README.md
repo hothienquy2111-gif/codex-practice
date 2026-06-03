@@ -1,109 +1,131 @@
-# ANH MINH STORE - Landing page showroom tivi cao cấp
+# ANH MINH STORE - Website tivi phong cách công nghệ cao
 
-Website tĩnh cho **CÔNG TY KỸ THUẬT ĐIỆN TỬ ANH MINH STORE** tại Đà Nẵng. Giao diện dùng HTML, CSS và JavaScript thuần, tập trung vào cảm giác showroom điện tử cao cấp với hero tivi điện ảnh, nền dark navy / purple / rose và khu vực thương hiệu dạng kính.
+Website tĩnh cho **CÔNG TY KỸ THUẬT ĐIỆN TỬ ANH MINH STORE** tại Đà Nẵng. Dự án dùng **HTML, CSS và JavaScript thuần**, không dùng framework, tập trung vào giao diện sạch, sắc nét, chuyên nghiệp cho cửa hàng tivi chính hãng.
 
-## Thông tin chính
+## Mục đích dự án
 
-- **Tên công ty:** CÔNG TY KỸ THUẬT ĐIỆN TỬ ANH MINH STORE
-- **Số điện thoại:** 0905111223
-- **Cơ sở 1:** 100 Tiểu La, Hải Châu, Đà Nẵng
-- **Cơ sở 2:** 540B Nguyễn Hữu Thọ, Đà Nẵng
+- Giới thiệu Anh Minh Store và thông tin liên hệ chính thức.
+- Trưng bày các dòng tivi theo thương hiệu.
+- Trình bày dịch vụ **thu cũ đổi mới** và **hỗ trợ trả góp**.
+- Cung cấp các nút liên hệ nhanh: gọi điện, Zalo và xem địa chỉ.
 
-## Hero tivi dùng `tivi.svg`
+## Hướng thiết kế mới
 
-Màn hình tivi trong hero hiện dùng file ảnh có sẵn **`tivi.svg`**. Ảnh chỉ được đặt bên trong khung màn hình TV, không dùng làm nền toàn trang, để giữ nguyên không gian showroom tối màu ở bên ngoài.
+Giao diện mới lấy cảm hứng cảm giác từ các website sản phẩm gaming-tech cao cấp: mạnh mẽ, hiện đại, kỹ thuật và có bố cục sắc cạnh. Website **không sao chép logo, nhãn hiệu hoặc tài sản của ASUS/ROG**.
 
-Cấu trúc chính nằm trong `index.html`:
+Đặc điểm chính:
 
-```html
-<div class="screen-media">
-  <img class="tv-screen-image" src="tivi.svg" alt="Hình ảnh tivi hiển thị nội dung sắc nét tại Anh Minh Store" loading="eager" decoding="async">
-</div>
-```
-
-Phần CSS trong `styles.css` dùng class `.tv-screen-image` để ảnh vừa khít màn hình bằng `object-fit: cover`, giữ tỷ lệ ảnh không bị méo, hiển thị rõ với độ sáng đầy đủ và cắt gọn phần thừa nếu tỷ lệ ảnh khác tỷ lệ màn hình TV.
-
-## Hiệu ứng màn hình TV
-
-Khung TV premium vẫn được giữ lại, đồng thời màn hình có thêm các lớp CSS để tạo cảm giác kính đen cao cấp:
-
-- Lớp ảnh sản phẩm `tivi.svg` nằm trong `.screen-media` và được gắn class `.tv-screen-image`.
-- `object-fit: cover` giúp ảnh phủ kín màn hình mà không bị kéo giãn.
-- `.screen-media` có z-index đủ cao để ảnh nằm trên nền màn hình TV.
-- Lớp vignette chỉ làm tối viền rất nhẹ, không che hoặc làm đen ảnh.
-- Lớp phản chiếu chéo được giảm cường độ để giữ độ bóng kính premium nhưng vẫn để ảnh hiển thị rõ.
-- Bóng đổ, glow cyan nhẹ và inner shadow giúp màn hình có chiều sâu hơn.
-
-## Cách thay `tivi.svg` sau này
-
-Nếu muốn thay hình hiển thị trong màn hình TV, có hai cách:
-
-1. **Giữ nguyên tên file:** thay nội dung file `tivi.svg` bằng ảnh mới cùng tên. Khi đó không cần sửa HTML hoặc CSS.
-2. **Đổi sang đường dẫn khác:** sửa thuộc tính `src` trong `index.html` tại khối `.screen-media`, ví dụ:
-
-```html
-<img class="tv-screen-image" src="duong-dan/anh-moi.svg" alt="Hình ảnh tivi hiển thị nội dung sắc nét tại Anh Minh Store" loading="eager" decoding="async">
-```
-
-Nếu cần tinh chỉnh cách ảnh nằm trong màn hình, sửa trong `styles.css` tại selector `.tv-screen-image`:
-
-```css
-.tv-screen-image {
-  object-fit: cover;
-  object-position: center;
-  opacity: 1;
-}
-```
-
-- Đổi `object-position` nếu muốn căn ảnh sang trái, phải, trên hoặc dưới.
-- Có thể dùng `object-fit: contain` nếu muốn thấy toàn bộ ảnh, nhưng sẽ có thể xuất hiện khoảng trống trong màn hình.
-
-## Chủ đề showroom và chuyển cảnh khi cuộn
-
-Nền ngoài TV vẫn giữ phong cách **dark navy, tím, rose glow và cyan highlight**. Khi cuộn xuống section **Các dòng tivi**, JavaScript tiếp tục cập nhật biến CSS để chuyển dần sang chủ đề đại dương xanh sâu, giữ hiệu ứng sứa neon và các panel kính.
-
-## Điều hướng và responsive
-
-Website vẫn dùng `script.js` để xử lý:
-
-- Header sticky đổi trạng thái khi cuộn.
-- Hamburger menu trên màn hình nhỏ.
-- Smooth scrolling khi bấm menu.
-- Active navigation theo section hiện tại.
-- Reveal-on-scroll và chuyển theme giữa hero và các section bên dưới.
-
-Layout được thiết kế responsive cho desktop, tablet và mobile bằng các media query trong `styles.css`.
-
-## Thương hiệu tivi
-
-Các thương hiệu được trình bày dưới dạng **premium glass logo tiles**:
-
-- Logo-style typography cho Samsung, LG, Sony, Toshiba, Hisense, TCL và Panasonic.
-- Tile kính có border trong, reflection, glow và hover highlight.
-- Khi có file logo chính thức, có thể thay text trong `.logo-tile` bằng ảnh SVG/PNG mà vẫn giữ hiệu ứng kính.
-
-Ví dụ thay logo sau này:
-
-```html
-<div class="logo-tile logo-samsung" aria-label="Logo Samsung">
-  <img src="assets/logos/samsung.svg" alt="Samsung">
-</div>
-```
+- Nền trắng làm chủ đạo, chữ đen có độ tương phản cao.
+- Điểm nhấn bằng đen, xám đậm, bạc, xám nhạt và một lượng nhỏ màu đỏ.
+- Bố cục nhiều khoảng thở, đường viền kỹ thuật, lưới mảnh và mảng chéo.
+- Loại bỏ toàn bộ phong cách trang trí cũ không phù hợp với hướng công nghệ trắng / đen mới.
 
 ## Cấu trúc file
 
 ```text
 .
-├── index.html   # Nội dung và cấu trúc website
-├── styles.css   # Giao diện, responsive, TV, màn hình dùng tivi.svg, đại dương và logo tiles
-├── script.js    # Menu mobile, active nav, reveal-on-scroll và chuyển theme khi cuộn
-├── tivi.svg     # Ảnh đang hiển thị bên trong màn hình TV hero
-└── README.md    # Tài liệu tiếng Việt
+├── index.html   # Cấu trúc nội dung chính của website
+├── styles.css   # Toàn bộ giao diện, responsive, hiệu ứng hover và visual TV
+├── script.js    # Menu mobile, smooth scroll, active nav và reveal nhẹ
+├── tivi.svg     # Ảnh đang được hiển thị trong màn hình TV ở hero
+└── README.md    # Tài liệu hướng dẫn tiếng Việt
 ```
 
-## Cách chạy website trên máy tính
+## Vai trò từng file
 
-Mở trực tiếp `index.html` bằng trình duyệt hoặc chạy local server tại thư mục dự án:
+### `index.html`
+
+- Chứa HTML5 semantic cho header, hero, các dòng tivi, thu cũ đổi mới, trả góp, liên hệ và footer.
+- Dùng các section ID rõ ràng để menu cuộn tới đúng vị trí:
+  - `#trang-chu`
+  - `#cac-dong-tivi`
+  - `#thu-cu-doi-moi`
+  - `#tra-gop`
+  - `#lien-he`
+- Hiển thị thông tin thương hiệu, số điện thoại và hai cơ sở tại Đà Nẵng.
+- Dùng `tivi.svg` bên trong màn hình TV ở phần hero vì file này đang tồn tại trong repository.
+
+### `styles.css`
+
+- Tổ chức theo biến màu, base styles, header, hero, card sản phẩm, timeline, benefit cards, contact và responsive.
+- Tạo visual TV nền trắng với khung đen/bạc, bóng đổ, đường lưới kỹ thuật, badge thông số và chi tiết đỏ nhỏ.
+- Tạo các brand card sắc cạnh, viền đen, bóng nhẹ và hover chuyên nghiệp.
+- Đảm bảo responsive cho desktop, tablet và mobile.
+
+### `script.js`
+
+- Đóng/mở hamburger menu trên mobile.
+- Smooth scroll khi bấm các mục điều hướng.
+- Cập nhật trạng thái active của menu khi cuộn trang.
+- Đổi trạng thái header khi trang được cuộn.
+- Thêm reveal-on-scroll nhẹ bằng `IntersectionObserver`.
+
+## Cách thay ảnh TV
+
+Hiện tại hero dùng file:
+
+```html
+<img src="tivi.svg" alt="Hình ảnh tivi hiển thị sắc nét tại Anh Minh Store" class="tv-screen-image">
+```
+
+Cách thay ảnh:
+
+1. **Giữ tên `tivi.svg`:** thay nội dung file `tivi.svg` bằng ảnh mới cùng tên, không cần sửa HTML.
+2. **Dùng file khác:** sửa thuộc tính `src` trong `index.html`, ví dụ:
+
+```html
+<img src="assets/tivi-moi.svg" alt="Hình ảnh tivi mới" class="tv-screen-image">
+```
+
+Nếu muốn ảnh nằm gọn toàn bộ trong màn hình, có thể đổi CSS tại `.tv-screen-image` từ `object-fit: cover` sang `object-fit: contain`.
+
+## Cách thêm logo thương hiệu thật sau này
+
+Hiện tại các thương hiệu dùng logo dạng chữ để không phụ thuộc vào file ngoài. Khi có logo thật, có thể tạo thư mục:
+
+```text
+assets/logos/
+```
+
+Sau đó thay nội dung trong card, ví dụ:
+
+```html
+<div class="brand-logo" aria-label="Samsung">
+  <img src="assets/logos/samsung.svg" alt="Samsung">
+</div>
+```
+
+Nên ưu tiên file SVG để logo sắc nét trên màn hình lớn. Nếu dùng PNG, hãy dùng ảnh nền trong suốt và độ phân giải đủ cao.
+
+## Cách cập nhật giá sau này
+
+Mỗi card thương hiệu trong `index.html` có dòng:
+
+```html
+<strong>Giá đang cập nhật</strong>
+```
+
+Khi có giá cụ thể, sửa trực tiếp nội dung này, ví dụ:
+
+```html
+<strong>Từ 6.990.000đ</strong>
+```
+
+Nếu cần nhiều sản phẩm cho từng thương hiệu, có thể nhân bản card hoặc tạo thêm section danh sách sản phẩm chi tiết.
+
+## Cách cập nhật link Zalo
+
+Nút Zalo hiện dùng:
+
+```html
+<a href="https://zalo.me/0905111223">Nhắn Zalo</a>
+```
+
+Nếu tài khoản Zalo OA hoặc link Zalo khác được cung cấp, thay URL trong thuộc tính `href` của nút **Nhắn Zalo** tại section `#lien-he`.
+
+## Cách chạy local
+
+Có thể mở trực tiếp file `index.html` bằng trình duyệt, hoặc chạy local server tại thư mục dự án:
 
 ```bash
 python3 -m http.server 8000
@@ -115,11 +137,19 @@ Sau đó truy cập:
 http://localhost:8000
 ```
 
-## Gợi ý bảo trì nhanh
+## Cách deploy bằng GitHub Pages
 
-- Đổi ảnh hero TV: sửa `src="tivi.svg"` trong `index.html` hoặc thay file `tivi.svg` bằng ảnh mới cùng tên.
-- Đổi màu chủ đạo: sửa các biến trong `:root` của `styles.css`, ví dụ `--color-rose`, `--color-purple`, `--color-cyan`.
-- Thêm thương hiệu: copy một khối `<article class="brand-card">` trong `index.html`, dán vào `.brand-grid`, rồi sửa logo, mô tả và giá.
-- Đổi địa chỉ: sửa nội dung `<address>` trong section `id="lien-he"`.
-- Đổi link bản đồ hoặc Zalo: sửa các nút trong section `id="lien-he"` của `index.html`.
-- Nếu thêm ảnh/logo chính thức, ưu tiên SVG để logo sắc nét trên màn hình lớn.
+1. Đẩy toàn bộ mã nguồn lên một repository GitHub.
+2. Vào **Settings** của repository.
+3. Chọn **Pages**.
+4. Ở mục **Build and deployment**, chọn source là nhánh chứa website, thường là `main`.
+5. Chọn thư mục root nếu các file `index.html`, `styles.css`, `script.js` nằm ở gốc repository.
+6. Lưu cấu hình và chờ GitHub Pages tạo link truy cập.
+
+## Ghi chú kiểm tra trước khi bàn giao
+
+- `tivi.svg` đang tồn tại nên website sử dụng file này trong màn hình TV hero.
+- Không còn dùng các lớp nền và chi tiết trang trí cũ không phù hợp với hướng công nghệ trắng / đen.
+- Menu mobile hỗ trợ mở/đóng bằng hamburger và đóng bằng phím Escape.
+- Điều hướng hỗ trợ smooth scroll và active nav theo vị trí cuộn.
+- Layout có media query cho desktop, tablet và mobile.
