@@ -93,9 +93,13 @@ button { cursor: pointer; }
 .brand-panel { border: 1px solid var(--color-gray-200); border-radius: var(--radius-lg); background: var(--color-white); box-shadow: var(--shadow-sm); overflow: hidden; }
 .brand-panel h2 { margin: 0; padding: 13px 14px; background: var(--color-primary-deep); color: var(--color-white); font-size: 0.98rem; }
 .brand-list { display: grid; max-height: 478px; margin: 0; padding: 8px; overflow: auto; list-style: none; }
-.brand-list a { display: flex; align-items: center; gap: 10px; border-radius: 12px; padding: 8px 10px; color: var(--color-gray-700); font-weight: 750; }
+.brand-list a { display: flex; align-items: center; gap: 10px; min-height: 48px; border-radius: 12px; padding: 5px 8px; color: var(--color-gray-700); font-weight: 750; }
 .brand-list a:hover { background: var(--color-gray-100); color: var(--color-primary); }
-.brand-list span { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: #e8f2ff; color: var(--color-primary); font-size: 0.78rem; font-weight: 900; }
+.brand-logo-box, .brand-fallback-badge { flex: 0 0 auto; }
+.brand-logo-box { display: flex; align-items: center; justify-content: center; width: 38px; height: 38px; border: 1px solid rgba(2, 56, 113, 0.12); border-radius: 10px; background: #f4f8fd; }
+.brand-logo-box img { display: block; max-width: 30px; max-height: 24px; object-fit: contain; }
+.brand-fallback-badge { display: inline-grid; place-items: center; width: 38px; height: 38px; border: 1px solid rgba(2, 56, 113, 0.12); border-radius: 10px; background: #e8f2ff; color: var(--color-primary); font-size: 0.8rem; font-weight: 900; }
+.brand-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .hero__main { min-width: 0; }
 .hero-intro { margin-bottom: var(--space-3); }
 .hero-intro h1 { margin: 0 0 6px; color: var(--color-primary-deep); font-size: clamp(1.55rem, 3vw, 2.35rem); line-height: 1.15; }
@@ -237,7 +241,7 @@ button { cursor: pointer; }
   .category-dropdown { right: 0; left: auto; max-width: calc(100vw - 32px); }
   .hero__grid { grid-template-columns: 1fr; }
   .brand-panel { order: 2; }
-  .brand-list { grid-template-columns: repeat(2, minmax(0, 1fr)); max-height: none; }
+  .brand-list { grid-template-columns: repeat(2, minmax(0, 1fr)); max-height: 360px; }
   .hero-benefits, .quick-services__grid, .benefit-list, .chip-list, .issue-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .size-filter__inner, .info-grid, .exchange__grid, .repair__grid, .contact__grid, .footer-grid, .product-detail-card { grid-template-columns: 1fr; }
   .product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
