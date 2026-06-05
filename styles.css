@@ -99,16 +99,12 @@ button { cursor: pointer; }
 .hero__main { min-width: 0; }
 .hero-intro { margin-bottom: var(--space-3); }
 .hero-intro h1 { margin: 0 0 6px; color: var(--color-primary-deep); font-size: clamp(1.55rem, 3vw, 2.35rem); line-height: 1.15; }
-.hero-intro p { margin: 0; color: var(--color-gray-700); font-weight: 700; }
 .hero-carousel { position: relative; overflow: hidden; border-radius: var(--radius-lg); background: var(--color-primary-deep); box-shadow: var(--shadow-md); }
 .carousel-viewport { aspect-ratio: 16 / 9; overflow: hidden; touch-action: pan-y; cursor: grab; }
 .hero-carousel.is-dragging .carousel-viewport { cursor: grabbing; }
 .carousel-track { display: flex; height: 100%; will-change: transform; }
 .carousel-slide { position: relative; flex: 0 0 100%; min-width: 100%; height: 100%; overflow: hidden; background: var(--color-primary-deep); }
 .carousel-slide img { width: 100%; height: 100%; object-fit: cover; user-select: none; pointer-events: none; }
-.slide-caption { position: absolute; left: clamp(16px, 4vw, 48px); bottom: clamp(18px, 4vw, 44px); max-width: min(560px, 78%); padding: clamp(12px, 2vw, 18px); border-radius: var(--radius-md); background: rgba(6, 42, 86, 0.78); color: var(--color-white); backdrop-filter: blur(6px); }
-.slide-caption span { display: block; margin-bottom: 4px; color: #b9d9ff; font-weight: 900; letter-spacing: 0.08em; }
-.slide-caption strong { display: block; font-size: clamp(1.15rem, 3vw, 2rem); line-height: 1.2; }
 .carousel-btn { position: absolute; top: 50%; z-index: 3; display: grid; place-items: center; width: 42px; height: 42px; border: 0; border-radius: 50%; background: rgba(255,255,255,0.9); color: var(--color-primary-deep); font-size: 2rem; line-height: 1; box-shadow: var(--shadow-sm); transform: translateY(-50%); }
 .carousel-btn:hover { background: var(--color-white); }
 .carousel-btn--prev { left: 14px; }
@@ -260,7 +256,6 @@ button { cursor: pointer; }
   .hamburger { grid-template-columns: 20px; padding: 10px; }
   .nav-links { max-width: calc(100vw - 84px); }
   .hero { padding-top: var(--space-3); }
-  .slide-caption { max-width: 84%; padding: 10px; }
   .carousel-btn { width: 36px; height: 36px; font-size: 1.6rem; }
   .carousel-btn--prev { left: 8px; }
   .carousel-btn--next { right: 8px; }
