@@ -142,22 +142,22 @@ Gợi ý các trường nên có:
 
 Các logo hãng tivi được lưu trực tiếp ở thư mục gốc repository, cùng cấp với `index.html`. Panel **DANH MỤC HÃNG TIVI** hiện dùng logo SVG thật cho các hãng đã có file, ví dụ:
 
-- `Samsung.svg`
+- `samsung1.svg` cho Samsung
 - `LG_logo.svg`
 - `Sony.svg`
 - `Toshiba-Logo.svg`
 - `Hisense.svg`
 - `TCL.svg`
 - `Panasonic-Logo.svg`
-- `Sharp.svg`
+- `sharp1.svg` cho Sharp
 - `xiaomi.svg` nếu file này có trong thư mục gốc
 
-Mỗi dòng hãng trong `index.html` hiển thị logo bên trái và tên hãng bên phải. Logo được đặt trong hộp nhỏ để giữ giao diện trắng + xanh dương đậm gọn gàng, không làm panel lớn hơn và không che nhiều banner.
+Mỗi dòng hãng trong `index.html` hiển thị logo bên trái và tên hãng bên phải. Logo được đặt trong hộp nhỏ để giữ giao diện trắng + xanh dương đậm gọn gàng, không làm panel lớn hơn và không che nhiều banner. Riêng Samsung hiện dùng `samsung1.svg` và Sharp hiện dùng `sharp1.svg`; cả hai file này được lưu ở thư mục gốc repository.
 
 ### Cách thay logo một hãng sau này
 
-1. Chuẩn bị file SVG mới có tên đúng với đường dẫn đang dùng trong `index.html`.
-2. Thay nội dung file logo ở thư mục gốc bằng phiên bản mới, giữ nguyên tên file nếu không muốn sửa code.
+1. Tải file SVG logo mới lên thư mục gốc repository.
+2. Cập nhật đường dẫn logo trong map/code hiển thị logo hãng, hiện là thẻ `<img src="...">` tương ứng trong `index.html` của panel **DANH MỤC HÃNG TIVI**. Ví dụ Samsung đang trỏ tới `samsung1.svg`, Sharp đang trỏ tới `sharp1.svg`.
 3. Kiểm tra lại `alt` của ảnh trong `index.html`, ví dụ `alt="Logo Samsung"`, để đảm bảo mô tả vẫn đúng.
 4. Mở website trên desktop và mobile để kiểm tra logo không bị méo, không bị cắt và không gây tràn ngang.
 
