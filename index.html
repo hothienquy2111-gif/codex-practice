@@ -5,266 +5,378 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="ANH MINH STORE - Công ty kỹ thuật điện tử Anh Minh chuyên tivi cũ, tivi mới, thu cũ đổi mới và sửa tivi tất cả các dòng."
+      content="Anh Minh Store tại Đà Nẵng chuyên tivi cũ, tivi mới, thu cũ đổi mới, sửa tivi tất cả các dòng và tư vấn chọn tivi theo nhu cầu."
     />
-    <title>ANH MINH STORE | Công ty kỹ thuật điện tử Anh Minh</title>
+    <title>Anh Minh Store - Tivi cũ, tivi mới, thu cũ đổi mới tại Đà Nẵng</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <header class="site-header">
-      <nav class="header-inner" aria-label="Điều hướng chính">
-        <a
-          class="brand"
-          href="#trang-chu"
-          aria-label="Trang chủ ANH MINH STORE"
-        >
-          <img
-            class="brand-logo"
-            src="Use_the_uploaded_image_as_202605051008.jpeg"
-            alt="Logo ANH MINH STORE"
-          />
-          <span class="brand-text">
-            <span class="store-name">ANH MINH STORE</span>
-            <span class="company-name">Công ty kỹ thuật điện tử Anh Minh</span>
-          </span>
-        </a>
+    <a class="skip-link" href="#noi-dung-chinh">Chuyển đến nội dung chính</a>
 
-        <div class="menu-wrap">
+    <header class="site-header" id="dau-trang">
+      <div class="top-bar" aria-label="Thông tin nhanh">
+        <div class="container top-bar__inner">
+          <span>Trung tâm tivi uy tín tại Đà Nẵng</span>
+          <span>Hotline: 0905111223 - 0774111223</span>
+          <span>2 cơ sở: Hải Châu - Cẩm Lệ</span>
+        </div>
+      </div>
+
+      <div class="main-header">
+        <div class="container main-header__inner">
+          <a class="brand" href="#trang-chu" aria-label="Về trang chủ Anh Minh Store">
+            <img
+              class="brand__logo"
+              src="Use_the_uploaded_image_as_202605051008.jpeg"
+              alt="Logo Anh Minh Store"
+            />
+            <span class="brand__content">
+              <strong>ANH MINH STORE</strong>
+              <span>Công ty kỹ thuật điện tử Anh Minh</span>
+            </span>
+          </a>
+
+          <form class="search-box" role="search" aria-label="Tìm kiếm tivi">
+            <label class="sr-only" for="search-input">Tìm kiếm tivi</label>
+            <input
+              id="search-input"
+              type="search"
+              placeholder="Bạn cần tìm tivi gì?"
+              autocomplete="off"
+            />
+            <button type="submit" aria-label="Tìm kiếm">Tìm</button>
+            <div class="search-box__suggestions" aria-label="Gợi ý tìm kiếm">
+              <span>55 inch</span>
+              <span>Tivi cũ</span>
+              <span>Sửa tivi</span>
+            </div>
+          </form>
+
+          <div class="header-actions">
+            <a class="btn btn--hotline" href="tel:0905111223" aria-label="Gọi ngay 0905111223">
+              Gọi ngay 0905111223
+            </a>
+            <a class="btn btn--zalo" href="#" aria-label="Nhắn Zalo cho Anh Minh Store">
+              Nhắn Zalo
+            </a>
+          </div>
+
           <button
-            class="hamburger"
+            class="mobile-call"
             type="button"
-            aria-label="Mở menu"
-            aria-expanded="false"
-            aria-controls="main-menu"
+            aria-label="Gọi hotline 0905111223"
+            data-call-button
           >
-            <span></span>
-            <span></span>
-            <span></span>
+            Gọi
           </button>
+        </div>
+      </div>
 
-          <ul class="menu-dropdown" id="main-menu">
-            <li><a href="#trang-chu">Trang chủ</a></li>
-            <li><a href="#tivi-cu">Tivi cũ</a></li>
-            <li><a href="#tivi-moi">Tivi mới</a></li>
-            <li><a href="#doi-moi">Thu cũ - đổi mới</a></li>
-            <li><a href="#sua-tivi">Sửa tivi tất cả các dòng</a></li>
+      <nav class="main-nav" aria-label="Điều hướng chính">
+        <div class="container main-nav__inner">
+          <div class="menu-wrap">
+            <button
+              class="hamburger"
+              type="button"
+              aria-label="Mở danh mục"
+              aria-controls="category-menu"
+              aria-expanded="false"
+            >
+              <span></span>
+              <span></span>
+              <span></span>
+              <strong>Danh mục</strong>
+            </button>
+            <ul class="category-dropdown" id="category-menu">
+              <li><a href="#trang-chu" data-menu-link>Trang chủ</a></li>
+              <li><a href="#tivi-cu" data-menu-link>Tivi cũ</a></li>
+              <li><a href="#tivi-moi" data-menu-link>Tivi mới</a></li>
+              <li><a href="#doi-moi" data-menu-link>Thu cũ - đổi mới</a></li>
+              <li><a href="#sua-tivi" data-menu-link>Sửa tivi tất cả các dòng</a></li>
+              <li><a href="#kich-thuoc" data-menu-link>Tivi theo kích thước</a></li>
+              <li><a href="#hang-tivi" data-menu-link>Tivi theo hãng</a></li>
+              <li><a href="#lien-he" data-menu-link>Liên hệ tư vấn</a></li>
+            </ul>
+          </div>
+
+          <ul class="nav-links">
+            <li><a class="nav-link is-active" href="#trang-chu">Trang chủ</a></li>
+            <li><a class="nav-link" href="#tivi-cu">Tivi cũ</a></li>
+            <li><a class="nav-link" href="#tivi-moi">Tivi mới</a></li>
+            <li><a class="nav-link" href="#doi-moi">Thu cũ - đổi mới</a></li>
+            <li><a class="nav-link" href="#sua-tivi">Sửa tivi</a></li>
+            <li><a class="nav-link" href="#lien-he">Liên hệ</a></li>
           </ul>
         </div>
       </nav>
     </header>
 
-    <main id="trang-chu">
-      <section class="hero" aria-labelledby="hero-title">
-        <div class="hero-copy">
-          <p class="eyebrow">Trung tâm tivi uy tín</p>
-          <h1 id="hero-title">
-            Giải pháp tivi gọn đẹp, hiện đại cho mọi gia đình
-          </h1>
-          <p class="hero-text">
-            ANH MINH STORE cung cấp tivi cũ, tivi mới, dịch vụ thu cũ đổi mới và
-            sửa tivi tất cả các dòng với phong cách tư vấn rõ ràng, nhanh chóng.
-          </p>
-        </div>
+    <main id="noi-dung-chinh">
+      <section class="hero section-anchor" id="trang-chu" aria-labelledby="hero-title">
+        <div class="container hero__grid">
+          <aside class="brand-panel" id="hang-tivi" aria-labelledby="brand-title">
+            <h2 id="brand-title">DANH MỤC HÃNG TIVI</h2>
+            <ul class="brand-list" aria-label="Danh sách hãng tivi">
+              <li><a href="#san-pham"><span>S</span>Samsung</a></li>
+              <li><a href="#san-pham"><span>L</span>LG</a></li>
+              <li><a href="#san-pham"><span>S</span>Sony</a></li>
+              <li><a href="#san-pham"><span>T</span>Toshiba</a></li>
+              <li><a href="#san-pham"><span>H</span>Hisense</a></li>
+              <li><a href="#san-pham"><span>T</span>TCL</a></li>
+              <li><a href="#san-pham"><span>P</span>Panasonic</a></li>
+              <li><a href="#san-pham"><span>S</span>Sharp</a></li>
+              <li><a href="#san-pham"><span>X</span>Xiaomi</a></li>
+              <li><a href="#san-pham"><span>C</span>Casper</a></li>
+              <li><a href="#san-pham"><span>C</span>Coocaa</a></li>
+              <li><a href="#san-pham"><span>S</span>Skyworth</a></li>
+              <li><a href="#san-pham"><span>P</span>Philips</a></li>
+              <li><a href="#san-pham"><span>H</span>Hitachi</a></li>
+            </ul>
+          </aside>
 
-        <section
-          class="carousel-section"
-          aria-label="Hình ảnh nổi bật của ANH MINH STORE"
-        >
-          <div class="carousel-stage">
-            <aside
-              class="brand-panel"
-              id="danh-muc-tivi"
-              aria-labelledby="brand-panel-title"
-            >
-              <div class="brand-panel-title" id="brand-panel-title">
-                <span class="brand-panel-icon" aria-hidden="true">
-                  <span></span>
-                  <span></span>
-                  <span></span>
-                </span>
-                DANH MỤC HÃNG TIVI
-              </div>
-              <ul class="brand-list" aria-label="Danh sách hãng tivi">
-                <li>
-                  <a href="#danh-muc-tivi"
-                    ><span class="brand-badge">S</span>Samsung</a
-                  >
-                </li>
-                <li>
-                  <a href="#danh-muc-tivi"
-                    ><span class="brand-badge">L</span>LG</a
-                  >
-                </li>
-                <li>
-                  <a href="#danh-muc-tivi"
-                    ><span class="brand-badge">S</span>Sony</a
-                  >
-                </li>
-                <li>
-                  <a href="#danh-muc-tivi"
-                    ><span class="brand-badge">T</span>Toshiba</a
-                  >
-                </li>
-                <li>
-                  <a href="#danh-muc-tivi"
-                    ><span class="brand-badge">H</span>Hisense</a
-                  >
-                </li>
-                <li>
-                  <a href="#danh-muc-tivi"
-                    ><span class="brand-badge">T</span>TCL</a
-                  >
-                </li>
-                <li>
-                  <a href="#danh-muc-tivi"
-                    ><span class="brand-badge">P</span>Panasonic</a
-                  >
-                </li>
-                <li>
-                  <a href="#danh-muc-tivi"
-                    ><span class="brand-badge">S</span>Sharp</a
-                  >
-                </li>
-                <li>
-                  <a href="#danh-muc-tivi"
-                    ><span class="brand-badge">X</span>Xiaomi</a
-                  >
-                </li>
-                <li>
-                  <a href="#danh-muc-tivi"
-                    ><span class="brand-badge">C</span>Casper</a
-                  >
-                </li>
-                <li>
-                  <a href="#danh-muc-tivi"
-                    ><span class="brand-badge">C</span>Coocaa</a
-                  >
-                </li>
-                <li>
-                  <a href="#danh-muc-tivi"
-                    ><span class="brand-badge">S</span>Skyworth</a
-                  >
-                </li>
-                <li>
-                  <a href="#danh-muc-tivi"
-                    ><span class="brand-badge">P</span>Philips</a
-                  >
-                </li>
-                <li>
-                  <a href="#danh-muc-tivi"
-                    ><span class="brand-badge">H</span>Hitachi</a
-                  >
-                </li>
-              </ul>
-            </aside>
-
-            <div class="carousel" data-carousel>
+          <div class="hero__main">
+            <section class="hero-carousel" aria-label="Banner khuyến mại nổi bật" data-carousel>
               <div class="carousel-viewport">
                 <div class="carousel-track">
-                  <article
-                    class="carousel-slide"
-                    aria-label="Hình ảnh nổi bật 1"
-                  >
+                  <article class="carousel-slide" aria-label="Banner tivi chính hãng">
                     <img
                       src="Create_an_ultra-realistic_premium_World_202606042116.jpeg"
-                      alt="Không gian trưng bày tivi cao cấp của ANH MINH STORE"
+                      alt="Không gian trưng bày tivi cao cấp của Anh Minh Store"
                       draggable="false"
                     />
+                    <div class="slide-caption">
+                      <span>ANH MINH STORE</span>
+                      <strong>Tivi chính hãng - Giá tốt mỗi ngày</strong>
+                    </div>
                   </article>
-                  <article
-                    class="carousel-slide"
-                    aria-label="Hình ảnh nổi bật 2"
-                  >
+                  <article class="carousel-slide" aria-label="Banner tư vấn tivi">
                     <img
                       src="Create_a_premium_16_9_commercial_202605091429.jpeg"
-                      alt="Mẫu tivi thương mại hiện đại tại ANH MINH STORE"
+                      alt="Tivi màn hình lớn cho gia đình tại Anh Minh Store"
                       draggable="false"
                     />
+                    <div class="slide-caption">
+                      <span>ANH MINH STORE</span>
+                      <strong>Tivi chính hãng - Giá tốt mỗi ngày</strong>
+                    </div>
                   </article>
                 </div>
               </div>
+              <button class="carousel-btn carousel-btn--prev" type="button" aria-label="Xem banner trước">‹</button>
+              <button class="carousel-btn carousel-btn--next" type="button" aria-label="Xem banner tiếp theo">›</button>
+              <div class="carousel-dots" aria-label="Chọn banner"></div>
+            </section>
 
-              <button
-                class="carousel-arrow carousel-arrow-prev"
-                type="button"
-                aria-label="Ảnh trước"
-              >
-                ‹
-              </button>
-              <button
-                class="carousel-arrow carousel-arrow-next"
-                type="button"
-                aria-label="Ảnh sau"
-              >
-                ›
-              </button>
-
-              <div class="carousel-dots" aria-label="Chọn ảnh hiển thị">
-                <button
-                  class="dot is-active"
-                  type="button"
-                  aria-label="Chọn ảnh 1"
-                  aria-current="true"
-                ></button>
-                <button
-                  class="dot"
-                  type="button"
-                  aria-label="Chọn ảnh 2"
-                ></button>
-              </div>
+            <div class="hero-benefits" aria-label="Lợi ích nhanh">
+              <a href="tel:0905111223"><strong>Hotline nhanh</strong><span>0905111223</span></a>
+              <a href="#doi-moi"><strong>Thu cũ đổi mới</strong><span>Tư vấn minh bạch</span></a>
+              <a href="#sua-tivi"><strong>Sửa tivi</strong><span>Kiểm tra rõ ràng</span></a>
             </div>
           </div>
+        </div>
+      </section>
 
-          <section class="size-selector" aria-labelledby="size-selector-title">
-            <div class="size-selector-head">
-              <h2 id="size-selector-title">Chọn kích thước tivi</h2>
-              <p class="selected-size" aria-live="polite">
-                Đang xem: <span>55 inch</span>
-              </p>
-            </div>
-            <div
-              class="size-options"
-              role="group"
-              aria-label="Chọn kích thước tivi"
-            >
-              <button class="size-pill" type="button" data-size="32 inch">
-                32 inch
-              </button>
-              <button class="size-pill" type="button" data-size="43 inch">
-                43 inch
-              </button>
-              <button class="size-pill" type="button" data-size="49 inch">
-                49 inch
-              </button>
-              <button class="size-pill" type="button" data-size="50 inch">
-                50 inch
-              </button>
-              <button
-                class="size-pill is-active"
-                type="button"
-                data-size="55 inch"
-                aria-pressed="true"
-              >
-                55 inch
-              </button>
-              <button class="size-pill" type="button" data-size="65 inch">
-                65 inch
-              </button>
-              <button class="size-pill" type="button" data-size="75 inch">
-                75 inch
-              </button>
-              <button class="size-pill" type="button" data-size="85 inch">
-                85 inch
-              </button>
-            </div>
-          </section>
-        </section>
+      <section class="quick-services" aria-label="Dịch vụ nổi bật">
+        <div class="container quick-services__grid">
+          <a href="#tivi-cu" class="quick-tile"><span>CU</span><strong>Tivi cũ</strong><em>Đã kiểm tra trước khi tư vấn</em></a>
+          <a href="#tivi-moi" class="quick-tile"><span>MO</span><strong>Tivi mới</strong><em>Nhiều dòng phổ biến</em></a>
+          <a href="#doi-moi" class="quick-tile"><span>ĐM</span><strong>Thu cũ - đổi mới</strong><em>Lên đời tivi tiết kiệm</em></a>
+          <a href="#sua-tivi" class="quick-tile"><span>SC</span><strong>Sửa tivi</strong><em>Tiếp nhận nhiều lỗi thường gặp</em></a>
+        </div>
+      </section>
+
+      <section class="size-filter section-anchor" id="kich-thuoc" aria-labelledby="size-title">
+        <div class="container size-filter__inner">
+          <div>
+            <h2 id="size-title">Chọn kích thước tivi</h2>
+            <p class="selected-size" aria-live="polite">Đang xem: <span>55 inch</span></p>
+          </div>
+          <div class="size-options" role="group" aria-label="Chọn kích thước tivi">
+            <button class="size-pill" type="button" data-size="32 inch" aria-pressed="false">32 inch</button>
+            <button class="size-pill" type="button" data-size="43 inch" aria-pressed="false">43 inch</button>
+            <button class="size-pill" type="button" data-size="49 inch" aria-pressed="false">49 inch</button>
+            <button class="size-pill" type="button" data-size="50 inch" aria-pressed="false">50 inch</button>
+            <button class="size-pill is-active" type="button" data-size="55 inch" aria-pressed="true">55 inch</button>
+            <button class="size-pill" type="button" data-size="65 inch" aria-pressed="false">65 inch</button>
+            <button class="size-pill" type="button" data-size="75 inch" aria-pressed="false">75 inch</button>
+            <button class="size-pill" type="button" data-size="85 inch" aria-pressed="false">85 inch</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="section products section-anchor" id="san-pham" aria-labelledby="featured-title">
+        <div class="container">
+          <div class="section-heading">
+            <span>Danh mục tư vấn</span>
+            <h2 id="featured-title">Sản phẩm nổi bật</h2>
+            <p>Các mẫu tham khảo giúp khách hàng chọn nhanh theo kích thước, thương hiệu và nhu cầu sử dụng.</p>
+          </div>
+          <div class="product-grid">
+            <article class="product-card">
+              <div class="tv-mockup" aria-hidden="true"><span></span></div>
+              <span class="product-brand">Samsung</span>
+              <h3>Samsung Smart TV 55 inch</h3>
+              <p class="product-size">55 inch</p>
+              <ul><li>Smart TV dễ sử dụng</li><li>Phù hợp phòng khách gia đình</li></ul>
+              <strong class="product-price">Liên hệ nhận giá tốt</strong>
+              <a class="btn btn--primary" href="#lien-he">Tư vấn ngay</a>
+            </article>
+            <article class="product-card">
+              <div class="tv-mockup" aria-hidden="true"><span></span></div>
+              <span class="product-brand">LG</span>
+              <h3>LG 4K UHD 50 inch</h3>
+              <p class="product-size">50 inch</p>
+              <ul><li>Độ phân giải 4K UHD</li><li>Hình ảnh sáng, màu sắc cân bằng</li></ul>
+              <strong class="product-price">Giá đang cập nhật</strong>
+              <a class="btn btn--primary" href="#lien-he">Tư vấn ngay</a>
+            </article>
+            <article class="product-card">
+              <div class="tv-mockup" aria-hidden="true"><span></span></div>
+              <span class="product-brand">Sony</span>
+              <h3>Sony Google TV 65 inch</h3>
+              <p class="product-size">65 inch</p>
+              <ul><li>Google TV tiện lợi</li><li>Gợi ý cho không gian rộng</li></ul>
+              <strong class="product-price">Liên hệ nhận giá tốt</strong>
+              <a class="btn btn--primary" href="#lien-he">Tư vấn ngay</a>
+            </article>
+            <article class="product-card">
+              <div class="tv-mockup" aria-hidden="true"><span></span></div>
+              <span class="product-brand">Toshiba</span>
+              <h3>Toshiba 43 inch</h3>
+              <p class="product-size">43 inch</p>
+              <ul><li>Kích thước gọn gàng</li><li>Phù hợp phòng ngủ, phòng nhỏ</li></ul>
+              <strong class="product-price">Giá đang cập nhật</strong>
+              <a class="btn btn--primary" href="#lien-he">Tư vấn ngay</a>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section info-section section-anchor" id="tivi-cu" aria-labelledby="old-tv-title">
+        <div class="container info-grid">
+          <div class="info-copy">
+            <span class="section-kicker">Tivi đã qua sử dụng</span>
+            <h2 id="old-tv-title">Tivi cũ đã kiểm tra</h2>
+            <p>Các mẫu tivi đã qua sử dụng được kiểm tra hình ảnh, âm thanh và độ ổn định trước khi tư vấn.</p>
+          </div>
+          <div class="benefit-list">
+            <article><span></span><strong>Kiểm tra kỹ tình trạng</strong></article>
+            <article><span></span><strong>Tư vấn đúng nhu cầu</strong></article>
+            <article><span></span><strong>Giá phù hợp ngân sách</strong></article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section info-section info-section--light section-anchor" id="tivi-moi" aria-labelledby="new-tv-title">
+        <div class="container info-grid">
+          <div class="info-copy">
+            <span class="section-kicker">Tivi mới</span>
+            <h2 id="new-tv-title">Tivi mới chính hãng</h2>
+            <p>Cập nhật nhiều dòng tivi mới từ các thương hiệu phổ biến, hỗ trợ tư vấn theo diện tích phòng và nhu cầu sử dụng.</p>
+          </div>
+          <div class="chip-list" aria-label="Thương hiệu tivi mới">
+            <span>Samsung</span><span>LG</span><span>Sony</span><span>Toshiba</span><span>Hisense</span><span>TCL</span><span>Panasonic</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="section exchange section-anchor" id="doi-moi" aria-labelledby="exchange-title">
+        <div class="container exchange__grid">
+          <div class="info-copy">
+            <span class="section-kicker">Dịch vụ linh hoạt</span>
+            <h2 id="exchange-title">Thu cũ - đổi mới</h2>
+            <p>Anh Minh Store hỗ trợ thu tivi cũ, tư vấn đổi lên đời tivi mới gọn gàng, minh bạch và tiết kiệm.</p>
+            <a class="btn btn--primary" href="#lien-he">Nhận tư vấn thu đổi</a>
+          </div>
+          <ol class="process-list">
+            <li><span>1</span><strong>Gửi thông tin tivi cũ</strong></li>
+            <li><span>2</span><strong>Nhận tư vấn định giá</strong></li>
+            <li><span>3</span><strong>Đổi lên tivi phù hợp hơn</strong></li>
+          </ol>
+        </div>
+      </section>
+
+      <section class="section repair section-anchor" id="sua-tivi" aria-labelledby="repair-title">
+        <div class="container repair__grid">
+          <div class="info-copy">
+            <span class="section-kicker">Kiểm tra và sửa chữa</span>
+            <h2 id="repair-title">Sửa tivi tất cả các dòng</h2>
+            <p>Tiếp nhận kiểm tra và tư vấn sửa chữa nhiều dòng tivi phổ biến với quy trình rõ ràng, dễ theo dõi.</p>
+            <a class="btn btn--primary" href="#lien-he">Liên hệ kiểm tra tivi</a>
+          </div>
+          <div class="issue-grid" aria-label="Các lỗi tivi thường gặp">
+            <span>Không lên nguồn</span><span>Mất hình</span><span>Có tiếng không hình</span><span>Sọc màn hình</span><span>Lỗi đèn nền</span><span>Lỗi bo mạch</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="section why" aria-labelledby="why-title">
+        <div class="container">
+          <div class="section-heading">
+            <span>Cam kết phục vụ</span>
+            <h2 id="why-title">Vì sao chọn Anh Minh Store?</h2>
+          </div>
+          <div class="trust-grid">
+            <article><span></span><strong>Tư vấn rõ ràng</strong><p>Giải thích dễ hiểu, chọn tivi theo nhu cầu thực tế.</p></article>
+            <article><span></span><strong>Hỗ trợ nhanh tại Đà Nẵng</strong><p>Phục vụ khách hàng tại Hải Châu, Cẩm Lệ và khu vực lân cận.</p></article>
+            <article><span></span><strong>Nhiều dòng tivi phổ biến</strong><p>Tư vấn đa dạng kích thước, thương hiệu và công nghệ.</p></article>
+            <article><span></span><strong>Thu cũ đổi mới linh hoạt</strong><p>Quy trình gọn gàng, minh bạch, dễ theo dõi.</p></article>
+            <article><span></span><strong>Hỗ trợ khách hàng sau mua</strong><p>Luôn ưu tiên sự yên tâm trong quá trình sử dụng.</p></article>
+          </div>
+        </div>
+      </section>
+
+      <section class="contact section-anchor" id="lien-he" aria-labelledby="contact-title">
+        <div class="container contact__grid">
+          <div>
+            <span class="contact__label">Thông tin liên hệ</span>
+            <h2 id="contact-title">Liên hệ Anh Minh Store</h2>
+            <p>Hotline: <strong>0905111223 - 0774111223</strong></p>
+            <p>Cơ sở 1: 100 Tiểu La, Hải Châu, Đà Nẵng</p>
+            <p>Cơ sở 2: 540B Nguyễn Hữu Thọ, Cẩm Lệ, Đà Nẵng</p>
+          </div>
+          <div class="contact-actions">
+            <a class="btn btn--light" href="tel:0905111223">Gọi ngay</a>
+            <a class="btn btn--outline-light" href="#">Nhắn Zalo</a>
+            <a class="btn btn--outline-light" href="https://www.google.com/maps/search/?api=1&query=100%20Ti%E1%BB%83u%20La%2C%20H%E1%BA%A3i%20Ch%C3%A2u%2C%20%C4%90%C3%A0%20N%E1%BA%B5ng" target="_blank" rel="noreferrer">Xem địa chỉ</a>
+          </div>
+        </div>
       </section>
     </main>
 
     <footer class="site-footer">
-      <p>ANH MINH STORE - Công ty kỹ thuật điện tử Anh Minh</p>
+      <div class="container footer-grid">
+        <div>
+          <h2>ANH MINH STORE</h2>
+          <p>Công ty kỹ thuật điện tử Anh Minh</p>
+          <p>Hotline: 0905111223 - 0774111223</p>
+          <p>100 Tiểu La, Hải Châu, Đà Nẵng</p>
+          <p>540B Nguyễn Hữu Thọ, Cẩm Lệ, Đà Nẵng</p>
+        </div>
+        <nav aria-label="Liên kết nhanh">
+          <h3>Liên kết nhanh</h3>
+          <a href="#trang-chu">Trang chủ</a>
+          <a href="#san-pham">Sản phẩm nổi bật</a>
+          <a href="#doi-moi">Thu cũ - đổi mới</a>
+          <a href="#lien-he">Liên hệ</a>
+        </nav>
+        <nav aria-label="Danh sách dịch vụ">
+          <h3>Dịch vụ</h3>
+          <a href="#tivi-cu">Tivi cũ</a>
+          <a href="#tivi-moi">Tivi mới</a>
+          <a href="#sua-tivi">Sửa tivi tất cả các dòng</a>
+          <a href="#kich-thuoc">Tư vấn kích thước tivi</a>
+        </nav>
+      </div>
+      <p class="copyright">© 2026 Anh Minh Store. All rights reserved.</p>
     </footer>
+
+    <div class="floating-contact" aria-label="Liên hệ nhanh">
+      <a href="tel:0905111223">Gọi ngay</a>
+      <a href="#">Zalo</a>
+    </div>
+
+    <button class="back-to-top" type="button" aria-label="Lên đầu trang">↑</button>
 
     <script src="script.js"></script>
   </body>
