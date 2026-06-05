@@ -14,6 +14,7 @@ const dom = {
   backToTop: document.querySelector('.back-to-top'),
   mobileCall: document.querySelector('[data-call-button]'),
   brandLogoImages: document.querySelectorAll('.brand-logo-box img'),
+  serviceIconImages: document.querySelectorAll('[data-service-icon]'),
 };
 
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -84,6 +85,36 @@ dom.brandLogoImages.forEach((image) => {
 
   if (image.complete && typeof image.decode === 'function') {
     image.decode().then(() => showBrandLogoImage(image)).catch(() => showBrandLogoFallback(image));
+  }
+});
+
+const showServiceIconImage = (image) => {
+  const iconBox = image.closest('.service-icon-box');
+  if (!iconBox) return;
+  iconBox.classList.remove('is-icon-error');
+  image.hidden = false;
+  const fallback = iconBox.querySelector('.service-icon-fallback');
+  if (fallback) fallback.setAttribute('aria-hidden', 'true');
+};
+
+const showServiceIconFallback = (image) => {
+  const iconBox = image.closest('.service-icon-box');
+  if (!iconBox) return;
+  const fallback = iconBox.querySelector('.service-icon-fallback');
+  iconBox.classList.add('is-icon-error');
+  image.hidden = true;
+  if (fallback) {
+    fallback.textContent = image.dataset.fallback || 'TV';
+    fallback.setAttribute('aria-hidden', 'false');
+  }
+};
+
+dom.serviceIconImages.forEach((image) => {
+  image.addEventListener('load', () => showServiceIconImage(image));
+  image.addEventListener('error', () => showServiceIconFallback(image));
+
+  if (image.complete && typeof image.decode === 'function') {
+    image.decode().then(() => showServiceIconImage(image)).catch(() => showServiceIconFallback(image));
   }
 });
 

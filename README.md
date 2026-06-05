@@ -19,6 +19,7 @@ Website đã được tối ưu theo hướng nhẹ, ổn định và dễ bảo
 - Điều hướng nội bộ cuộn mượt, có active state và `scroll-margin-top` để header sticky không che tiêu đề.
 - Product card được render tự động, link mở trong cùng tab theo dạng `product-detail.html?id={product.id}`.
 - Panel **DANH MỤC HÃNG TIVI** dùng logo SVG thật được lưu ngay tại thư mục gốc repository; hãng chưa có logo vẫn dùng badge chữ fallback gọn gàng.
+- Các thẻ dịch vụ nổi bật trên trang chủ dùng icon ảnh thật từ thư mục gốc repository và có badge chữ xanh đậm để dự phòng khi ảnh không tải được.
 - Nếu chưa có ảnh sản phẩm, website dùng placeholder tivi bằng CSS để tránh vỡ layout.
 - Nếu thiếu danh sách sản phẩm hoặc id sản phẩm không hợp lệ, website hiển thị thông báo tiếng Việt thân thiện.
 - Có SEO metadata, Open Graph, alt text ảnh, focus state, aria attributes và hỗ trợ `prefers-reduced-motion`.
@@ -35,6 +36,28 @@ product-detail.html    # Khung trang chi tiết sản phẩm
 product-detail.js      # Đọc id từ URLSearchParams và render chi tiết sản phẩm
 README.md              # Hướng dẫn vận hành và bảo trì website
 ```
+
+## Icon dịch vụ trên trang chủ
+
+Các thẻ dịch vụ nổi bật trên trang chủ dùng icon ảnh được lưu trực tiếp ở thư mục gốc repository, cùng cấp với `index.html`. Bốn file đang dùng là:
+
+- `tivicu.jpeg` cho dịch vụ **Tivi cũ**.
+- `tivimoi.jpeg` cho dịch vụ **Tivi mới**.
+- `thucudoimoi.jpeg` cho dịch vụ **Thu cũ - đổi mới**.
+- `suachua.jpeg` cho dịch vụ **Sửa tivi**.
+
+Các icon này được đặt trong hộp icon bo góc nền trắng xanh nhẹ để giữ giao diện bán lẻ trắng + xanh dương đậm gọn gàng. Nếu một file ảnh dịch vụ bị thiếu hoặc tải lỗi, `script.js` sẽ ẩn ảnh lỗi và hiện badge chữ màu xanh dương đậm thay thế để không làm vỡ bố cục.
+
+### Cách thay icon dịch vụ sau này
+
+1. Chuẩn bị file icon mới có dung lượng tối ưu và hình ảnh rõ nét.
+2. Đưa file icon mới vào thư mục gốc repository.
+3. Mở `index.html` và cập nhật thuộc tính `src` trong thẻ `<img>` của dịch vụ tương ứng, ví dụ đổi `src="tivicu.jpeg"` sang tên file mới.
+4. Giữ hoặc cập nhật `alt` tiếng Việt cho đúng nội dung, ví dụ `alt="Biểu tượng tivi cũ"`.
+5. Nếu cần đổi chữ dự phòng, cập nhật `data-fallback` và nội dung trong `.service-icon-fallback` của đúng thẻ dịch vụ.
+6. Kiểm tra lại trên desktop, tablet và mobile để đảm bảo icon không bị méo, không tràn khỏi thẻ và các thẻ dịch vụ vẫn xếp hàng/cột gọn gàng.
+
+Lưu ý: chỉ thay đường dẫn trong code khi muốn đổi icon; không chỉnh sửa trực tiếp file ảnh gốc nếu không có yêu cầu riêng.
 
 ## Cách dữ liệu sản phẩm hoạt động trong products.js
 
