@@ -52,19 +52,39 @@ const normalizeProduct = (product = {}, index = 0) => {
 
 const products = PRODUCTS.map(normalizeProduct);
 
+const getBrandNameFromLogo = (image) => image.alt.replace(/^Logo\s+/i, '').trim();
+
+const showBrandLogoImage = (image) => {
+  const logoBox = image.closest('.brand-logo-box');
+  if (!logoBox) return;
+  logoBox.classList.remove('is-logo-error');
+  logoBox.removeAttribute('aria-label');
+  image.hidden = false;
+  const fallback = logoBox.querySelector('.brand-fallback-badge');
+  if (fallback) fallback.setAttribute('aria-hidden', 'true');
+};
+
 const showBrandLogoFallback = (image) => {
   const logoBox = image.closest('.brand-logo-box');
   if (!logoBox) return;
-  const brandName = image.alt.replace(/^Logo\s+/i, '').trim();
-  logoBox.classList.remove('brand-logo-box');
-  logoBox.classList.add('brand-fallback-badge');
-  logoBox.textContent = brandName.charAt(0).toUpperCase() || '?';
+  const brandName = getBrandNameFromLogo(image);
+  const fallback = logoBox.querySelector('.brand-fallback-badge');
+  logoBox.classList.add('is-logo-error');
+  image.hidden = true;
+  if (fallback) {
+    fallback.textContent = brandName.charAt(0).toUpperCase() || '?';
+    fallback.setAttribute('aria-hidden', 'false');
+  }
   logoBox.setAttribute('aria-label', `Logo ${brandName || 'hãng tivi'} đang được cập nhật`);
 };
 
 dom.brandLogoImages.forEach((image) => {
+  image.addEventListener('load', () => showBrandLogoImage(image));
   image.addEventListener('error', () => showBrandLogoFallback(image));
-  if (image.complete && image.naturalWidth === 0) showBrandLogoFallback(image);
+
+  if (image.complete && typeof image.decode === 'function') {
+    image.decode().then(() => showBrandLogoImage(image)).catch(() => showBrandLogoFallback(image));
+  }
 });
 
 const setMenuState = (isOpen) => {

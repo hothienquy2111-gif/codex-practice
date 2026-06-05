@@ -152,13 +152,13 @@ Các logo hãng tivi được lưu trực tiếp ở thư mục gốc repository
 - `sharp1.svg` cho Sharp
 - `xiaomi.svg` nếu file này có trong thư mục gốc
 
-Mỗi dòng hãng trong `index.html` hiển thị logo bên trái và tên hãng bên phải. Logo được đặt trong hộp nhỏ để giữ giao diện trắng + xanh dương đậm gọn gàng, không làm panel lớn hơn và không che nhiều banner. Riêng Samsung hiện dùng `samsung1.svg` và Sharp hiện dùng `sharp1.svg`; cả hai file này được lưu ở thư mục gốc repository.
+Mỗi dòng hãng trong `index.html` hiển thị logo bên trái và tên hãng bên phải. Logo được đặt trong hộp nhỏ để giữ giao diện trắng + xanh dương đậm gọn gàng, không làm panel lớn hơn và không che nhiều banner. Riêng Samsung dùng chính xác `samsung1.svg` từ thư mục gốc repository và Sharp dùng chính xác `sharp1.svg` từ thư mục gốc repository.
 
 ### Cách thay logo một hãng sau này
 
 1. Tải file SVG logo mới lên thư mục gốc repository.
 2. Cập nhật đường dẫn logo trong map/code hiển thị logo hãng, hiện là thẻ `<img src="...">` tương ứng trong `index.html` của panel **DANH MỤC HÃNG TIVI**. Ví dụ Samsung đang trỏ tới `samsung1.svg`, Sharp đang trỏ tới `sharp1.svg`.
-3. Kiểm tra lại `alt` của ảnh trong `index.html`, ví dụ `alt="Logo Samsung"`, để đảm bảo mô tả vẫn đúng.
+3. Kiểm tra lại `alt` của ảnh trong `index.html`, ví dụ `alt="Logo Samsung"`, để đảm bảo mô tả vẫn đúng và giữ badge chữ bên trong hộp logo ở trạng thái ẩn mặc định.
 4. Mở website trên desktop và mobile để kiểm tra logo không bị méo, không bị cắt và không gây tràn ngang.
 
 ### Cách thêm logo cho một hãng mới sau này
@@ -169,7 +169,10 @@ Mỗi dòng hãng trong `index.html` hiển thị logo bên trái và tên hãng
 ```html
 <li>
   <a href="#san-pham">
-    <span class="brand-logo-box"><img src="ten-logo.svg" alt="Logo Tên hãng" /></span>
+    <span class="brand-logo-box">
+      <img src="ten-logo.svg" alt="Logo Tên hãng" />
+      <span class="brand-fallback-badge" aria-hidden="true">T</span>
+    </span>
     <span class="brand-name">Tên hãng</span>
   </a>
 </li>
@@ -186,7 +189,7 @@ Mỗi dòng hãng trong `index.html` hiển thị logo bên trái và tên hãng
 </li>
 ```
 
-Nếu file logo bị thiếu hoặc chưa được tải lên, `script.js` sẽ đổi hộp logo bị lỗi thành badge chữ fallback để không làm mất hãng khỏi danh sách và không gây vỡ giao diện.
+Nếu file logo bị thiếu hoặc chưa được tải lên, `script.js` sẽ ẩn ảnh bị lỗi và chỉ lúc đó mới hiện badge chữ fallback trong hộp logo. Khi logo tải thành công, badge fallback vẫn bị ẩn nên không che ảnh logo.
 
 ## Cách cập nhật hình ảnh sau này
 
