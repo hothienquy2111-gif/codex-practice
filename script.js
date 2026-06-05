@@ -13,6 +13,7 @@ const dom = {
   searchInput: document.querySelector('#search-input'),
   backToTop: document.querySelector('.back-to-top'),
   mobileCall: document.querySelector('[data-call-button]'),
+  brandLogoImages: document.querySelectorAll('.brand-logo-box img'),
 };
 
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -50,6 +51,21 @@ const normalizeProduct = (product = {}, index = 0) => {
 };
 
 const products = PRODUCTS.map(normalizeProduct);
+
+const showBrandLogoFallback = (image) => {
+  const logoBox = image.closest('.brand-logo-box');
+  if (!logoBox) return;
+  const brandName = image.alt.replace(/^Logo\s+/i, '').trim();
+  logoBox.classList.remove('brand-logo-box');
+  logoBox.classList.add('brand-fallback-badge');
+  logoBox.textContent = brandName.charAt(0).toUpperCase() || '?';
+  logoBox.setAttribute('aria-label', `Logo ${brandName || 'hãng tivi'} đang được cập nhật`);
+};
+
+dom.brandLogoImages.forEach((image) => {
+  image.addEventListener('error', () => showBrandLogoFallback(image));
+  if (image.complete && image.naturalWidth === 0) showBrandLogoFallback(image);
+});
 
 const setMenuState = (isOpen) => {
   if (!dom.menuWrap || !dom.hamburger) return;

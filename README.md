@@ -18,6 +18,7 @@ Website đã được tối ưu theo hướng nhẹ, ổn định và dễ bảo
 - Menu danh mục hỗ trợ hover/click trên desktop, click trên mobile, đóng khi bấm ngoài hoặc nhấn Escape.
 - Điều hướng nội bộ cuộn mượt, có active state và `scroll-margin-top` để header sticky không che tiêu đề.
 - Product card được render tự động, link mở trong cùng tab theo dạng `product-detail.html?id={product.id}`.
+- Panel **DANH MỤC HÃNG TIVI** dùng logo SVG thật được lưu ngay tại thư mục gốc repository; hãng chưa có logo vẫn dùng badge chữ fallback gọn gàng.
 - Nếu chưa có ảnh sản phẩm, website dùng placeholder tivi bằng CSS để tránh vỡ layout.
 - Nếu thiếu danh sách sản phẩm hoặc id sản phẩm không hợp lệ, website hiển thị thông báo tiếng Việt thân thiện.
 - Có SEO metadata, Open Graph, alt text ảnh, focus state, aria attributes và hỗ trợ `prefers-reduced-motion`.
@@ -136,6 +137,56 @@ Gợi ý các trường nên có:
 - `image`: đường dẫn ảnh, để `""` nếu chưa có ảnh.
 - `badge`: nhãn ngắn như `Hàng mới`, `Tư vấn nhiều`.
 - `description`: mô tả ngắn cho trang chi tiết.
+
+## Logo hãng tivi trong panel DANH MỤC HÃNG TIVI
+
+Các logo hãng tivi được lưu trực tiếp ở thư mục gốc repository, cùng cấp với `index.html`. Panel **DANH MỤC HÃNG TIVI** hiện dùng logo SVG thật cho các hãng đã có file, ví dụ:
+
+- `Samsung.svg`
+- `LG_logo.svg`
+- `Sony.svg`
+- `Toshiba-Logo.svg`
+- `Hisense.svg`
+- `TCL.svg`
+- `Panasonic-Logo.svg`
+- `Sharp.svg`
+- `xiaomi.svg` nếu file này có trong thư mục gốc
+
+Mỗi dòng hãng trong `index.html` hiển thị logo bên trái và tên hãng bên phải. Logo được đặt trong hộp nhỏ để giữ giao diện trắng + xanh dương đậm gọn gàng, không làm panel lớn hơn và không che nhiều banner.
+
+### Cách thay logo một hãng sau này
+
+1. Chuẩn bị file SVG mới có tên đúng với đường dẫn đang dùng trong `index.html`.
+2. Thay nội dung file logo ở thư mục gốc bằng phiên bản mới, giữ nguyên tên file nếu không muốn sửa code.
+3. Kiểm tra lại `alt` của ảnh trong `index.html`, ví dụ `alt="Logo Samsung"`, để đảm bảo mô tả vẫn đúng.
+4. Mở website trên desktop và mobile để kiểm tra logo không bị méo, không bị cắt và không gây tràn ngang.
+
+### Cách thêm logo cho một hãng mới sau này
+
+1. Đưa file SVG logo mới vào thư mục gốc repository.
+2. Thêm hoặc cập nhật dòng hãng trong `index.html` theo mẫu:
+
+```html
+<li>
+  <a href="#san-pham">
+    <span class="brand-logo-box"><img src="ten-logo.svg" alt="Logo Tên hãng" /></span>
+    <span class="brand-name">Tên hãng</span>
+  </a>
+</li>
+```
+
+3. Nếu chưa có logo, giữ badge chữ fallback theo mẫu:
+
+```html
+<li>
+  <a href="#san-pham">
+    <span class="brand-fallback-badge">T</span>
+    <span class="brand-name">Tên hãng</span>
+  </a>
+</li>
+```
+
+Nếu file logo bị thiếu hoặc chưa được tải lên, `script.js` sẽ đổi hộp logo bị lỗi thành badge chữ fallback để không làm mất hãng khỏi danh sách và không gây vỡ giao diện.
 
 ## Cách cập nhật hình ảnh sau này
 
