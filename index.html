@@ -3,228 +3,100 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="CÔNG TY KỸ THUẬT ĐIỆN TỬ ANH MINH STORE - tivi chính hãng, thu cũ đổi mới và hỗ trợ trả góp tại Đà Nẵng.">
-  <title>ANH MINH STORE | Tivi chính hãng tại Đà Nẵng</title>
+  <meta name="description" content="ANH MINH STORE - Công ty kỹ thuật điện tử Anh Minh chuyên tivi cũ, tivi mới, thu cũ đổi mới và sửa tivi tất cả các dòng.">
+  <title>ANH MINH STORE | Công ty kỹ thuật điện tử Anh Minh</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <header class="site-header" id="dau-trang">
-    <nav class="nav-shell" aria-label="Thanh điều hướng chính">
-      <a class="brand" href="#trang-chu" aria-label="Về trang chủ Anh Minh Store">
-        <span class="brand-mark">AM</span>
-        <span class="brand-copy">
-          <span>CÔNG TY KỸ THUẬT ĐIỆN TỬ ANH MINH STORE</span>
-          <small>0905111223</small>
+  <header class="site-header">
+    <nav class="header-inner" aria-label="Điều hướng chính">
+      <a class="brand" href="#trang-chu" aria-label="Trang chủ ANH MINH STORE">
+        <img class="brand-logo" src="Use_the_uploaded_image_as_202605051008.jpeg" alt="Logo ANH MINH STORE">
+        <span class="brand-text">
+          <span class="store-name">ANH MINH STORE</span>
+          <span class="company-name">Công ty kỹ thuật điện tử Anh Minh</span>
         </span>
       </a>
 
-      <button class="menu-toggle" type="button" aria-label="Mở menu điều hướng" aria-controls="primary-menu" aria-expanded="false">
-        <span></span>
-        <span></span>
-        <span></span>
-      </button>
+      <div class="menu-wrap">
+        <button class="hamburger" type="button" aria-label="Mở menu" aria-expanded="false" aria-controls="main-menu">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
 
-      <ul class="nav-menu" id="primary-menu">
-        <li><a class="nav-link active" href="#trang-chu">Trang chủ</a></li>
-        <li><a class="nav-link" href="#cac-dong-tivi">Các dòng tivi</a></li>
-        <li><a class="nav-link" href="#thu-cu-doi-moi">Thu cũ đổi mới</a></li>
-        <li><a class="nav-link" href="#tra-gop">Hỗ trợ trả góp</a></li>
-        <li><a class="nav-link" href="#lien-he">Liên hệ</a></li>
-      </ul>
+        <ul class="menu-dropdown" id="main-menu">
+          <li><a href="#trang-chu">Trang chủ</a></li>
+          <li><a href="#tivi-cu">Tivi cũ</a></li>
+          <li><a href="#tivi-moi">Tivi mới</a></li>
+          <li><a href="#doi-moi">Thu cũ - đổi mới</a></li>
+          <li><a href="#sua-tivi">Sửa tivi tất cả các dòng</a></li>
+        </ul>
+      </div>
     </nav>
   </header>
 
-  <main>
-    <section class="section hero" id="trang-chu" aria-labelledby="hero-title">
-      <div class="hero-grid">
-        <div class="hero-copy reveal-on-scroll">
-          <p class="eyebrow">Showroom tivi chính hãng tại Đà Nẵng</p>
-          <h1 id="hero-title">Công nghệ hiển thị sắc nét cho mọi không gian</h1>
-          <p class="hero-subtitle">Anh Minh Store chuyên tivi chính hãng, tư vấn tận tâm, hỗ trợ thu cũ đổi mới và trả góp linh hoạt tại Đà Nẵng.</p>
+  <main id="trang-chu">
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <p class="eyebrow">Trung tâm tivi uy tín</p>
+        <h1 id="hero-title">Giải pháp tivi gọn đẹp, hiện đại cho mọi gia đình</h1>
+        <p class="hero-text">ANH MINH STORE cung cấp tivi cũ, tivi mới, dịch vụ thu cũ đổi mới và sửa tivi tất cả các dòng với phong cách tư vấn rõ ràng, nhanh chóng.</p>
+      </div>
 
-          <div class="hero-actions" aria-label="Hành động chính">
-            <a class="btn btn-primary" href="#cac-dong-tivi">Xem các dòng tivi</a>
-            <a class="btn btn-secondary" href="#lien-he">Liên hệ tư vấn</a>
-          </div>
-
-          <div class="hero-stats" aria-label="Cam kết dịch vụ">
-            <div><strong>7+</strong><span>Thương hiệu</span></div>
-            <div><strong>2</strong><span>Cơ sở Đà Nẵng</span></div>
-            <div><strong>AM</strong><span>Tư vấn tận tâm</span></div>
-          </div>
-        </div>
-
-        <div class="hero-visual reveal-on-scroll" aria-label="Khu trưng bày tivi phong cách công nghệ cao">
-          <div class="tech-grid" aria-hidden="true"></div>
-          <span class="diagonal-accent accent-black" aria-hidden="true"></span>
-          <span class="diagonal-accent accent-red" aria-hidden="true"></span>
-
-          <div class="spec-badges" aria-label="Thông số nổi bật">
-            <span>4K</span>
-            <span>OLED / QLED</span>
-            <span>Smart TV</span>
-            <span>Bảo hành</span>
-          </div>
-
-          <div class="tv-product">
-            <div class="tv-frame">
-              <div class="tv-screen">
-                <img src="tivi.svg" alt="Hình ảnh tivi hiển thị sắc nét tại Anh Minh Store" class="tv-screen-image" loading="eager" decoding="async">
-                <span class="screen-reflection" aria-hidden="true"></span>
-              </div>
+      <section class="carousel-section" aria-label="Hình ảnh nổi bật của ANH MINH STORE">
+        <div class="carousel" data-carousel>
+          <div class="carousel-viewport">
+            <div class="carousel-track">
+              <article class="carousel-slide" aria-label="Hình ảnh nổi bật 1">
+                <img src="Create_an_ultra-realistic_premium_World_202606042116.jpeg" alt="Không gian trưng bày tivi cao cấp của ANH MINH STORE" draggable="false">
+              </article>
+              <article class="carousel-slide" aria-label="Hình ảnh nổi bật 2">
+                <img src="Create_a_premium_16_9_commercial_202605091429.jpeg" alt="Mẫu tivi thương mại hiện đại tại ANH MINH STORE" draggable="false">
+              </article>
             </div>
-            <div class="tv-neck" aria-hidden="true"></div>
-            <div class="tv-base" aria-hidden="true"></div>
           </div>
 
-          <div class="product-card">
-            <span>Tư vấn theo nhu cầu</span>
-            <strong>Gọi ngay: 0905111223</strong>
+          <button class="carousel-arrow carousel-arrow-prev" type="button" aria-label="Ảnh trước">‹</button>
+          <button class="carousel-arrow carousel-arrow-next" type="button" aria-label="Ảnh sau">›</button>
+
+          <div class="carousel-dots" aria-label="Chọn ảnh hiển thị">
+            <button class="dot is-active" type="button" aria-label="Chọn ảnh 1" aria-current="true"></button>
+            <button class="dot" type="button" aria-label="Chọn ảnh 2"></button>
           </div>
         </div>
-      </div>
+      </section>
     </section>
 
-    <section class="section products-section" id="cac-dong-tivi" aria-labelledby="products-title">
-      <div class="section-heading reveal-on-scroll">
-        <p class="eyebrow">Các dòng tivi</p>
-        <h2 id="products-title">Thương hiệu nổi bật</h2>
-        <p>Danh mục tivi chính hãng được trình bày theo phong cách sản phẩm điện tử cao cấp, sắc nét và dễ cập nhật.</p>
-      </div>
-
-      <div class="brand-grid" aria-label="Danh sách thương hiệu tivi">
-        <article class="brand-card reveal-on-scroll">
-          <div class="brand-logo logo-samsung" aria-label="Samsung">Samsung</div>
-          <p>Dòng tivi hình ảnh rực rỡ, thiết kế mỏng và nhiều lựa chọn cho phòng khách hiện đại.</p>
-          <strong>Giá đang cập nhật</strong>
-          <a class="card-link" href="#lien-he">Xem thêm</a>
-        </article>
-
-        <article class="brand-card reveal-on-scroll">
-          <div class="brand-logo logo-lg" aria-label="LG">LG</div>
-          <p>Giải pháp OLED, QNED và Smart TV tối ưu cho trải nghiệm xem phim, thể thao và giải trí.</p>
-          <strong>Giá đang cập nhật</strong>
-          <a class="card-link" href="#lien-he">Xem thêm</a>
-        </article>
-
-        <article class="brand-card reveal-on-scroll">
-          <div class="brand-logo logo-sony" aria-label="Sony">Sony</div>
-          <p>Chất lượng hình ảnh tự nhiên, âm thanh sống động và kiểu dáng tinh giản cho không gian cao cấp.</p>
-          <strong>Giá đang cập nhật</strong>
-          <a class="card-link" href="#lien-he">Xem thêm</a>
-        </article>
-
-        <article class="brand-card reveal-on-scroll">
-          <div class="brand-logo logo-toshiba" aria-label="Toshiba">Toshiba</div>
-          <p>Lựa chọn bền bỉ, dễ sử dụng, phù hợp nhu cầu gia đình với mức chi phí hợp lý.</p>
-          <strong>Giá đang cập nhật</strong>
-          <a class="card-link" href="#lien-he">Xem thêm</a>
-        </article>
-
-        <article class="brand-card reveal-on-scroll">
-          <div class="brand-logo logo-hisense" aria-label="Hisense">Hisense</div>
-          <p>Hiệu năng hiển thị tốt, nhiều kích thước và tính năng thông minh cho nhu cầu nâng cấp.</p>
-          <strong>Giá đang cập nhật</strong>
-          <a class="card-link" href="#lien-he">Xem thêm</a>
-        </article>
-
-        <article class="brand-card reveal-on-scroll">
-          <div class="brand-logo logo-tcl" aria-label="TCL">TCL</div>
-          <p>Smart TV đa dạng, công nghệ mới và lựa chọn kích thước linh hoạt cho nhiều ngân sách.</p>
-          <strong>Giá đang cập nhật</strong>
-          <a class="card-link" href="#lien-he">Xem thêm</a>
-        </article>
-
-        <article class="brand-card reveal-on-scroll">
-          <div class="brand-logo logo-panasonic" aria-label="Panasonic">Panasonic</div>
-          <p>Hình ảnh cân bằng, vận hành ổn định và phù hợp với khách hàng đề cao độ bền.</p>
-          <strong>Giá đang cập nhật</strong>
-          <a class="card-link" href="#lien-he">Xem thêm</a>
-        </article>
-      </div>
-    </section>
-
-    <section class="section trade-section" id="thu-cu-doi-moi" aria-labelledby="trade-title">
-      <div class="section-heading reveal-on-scroll">
-        <p class="eyebrow">Dịch vụ nâng cấp</p>
-        <h2 id="trade-title">Thu cũ đổi mới</h2>
-        <p>Anh Minh Store hỗ trợ thu tivi cũ, tư vấn đổi lên đời tivi mới phù hợp với nhu cầu và ngân sách.</p>
-      </div>
-
-      <div class="timeline" aria-label="Quy trình thu cũ đổi mới">
-        <article class="timeline-card reveal-on-scroll">
-          <span class="step-number">01</span>
-          <h3>Gửi thông tin tivi cũ</h3>
-          <p>Khách hàng gửi model, kích thước, tình trạng sử dụng và hình ảnh thực tế của tivi.</p>
-        </article>
-        <article class="timeline-card reveal-on-scroll">
-          <span class="step-number">02</span>
-          <h3>Nhận tư vấn định giá</h3>
-          <p>Đội ngũ tư vấn kiểm tra nhu cầu, định giá tham khảo và đề xuất phương án nâng cấp.</p>
-        </article>
-        <article class="timeline-card reveal-on-scroll">
-          <span class="step-number">03</span>
-          <h3>Đổi lên tivi mới</h3>
-          <p>Chọn sản phẩm phù hợp, hoàn tất chênh lệch và nhận hỗ trợ giao lắp tại Đà Nẵng.</p>
-        </article>
-      </div>
-    </section>
-
-    <section class="section installment-section" id="tra-gop" aria-labelledby="installment-title">
-      <div class="section-heading reveal-on-scroll">
-        <p class="eyebrow">Giải pháp thanh toán</p>
-        <h2 id="installment-title">Hỗ trợ trả góp linh hoạt</h2>
-        <p>Tư vấn phương án trả góp phù hợp, thủ tục đơn giản, hỗ trợ khách hàng chọn sản phẩm đúng nhu cầu.</p>
-      </div>
-
-      <div class="benefit-grid" aria-label="Lợi ích trả góp">
-        <article class="benefit-card reveal-on-scroll">
-          <span class="css-icon icon-speed" aria-hidden="true"></span>
-          <h3>Tư vấn nhanh</h3>
-          <p>Tiếp nhận nhu cầu và phản hồi phương án phù hợp trong thời gian ngắn.</p>
-        </article>
-        <article class="benefit-card reveal-on-scroll">
-          <span class="css-icon icon-paper" aria-hidden="true"></span>
-          <h3>Thủ tục đơn giản</h3>
-          <p>Hướng dẫn rõ ràng các bước cần chuẩn bị để khách hàng dễ hoàn tất.</p>
-        </article>
-        <article class="benefit-card reveal-on-scroll">
-          <span class="css-icon icon-budget" aria-hidden="true"></span>
-          <h3>Phù hợp ngân sách</h3>
-          <p>Gợi ý sản phẩm và kế hoạch thanh toán theo khả năng chi trả thực tế.</p>
-        </article>
-        <article class="benefit-card reveal-on-scroll">
-          <span class="css-icon icon-choice" aria-hidden="true"></span>
-          <h3>Nhiều lựa chọn sản phẩm</h3>
-          <p>So sánh thương hiệu, kích thước và công nghệ để chọn tivi đúng nhu cầu.</p>
-        </article>
-      </div>
-    </section>
-
-    <section class="section contact-section" id="lien-he" aria-labelledby="contact-title">
-      <div class="contact-grid">
-        <div class="contact-copy reveal-on-scroll">
-          <p class="eyebrow eyebrow-invert">Liên hệ Anh Minh Store</p>
-          <h2 id="contact-title">Cần tư vấn tivi phù hợp?</h2>
-          <p>Gọi cho Anh Minh Store để được hỗ trợ chọn tivi chính hãng, thu cũ đổi mới và trả góp tại Đà Nẵng.</p>
-        </div>
-
-        <address class="contact-card reveal-on-scroll">
-          <p><span>SĐT:</span> <a href="tel:0905111223">0905111223</a></p>
-          <p><span>Cơ sở 1:</span> 100 Tiểu La, Hải Châu, Đà Nẵng</p>
-          <p><span>Cơ sở 2:</span> 540B Nguyễn Hữu Thọ, Đà Nẵng</p>
-          <div class="contact-actions" aria-label="Liên kết liên hệ">
-            <a class="btn btn-light" href="tel:0905111223">Gọi ngay</a>
-            <a class="btn btn-outline-light" href="https://zalo.me/0905111223" target="_blank" rel="noopener">Nhắn Zalo</a>
-            <a class="btn btn-outline-light" href="https://www.google.com/maps/search/?api=1&query=Anh+Minh+Store+Da+Nang" target="_blank" rel="noopener">Xem địa chỉ</a>
-          </div>
-        </address>
-      </div>
+    <section class="service-grid" aria-label="Dịch vụ chính">
+      <article class="service-card" id="tivi-cu">
+        <span>01</span>
+        <h2>Tivi cũ</h2>
+        <p>Tuyển chọn tivi đã qua sử dụng, kiểm tra kỹ tình trạng hình ảnh, âm thanh và độ ổn định trước khi tư vấn.</p>
+      </article>
+      <article class="service-card" id="tivi-moi">
+        <span>02</span>
+        <h2>Tivi mới</h2>
+        <p>Cập nhật các dòng tivi mới với thiết kế mỏng, hình ảnh sắc nét và tính năng thông minh phù hợp từng nhu cầu.</p>
+      </article>
+      <article class="service-card" id="doi-moi">
+        <span>03</span>
+        <h2>Thu cũ - đổi mới</h2>
+        <p>Hỗ trợ định giá tivi đang dùng, tư vấn phương án đổi máy mới gọn gàng, tiết kiệm và minh bạch.</p>
+      </article>
+      <article class="service-card" id="sua-tivi">
+        <span>04</span>
+        <h2>Sửa tivi tất cả các dòng</h2>
+        <p>Tiếp nhận kiểm tra, tư vấn lỗi và sửa chữa nhiều dòng tivi phổ biến với quy trình rõ ràng, dễ theo dõi.</p>
+      </article>
     </section>
   </main>
 
   <footer class="site-footer">
-    <p>© 2026 CÔNG TY KỸ THUẬT ĐIỆN TỬ ANH MINH STORE. Thiết kế phong cách công nghệ trắng / đen cao cấp.</p>
+    <p>ANH MINH STORE - Công ty kỹ thuật điện tử Anh Minh</p>
   </footer>
 
   <script src="script.js"></script>
