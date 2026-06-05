@@ -5,7 +5,8 @@ Trang chủ tĩnh cho **ANH MINH STORE - Công ty kỹ thuật điện tử Anh 
 ## Nội dung cập nhật
 
 - Giao diện một trang sạch, hiện đại, dùng hai màu chính là trắng và xanh dương đậm.
-- Header xanh dương đậm dạng thanh mảnh, chữ trắng, logo nằm bên trái và tên công ty hiển thị rõ ràng.
+- Header dùng gradient xanh dương đậm `#01346C -> #023871 -> #03457F`, chữ trắng, logo nằm bên trái và tên công ty hiển thị rõ ràng.
+- Header có viền dưới mảnh và bóng đổ mềm để tạo cảm giác cao cấp.
 - Menu hamburger có 5 mục:
   1. Trang chủ
   2. Tivi cũ
