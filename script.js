@@ -204,6 +204,41 @@ if (carousel) {
   startAutoplay();
 }
 
+
+const products = Array.isArray(window.products) ? window.products : [];
+const productGrid = document.querySelector("[data-product-grid]");
+const createProductDetailUrl = (product) => `product-detail.html?id=${encodeURIComponent(product.id)}`;
+
+const renderProductCards = () => {
+  if (!productGrid) return;
+
+  productGrid.innerHTML = products
+    .map((product) => {
+      const detailUrl = createProductDetailUrl(product);
+      const featureItems = product.features
+        .slice(0, 2)
+        .map((feature) => `<li>${feature}</li>`)
+        .join("");
+      const media = product.image
+        ? `<img class="product-card__image" src="${product.image}" alt="${product.brand} ${product.model}" loading="lazy" />`
+        : `<div class="tv-mockup" aria-hidden="true"><span></span></div>`;
+
+      return `
+        <a class="product-card" href="${detailUrl}" aria-label="Xem chi tiết ${product.brand} ${product.model}">
+          ${media}
+          <span class="product-brand">${product.brand}</span>
+          <h3>${product.model}</h3>
+          <p class="product-size">${product.size}</p>
+          <ul>${featureItems}</ul>
+          <strong class="product-price">${product.price}</strong>
+          <span class="btn btn--primary product-card__cta" aria-hidden="true">Xem chi tiết</span>
+        </a>`;
+    })
+    .join("");
+};
+
+renderProductCards();
+
 const selectedSizeText = document.querySelector(".selected-size span");
 document.querySelectorAll(".size-pill").forEach((pill) => {
   pill.addEventListener("click", () => {
