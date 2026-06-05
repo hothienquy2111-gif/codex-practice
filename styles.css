@@ -56,7 +56,7 @@ button { cursor: pointer; }
 .top-bar__inner { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); min-height: 34px; }
 .main-header__inner { display: grid; grid-template-columns: minmax(250px, 1fr) minmax(280px, 1.2fr) auto auto; gap: var(--space-4); align-items: center; padding-block: 14px; }
 .brand { display: flex; align-items: center; gap: var(--space-3); min-width: 0; }
-.brand__logo { width: 70px; height: 54px; object-fit: contain; overflow: hidden; flex: 0 0 auto; border: 1px solid rgba(6, 42, 86, 0.12); border-radius: 12px; background: var(--color-white); box-shadow: 0 6px 16px rgba(6, 42, 86, 0.08); }
+.brand__logo { display: block; width: 64px; height: 64px; object-fit: cover; flex: 0 0 auto; border: none; border-radius: 12px; background: transparent; box-shadow: none; }
 .brand__content { display: grid; min-width: 0; }
 .brand__content strong { color: var(--color-primary-deep); font-size: 1.24rem; letter-spacing: 0.02em; line-height: 1.2; }
 .brand__content span { overflow: hidden; color: var(--color-gray-700); font-size: 0.92rem; text-overflow: ellipsis; white-space: nowrap; }
@@ -253,7 +253,7 @@ button { cursor: pointer; }
   .container { width: min(100% - 24px, 1180px); }
   .top-bar { font-size: 0.78rem; }
   .top-bar__inner span:last-child { display: none; }
-  .brand__logo { width: 58px; height: 46px; }
+  .brand__logo { width: 56px; height: 56px; }
   .brand__content strong { font-size: 1rem; }
   .brand__content span { font-size: 0.78rem; }
   .hamburger strong { display: none; }
