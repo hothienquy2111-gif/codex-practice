@@ -1,6 +1,6 @@
 # ANH MINH STORE - Website tivi tại Đà Nẵng
 
-Website tĩnh cho **Công ty kỹ thuật điện tử Anh Minh** tại Đà Nẵng, dùng để giới thiệu dịch vụ tivi cũ, tivi mới, thu cũ đổi mới, sửa tivi và tư vấn sản phẩm cho khách hàng.
+Website tĩnh cho **Công ty kỹ thuật điện tử Anh Minh** tại Đà Nẵng, dùng để giới thiệu dịch vụ tivi cũ, tivi mới, thu hư đổi mới, sửa tivi và tư vấn sản phẩm cho khách hàng.
 
 Thiết kế giữ phong cách bán lẻ điện máy chuyên nghiệp với nền trắng, xanh dương đậm, điểm nhấn cam cho hành động gọi điện. Toàn bộ giao diện dùng font:
 
@@ -43,7 +43,7 @@ Các thẻ dịch vụ nổi bật trên trang chủ dùng icon ảnh được l
 
 - `tivicu.jpeg` cho dịch vụ **Tivi cũ**.
 - `tivimoi.jpeg` cho dịch vụ **Tivi mới**.
-- `thucudoimoi.jpeg` cho dịch vụ **Thu cũ - đổi mới**.
+- `thucudoimoi.jpeg` cho dịch vụ **Thu hư đổi mới**.
 - `suachua.jpeg` cho dịch vụ **Sửa tivi**.
 
 Các icon này được đặt trong hộp icon bo góc nền trắng xanh nhẹ để giữ giao diện bán lẻ trắng + xanh dương đậm gọn gàng. Nếu một file ảnh dịch vụ bị thiếu hoặc tải lỗi, `script.js` sẽ ẩn ảnh lỗi và hiện badge chữ màu xanh dương đậm thay thế để không làm vỡ bố cục.

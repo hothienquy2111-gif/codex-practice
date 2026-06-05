@@ -55,7 +55,7 @@ const renderProductDetail = (rawProduct) => {
 
   const metaDescription = document.querySelector('meta[name="description"]');
   if (metaDescription) {
-    metaDescription.setAttribute('content', `${label} tại Anh Minh Store Đà Nẵng. Gọi 0905111223 để được tư vấn tivi cũ, tivi mới, thu cũ đổi mới và sửa tivi.`);
+    metaDescription.setAttribute('content', `${label} tại Anh Minh Store Đà Nẵng. Gọi 0905111223 để được tư vấn tivi cũ, tivi mới, thu hư đổi mới và sửa tivi.`);
   }
 
   const features = product.features.map((feature) => `<li>${escapeDetailHtml(feature)}</li>`).join('');
