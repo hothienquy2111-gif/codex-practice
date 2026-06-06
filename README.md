@@ -20,7 +20,8 @@ Website đã được tối ưu theo hướng nhẹ, ổn định và dễ bảo
 - Product card được render tự động, link mở trong cùng tab theo dạng `product-detail.html?id={product.id}`.
 - Panel **DANH MỤC HÃNG TIVI** dùng logo SVG thật được lưu ngay tại thư mục gốc repository; hãng chưa có logo vẫn dùng badge chữ fallback gọn gàng.
 - Các thẻ dịch vụ nổi bật trên trang chủ dùng icon ảnh thật từ thư mục gốc repository và có badge chữ xanh đậm để dự phòng khi ảnh không tải được.
-- Nếu chưa có ảnh sản phẩm, website dùng placeholder tivi bằng CSS để tránh vỡ layout.
+- Nếu chưa có ảnh sản phẩm hoặc ảnh sản phẩm tải lỗi, website dùng placeholder tivi bằng CSS để tránh vỡ layout.
+- Sản phẩm thật **Samsung 43U8500F** đã được thêm với thư viện 4 ảnh thật lưu ở thư mục gốc repository.
 - Nếu thiếu danh sách sản phẩm hoặc id sản phẩm không hợp lệ, website hiển thị thông báo tiếng Việt thân thiện.
 - Có SEO metadata, Open Graph, alt text ảnh, focus state, aria attributes và hỗ trợ `prefers-reduced-motion`.
 - Có nút liên hệ nổi **Gọi ngay / Zalo** và nút **lên đầu trang**.
@@ -30,10 +31,10 @@ Website đã được tối ưu theo hướng nhẹ, ổn định và dễ bảo
 ```text
 index.html             # Trang chủ, header, menu, carousel, danh sách sản phẩm, dịch vụ, liên hệ
 styles.css             # Toàn bộ giao diện responsive, placeholder tivi, trạng thái hover/focus/mobile
-script.js              # Menu, carousel, tìm kiếm, lọc kích thước, render product card, back-to-top
+script.js              # Menu, carousel, tìm kiếm, lọc kích thước/hãng/loại, render product card, back-to-top
 products.js            # Nguồn dữ liệu sản phẩm duy nhất
 product-detail.html    # Khung trang chi tiết sản phẩm
-product-detail.js      # Đọc id từ URLSearchParams và render chi tiết sản phẩm
+product-detail.js      # Đọc id từ URLSearchParams, render chi tiết và thư viện ảnh sản phẩm
 README.md              # Hướng dẫn vận hành và bảo trì website
 ```
 
@@ -94,6 +95,29 @@ Nếu mảng sản phẩm bị thiếu hoặc trống, trang chủ hiển thị:
 Sản phẩm đang được cập nhật.
 ```
 
+### Sản phẩm thật Samsung 43U8500F
+
+Website đã thêm sản phẩm thật:
+
+- `id`: `samsung-43u8500f`
+- `brand`: `Samsung`
+- `model`: `43U8500F`
+- `fullName`: `Smart Tivi Crystal UHD Samsung 4K 43 inch`
+- `size`: `43 inch`
+- `type`: `Tivi mới`
+- `condition`: `Mới`
+- `warranty`: `Bảo hành 2 năm`
+- `price`: `7.700.000đ`
+
+Ảnh sản phẩm được lưu ngay tại thư mục gốc repository, cùng cấp với `index.html`, và được tham chiếu trực tiếp trong `products.js`. Tên file ảnh giữ nguyên tiếng Việt có dấu và khoảng trắng:
+
+- `mặt trước tivi.jpg`
+- `mặt nghiêng trái tivi.jpg`
+- `màu nghiêng phải tivi.jpg`
+- `viền tivi.jpg`
+
+Trong đó `image: "mặt trước tivi.jpg"` là ảnh chính dùng cho card ở trang chủ, còn mảng `images` chứa 4 ảnh dùng cho thư viện ảnh ở trang chi tiết.
+
 ## Cách điều hướng chi tiết sản phẩm hoạt động
 
 Mỗi card sản phẩm trên trang chủ là một liên kết bình thường trong cùng tab:
@@ -108,6 +132,12 @@ Ví dụ:
 product-detail.html?id=samsung-55-du7000
 ```
 
+URL chi tiết của sản phẩm Samsung 43U8500F là:
+
+```text
+product-detail.html?id=samsung-43u8500f
+```
+
 Trang `product-detail.html` nạp `products.js`, sau đó `product-detail.js` đọc id bằng:
 
 ```js
@@ -115,7 +145,7 @@ const detailParams = new URLSearchParams(window.location.search);
 const productId = detailParams.get("id");
 ```
 
-Nếu tìm thấy sản phẩm đúng id, trang chi tiết hiển thị thương hiệu, model, kích thước, tình trạng, đặc điểm nổi bật, mô tả, giá và nút liên hệ. Nếu không tìm thấy id, trang hiển thị:
+Nếu tìm thấy sản phẩm đúng id, trang chi tiết hiển thị thương hiệu, model, tên đầy đủ, kích thước, loại sản phẩm, tình trạng, bảo hành, đặc điểm nổi bật, mô tả, giá và nút liên hệ. Nếu sản phẩm có mảng `images`, trang chi tiết hiển thị ảnh lớn và hàng thumbnail; khi bấm một thumbnail, JavaScript đổi `src` của ảnh lớn sang đúng file ảnh được chọn và đánh dấu thumbnail đang active bằng viền xanh dương đậm. Nếu không tìm thấy id, trang hiển thị:
 
 ```text
 Không tìm thấy sản phẩm. Vui lòng quay lại trang chủ.
@@ -133,14 +163,17 @@ Ví dụ:
 {
   id: "lg-55-ur7550",
   brand: "LG",
-  model: "LG UR7550 55 inch",
+  model: "UR7550",
+  fullName: "Smart Tivi LG 4K UHD 55 inch",
   size: "55 inch",
   type: "Tivi mới",
   condition: "Mới",
+  warranty: "Bảo hành chính hãng",
   features: ["4K UHD", "Smart TV", "Phù hợp phòng khách"],
   oldPrice: "",
   price: "Liên hệ nhận giá tốt",
-  image: "",
+  image: "anh-chinh.jpg",
+  images: ["anh-chinh.jpg", "anh-nghieng.jpg", "anh-can-canh.jpg"],
   badge: "Hàng mới",
   description: "Mẫu tivi 55 inch phù hợp nhu cầu xem phim, thể thao và giải trí gia đình.",
 }
@@ -150,15 +183,18 @@ Gợi ý các trường nên có:
 
 - `id`: mã sản phẩm dùng trong URL chi tiết.
 - `brand`: hãng tivi.
-- `model`: tên model hoặc tên sản phẩm.
+- `model`: mã model ngắn hiển thị trên card và trang chi tiết.
+- `fullName`: tên sản phẩm đầy đủ.
 - `size`: kích thước như `43 inch`, `55 inch`, `65 inch`.
 - `type`: tivi cũ, tivi mới hoặc nhóm tư vấn.
 - `condition`: tình trạng sản phẩm.
-- `features`: 2-4 điểm nổi bật.
+- `warranty`: thông tin bảo hành nếu có.
+- `features`: 2-6 điểm nổi bật.
 - `oldPrice`: giá cũ nếu có, để `""` nếu không dùng.
 - `price`: giá bán hoặc dòng liên hệ.
-- `image`: đường dẫn ảnh, để `""` nếu chưa có ảnh.
-- `badge`: nhãn ngắn như `Hàng mới`, `Tư vấn nhiều`.
+- `image`: đường dẫn ảnh chính cho card trang chủ, để `""` nếu chưa có ảnh.
+- `images`: mảng nhiều ảnh cho gallery trang chi tiết; ảnh đầu tiên thường trùng với `image`.
+- `badge`: nhãn ngắn như `Hàng mới`, `Tư vấn nhiều`, `Bảo hành 2 năm`.
 - `description`: mô tả ngắn cho trang chi tiết.
 
 ## Logo hãng tivi trong panel DANH MỤC HÃNG TIVI
@@ -226,7 +262,7 @@ Hiện tại nhiều sản phẩm dùng placeholder tivi bằng CSS. Khi muốn 
 image: "ten-file-anh.jpg"
 ```
 
-Lưu ý: khi cập nhật nội dung hoặc code, không chỉnh sửa file ảnh/SVG/binary nếu không có yêu cầu riêng. Nên nén ảnh trước khi đưa lên production để tải nhanh hơn.
+Lưu ý: khi cập nhật nội dung hoặc code, không chỉnh sửa file ảnh/SVG/binary nếu không có yêu cầu riêng. Với ảnh có tên tiếng Việt, khoảng trắng hoặc dấu, hãy dùng đúng tên file trong `products.js`, không tự đổi sang dấu gạch ngang và không bỏ dấu. Nên nén ảnh trước khi đưa lên production để tải nhanh hơn.
 
 ## Cách cập nhật số điện thoại và địa chỉ
 

@@ -15,12 +15,15 @@ const dom = {
   mobileCall: document.querySelector('[data-call-button]'),
   brandLogoImages: document.querySelectorAll('.brand-logo-box img'),
   serviceIconImages: document.querySelectorAll('[data-service-icon]'),
+  productFilterLinks: document.querySelectorAll('[data-product-filter]'),
 };
 
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const PRODUCTS = Array.isArray(window.products) ? window.products : [];
 const productIds = new Set();
-let activeSize = dom.selectedSize?.textContent?.trim() || '55 inch';
+let activeSize = dom.selectedSize?.textContent?.trim() === 'Tất cả' ? '' : dom.selectedSize?.textContent?.trim() || '';
+let activeBrand = '';
+let activeType = '';
 let searchTerm = '';
 
 const escapeHtml = (value = '') =>
@@ -39,9 +42,11 @@ const normalizeProduct = (product = {}, index = 0) => {
     id,
     brand: product.brand || 'Anh Minh Store',
     model: product.model || 'Tivi đang cập nhật',
+    fullName: product.fullName || product.model || 'Tivi đang cập nhật',
     size: product.size || 'Liên hệ tư vấn',
     type: product.type || 'Tivi',
     condition: product.condition || 'Liên hệ kiểm tra tình trạng',
+    warranty: product.warranty || '',
     features: Array.isArray(product.features) && product.features.length ? product.features : ['Thông tin đang được cập nhật'],
     oldPrice: product.oldPrice || '',
     price: product.price || 'Giá đang cập nhật',
@@ -194,15 +199,32 @@ const renderTvPlaceholder = (label = 'Tivi Anh Minh Store') => `
     <span></span>
   </div>`;
 
+const renderProductMedia = (product, label) => {
+  const placeholder = renderTvPlaceholder(label);
+  if (!product.image) return placeholder;
+  return `
+    <div class="product-card__media">
+      <img class="product-card__image" src="${escapeHtml(product.image)}" alt="${escapeHtml(label)}" loading="lazy" decoding="async" />
+      <div class="product-card__fallback" aria-hidden="true">${placeholder}</div>
+    </div>`;
+};
+
 const getFilteredProducts = () => {
-  const bySize = activeSize ? products.filter((product) => product.size.toLowerCase().includes(activeSize.toLowerCase())) : products;
-  if (!searchTerm) return bySize.length ? bySize : products;
-  return products.filter((product) =>
-    [product.brand, product.model, product.size, product.type, product.condition, product.features.join(' ')]
-      .join(' ')
-      .toLowerCase()
-      .includes(searchTerm),
-  );
+  if (searchTerm) {
+    return products.filter((product) =>
+      [product.brand, product.model, product.fullName, product.size, product.type, product.condition, product.warranty, product.features.join(' ')]
+        .join(' ')
+        .toLowerCase()
+        .includes(searchTerm),
+    );
+  }
+
+  return products.filter((product) => {
+    const matchesSize = activeSize ? product.size.toLowerCase().includes(activeSize.toLowerCase()) : true;
+    const matchesBrand = activeBrand ? product.brand.toLowerCase() === activeBrand.toLowerCase() : true;
+    const matchesType = activeType ? product.type.toLowerCase().includes(activeType.toLowerCase()) : true;
+    return matchesSize && matchesBrand && matchesType;
+  });
 };
 
 const renderProductCards = () => {
@@ -220,11 +242,9 @@ const renderProductCards = () => {
 
   dom.productGrid.innerHTML = visibleProducts
     .map((product) => {
-      const label = `${product.brand} ${product.model}`.trim();
+      const label = `${product.fullName} ${product.model}`.trim();
+      const media = renderProductMedia(product, label);
       const featureItems = product.features.slice(0, 2).map((feature) => `<li>${escapeHtml(feature)}</li>`).join('');
-      const media = product.image
-        ? `<img class="product-card__image" src="${escapeHtml(product.image)}" alt="${escapeHtml(label)}" loading="lazy" decoding="async" />`
-        : renderTvPlaceholder(label);
 
       return `
         <article class="product-card-wrap">
@@ -233,14 +253,22 @@ const renderProductCards = () => {
             ${media}
             <span class="product-brand">${escapeHtml(product.brand)}</span>
             <h3>${escapeHtml(product.model)}</h3>
+            <p class="product-full-name">${escapeHtml(product.fullName)}</p>
             <p class="product-size">${escapeHtml(product.size)}</p>
+            <p class="product-type">${escapeHtml(product.type)}</p>
             <ul>${featureItems}</ul>
-            <strong class="product-price">${escapeHtml(product.price)}</strong>
+            <strong class="product-price"><span>Giá:</span> ${escapeHtml(product.price)}</strong>
             <span class="btn btn--primary product-card__cta" aria-hidden="true">Xem chi tiết</span>
           </a>
         </article>`;
     })
     .join('');
+
+  dom.productGrid.querySelectorAll('.product-card__image').forEach((image) => {
+    image.addEventListener('error', () => {
+      image.closest('.product-card__media')?.classList.add('is-image-error');
+    }, { once: true });
+  });
 };
 
 renderProductCards();
@@ -248,13 +276,17 @@ renderProductCards();
 dom.sizeOptions?.addEventListener('click', (event) => {
   const pill = event.target.closest('.size-pill');
   if (!pill) return;
-  activeSize = pill.dataset.size || pill.textContent.trim();
+  activeSize = pill.dataset.size || '';
+  activeBrand = '';
+  activeType = '';
+  searchTerm = '';
+  if (dom.searchInput) dom.searchInput.value = '';
   dom.sizeOptions.querySelectorAll('.size-pill').forEach((button) => {
     const isActive = button === pill;
     button.classList.toggle('is-active', isActive);
     button.setAttribute('aria-pressed', String(isActive));
   });
-  if (dom.selectedSize) dom.selectedSize.textContent = activeSize;
+  if (dom.selectedSize) dom.selectedSize.textContent = activeSize || 'Tất cả';
   renderProductCards();
   dom.productGrid?.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'nearest' });
 });
@@ -263,6 +295,8 @@ dom.searchForm?.addEventListener('submit', (event) => {
   event.preventDefault();
   searchTerm = dom.searchInput?.value.trim().toLowerCase() || '';
   activeSize = '';
+  activeBrand = '';
+  activeType = '';
   if (dom.selectedSize) dom.selectedSize.textContent = searchTerm ? `Tìm: ${dom.searchInput.value.trim()}` : 'Tất cả';
   dom.sizeOptions?.querySelectorAll('.size-pill').forEach((button) => {
     button.classList.remove('is-active');
@@ -270,6 +304,31 @@ dom.searchForm?.addEventListener('submit', (event) => {
   });
   renderProductCards();
   scrollToHash('#san-pham');
+});
+
+dom.productFilterLinks.forEach((link) => {
+  link.addEventListener('click', (event) => {
+    event.preventDefault();
+    const filterType = link.dataset.productFilter;
+    const filterValue = link.dataset.filterValue || '';
+    activeSize = filterType === 'size' ? filterValue : '';
+    activeBrand = filterType === 'brand' ? filterValue : '';
+    activeType = filterType === 'type' ? filterValue : '';
+    searchTerm = '';
+    if (dom.searchInput) dom.searchInput.value = '';
+
+    dom.sizeOptions?.querySelectorAll('.size-pill').forEach((button) => {
+      const isActive = filterType === 'size' && (button.dataset.size || '') === filterValue;
+      button.classList.toggle('is-active', isActive);
+      button.setAttribute('aria-pressed', String(isActive));
+    });
+
+    const label = filterValue || 'Tất cả';
+    if (dom.selectedSize) dom.selectedSize.textContent = label;
+    renderProductCards();
+    setMenuState(false);
+    scrollToHash('#san-pham');
+  });
 });
 
 const initCarousel = () => {
