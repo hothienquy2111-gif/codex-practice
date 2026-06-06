@@ -1,20 +1,171 @@
 window.products = [
   {
-    id: "samsung-55-du7000",
+    id: "samsung-qa55q7fa",
     brand: "Samsung",
-    model: "UA55DU7000",
-    fullName: "Smart Tivi Samsung 4K 55 inch UA55DU7000",
+    model: "QA55Q7FA",
+    fullName: "Smart Tivi Samsung QLED 4K Vision AI 55 Inch QA55Q7FA",
     size: "55 inch",
     type: "Tivi mới",
     condition: "Mới",
-    warranty: "Bảo hành chính hãng",
-    features: ["4K UHD", "Smart TV", "Bảo hành chính hãng"],
-    oldPrice: "",
-    price: "Liên hệ nhận giá tốt",
-    image: "",
-    images: [],
-    badge: "Hàng mới",
-    description: "Phù hợp phòng khách, hình ảnh sắc nét, dễ sử dụng.",
+    warranty: "Bảo hành 2 năm",
+    oldPrice: "14.299.000đ",
+    price: "11.690.000đ",
+    badge: "Bảo hành 2 năm",
+    description: "Smart Tivi Samsung QLED 4K Vision AI 55 Inch QA55Q7FA mở ra thế giới giải trí đỉnh cao với thiết kế sang trọng, công nghệ hình ảnh QLED 4K, âm thanh tiên tiến và bộ xử lý AI Q4 thông minh.",
+    features: [
+      "QLED 4K Ultra HD",
+      "Samsung Vision AI",
+      "Bộ xử lý Q4 AI Processor",
+      "Quantum Dot tái hiện 100% dải màu",
+      "Quantum HDR+",
+      "Motion Xcelerator",
+      "Bảo hành 2 năm",
+    ],
+    image: "55Q7 trước.webp",
+    images: [
+      "55Q7 trước.webp",
+      "55q7 nghiên trái.webp",
+      "55q7 nghiên phải.webp",
+      "55q7 viền.webp",
+    ],
+    overview: [
+      {
+        paragraphs: [
+          "Smart Tivi Samsung QLED 4K Vision AI 55 Inch QA55Q7FA mở ra một thế giới giải trí đỉnh cao nhờ thiết kế sang trọng, công nghệ hình ảnh và âm thanh tiên tiến cùng bộ xử lý AI Q4 thông minh. Đây là lựa chọn giúp nâng tầm trải nghiệm giải trí gia đình với hình ảnh sắc nét, màu sắc sống động và khả năng vận hành mượt mà.",
+        ],
+      },
+      {
+        heading: "Đặc điểm nổi bật",
+        paragraphs: [
+          "Thiết kế tinh tế, thanh mảnh.",
+          "Công nghệ Quantum Dot tái hiện 100% dải màu.",
+          "Công nghệ Quantum HDR+ tái hiện từng sắc thái điện ảnh.",
+          "Samsung Vision AI nâng tầm trải nghiệm.",
+          "Bộ xử lý Q4 AI Processor nâng cấp trải nghiệm giải trí.",
+          "Motion Xcelerator giúp chuyển động mượt mà hơn.",
+          "Âm thanh sống động với OTS Lite, Adaptive Sound và Q-Symphony.",
+          "Hệ điều hành Tizen cá nhân hóa trải nghiệm.",
+          "SmartThings kết nối và điều khiển liền mạch.",
+        ],
+      },
+      {
+        heading: "Thiết kế",
+        paragraphs: [
+          "Smart Tivi Samsung QLED 4K Vision AI 55 Inch QA55Q7FA sở hữu thiết kế hiện đại, thanh lịch với kích thước 55 inch, phù hợp nhiều không gian như phòng khách, phòng ngủ lớn hoặc căn hộ hiện đại. Kiểu dáng mỏng gọn giúp tivi dễ trở thành điểm nhấn sang trọng trong không gian nội thất.",
+        ],
+      },
+      {
+        heading: "Màn hình QLED 4K",
+        paragraphs: [
+          "Tivi được trang bị màn hình QLED 55 inch độ phân giải 4K Ultra HD, mang đến hình ảnh rõ nét, màu sắc rực rỡ và độ chi tiết cao. Công nghệ Quantum Dot giúp tái hiện màu sắc sống động ở nhiều mức độ sáng.",
+        ],
+      },
+      {
+        heading: "Công nghệ hình ảnh",
+        paragraphs: [
+          "Quantum HDR+, Mega Contrast, Color Booster Pro, UHD Dimming và Contrast Enhancer giúp tăng chiều sâu hình ảnh, tối ưu độ tương phản và cải thiện chi tiết trong vùng sáng tối. Bộ xử lý Q4 AI Processor hỗ trợ nâng cấp nội dung lên gần chuẩn 4K để hình ảnh hiển thị mượt mà và sắc nét hơn.",
+        ],
+      },
+      {
+        heading: "Samsung Vision AI",
+        paragraphs: [
+          "Samsung Vision AI hỗ trợ tối ưu trải nghiệm xem thông minh, kết hợp các tiện ích như AI Generative Wallpaper, Bixby tiếng Việt, SmartThings và các tính năng cá nhân hóa giúp người dùng dễ dàng điều khiển, kết nối và tận hưởng nội dung giải trí.",
+        ],
+      },
+      {
+        heading: "Trải nghiệm game và chuyển động",
+        paragraphs: [
+          "Motion Xcelerator giúp các cảnh chuyển động nhanh trở nên mượt hơn, hạn chế bóng mờ và hỗ trợ trải nghiệm xem thể thao, phim hành động hoặc chơi game tốt hơn.",
+        ],
+      },
+      {
+        heading: "Âm thanh",
+        paragraphs: [
+          "Tivi hỗ trợ Object Tracking Sound Lite, Adaptive Sound và Q-Symphony, giúp âm thanh sống động hơn và có thể kết hợp tốt với loa thanh Samsung để tăng trải nghiệm nghe nhìn.",
+        ],
+      },
+      {
+        heading: "Hệ điều hành",
+        paragraphs: [
+          "Nền tảng Tizen trực quan, dễ dùng, hỗ trợ nhiều ứng dụng phổ biến như YouTube, Netflix, FPT Play, TV 360, VieON và nhiều tiện ích thông minh khác.",
+        ],
+      },
+    ],
+    specifications: [
+      {
+        group: "Tổng quan sản phẩm",
+        rows: [
+          { label: "Loại Tivi", value: "Smart Tivi QLED" },
+          { label: "Kích cỡ màn hình", value: "55 Inch" },
+          { label: "Độ phân giải", value: "4K (Ultra HD)" },
+          { label: "Hệ điều hành", value: "Tizen" },
+        ],
+      },
+      {
+        group: "Công nghệ hình ảnh",
+        rows: [
+          {
+            label: "Công nghệ hình ảnh",
+            value: [
+              "Công nghệ Quantum Dot",
+              "Công nghệ Quantum HDR+",
+              "Công nghệ Motion Xcelerator",
+              "Công nghệ Supreme UHD Dimming: Công nghệ kiểm soát chi tiết độ tương phản",
+              "Công nghệ Mega Contrast",
+              "Công nghệ Color Booster Pro",
+              "AI Generative Wallpaper",
+              "Smart Calibration",
+            ],
+          },
+          { label: "Bộ xử lý", value: "Bộ xử lý Q4 AI Processor" },
+          { label: "Tần số quét thực", value: "50 Hz" },
+        ],
+      },
+      {
+        group: "Công nghệ âm thanh",
+        rows: [
+          { label: "Tổng công suất loa", value: "20W" },
+          { label: "Số lượng loa", value: "2" },
+          { label: "Âm thanh vòm", value: ["Object Tracking Sound (OTS Lite)", "Adaptive Sound", "Q-Symphony"] },
+        ],
+      },
+      {
+        group: "Cổng kết nối",
+        rows: [
+          { label: "Kết nối Internet", value: ["Wifi 5", "LAN"] },
+          { label: "Kết nối không dây", value: "Bluetooth 5.3" },
+          { label: "USB", value: "1 x USB – A" },
+          { label: "Cổng nhận hình ảnh, âm thanh", value: "3 x HDMI" },
+        ],
+      },
+      {
+        group: "Tiện ích",
+        rows: [
+          { label: "Điều khiển tivi bằng điện thoại", value: "SmartThings" },
+          { label: "Điều khiển bằng giọng nói", value: "Trợ lý ảo Tiếng Việt Bixby" },
+          { label: "Remote thông minh", value: "Điều khiển One Remote Control tích hợp Solar Cell Remote" },
+          { label: "Tiện ích thông minh khác", value: ["Universal Gestures", "Quick Remote", "Art Store"] },
+        ],
+      },
+      {
+        group: "Thông tin lắp đặt",
+        rows: [
+          { label: "Kích thước có chân, đặt bàn", value: "Ngang 123.41 cm - Cao 75.8 cm - Dày 23.7 cm" },
+          { label: "Khối lượng có chân", value: "11.1 Kg" },
+          { label: "Kích thước không chân, treo tường", value: "Ngang 123.41 cm - Cao 71.08 cm - Dày 6.03 cm" },
+          { label: "Khối lượng không chân", value: "10.8 Kg" },
+        ],
+      },
+      {
+        group: "Xuất xứ và bảo hành",
+        rows: [
+          { label: "Hãng sản xuất", value: "Samsung (Thương hiệu: Hàn Quốc)" },
+          { label: "Sản xuất tại", value: "Việt Nam" },
+          { label: "Bảo hành", value: "24 tháng" },
+          { label: "Năm ra mắt", value: "2025" },
+        ],
+      },
+    ],
   },
   {
     id: "lg-50-4k-uhd",

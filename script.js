@@ -178,6 +178,7 @@ const renderSectionProductCard = (product, sectionType) => {
     : `data-new-tv-card data-new-size="${escapeHtml(product.size)}" data-new-brand="${escapeHtml(product.brand)}"`;
   const classes = isUsed ? 'used-tv-card' : 'used-tv-card new-tv-card';
   const featureItems = product.features.slice(0, 4).map((feature) => `<li>${escapeHtml(feature)}</li>`).join('');
+  const oldPrice = product.oldPrice ? `<span class="product-price__old">${escapeHtml(product.oldPrice)}</span>` : '';
   const warrantyRow = product.warranty ? `<div><dt>Bảo hành</dt><dd>${escapeHtml(product.warranty)}</dd></div>` : '';
   const title = product.fullName || product.model;
 
@@ -195,7 +196,7 @@ const renderSectionProductCard = (product, sectionType) => {
         ${warrantyRow}
       </dl>
       <ul>${featureItems}</ul>
-      <strong class="product-price"><span>Giá:</span> ${escapeHtml(product.price)}</strong>
+      <strong class="product-price"><span>Giá:</span> ${oldPrice}<span class="product-price__sale">${escapeHtml(product.price)}</span></strong>
       <a class="btn btn--primary product-card__cta" href="${createProductDetailUrl(product)}">Xem chi tiết</a>
     </article>`;
 };
@@ -373,6 +374,7 @@ const renderProductCards = () => {
       const label = `${product.fullName} ${product.model}`.trim();
       const media = renderProductMedia(product, label);
       const featureItems = product.features.slice(0, 2).map((feature) => `<li>${escapeHtml(feature)}</li>`).join('');
+      const oldPrice = product.oldPrice ? `<span class="product-price__old">${escapeHtml(product.oldPrice)}</span>` : '';
 
       return `
         <article class="product-card-wrap">
@@ -385,7 +387,7 @@ const renderProductCards = () => {
             <p class="product-size">${escapeHtml(product.size)}</p>
             <p class="product-type">${escapeHtml(product.type)}</p>
             <ul>${featureItems}</ul>
-            <strong class="product-price"><span>Giá:</span> ${escapeHtml(product.price)}</strong>
+            <strong class="product-price"><span>Giá:</span> ${oldPrice}<span class="product-price__sale">${escapeHtml(product.price)}</span></strong>
             <span class="btn btn--primary product-card__cta" aria-hidden="true">Xem chi tiết</span>
           </a>
         </article>`;
