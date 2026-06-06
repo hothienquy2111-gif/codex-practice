@@ -18,7 +18,7 @@ Website đã được tối ưu theo hướng nhẹ, ổn định và dễ bảo
 - Menu danh mục hỗ trợ hover/click trên desktop, click trên mobile, đóng khi bấm ngoài hoặc nhấn Escape.
 - Điều hướng nội bộ cuộn mượt, có active state và `scroll-margin-top` để header sticky không che tiêu đề.
 - Product card được render tự động, link mở trong cùng tab theo dạng `product-detail.html?id={product.id}`.
-- Panel **DANH MỤC HÃNG TIVI** dùng logo SVG thật được lưu ngay tại thư mục gốc repository; hãng chưa có logo vẫn dùng badge chữ fallback gọn gàng.
+- Panel **DANH MỤC HÃNG TIVI** dùng các file logo ảnh đã tải lên ở thư mục gốc repository; Hisense giữ logo hiện có và badge chữ chỉ hiện khi một logo không tải được.
 - Các thẻ dịch vụ nổi bật trên trang chủ dùng icon ảnh thật từ thư mục gốc repository và có badge chữ xanh đậm để dự phòng khi ảnh không tải được.
 - Nếu chưa có ảnh sản phẩm hoặc ảnh sản phẩm tải lỗi, website dùng placeholder tivi bằng CSS để tránh vỡ layout.
 - Sản phẩm thật **Samsung 43U8500F** đã được thêm với thư viện 4 ảnh thật lưu ở thư mục gốc repository.
@@ -257,37 +257,42 @@ Gợi ý các trường nên có:
 
 ## Logo hãng tivi trong panel DANH MỤC HÃNG TIVI
 
-Các logo hãng tivi được lưu trực tiếp ở thư mục gốc repository, cùng cấp với `index.html`. Panel **DANH MỤC HÃNG TIVI** hiện dùng logo SVG thật cho các hãng đã có file, ví dụ:
+Các logo hãng tivi được lưu trực tiếp ở thư mục gốc repository, cùng cấp với `index.html`. Panel **DANH MỤC HÃNG TIVI** hiện dùng các file logo ảnh đã tải lên từ thư mục gốc theo đúng thứ tự hiển thị từ trên xuống:
 
-- `samsung1.svg` cho Samsung
-- `LG_logo.svg`
-- `Sony.svg`
-- `Toshiba-Logo.svg`
-- `Hisense.svg`
-- `TCL.svg`
-- `Panasonic-Logo.svg`
-- `sharp1.svg` cho Sharp
-- `xiaomi.svg` nếu file này có trong thư mục gốc
+- Samsung: `samsung.jpeg`
+- LG: `LG.jpeg`
+- Sony: `sony.jpeg`
+- Toshiba: `toshiba.jpeg`
+- Hisense: giữ nguyên logo/path hiện có
+- TCL: `TCL.jpeg`
+- Panasonic: `panasonic.jpeg`
+- Sharp: `sharp.jpeg`
+- Xiaomi: `xiaomi.jpeg`
+- Casper: `casper.jpeg`
+- Coocaa: `coocaa.jpeg`
+- Skyworth: `skyworth.png`
+- Philips: `philips.jpeg`
+- Hitachi: `hitachi.jpeg`
 
-Mỗi dòng hãng trong `index.html` hiển thị logo bên trái và tên hãng bên phải. Logo được đặt trong hộp nhỏ để giữ giao diện trắng + xanh dương đậm gọn gàng, không làm panel lớn hơn và không che nhiều banner. Riêng Samsung dùng chính xác `samsung1.svg` từ thư mục gốc repository và Sharp dùng chính xác `sharp1.svg` từ thư mục gốc repository.
+Mỗi dòng hãng trong `index.html` hiển thị hộp logo nhỏ bên trái và tên hãng bên phải. Logo được căn giữa trong hộp 42px, dùng `object-fit: contain` để giữ ảnh sắc nét, không méo, không cắt, đồng thời giữ giao diện trắng + xanh dương đậm gọn gàng, không làm panel lớn hơn và không che nhiều banner.
 
 ### Cách thay logo một hãng sau này
 
-1. Tải file SVG logo mới lên thư mục gốc repository.
-2. Cập nhật đường dẫn logo trong map/code hiển thị logo hãng, hiện là thẻ `<img src="...">` tương ứng trong `index.html` của panel **DANH MỤC HÃNG TIVI**. Ví dụ Samsung đang trỏ tới `samsung1.svg`, Sharp đang trỏ tới `sharp1.svg`.
+1. Tải file logo mới lên thư mục gốc repository và giữ đúng chữ hoa/thường của tên file vì GitHub Pages phân biệt hoa thường.
+2. Cập nhật đường dẫn logo trong thẻ `<img src="...">` tương ứng trong `index.html` của panel **DANH MỤC HÃNG TIVI**.
 3. Kiểm tra lại `alt` của ảnh trong `index.html`, ví dụ `alt="Logo Samsung"`, để đảm bảo mô tả vẫn đúng và giữ badge chữ bên trong hộp logo ở trạng thái ẩn mặc định.
 4. Mở website trên desktop và mobile để kiểm tra logo không bị méo, không bị cắt và không gây tràn ngang.
 
 ### Cách thêm logo cho một hãng mới sau này
 
-1. Đưa file SVG logo mới vào thư mục gốc repository.
+1. Đưa file logo mới vào thư mục gốc repository.
 2. Thêm hoặc cập nhật dòng hãng trong `index.html` theo mẫu:
 
 ```html
 <li>
   <a href="#san-pham">
     <span class="brand-logo-box">
-      <img src="ten-logo.svg" alt="Logo Tên hãng" />
+      <img src="ten-logo.jpeg" alt="Logo Tên hãng" />
       <span class="brand-fallback-badge" aria-hidden="true">T</span>
     </span>
     <span class="brand-name">Tên hãng</span>
@@ -295,16 +300,7 @@ Mỗi dòng hãng trong `index.html` hiển thị logo bên trái và tên hãng
 </li>
 ```
 
-3. Nếu chưa có logo, giữ badge chữ fallback theo mẫu:
-
-```html
-<li>
-  <a href="#san-pham">
-    <span class="brand-fallback-badge">T</span>
-    <span class="brand-name">Tên hãng</span>
-  </a>
-</li>
-```
+3. Nếu tạm thời chưa có logo, vẫn có thể dùng badge chữ fallback gọn gàng; khi dùng ảnh thật, đặt badge bên trong `.brand-logo-box` để script chỉ hiện badge nếu ảnh lỗi.
 
 Nếu file logo bị thiếu hoặc chưa được tải lên, `script.js` sẽ ẩn ảnh bị lỗi và chỉ lúc đó mới hiện badge chữ fallback trong hộp logo. Khi logo tải thành công, badge fallback vẫn bị ẩn nên không che ảnh logo.
 
