@@ -316,16 +316,29 @@ button { cursor: pointer; }
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-3);
-  margin-top: var(--space-4);
+  margin: var(--space-4) 0;
 }
 .product-detail__modal-button {
+  flex: 1 1 190px;
   border-color: var(--color-primary-deep);
-  background: var(--color-white);
-  color: var(--color-primary-deep);
   border-radius: 14px;
   box-shadow: 0 8px 20px rgba(6, 42, 86, 0.08);
 }
-.product-detail__modal-button:hover {
+.product-detail__modal-button--overview {
+  background: var(--color-primary-deep);
+  color: var(--color-white);
+}
+.product-detail__modal-button--specifications {
+  background: var(--color-white);
+  color: var(--color-primary-deep);
+}
+.product-detail__modal-button--overview:hover {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-white);
+  box-shadow: 0 12px 28px rgba(6, 42, 86, 0.18);
+}
+.product-detail__modal-button--specifications:hover {
   border-color: var(--color-primary-deep);
   background: var(--color-primary-deep);
   color: var(--color-white);

@@ -117,12 +117,12 @@ window.products = [
         group: "Tiện ích",
         rows: [
           { label: "Điều khiển tivi bằng điện thoại", value: "SmartThings" },
-          { label: "Điều khiển bằng giọng nói", value: ["Tìm kiếm giọng nói trên YouTube bằng tiếng Việt", "Bixby có tiếng Việt"] },
+          { label: "Điều khiển bằng giọng nói", value: "Tìm kiếm giọng nói trên YouTube bằng tiếng Việt, Bixby có tiếng Việt" },
           { label: "Chiếu hình từ điện thoại lên TV", value: "AirPlay 2" },
           { label: "Remote thông minh", value: "Điều khiển One Remote Control tích hợp Solar Cell Remote" },
           { label: "Kết nối ứng dụng các thiết bị trong nhà", value: "SmartThings" },
-          { label: "Ứng dụng phổ biến", value: ["YouTube", "Netflix", "FPT Play", "TV 360", "VieON"] },
-          { label: "Tiện ích thông minh khác", value: ["Built in IoT Hub kết nối các thiết bị IoT mà không cần dongle", "Universal Gestures điều khiển bằng đồng hồ Galaxy, hỗ trợ từ Galaxy Watch 4", "Quick Remote sử dụng điện thoại như điều khiển từ xa, hỗ trợ Android OS 11.0/iOS 16.0 trở lên"] },
+          { label: "Ứng dụng phổ biến", value: "YouTube, Netflix, FPT Play, TV 360, VieON" },
+          { label: "Tiện ích thông minh khác", value: "Built in IoT Hub, Universal Gestures, Quick Remote" },
         ],
       },
       {
@@ -130,13 +130,13 @@ window.products = [
         rows: [
           { label: "Tổng công suất loa", value: "20W" },
           { label: "Âm thanh vòm", value: "Âm thanh chuyển động theo hình ảnh OTS Lite" },
-          { label: "Các công nghệ khác", value: ["Adaptive Sound", "Q-Symphony kết hợp loa tivi với loa thanh"] },
+          { label: "Các công nghệ khác", value: "Adaptive Sound, Q-Symphony" },
         ],
       },
       {
         group: "Cổng kết nối",
         rows: [
-          { label: "Kết nối Internet", value: ["Wi-Fi", "Cổng mạng LAN"] },
+          { label: "Kết nối Internet", value: "Wi-Fi, Cổng mạng LAN" },
           { label: "Kết nối không dây", value: "Bluetooth 5.3" },
           { label: "USB", value: "1 cổng USB A" },
           { label: "Cổng nhận hình ảnh, âm thanh", value: "3 cổng HDMI, có 1 cổng HDMI eARC (ARC)" },
