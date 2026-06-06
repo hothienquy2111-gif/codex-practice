@@ -187,6 +187,40 @@ button { cursor: pointer; }
 .chip-list, .issue-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .chip-list span, .chip-list a, .issue-grid span { border: 1px solid var(--color-gray-200); border-radius: 999px; padding: 11px 14px; background: var(--color-white); color: var(--color-primary-deep); font-weight: 800; text-align: center; }
 .chip-list a:hover { border-color: var(--color-primary-highlight); color: var(--color-primary-highlight); }
+
+.old-tv-section { overflow: hidden; }
+.old-tv-section__inner { display: grid; gap: var(--space-5); min-width: 0; }
+.old-tv-section__top { display: grid; grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr); gap: var(--space-6); align-items: center; min-width: 0; }
+.old-tv-benefits { min-width: 0; }
+.old-tv-filter-block { display: grid; gap: 10px; min-width: 0; }
+.old-tv-filter-label { margin: 0; color: var(--color-primary-deep); font-weight: 900; }
+.old-tv-size-row,
+.old-tv-brand-row { display: flex; gap: 10px; max-width: 100%; overflow-x: auto; overscroll-behavior-inline: contain; padding: 3px 2px 10px; scrollbar-width: thin; }
+.old-tv-size-pill { flex: 0 0 auto; border: 1px solid var(--color-primary-deep); border-radius: 999px; padding: 9px 15px; background: var(--color-white); color: var(--color-primary-deep); font-weight: 850; transition: background var(--transition), color var(--transition), border-color var(--transition), transform var(--transition); }
+.old-tv-size-pill:hover,
+.old-tv-size-pill.is-active { border-color: var(--color-primary-deep); background: var(--color-primary-deep); color: var(--color-white); }
+.old-tv-size-pill:hover { transform: translateY(-1px); }
+.old-tv-brand-row { gap: 12px; }
+.old-tv-brand-card { display: grid; flex: 0 0 112px; place-items: center; gap: 8px; min-height: 94px; border: 1px solid var(--color-gray-200); border-radius: var(--radius-md); padding: 12px 10px; background: var(--color-white); color: var(--color-primary-deep); font-weight: 850; box-shadow: 0 8px 20px rgba(6, 42, 86, 0.06); transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition), background var(--transition), color var(--transition); }
+.old-tv-brand-card:hover,
+.old-tv-brand-card.is-active { border-color: var(--color-primary-deep); box-shadow: var(--shadow-sm); transform: translateY(-2px); }
+.old-tv-brand-card.is-active { background: #f4f8fd; }
+.old-tv-brand-card__logo { width: 64px; height: 42px; border-radius: 12px; }
+.old-tv-brand-card__logo img { max-width: 54px; max-height: 30px; object-fit: contain; }
+.old-tv-brand-card__logo img.brand-logo-image--wide { max-width: 58px; }
+.old-tv-brand-card__name { font-size: 0.9rem; line-height: 1.2; text-align: center; }
+.used-tv-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-4); min-width: 0; }
+.used-tv-card { position: relative; display: grid; min-width: 0; height: 100%; gap: 9px; border: 1px solid var(--color-gray-200); border-radius: var(--radius-lg); padding: 14px; background: var(--color-white); box-shadow: var(--shadow-sm); transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition); }
+.used-tv-card:hover { transform: translateY(-3px); border-color: rgba(19, 111, 206, 0.34); box-shadow: var(--shadow-md); }
+.used-tv-card h3 { margin: 0; color: var(--color-primary-deep); font-size: 1.08rem; line-height: 1.3; }
+.used-tv-card__meta { display: grid; gap: 6px; margin: 0; }
+.used-tv-card__meta div { display: flex; justify-content: space-between; gap: 10px; border-bottom: 1px dashed var(--color-gray-200); padding-bottom: 5px; }
+.used-tv-card__meta dt { color: var(--color-gray-500); font-weight: 800; }
+.used-tv-card__meta dd { margin: 0; color: var(--color-primary-deep); font-weight: 850; text-align: right; }
+.used-tv-card ul { margin: 0; padding-left: 18px; color: var(--color-gray-700); font-size: 0.94rem; }
+.used-tv-empty { display: block; }
+.used-tv-empty[hidden] { display: none; }
+
 .exchange { background: linear-gradient(135deg, var(--color-primary-deep), var(--color-primary)); color: var(--color-white); }
 .exchange h2, .exchange .section-kicker, .exchange p { color: var(--color-white); }
 .process-list { display: grid; gap: var(--space-3); margin: 0; padding: 0; list-style: none; }
@@ -274,7 +308,8 @@ button { cursor: pointer; }
   .brand-panel { order: 2; }
   .brand-list { grid-template-columns: repeat(2, minmax(0, 1fr)); max-height: 360px; }
   .hero-benefits, .quick-services__grid, .benefit-list, .chip-list, .issue-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .size-filter__inner, .info-grid, .exchange__grid, .repair__grid, .contact__grid, .footer-grid, .product-detail-card { grid-template-columns: 1fr; }
+  .size-filter__inner, .info-grid, .old-tv-section__top, .exchange__grid, .repair__grid, .contact__grid, .footer-grid, .product-detail-card { grid-template-columns: 1fr; }
+  .used-tv-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .contact-actions .btn { flex: 1 1 190px; }
 }
@@ -294,7 +329,8 @@ button { cursor: pointer; }
   .carousel-btn { width: 36px; height: 36px; font-size: 1.6rem; }
   .carousel-btn--prev { left: 8px; }
   .carousel-btn--next { right: 8px; }
-  .brand-list, .hero-benefits, .quick-services__grid, .benefit-list, .chip-list, .issue-grid, .trust-grid, .product-grid { grid-template-columns: 1fr; }
+  .brand-list, .hero-benefits, .quick-services__grid, .benefit-list, .chip-list, .issue-grid, .trust-grid, .product-grid, .used-tv-grid { grid-template-columns: 1fr; }
+  .old-tv-brand-card { flex-basis: 98px; }
   .section { padding: 34px 0; }
   .size-filter__inner { gap: var(--space-3); }
   .product-detail-card { padding: 18px; }
