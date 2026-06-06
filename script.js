@@ -18,11 +18,13 @@ const dom = {
   productFilterLinks: document.querySelectorAll('[data-product-filter]'),
   usedTvSizeRow: document.querySelector('[data-old-tv-size-row]'),
   usedTvBrandRow: document.querySelector('[data-old-tv-brand-row]'),
-  usedTvCards: document.querySelectorAll('[data-used-tv-card]'),
+  usedTvGrid: document.querySelector('[data-used-tv-grid]'),
+  usedTvCount: document.querySelector('[data-used-tv-count]'),
   usedTvEmpty: document.querySelector('[data-used-tv-empty]'),
   newTvSizeRow: document.querySelector('[data-new-tv-size-row]'),
   newTvBrandRow: document.querySelector('[data-new-tv-brand-row]'),
-  newTvCards: document.querySelectorAll('[data-new-tv-card]'),
+  newTvGrid: document.querySelector('[data-new-tv-grid]'),
+  newTvCount: document.querySelector('[data-new-tv-count]'),
   newTvEmpty: document.querySelector('[data-new-tv-empty]'),
 };
 
@@ -59,6 +61,7 @@ const normalizeProduct = (product = {}, index = 0) => {
     oldPrice: product.oldPrice || '',
     price: product.price || 'Giá đang cập nhật',
     image: product.image || '',
+    images: Array.isArray(product.images) ? product.images : [],
     badge: product.badge || 'Tư vấn',
     description: product.description || 'Vui lòng liên hệ Anh Minh Store để được tư vấn chi tiết.',
   };
@@ -136,14 +139,21 @@ dom.serviceIconImages.forEach((image) => {
 
 
 const usedTvFilter = {
-  size: '',
-  brand: '',
+  selectedSize: 'Tất cả',
+  selectedBrand: 'Tất cả',
 };
 
 const newTvFilter = {
-  size: '',
-  brand: '',
+  selectedSize: 'Tất cả',
+  selectedBrand: 'Tất cả',
 };
+
+const FILTER_ALL_LABEL = 'Tất cả';
+const FILTER_EMPTY_MESSAGE = 'Chưa có sản phẩm phù hợp. Vui lòng chọn bộ lọc khác hoặc liên hệ Anh Minh Store.';
+
+const normalizeFilterValue = (value = '') => String(value).trim();
+const isAllFilter = (value = '') => normalizeFilterValue(value) === '' || normalizeFilterValue(value) === FILTER_ALL_LABEL;
+const normalizeBrand = (value = '') => normalizeFilterValue(value).toLowerCase();
 
 const updatePressedState = (container, activeButton) => {
   container?.querySelectorAll('button[aria-pressed]').forEach((button) => {
@@ -153,70 +163,93 @@ const updatePressedState = (container, activeButton) => {
   });
 };
 
-const filterUsedTvCards = () => {
-  if (!dom.usedTvCards.length) return;
-  let visibleCount = 0;
-
-  dom.usedTvCards.forEach((card) => {
-    const matchesSize = usedTvFilter.size ? card.dataset.usedSize === usedTvFilter.size : true;
-    const matchesBrand = usedTvFilter.brand ? card.dataset.usedBrand === usedTvFilter.brand : true;
-    const isVisible = matchesSize && matchesBrand;
-    card.hidden = !isVisible;
-    if (isVisible) visibleCount += 1;
+const getSectionProducts = (type, filterState) =>
+  products.filter((product) => {
+    if (product.type !== type) return false;
+    const matchesSize = isAllFilter(filterState.selectedSize) ? true : product.size === filterState.selectedSize;
+    const matchesBrand = isAllFilter(filterState.selectedBrand) ? true : normalizeBrand(product.brand) === normalizeBrand(filterState.selectedBrand);
+    return matchesSize && matchesBrand;
   });
 
-  if (dom.usedTvEmpty) dom.usedTvEmpty.hidden = visibleCount > 0;
+const renderSectionProductCard = (product, sectionType) => {
+  const isUsed = sectionType === 'used';
+  const cardDataset = isUsed
+    ? `data-used-tv-card data-used-size="${escapeHtml(product.size)}" data-used-brand="${escapeHtml(product.brand)}"`
+    : `data-new-tv-card data-new-size="${escapeHtml(product.size)}" data-new-brand="${escapeHtml(product.brand)}"`;
+  const classes = isUsed ? 'used-tv-card' : 'used-tv-card new-tv-card';
+  const featureItems = product.features.slice(0, 4).map((feature) => `<li>${escapeHtml(feature)}</li>`).join('');
+  const warrantyRow = product.warranty ? `<div><dt>Bảo hành</dt><dd>${escapeHtml(product.warranty)}</dd></div>` : '';
+  const title = product.fullName || product.model;
+
+  return `
+    <article class="${classes}" ${cardDataset}>
+      <span class="product-card__badge">${escapeHtml(product.badge)}</span>
+      ${renderProductMedia(product, title)}
+      <span class="product-brand">${escapeHtml(product.brand)}</span>
+      <h3>${escapeHtml(title)}</h3>
+      <dl class="used-tv-card__meta">
+        <div><dt>Model</dt><dd>${escapeHtml(product.model)}</dd></div>
+        <div><dt>Kích thước</dt><dd>${escapeHtml(product.size)}</dd></div>
+        <div><dt>Loại</dt><dd>${escapeHtml(product.type)}</dd></div>
+        <div><dt>Tình trạng</dt><dd>${escapeHtml(product.condition)}</dd></div>
+        ${warrantyRow}
+      </dl>
+      <ul>${featureItems}</ul>
+      <strong class="product-price"><span>Giá:</span> ${escapeHtml(product.price)}</strong>
+      <a class="btn btn--primary product-card__cta" href="${createProductDetailUrl(product)}">Xem chi tiết</a>
+    </article>`;
 };
 
-const filterNewTvCards = () => {
-  if (!dom.newTvCards.length) return;
-  let visibleCount = 0;
-
-  dom.newTvCards.forEach((card) => {
-    const matchesSize = newTvFilter.size ? card.dataset.newSize === newTvFilter.size : true;
-    const matchesBrand = newTvFilter.brand ? card.dataset.newBrand === newTvFilter.brand : true;
-    const isVisible = matchesSize && matchesBrand;
-    card.hidden = !isVisible;
-    if (isVisible) visibleCount += 1;
+const renderTvSection = ({ grid, empty, count, type, filterState, sectionType }) => {
+  if (!grid) return;
+  const filteredProducts = getSectionProducts(type, filterState);
+  const cards = filteredProducts.map((product) => renderSectionProductCard(product, sectionType)).join('');
+  const emptyMarkup = `<p class="empty-state used-tv-empty${sectionType === 'new' ? ' new-tv-empty' : ''}" ${sectionType === 'new' ? 'data-new-tv-empty' : 'data-used-tv-empty'}${filteredProducts.length ? ' hidden' : ''}>${FILTER_EMPTY_MESSAGE}</p>`;
+  grid.innerHTML = `${cards}${emptyMarkup}`;
+  if (count) count.textContent = `Đang hiển thị: ${filteredProducts.length} sản phẩm`;
+  if (empty) empty.hidden = filteredProducts.length > 0;
+  grid.querySelectorAll('.product-card__image').forEach((image) => {
+    image.addEventListener('error', () => {
+      image.closest('.product-card__media')?.classList.add('is-image-error');
+    }, { once: true });
   });
-
-  if (dom.newTvEmpty) dom.newTvEmpty.hidden = visibleCount > 0;
 };
+
+const renderUsedTvSection = () => renderTvSection({ grid: dom.usedTvGrid, empty: dom.usedTvEmpty, count: dom.usedTvCount, type: 'Tivi cũ', filterState: usedTvFilter, sectionType: 'used' });
+const renderNewTvSection = () => renderTvSection({ grid: dom.newTvGrid, empty: dom.newTvEmpty, count: dom.newTvCount, type: 'Tivi mới', filterState: newTvFilter, sectionType: 'new' });
 
 dom.usedTvSizeRow?.addEventListener('click', (event) => {
   const button = event.target.closest('.old-tv-size-pill');
   if (!button) return;
-  usedTvFilter.size = button.dataset.usedSize || '';
+  usedTvFilter.selectedSize = button.dataset.usedSize || FILTER_ALL_LABEL;
   updatePressedState(dom.usedTvSizeRow, button);
-  filterUsedTvCards();
+  renderUsedTvSection();
 });
 
 dom.usedTvBrandRow?.addEventListener('click', (event) => {
   const button = event.target.closest('.old-tv-brand-card');
   if (!button) return;
-  usedTvFilter.brand = button.dataset.usedBrand || '';
+  usedTvFilter.selectedBrand = button.dataset.usedBrand || FILTER_ALL_LABEL;
   updatePressedState(dom.usedTvBrandRow, button);
-  filterUsedTvCards();
+  renderUsedTvSection();
 });
 
 dom.newTvSizeRow?.addEventListener('click', (event) => {
   const button = event.target.closest('.new-tv-size-pill');
   if (!button) return;
-  newTvFilter.size = button.dataset.newSize || '';
+  newTvFilter.selectedSize = button.dataset.newSize || FILTER_ALL_LABEL;
   updatePressedState(dom.newTvSizeRow, button);
-  filterNewTvCards();
+  renderNewTvSection();
 });
 
 dom.newTvBrandRow?.addEventListener('click', (event) => {
   const button = event.target.closest('.new-tv-brand-card');
   if (!button) return;
-  newTvFilter.brand = button.dataset.newBrand || '';
+  newTvFilter.selectedBrand = button.dataset.newBrand || FILTER_ALL_LABEL;
   updatePressedState(dom.newTvBrandRow, button);
-  filterNewTvCards();
+  renderNewTvSection();
 });
 
-filterUsedTvCards();
-filterNewTvCards();
 
 const setMenuState = (isOpen) => {
   if (!dom.menuWrap || !dom.hamburger) return;
@@ -367,6 +400,8 @@ const renderProductCards = () => {
 };
 
 renderProductCards();
+renderUsedTvSection();
+renderNewTvSection();
 
 dom.sizeOptions?.addEventListener('click', (event) => {
   const pill = event.target.closest('.size-pill');

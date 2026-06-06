@@ -315,31 +315,18 @@ Hiện khu vực này có:
 - Hàng logo hãng ngang với nhãn **Chọn hãng tivi cũ**.
 - Logo hãng dùng file ảnh có sẵn ở thư mục gốc repository: Samsung, LG, Sony, Toshiba, Hisense, TCL, Panasonic, Sharp, Xiaomi, Casper, Coocaa, Skyworth, Philips và Hitachi.
 - Mỗi logo dùng `object-fit: contain` để không bị méo, không bị cắt. Nếu ảnh logo thiếu hoặc lỗi tải, `script.js` hiển thị badge chữ cái đầu để bố cục vẫn gọn.
-- 3 card sản phẩm tivi cũ mẫu:
-  - **Samsung Smart TV 43 inch cũ** - model `UA43TU7000`.
-  - **LG Smart TV 50 inch cũ** - model `50UP7550`.
-  - **Sony Google TV 55 inch cũ** - model `KD-55X80J`.
-- Bộ lọc kích thước và hãng trong khu vực này đã có active state khi bấm, đồng thời lọc trực tiếp 3 card mẫu theo `data-used-size` và `data-used-brand`.
+- Card sản phẩm tivi cũ được render từ `products.js`, gồm các sản phẩm có `type: "Tivi cũ"`.
+- Bộ lọc kích thước và hãng trong khu vực này có active state khi bấm, đồng thời render lại riêng lưới Tivi cũ theo `size` và `brand` trong dữ liệu sản phẩm.
 - Trên mobile, hàng kích thước và hàng logo cuộn ngang trong phạm vi màn hình; card sản phẩm xếp 1 cột để tránh tràn ngang.
 
-### Cách thêm thêm sản phẩm tivi cũ vào khu vực này
+### Cách thêm sản phẩm tivi cũ vào khu vực này
 
-1. Mở `index.html` và tìm khối:
-
-```html
-<div class="used-tv-grid" data-used-tv-grid aria-live="polite">
-```
-
-2. Sao chép một thẻ `<article class="used-tv-card" ...>` hiện có.
-3. Cập nhật các thuộc tính lọc trên article:
-
-```html
-data-used-size="55 inch" data-used-brand="Sony"
-```
-
-4. Cập nhật toàn bộ chữ hiển thị bên trong card bằng tiếng Việt: tên sản phẩm, model, kích thước, loại, tình trạng, tính năng, giá và badge.
-5. Nếu chưa có ảnh sản phẩm thật, giữ placeholder tivi CSS hiện tại để không cần thêm ảnh mới.
-6. Nếu sau này muốn sản phẩm mẫu này có trang chi tiết riêng, hãy thêm sản phẩm tương ứng vào `products.js` và đổi nút **Xem chi tiết** sang URL `product-detail.html?id=ma-san-pham`.
+1. Mở `products.js` và thêm object mới vào mảng `window.products`.
+2. Đặt `type: "Tivi cũ"` để sản phẩm xuất hiện đúng khu vực.
+3. Đặt `size` trùng chính xác với nút lọc, ví dụ `"43 inch"` hoặc `"55 inch"`.
+4. Đặt `brand` đúng tên hãng để bộ lọc hãng hoạt động; việc so khớp hãng không phân biệt chữ hoa/thường.
+5. Nếu chưa có ảnh sản phẩm thật, để `image: ""` và `images: []` để giao diện tự hiển thị placeholder tivi CSS.
+6. Link **Xem chi tiết** được tạo tự động theo dạng `product-detail.html?id=ma-san-pham`.
 
 ### Cách cập nhật danh sách logo hãng tivi cũ
 
@@ -362,7 +349,7 @@ data-used-size="55 inch" data-used-brand="Sony"
 </button>
 ```
 
-4. Nếu muốn bộ lọc hãng hoạt động với sản phẩm mới, giá trị `data-used-brand` trên nút hãng phải trùng với `data-used-brand` trên card sản phẩm.
+4. Nếu thêm hãng mới vào hàng lọc, giá trị `data-used-brand` trên nút hãng nên trùng với `brand` trong `products.js`.
 
 ### Cách cập nhật lựa chọn kích thước tivi cũ
 
@@ -378,7 +365,7 @@ data-used-size="55 inch" data-used-brand="Sony"
 <button class="old-tv-size-pill" type="button" data-used-size="60 inch" aria-pressed="false">60 inch</button>
 ```
 
-3. Nếu muốn lọc đúng sản phẩm theo kích thước mới, giá trị `data-used-size` trên nút phải trùng với `data-used-size` trên card sản phẩm.
+3. Nếu thêm kích thước mới, giá trị `data-used-size` trên nút phải trùng chính xác với `size` trong `products.js`.
 4. Giữ nút `Tất cả` với `data-used-size=""` để khách hàng có thể quay lại xem toàn bộ mẫu tivi cũ.
 
 ## Khu vực “Tivi mới chính hãng” trên trang chủ
@@ -393,31 +380,18 @@ Hiện khu vực này có:
 - Hàng logo hãng ngang nằm dưới hàng kích thước với nhãn **Chọn hãng tivi mới**.
 - Logo hãng dùng file có sẵn ở thư mục gốc repository: Samsung, LG, Sony, Toshiba, Hisense, TCL, Panasonic, Sharp, Xiaomi, Casper, Coocaa, Skyworth, Philips và Hitachi.
 - Mỗi logo dùng `object-fit: contain` để không bị kéo méo, không bị cắt. Nếu ảnh logo thiếu hoặc lỗi tải, `script.js` hiển thị badge chữ cái đầu trong ô logo.
-- 3 card sản phẩm tivi mới mẫu:
-  - **Smart Tivi Crystal UHD Samsung 4K 43 inch** - model `UA43U8500F`, giá `7.700.000đ`, bảo hành 2 năm.
-  - **Smart Tivi LG 4K 50 inch** - model `50UQ8000PSC`, giá `Liên hệ nhận giá tốt`, bảo hành 2 năm.
-  - **Google Tivi Sony 4K 55 inch** - model `KD-55X80K`, giá `Liên hệ nhận giá tốt`, bảo hành 2 năm.
-- Bộ lọc kích thước và hãng trong khu vực này có active state khi bấm, đồng thời lọc trực tiếp 3 card mẫu theo `data-new-size` và `data-new-brand`.
+- Card sản phẩm tivi mới được render từ `products.js`, gồm các sản phẩm có `type: "Tivi mới"`.
+- Bộ lọc kích thước và hãng trong khu vực này có active state khi bấm, đồng thời render lại riêng lưới Tivi mới theo `size` và `brand` trong dữ liệu sản phẩm.
 - Trên mobile, hàng kích thước và hàng logo cuộn ngang trong phạm vi màn hình; card sản phẩm xếp 1 cột để tránh tràn ngang.
 
-### Cách thêm thêm sản phẩm tivi mới vào khu vực này
+### Cách thêm sản phẩm tivi mới vào khu vực này
 
-1. Mở `index.html` và tìm khối:
-
-```html
-<div class="used-tv-grid new-tv-grid" data-new-tv-grid aria-live="polite">
-```
-
-2. Sao chép một thẻ `<article class="used-tv-card new-tv-card" ...>` hiện có.
-3. Cập nhật các thuộc tính lọc trên article:
-
-```html
-data-new-size="55 inch" data-new-brand="Sony"
-```
-
-4. Cập nhật toàn bộ chữ hiển thị bên trong card bằng tiếng Việt: hãng, tên đầy đủ, model, kích thước, loại, tình trạng, bảo hành, tính năng, giá và badge.
-5. Nếu chưa có ảnh sản phẩm thật, giữ placeholder tivi CSS hiện tại để không cần thêm ảnh mới.
-6. Nếu sản phẩm có trang chi tiết trong `products.js`, đổi liên kết nút **Xem chi tiết** sang dạng `product-detail.html?id=ma-san-pham`. Nếu chưa có trang chi tiết, có thể để liên kết về `#lien-he`.
+1. Mở `products.js` và thêm object mới vào mảng `window.products`.
+2. Đặt `type: "Tivi mới"` để sản phẩm xuất hiện đúng khu vực.
+3. Đặt `size` trùng chính xác với nút lọc, ví dụ `"43 inch"` hoặc `"55 inch"`.
+4. Đặt `brand` đúng tên hãng để bộ lọc hãng hoạt động; việc so khớp hãng không phân biệt chữ hoa/thường.
+5. Nếu chưa có ảnh sản phẩm thật, để `image: ""` và `images: []` để giao diện tự hiển thị placeholder tivi CSS.
+6. Link **Xem chi tiết** được tạo tự động theo dạng `product-detail.html?id=ma-san-pham`.
 
 ### Cách cập nhật danh sách logo hãng tivi mới
 
@@ -440,7 +414,7 @@ data-new-size="55 inch" data-new-brand="Sony"
 </button>
 ```
 
-4. Nếu muốn bộ lọc hãng hoạt động với sản phẩm mới, giá trị `data-new-brand` trên nút hãng phải trùng với `data-new-brand` trên card sản phẩm.
+4. Nếu thêm hãng mới vào hàng lọc, giá trị `data-new-brand` trên nút hãng nên trùng với `brand` trong `products.js`.
 
 ### Cách cập nhật lựa chọn kích thước tivi mới
 
@@ -456,7 +430,7 @@ data-new-size="55 inch" data-new-brand="Sony"
 <button class="old-tv-size-pill new-tv-size-pill" type="button" data-new-size="60 inch" aria-pressed="false">60 inch</button>
 ```
 
-3. Nếu muốn lọc đúng sản phẩm theo kích thước mới, giá trị `data-new-size` trên nút phải trùng với `data-new-size` trên card sản phẩm.
+3. Nếu thêm kích thước mới, giá trị `data-new-size` trên nút phải trùng chính xác với `size` trong `products.js`.
 4. Giữ nút `Tất cả` với `data-new-size=""` để khách hàng có thể quay lại xem toàn bộ mẫu tivi mới.
 
 ## Cách cập nhật hình ảnh sau này
@@ -589,3 +563,64 @@ Website là web tĩnh nên không cần build, không cần cài dependency và 
 - [ ] Nút nổi Gọi ngay/Zalo không che nội dung quan trọng trên mobile.
 - [ ] SEO title, meta description và Open Graph hiển thị đúng.
 - [ ] Kiểm tra website trên Chrome, Safari mobile hoặc trình duyệt điện thoại thật trước khi chạy quảng cáo.
+
+## Cập nhật bộ lọc sản phẩm trang chủ
+
+Trang chủ hiện render hai khu vực **Tivi cũ đã kiểm tra** và **Tivi mới chính hãng** trực tiếp từ `products.js` thay vì phụ thuộc vào card sản phẩm viết cứng trong HTML.
+
+### Bộ lọc Tivi cũ và Tivi mới
+
+- Khu vực **Tivi cũ đã kiểm tra** chỉ lấy sản phẩm có `type: "Tivi cũ"`.
+- Khu vực **Tivi mới chính hãng** chỉ lấy sản phẩm có `type: "Tivi mới"`.
+- Mỗi khu vực có trạng thái lọc riêng:
+  - `selectedSize`, mặc định là `"Tất cả"`.
+  - `selectedBrand`, mặc định là `"Tất cả"`.
+- Khi bấm kích thước hoặc hãng trong khu vực Tivi cũ, chỉ danh sách Tivi cũ được render lại.
+- Khi bấm kích thước hoặc hãng trong khu vực Tivi mới, chỉ danh sách Tivi mới được render lại.
+- Nếu chọn `"Tất cả"`, bộ lọc tương ứng được reset.
+- Nếu không có sản phẩm phù hợp, trang hiển thị thông báo: `Chưa có sản phẩm phù hợp. Vui lòng chọn bộ lọc khác hoặc liên hệ Anh Minh Store.`
+- Mỗi khu vực có dòng đếm: `Đang hiển thị: X sản phẩm` và số lượng được cập nhật sau mỗi lần lọc.
+
+### Cách thêm sản phẩm mới vào `products.js`
+
+Thêm một object sản phẩm mới vào mảng `window.products`. Mỗi sản phẩm nên có đầy đủ các trường sau:
+
+```js
+{
+  id: "ma-san-pham-duy-nhat",
+  brand: "Samsung",
+  model: "Model sản phẩm",
+  fullName: "Tên đầy đủ hiển thị trên card và trang chi tiết",
+  size: "55 inch",
+  type: "Tivi mới",
+  condition: "Mới",
+  warranty: "Bảo hành 2 năm",
+  oldPrice: "",
+  price: "Liên hệ nhận giá tốt",
+  badge: "Hàng mới",
+  description: "Mô tả ngắn bằng tiếng Việt.",
+  features: ["4K UHD", "Smart TV"],
+  image: "",
+  images: []
+}
+```
+
+Lưu ý quan trọng:
+
+- `id` phải là duy nhất vì link chi tiết dùng dạng `product-detail.html?id={id}`.
+- `type` phải là đúng một trong hai giá trị:
+  - `"Tivi cũ"` để sản phẩm xuất hiện trong khu vực **Tivi cũ đã kiểm tra**.
+  - `"Tivi mới"` để sản phẩm xuất hiện trong khu vực **Tivi mới chính hãng**.
+- `size` cần khớp chính xác với text trên nút lọc, ví dụ `"43 inch"`, `"55 inch"`.
+- `brand` được so sánh không phân biệt chữ hoa/thường, nhưng nên viết đúng tên hãng để hiển thị đẹp.
+- Nếu chưa có ảnh sản phẩm, để `image: ""` và `images: []`; giao diện sẽ dùng khung tivi minh họa bằng CSS.
+
+### Cách kiểm thử bộ lọc
+
+1. Mở `index.html` trên trình duyệt.
+2. Trong khu vực **Tivi cũ đã kiểm tra**, bấm một hãng như `Samsung`, `LG`, `Sony` hoặc `Toshiba` và kiểm tra chỉ card Tivi cũ thay đổi.
+3. Trong khu vực **Tivi cũ đã kiểm tra**, bấm một kích thước như `43 inch`, `50 inch`, `55 inch` và kiểm tra danh sách lọc đúng theo kích thước.
+4. Trong khu vực **Tivi mới chính hãng**, bấm một hãng hoặc kích thước và kiểm tra danh sách Tivi mới thay đổi độc lập với khu vực Tivi cũ.
+5. Chọn kết hợp cả hãng và kích thước để kiểm tra lọc đồng thời theo cả hai điều kiện.
+6. Chọn `Tất cả` ở hàng kích thước hoặc hãng để reset riêng bộ lọc đó.
+7. Bấm nút **Xem chi tiết** trên sản phẩm để kiểm tra link mở cùng tab theo dạng `product-detail.html?id={id}`.
