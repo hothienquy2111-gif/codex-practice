@@ -381,6 +381,84 @@ data-used-size="55 inch" data-used-brand="Sony"
 3. Nếu muốn lọc đúng sản phẩm theo kích thước mới, giá trị `data-used-size` trên nút phải trùng với `data-used-size` trên card sản phẩm.
 4. Giữ nút `Tất cả` với `data-used-size=""` để khách hàng có thể quay lại xem toàn bộ mẫu tivi cũ.
 
+## Khu vực “Tivi mới chính hãng” trên trang chủ
+
+Khu vực **Tivi mới chính hãng** trong `index.html` đã được cập nhật để đồng bộ phong cách bán lẻ với khu vực **Tivi cũ đã kiểm tra**, vẫn giữ thiết kế nền trắng/xanh dương đậm và font Aptos toàn site.
+
+Hiện khu vực này có:
+
+- Đã bỏ hoàn toàn cụm pill thương hiệu cũ ở bên phải gồm `Tivi mới`, `Samsung`, `LG`, `Sony`, `Toshiba`, `Hisense`, `TCL`, `Panasonic`.
+- Hàng lọc kích thước ngang nằm ngay dưới mô tả với nhãn **Chọn kích thước tivi mới**.
+- Các nút pill kích thước: `Tất cả`, `32 inch`, `43 inch`, `49 inch`, `50 inch`, `55 inch`, `65 inch`, `75 inch`, `85 inch`.
+- Hàng logo hãng ngang nằm dưới hàng kích thước với nhãn **Chọn hãng tivi mới**.
+- Logo hãng dùng file có sẵn ở thư mục gốc repository: Samsung, LG, Sony, Toshiba, Hisense, TCL, Panasonic, Sharp, Xiaomi, Casper, Coocaa, Skyworth, Philips và Hitachi.
+- Mỗi logo dùng `object-fit: contain` để không bị kéo méo, không bị cắt. Nếu ảnh logo thiếu hoặc lỗi tải, `script.js` hiển thị badge chữ cái đầu trong ô logo.
+- 3 card sản phẩm tivi mới mẫu:
+  - **Smart Tivi Crystal UHD Samsung 4K 43 inch** - model `UA43U8500F`, giá `7.700.000đ`, bảo hành 2 năm.
+  - **Smart Tivi LG 4K 50 inch** - model `50UQ8000PSC`, giá `Liên hệ nhận giá tốt`, bảo hành 2 năm.
+  - **Google Tivi Sony 4K 55 inch** - model `KD-55X80K`, giá `Liên hệ nhận giá tốt`, bảo hành 2 năm.
+- Bộ lọc kích thước và hãng trong khu vực này có active state khi bấm, đồng thời lọc trực tiếp 3 card mẫu theo `data-new-size` và `data-new-brand`.
+- Trên mobile, hàng kích thước và hàng logo cuộn ngang trong phạm vi màn hình; card sản phẩm xếp 1 cột để tránh tràn ngang.
+
+### Cách thêm thêm sản phẩm tivi mới vào khu vực này
+
+1. Mở `index.html` và tìm khối:
+
+```html
+<div class="used-tv-grid new-tv-grid" data-new-tv-grid aria-live="polite">
+```
+
+2. Sao chép một thẻ `<article class="used-tv-card new-tv-card" ...>` hiện có.
+3. Cập nhật các thuộc tính lọc trên article:
+
+```html
+data-new-size="55 inch" data-new-brand="Sony"
+```
+
+4. Cập nhật toàn bộ chữ hiển thị bên trong card bằng tiếng Việt: hãng, tên đầy đủ, model, kích thước, loại, tình trạng, bảo hành, tính năng, giá và badge.
+5. Nếu chưa có ảnh sản phẩm thật, giữ placeholder tivi CSS hiện tại để không cần thêm ảnh mới.
+6. Nếu sản phẩm có trang chi tiết trong `products.js`, đổi liên kết nút **Xem chi tiết** sang dạng `product-detail.html?id=ma-san-pham`. Nếu chưa có trang chi tiết, có thể để liên kết về `#lien-he`.
+
+### Cách cập nhật danh sách logo hãng tivi mới
+
+1. Mở `index.html` và tìm khối:
+
+```html
+<div class="old-tv-brand-row new-tv-brand-row" role="group" aria-label="Chọn hãng tivi mới" data-new-tv-brand-row>
+```
+
+2. Để đổi logo, chỉ cập nhật `src` và `alt` của thẻ `<img>` trong đúng nút hãng. Không chỉnh sửa file ảnh/SVG/binary gốc nếu không có yêu cầu riêng.
+3. Để thêm hãng mới, thêm một nút theo mẫu:
+
+```html
+<button class="old-tv-brand-card new-tv-brand-card" type="button" data-new-brand="Tên hãng" aria-pressed="false">
+  <span class="brand-logo-box old-tv-brand-card__logo new-tv-brand-card__logo">
+    <img class="brand-logo-image--wide" src="ten-logo.jpeg" alt="Logo Tên hãng" />
+    <span class="brand-fallback-badge" aria-hidden="true">T</span>
+  </span>
+  <span class="old-tv-brand-card__name">Tên hãng</span>
+</button>
+```
+
+4. Nếu muốn bộ lọc hãng hoạt động với sản phẩm mới, giá trị `data-new-brand` trên nút hãng phải trùng với `data-new-brand` trên card sản phẩm.
+
+### Cách cập nhật lựa chọn kích thước tivi mới
+
+1. Mở `index.html` và tìm khối:
+
+```html
+<div class="old-tv-size-row new-tv-size-row" role="group" aria-label="Chọn kích thước tivi mới" data-new-tv-size-row>
+```
+
+2. Thêm, xóa hoặc đổi nút kích thước theo mẫu:
+
+```html
+<button class="old-tv-size-pill new-tv-size-pill" type="button" data-new-size="60 inch" aria-pressed="false">60 inch</button>
+```
+
+3. Nếu muốn lọc đúng sản phẩm theo kích thước mới, giá trị `data-new-size` trên nút phải trùng với `data-new-size` trên card sản phẩm.
+4. Giữ nút `Tất cả` với `data-new-size=""` để khách hàng có thể quay lại xem toàn bộ mẫu tivi mới.
+
 ## Cách cập nhật hình ảnh sau này
 
 Hiện tại nhiều sản phẩm dùng placeholder tivi bằng CSS. Khi muốn thêm ảnh thật:

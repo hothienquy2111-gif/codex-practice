@@ -221,6 +221,21 @@ button { cursor: pointer; }
 .used-tv-empty { display: block; }
 .used-tv-empty[hidden] { display: none; }
 
+
+.new-tv-section { overflow: hidden; }
+.new-tv-section__inner { min-width: 0; }
+.new-tv-filter-block { min-width: 0; }
+.new-tv-size-row,
+.new-tv-brand-row { max-width: 100%; }
+.new-tv-brand-card:hover,
+.new-tv-brand-card.is-active { border-color: var(--color-primary-deep); background: var(--color-primary-deep); color: var(--color-white); }
+.new-tv-brand-card:hover .new-tv-brand-card__logo,
+.new-tv-brand-card.is-active .new-tv-brand-card__logo { background: var(--color-white); }
+.new-tv-brand-card:hover .brand-fallback-badge,
+.new-tv-brand-card.is-active .brand-fallback-badge { color: var(--color-primary-deep); }
+.new-tv-grid { min-width: 0; }
+.new-tv-card h3 { min-height: 2.8em; }
+
 .exchange { background: linear-gradient(135deg, var(--color-primary-deep), var(--color-primary)); color: var(--color-white); }
 .exchange h2, .exchange .section-kicker, .exchange p { color: var(--color-white); }
 .process-list { display: grid; gap: var(--space-3); margin: 0; padding: 0; list-style: none; }
