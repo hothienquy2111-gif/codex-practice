@@ -511,15 +511,145 @@
         </div>
       </section>
 
-      <section class="section info-section info-section--light section-anchor" id="tivi-moi" aria-labelledby="new-tv-title">
-        <div class="container info-grid">
+      <section class="section info-section info-section--light new-tv-section section-anchor" id="tivi-moi" aria-labelledby="new-tv-title">
+        <div class="container old-tv-section__inner new-tv-section__inner">
           <div class="info-copy">
             <span class="section-kicker">Tivi mới</span>
             <h2 id="new-tv-title">Tivi mới chính hãng</h2>
             <p>Cập nhật nhiều dòng tivi mới từ các thương hiệu phổ biến, hỗ trợ tư vấn theo diện tích phòng và nhu cầu sử dụng.</p>
           </div>
-          <div class="chip-list" aria-label="Thương hiệu tivi mới">
-            <a href="#san-pham" data-product-filter="type" data-filter-value="Tivi mới">Tivi mới</a><a href="#san-pham" data-product-filter="brand" data-filter-value="Samsung">Samsung</a><span>LG</span><span>Sony</span><span>Toshiba</span><span>Hisense</span><span>TCL</span><span>Panasonic</span>
+
+          <div class="old-tv-filter-block new-tv-filter-block" aria-labelledby="new-tv-size-label">
+            <p class="old-tv-filter-label" id="new-tv-size-label">Chọn kích thước tivi mới</p>
+            <div class="old-tv-size-row new-tv-size-row" role="group" aria-label="Chọn kích thước tivi mới" data-new-tv-size-row>
+              <button class="old-tv-size-pill new-tv-size-pill is-active" type="button" data-new-size="" aria-pressed="true">Tất cả</button>
+              <button class="old-tv-size-pill new-tv-size-pill" type="button" data-new-size="32 inch" aria-pressed="false">32 inch</button>
+              <button class="old-tv-size-pill new-tv-size-pill" type="button" data-new-size="43 inch" aria-pressed="false">43 inch</button>
+              <button class="old-tv-size-pill new-tv-size-pill" type="button" data-new-size="49 inch" aria-pressed="false">49 inch</button>
+              <button class="old-tv-size-pill new-tv-size-pill" type="button" data-new-size="50 inch" aria-pressed="false">50 inch</button>
+              <button class="old-tv-size-pill new-tv-size-pill" type="button" data-new-size="55 inch" aria-pressed="false">55 inch</button>
+              <button class="old-tv-size-pill new-tv-size-pill" type="button" data-new-size="65 inch" aria-pressed="false">65 inch</button>
+              <button class="old-tv-size-pill new-tv-size-pill" type="button" data-new-size="75 inch" aria-pressed="false">75 inch</button>
+              <button class="old-tv-size-pill new-tv-size-pill" type="button" data-new-size="85 inch" aria-pressed="false">85 inch</button>
+            </div>
+          </div>
+
+          <div class="old-tv-filter-block new-tv-filter-block" aria-labelledby="new-tv-brand-label">
+            <p class="old-tv-filter-label" id="new-tv-brand-label">Chọn hãng tivi mới</p>
+            <div class="old-tv-brand-row new-tv-brand-row" role="group" aria-label="Chọn hãng tivi mới" data-new-tv-brand-row>
+              <button class="old-tv-brand-card new-tv-brand-card is-active" type="button" data-new-brand="" aria-pressed="true">
+                <span class="brand-logo-box old-tv-brand-card__logo new-tv-brand-card__logo is-logo-error"><span class="brand-fallback-badge" aria-hidden="false">T</span></span>
+                <span class="old-tv-brand-card__name">Tất cả</span>
+              </button>
+              <button class="old-tv-brand-card new-tv-brand-card" type="button" data-new-brand="Samsung" aria-pressed="false">
+                <span class="brand-logo-box old-tv-brand-card__logo new-tv-brand-card__logo"><img class="brand-logo-image--wide" src="samsung.jpeg" alt="Logo Samsung" /><span class="brand-fallback-badge" aria-hidden="true">S</span></span>
+                <span class="old-tv-brand-card__name">Samsung</span>
+              </button>
+              <button class="old-tv-brand-card new-tv-brand-card" type="button" data-new-brand="LG" aria-pressed="false">
+                <span class="brand-logo-box old-tv-brand-card__logo new-tv-brand-card__logo"><img class="brand-logo-image--wide" src="LG.jpeg" alt="Logo LG" /><span class="brand-fallback-badge" aria-hidden="true">L</span></span>
+                <span class="old-tv-brand-card__name">LG</span>
+              </button>
+              <button class="old-tv-brand-card new-tv-brand-card" type="button" data-new-brand="Sony" aria-pressed="false">
+                <span class="brand-logo-box old-tv-brand-card__logo new-tv-brand-card__logo"><img class="brand-logo-image--wide" src="sony.jpeg" alt="Logo Sony" /><span class="brand-fallback-badge" aria-hidden="true">S</span></span>
+                <span class="old-tv-brand-card__name">Sony</span>
+              </button>
+              <button class="old-tv-brand-card new-tv-brand-card" type="button" data-new-brand="Toshiba" aria-pressed="false">
+                <span class="brand-logo-box old-tv-brand-card__logo new-tv-brand-card__logo"><img class="brand-logo-image--wide" src="toshiba.jpeg" alt="Logo Toshiba" /><span class="brand-fallback-badge" aria-hidden="true">T</span></span>
+                <span class="old-tv-brand-card__name">Toshiba</span>
+              </button>
+              <button class="old-tv-brand-card new-tv-brand-card" type="button" data-new-brand="Hisense" aria-pressed="false">
+                <span class="brand-logo-box old-tv-brand-card__logo new-tv-brand-card__logo"><img class="brand-logo-image--wide" src="Hisense.svg" alt="Logo Hisense" /><span class="brand-fallback-badge" aria-hidden="true">H</span></span>
+                <span class="old-tv-brand-card__name">Hisense</span>
+              </button>
+              <button class="old-tv-brand-card new-tv-brand-card" type="button" data-new-brand="TCL" aria-pressed="false">
+                <span class="brand-logo-box old-tv-brand-card__logo new-tv-brand-card__logo"><img class="brand-logo-image--wide" src="TCL.jpeg" alt="Logo TCL" /><span class="brand-fallback-badge" aria-hidden="true">T</span></span>
+                <span class="old-tv-brand-card__name">TCL</span>
+              </button>
+              <button class="old-tv-brand-card new-tv-brand-card" type="button" data-new-brand="Panasonic" aria-pressed="false">
+                <span class="brand-logo-box old-tv-brand-card__logo new-tv-brand-card__logo"><img class="brand-logo-image--wide" src="panasonic.jpeg" alt="Logo Panasonic" /><span class="brand-fallback-badge" aria-hidden="true">P</span></span>
+                <span class="old-tv-brand-card__name">Panasonic</span>
+              </button>
+              <button class="old-tv-brand-card new-tv-brand-card" type="button" data-new-brand="Sharp" aria-pressed="false">
+                <span class="brand-logo-box old-tv-brand-card__logo new-tv-brand-card__logo"><img class="brand-logo-image--wide" src="sharp.jpeg" alt="Logo Sharp" /><span class="brand-fallback-badge" aria-hidden="true">S</span></span>
+                <span class="old-tv-brand-card__name">Sharp</span>
+              </button>
+              <button class="old-tv-brand-card new-tv-brand-card" type="button" data-new-brand="Xiaomi" aria-pressed="false">
+                <span class="brand-logo-box old-tv-brand-card__logo new-tv-brand-card__logo"><img class="brand-logo-image--wide" src="xiaomi.jpeg" alt="Logo Xiaomi" /><span class="brand-fallback-badge" aria-hidden="true">X</span></span>
+                <span class="old-tv-brand-card__name">Xiaomi</span>
+              </button>
+              <button class="old-tv-brand-card new-tv-brand-card" type="button" data-new-brand="Casper" aria-pressed="false">
+                <span class="brand-logo-box old-tv-brand-card__logo new-tv-brand-card__logo"><img class="brand-logo-image--wide" src="casper.jpeg" alt="Logo Casper" /><span class="brand-fallback-badge" aria-hidden="true">C</span></span>
+                <span class="old-tv-brand-card__name">Casper</span>
+              </button>
+              <button class="old-tv-brand-card new-tv-brand-card" type="button" data-new-brand="Coocaa" aria-pressed="false">
+                <span class="brand-logo-box old-tv-brand-card__logo new-tv-brand-card__logo"><img class="brand-logo-image--wide" src="coocaa.jpeg" alt="Logo Coocaa" /><span class="brand-fallback-badge" aria-hidden="true">C</span></span>
+                <span class="old-tv-brand-card__name">Coocaa</span>
+              </button>
+              <button class="old-tv-brand-card new-tv-brand-card" type="button" data-new-brand="Skyworth" aria-pressed="false">
+                <span class="brand-logo-box old-tv-brand-card__logo new-tv-brand-card__logo"><img class="brand-logo-image--wide" src="skyworth.png" alt="Logo Skyworth" /><span class="brand-fallback-badge" aria-hidden="true">S</span></span>
+                <span class="old-tv-brand-card__name">Skyworth</span>
+              </button>
+              <button class="old-tv-brand-card new-tv-brand-card" type="button" data-new-brand="Philips" aria-pressed="false">
+                <span class="brand-logo-box old-tv-brand-card__logo new-tv-brand-card__logo"><img class="brand-logo-image--wide" src="philips.jpeg" alt="Logo Philips" /><span class="brand-fallback-badge" aria-hidden="true">P</span></span>
+                <span class="old-tv-brand-card__name">Philips</span>
+              </button>
+              <button class="old-tv-brand-card new-tv-brand-card" type="button" data-new-brand="Hitachi" aria-pressed="false">
+                <span class="brand-logo-box old-tv-brand-card__logo new-tv-brand-card__logo"><img class="brand-logo-image--wide" src="hitachi.jpeg" alt="Logo Hitachi" /><span class="brand-fallback-badge" aria-hidden="true">H</span></span>
+                <span class="old-tv-brand-card__name">Hitachi</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="used-tv-grid new-tv-grid" data-new-tv-grid aria-live="polite">
+            <article class="used-tv-card new-tv-card" data-new-tv-card data-new-size="43 inch" data-new-brand="Samsung">
+              <span class="product-card__badge">Bảo hành 2 năm</span>
+              <div class="product-card__media"><div class="tv-mockup" aria-hidden="true"><span></span></div></div>
+              <span class="product-brand">Samsung</span>
+              <h3>Smart Tivi Crystal UHD Samsung 4K 43 inch</h3>
+              <dl class="used-tv-card__meta">
+                <div><dt>Model</dt><dd>UA43U8500F</dd></div>
+                <div><dt>Kích thước</dt><dd>43 inch</dd></div>
+                <div><dt>Loại</dt><dd>Tivi mới</dd></div>
+                <div><dt>Tình trạng</dt><dd>Mới</dd></div>
+                <div><dt>Bảo hành</dt><dd>Bảo hành 2 năm</dd></div>
+              </dl>
+              <ul><li>4K UHD</li><li>Crystal UHD</li><li>Smart TV</li><li>Bảo hành 2 năm</li></ul>
+              <strong class="product-price"><span>Giá:</span> 7.700.000đ</strong>
+              <a class="btn btn--primary product-card__cta" href="product-detail.html?id=samsung-43u8500f">Xem chi tiết</a>
+            </article>
+            <article class="used-tv-card new-tv-card" data-new-tv-card data-new-size="50 inch" data-new-brand="LG">
+              <span class="product-card__badge">Hàng mới</span>
+              <div class="product-card__media"><div class="tv-mockup" aria-hidden="true"><span></span></div></div>
+              <span class="product-brand">LG</span>
+              <h3>Smart Tivi LG 4K 50 inch</h3>
+              <dl class="used-tv-card__meta">
+                <div><dt>Model</dt><dd>50UQ8000PSC</dd></div>
+                <div><dt>Kích thước</dt><dd>50 inch</dd></div>
+                <div><dt>Loại</dt><dd>Tivi mới</dd></div>
+                <div><dt>Tình trạng</dt><dd>Mới</dd></div>
+                <div><dt>Bảo hành</dt><dd>Bảo hành 2 năm</dd></div>
+              </dl>
+              <ul><li>4K UHD</li><li>WebOS</li><li>Điều khiển thông minh</li><li>Phù hợp phòng khách</li></ul>
+              <strong class="product-price"><span>Giá:</span> Liên hệ nhận giá tốt</strong>
+              <a class="btn btn--primary product-card__cta" href="#lien-he">Xem chi tiết</a>
+            </article>
+            <article class="used-tv-card new-tv-card" data-new-tv-card data-new-size="55 inch" data-new-brand="Sony">
+              <span class="product-card__badge">Đáng tham khảo</span>
+              <div class="product-card__media"><div class="tv-mockup" aria-hidden="true"><span></span></div></div>
+              <span class="product-brand">Sony</span>
+              <h3>Google Tivi Sony 4K 55 inch</h3>
+              <dl class="used-tv-card__meta">
+                <div><dt>Model</dt><dd>KD-55X80K</dd></div>
+                <div><dt>Kích thước</dt><dd>55 inch</dd></div>
+                <div><dt>Loại</dt><dd>Tivi mới</dd></div>
+                <div><dt>Tình trạng</dt><dd>Mới</dd></div>
+                <div><dt>Bảo hành</dt><dd>Bảo hành 2 năm</dd></div>
+              </dl>
+              <ul><li>Google TV</li><li>4K HDR</li><li>Âm thanh rõ</li><li>Tư vấn theo nhu cầu</li></ul>
+              <strong class="product-price"><span>Giá:</span> Liên hệ nhận giá tốt</strong>
+              <a class="btn btn--primary product-card__cta" href="#lien-he">Xem chi tiết</a>
+            </article>
+            <p class="empty-state used-tv-empty new-tv-empty" data-new-tv-empty hidden>Chưa có mẫu tivi mới phù hợp. Vui lòng chọn lại bộ lọc hoặc liên hệ 0905111223 để được tư vấn.</p>
           </div>
         </div>
       </section>
