@@ -2,6 +2,7 @@
   const productDetailRoot = document.querySelector('#product-detail-root');
   const params = new URLSearchParams(window.location.search);
   const productId = params.get('id');
+  let activeModal = null;
 
   const escapeDetailHtml = (value = '') =>
     String(value).replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
@@ -48,6 +49,8 @@
       images: imageList,
       badge: product.badge || 'Tư vấn',
       description: product.description || 'Vui lòng liên hệ Anh Minh Store để được tư vấn chi tiết.',
+      overview: Array.isArray(product.overview) ? product.overview : [],
+      specifications: Array.isArray(product.specifications) ? product.specifications : [],
     };
   };
 
@@ -83,6 +86,127 @@
           ${thumbnails}
         </div>
       </div>`;
+  };
+
+  const renderModalValue = (value) => {
+    if (Array.isArray(value)) {
+      return `<ul class="product-modal__value-list">${value.map((item) => `<li>${escapeDetailHtml(item)}</li>`).join('')}</ul>`;
+    }
+
+    return escapeDetailHtml(value);
+  };
+
+  const renderOverviewContent = (overview = []) => {
+    if (!overview.length) return '';
+
+    return `
+      <div class="product-overview-modal">
+        ${overview.map((section) => {
+          const heading = section.heading ? `<h3>${escapeDetailHtml(section.heading)}</h3>` : '';
+          const paragraphs = Array.isArray(section.paragraphs)
+            ? section.paragraphs.map((paragraph) => `<p>${escapeDetailHtml(paragraph)}</p>`).join('')
+            : '';
+          return `<section>${heading}${paragraphs}</section>`;
+        }).join('')}
+      </div>`;
+  };
+
+  const renderSpecificationsContent = (specifications = []) => {
+    if (!specifications.length) return '';
+
+    return `
+      <div class="product-specification-modal">
+        ${specifications.map((group) => `
+          <section class="product-specification-group">
+            <h3>${escapeDetailHtml(group.group)}</h3>
+            <dl class="product-specification-table">
+              ${(Array.isArray(group.rows) ? group.rows : []).map((row) => `
+                <div class="product-specification-row">
+                  <dt>${escapeDetailHtml(row.label)}</dt>
+                  <dd>${renderModalValue(row.value)}</dd>
+                </div>`).join('')}
+            </dl>
+          </section>`).join('')}
+      </div>`;
+  };
+
+  const openProductModal = ({ title, content }) => {
+    if (!content) return;
+
+    if (activeModal) activeModal.remove();
+
+    const titleId = `product-modal-title-${Date.now()}`;
+    const modal = document.createElement('div');
+    modal.className = 'product-modal';
+    modal.innerHTML = `
+      <div class="product-modal__backdrop" data-product-modal-close></div>
+      <section class="product-modal__card" role="dialog" aria-modal="true" aria-labelledby="${titleId}">
+        <header class="product-modal__header">
+          <h2 id="${titleId}">${escapeDetailHtml(title)}</h2>
+          <button class="product-modal__close" type="button" aria-label="Đóng cửa sổ ${escapeDetailHtml(title)}" data-product-modal-close>×</button>
+        </header>
+        <div class="product-modal__content">
+          ${content}
+        </div>
+      </section>`;
+
+    const closeModal = () => {
+      modal.remove();
+      document.body.classList.remove('product-modal-open');
+      document.removeEventListener('keydown', handleEscape);
+      activeModal = null;
+    };
+
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') closeModal();
+    };
+
+    modal.addEventListener('click', (event) => {
+      if (event.target.matches('[data-product-modal-close]')) closeModal();
+    });
+
+    document.body.appendChild(modal);
+    document.body.classList.add('product-modal-open');
+    document.addEventListener('keydown', handleEscape);
+    activeModal = modal;
+    modal.querySelector('.product-modal__close')?.focus();
+  };
+
+  const renderDetailModalButtons = (product) => {
+    const buttons = [];
+
+    if (product.overview.length) {
+      buttons.push('<button class="btn product-detail__modal-button" type="button" data-product-modal-trigger="overview">Tổng quan sản phẩm</button>');
+    }
+
+    if (product.specifications.length) {
+      buttons.push('<button class="btn product-detail__modal-button" type="button" data-product-modal-trigger="specifications">Thông số chi tiết</button>');
+    }
+
+    if (!buttons.length) return '';
+
+    return `<div class="product-detail__modal-actions" aria-label="Thông tin chi tiết sản phẩm">${buttons.join('')}</div>`;
+  };
+
+  const bindProductModalButtons = (product) => {
+    productDetailRoot?.querySelectorAll('[data-product-modal-trigger]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const modalType = button.dataset.productModalTrigger;
+        if (modalType === 'overview') {
+          openProductModal({
+            title: 'Tổng quan sản phẩm',
+            content: renderOverviewContent(product.overview),
+          });
+        }
+
+        if (modalType === 'specifications') {
+          openProductModal({
+            title: 'Thông số chi tiết',
+            content: renderSpecificationsContent(product.specifications),
+          });
+        }
+      });
+    });
   };
 
   const bindProductGallery = () => {
@@ -170,6 +294,8 @@
           <p class="product-detail__price"><span>Giá bán:</span> <strong>${escapeDetailHtml(product.price)}</strong></p>
         </div>
 
+        ${renderDetailModalButtons(product)}
+
         <div class="product-detail__actions">
           <a class="btn btn--primary" href="tel:0905111223" aria-label="Gọi tư vấn sản phẩm ${escapeDetailHtml(label)}">Gọi tư vấn</a>
           <a class="btn btn--zalo" href="#" aria-label="Nhắn Zalo hỏi sản phẩm ${escapeDetailHtml(label)}">Nhắn Zalo</a>
@@ -178,6 +304,7 @@
       </article>`;
 
     bindProductGallery();
+    bindProductModalButtons(product);
   };
 
   if (!Array.isArray(window.products)) {

@@ -58,8 +58,8 @@ window.products = [
   {
     id: "samsung-43u8500f",
     brand: "Samsung",
-    model: "43U8500F",
-    fullName: "Smart Tivi Crystal UHD Samsung 4K 43 inch",
+    model: "UA43U8500F",
+    fullName: "Smart Tivi Crystal UHD Samsung 4K 43 inch UA43U8500F",
     size: "43 inch",
     type: "Tivi mới",
     condition: "Mới",
@@ -67,7 +67,92 @@ window.products = [
     oldPrice: "",
     price: "7.700.000đ",
     badge: "Bảo hành 2 năm",
-    description: "Smart Tivi Crystal UHD Samsung 4K 43 inch 43U8500F phù hợp cho phòng khách, phòng ngủ hoặc không gian giải trí gia đình. Thiết kế hiện đại, hình ảnh sắc nét, dễ sử dụng và được Anh Minh Store tư vấn tận tình.",
+    description: "Smart Tivi Crystal UHD Samsung 4K 43 inch UA43U8500F phù hợp cho phòng khách, phòng ngủ hoặc không gian giải trí gia đình. Thiết kế hiện đại, hình ảnh sắc nét, dễ sử dụng và được Anh Minh Store tư vấn tận tình.",
+    overview: [
+      {
+        paragraphs: [
+          "Smart Tivi Crystal UHD Samsung 4K 43 inch UA43U8500F mang đến hình ảnh 4K chi tiết, vận hành mượt trên nền tảng Tizen™ và hỗ trợ điều khiển giọng nói Bixby tiếng Việt tiện lợi.",
+        ],
+      },
+      {
+        heading: "Thiết kế",
+        paragraphs: [
+          "Màn hình 43 inch gọn gàng, dễ bố trí trong nhiều không gian từ phòng khách vừa, phòng ngủ đến căn hộ nhỏ. Viền mỏng tạo cảm giác hình ảnh tràn viền, chân đế nhựa chắc chắn, thuận tiện khi đặt trên kệ tivi hoặc bàn.",
+        ],
+      },
+      {
+        heading: "Công nghệ hình ảnh",
+        paragraphs: [
+          "Tivi trang bị bộ xử lý Crystal 4K, tivi nâng cấp chất lượng hiển thị của nội dung thường lên gần chuẩn 4K. Công nghệ HDR10+ và Contrast Enhancer tăng chiều sâu cho khung hình, trong khi UHD Dimming tinh chỉnh độ sáng tối chi tiết hơn.",
+        ],
+      },
+    ],
+    specifications: [
+      {
+        group: "Tổng quan",
+        rows: [
+          { label: "Loại Tivi", value: "Smart Tivi Crystal UHD" },
+          { label: "Kích cỡ màn hình", value: "43 inch" },
+          { label: "Độ phân giải", value: "4K (Ultra HD)" },
+          { label: "Loại màn hình", value: "Đèn nền LED viền (Edge LED)" },
+          { label: "Hệ điều hành", value: "Tizen™" },
+          { label: "RAM", value: "Hãng không công bố" },
+          { label: "ROM (Bộ nhớ lưu trữ)", value: "Hãng không công bố" },
+          { label: "Chất liệu chân đế", value: "Nhựa" },
+          { label: "Chất liệu viền tivi", value: "Nhựa" },
+          { label: "Nơi sản xuất", value: "Việt Nam" },
+          { label: "Năm ra mắt", value: "2025" },
+          { label: "Hãng", value: "Samsung" },
+        ],
+      },
+      {
+        group: "Công nghệ hình ảnh",
+        rows: [
+          { label: "Công nghệ hình ảnh", value: ["Độ tương phản cao - Mega Contrast", "HDR10+", "HDR", "Kiểm soát đèn nền UHD Dimming", "Công nghệ Color Booster", "Nâng cấp độ tương phản Contrast Enhancer", "4K Upscaling", "Chuyển động mượt Motion Xcelerator"] },
+          { label: "Bộ xử lý", value: "Bộ xử lý Crystal 4K" },
+          { label: "Tần số quét thực", value: "50 Hz/60 Hz" },
+        ],
+      },
+      {
+        group: "Tiện ích",
+        rows: [
+          { label: "Điều khiển tivi bằng điện thoại", value: "SmartThings" },
+          { label: "Điều khiển bằng giọng nói", value: ["Tìm kiếm giọng nói trên YouTube bằng tiếng Việt", "Bixby có tiếng Việt"] },
+          { label: "Chiếu hình từ điện thoại lên TV", value: "AirPlay 2" },
+          { label: "Remote thông minh", value: "Điều khiển One Remote Control tích hợp Solar Cell Remote" },
+          { label: "Kết nối ứng dụng các thiết bị trong nhà", value: "SmartThings" },
+          { label: "Ứng dụng phổ biến", value: ["YouTube", "Netflix", "FPT Play", "TV 360", "VieON"] },
+          { label: "Tiện ích thông minh khác", value: ["Built in IoT Hub kết nối các thiết bị IoT mà không cần dongle", "Universal Gestures điều khiển bằng đồng hồ Galaxy, hỗ trợ từ Galaxy Watch 4", "Quick Remote sử dụng điện thoại như điều khiển từ xa, hỗ trợ Android OS 11.0/iOS 16.0 trở lên"] },
+        ],
+      },
+      {
+        group: "Công nghệ âm thanh",
+        rows: [
+          { label: "Tổng công suất loa", value: "20W" },
+          { label: "Âm thanh vòm", value: "Âm thanh chuyển động theo hình ảnh OTS Lite" },
+          { label: "Các công nghệ khác", value: ["Adaptive Sound", "Q-Symphony kết hợp loa tivi với loa thanh"] },
+        ],
+      },
+      {
+        group: "Cổng kết nối",
+        rows: [
+          { label: "Kết nối Internet", value: ["Wi-Fi", "Cổng mạng LAN"] },
+          { label: "Kết nối không dây", value: "Bluetooth 5.3" },
+          { label: "USB", value: "1 cổng USB A" },
+          { label: "Cổng nhận hình ảnh, âm thanh", value: "3 cổng HDMI, có 1 cổng HDMI eARC (ARC)" },
+          { label: "Cổng xuất âm thanh", value: "1 cổng eARC (ARC)" },
+        ],
+      },
+      {
+        group: "Thông tin lắp đặt",
+        rows: [
+          { label: "Kích thước có chân, đặt bàn", value: "Ngang 95.78 cm - Cao 60.9 cm - Dày 15.7 cm" },
+          { label: "Khối lượng có chân", value: "6.6 kg" },
+          { label: "Kích thước không chân, treo tường", value: "Ngang 95.78 cm - Cao 55.88 cm - Dày 7.63 cm" },
+          { label: "Khối lượng không chân", value: "6.4 kg" },
+        ],
+      },
+    ],
     features: [
       "Độ phân giải 4K UHD",
       "Công nghệ Crystal UHD",
