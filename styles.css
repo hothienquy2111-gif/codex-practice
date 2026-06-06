@@ -93,11 +93,12 @@ button { cursor: pointer; }
 .brand-panel { border: 1px solid var(--color-gray-200); border-radius: var(--radius-lg); background: var(--color-white); box-shadow: var(--shadow-sm); overflow: hidden; }
 .brand-panel h2 { margin: 0; padding: 13px 14px; background: var(--color-primary-deep); color: var(--color-white); font-size: 0.98rem; }
 .brand-list { display: grid; max-height: 478px; margin: 0; padding: 8px; overflow: auto; list-style: none; }
-.brand-list a { display: flex; align-items: center; gap: 10px; min-height: 48px; border-radius: 12px; padding: 5px 8px; color: var(--color-gray-700); font-weight: 750; }
+.brand-list a { display: flex; align-items: center; gap: 10px; min-width: 0; min-height: 50px; border-radius: 12px; padding: 5px 8px; color: var(--color-gray-700); font-weight: 750; }
 .brand-list a:hover { background: var(--color-gray-100); color: var(--color-primary); }
 .brand-logo-box, .brand-fallback-badge { flex: 0 0 auto; }
 .brand-logo-box { display: flex; align-items: center; justify-content: center; width: 42px; height: 42px; border: 1px solid rgba(2, 56, 113, 0.12); border-radius: 12px; background: #ffffff; overflow: hidden; }
-.brand-logo-box img { display: block; max-width: 34px; max-height: 26px; object-fit: contain; }
+.brand-logo-box img { display: block; width: auto; height: auto; max-width: 34px; max-height: 28px; object-fit: contain; }
+.brand-logo-box img.brand-logo-image--wide { max-width: 38px; }
 .brand-logo-box .brand-fallback-badge { display: none; width: 100%; height: 100%; border: 0; border-radius: 0; }
 .brand-logo-box.is-logo-error img { display: none; }
 .brand-logo-box.is-logo-error .brand-fallback-badge { display: inline-grid; }

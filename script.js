@@ -90,6 +90,9 @@ dom.brandLogoImages.forEach((image) => {
 
   if (image.complete && typeof image.decode === 'function') {
     image.decode().then(() => showBrandLogoImage(image)).catch(() => showBrandLogoFallback(image));
+  } else if (image.complete) {
+    if (image.naturalWidth > 0) showBrandLogoImage(image);
+    else showBrandLogoFallback(image);
   }
 });
 
