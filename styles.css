@@ -388,10 +388,12 @@ body.product-modal-open { overflow: hidden; }
 }
 .product-modal__close {
   flex: 0 0 auto;
-  display: grid;
-  place-items: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 42px;
   height: 42px;
+  padding: 0;
   border: 1px solid rgba(2, 56, 113, 0.18);
   border-radius: 50%;
   background: var(--color-white);
@@ -399,6 +401,11 @@ body.product-modal-open { overflow: hidden; }
   font-size: 1.8rem;
   line-height: 1;
   transition: background var(--transition), color var(--transition), border-color var(--transition);
+}
+.product-modal__close span {
+  display: block;
+  line-height: 1;
+  transform: translateY(0);
 }
 .product-modal__close:hover {
   border-color: var(--color-primary-deep);

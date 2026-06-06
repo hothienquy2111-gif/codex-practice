@@ -143,7 +143,7 @@
       <section class="product-modal__card" role="dialog" aria-modal="true" aria-labelledby="${titleId}">
         <header class="product-modal__header">
           <h2 id="${titleId}">${escapeDetailHtml(title)}</h2>
-          <button class="product-modal__close" type="button" aria-label="Đóng cửa sổ ${escapeDetailHtml(title)}" data-product-modal-close>×</button>
+          <button class="product-modal__close" type="button" aria-label="Đóng cửa sổ ${escapeDetailHtml(title)}" data-product-modal-close><span aria-hidden="true">×</span></button>
         </header>
         <div class="product-modal__content">
           ${content}
@@ -162,7 +162,7 @@
     };
 
     modal.addEventListener('click', (event) => {
-      if (event.target.matches('[data-product-modal-close]')) closeModal();
+      if (event.target.closest('[data-product-modal-close]')) closeModal();
     });
 
     document.body.appendChild(modal);
