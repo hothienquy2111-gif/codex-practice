@@ -176,11 +176,11 @@
     const buttons = [];
 
     if (product.overview.length) {
-      buttons.push('<button class="btn product-detail__modal-button" type="button" data-product-modal-trigger="overview">Tổng quan sản phẩm</button>');
+      buttons.push('<button class="btn product-detail__modal-button product-detail__modal-button--overview" type="button" data-product-modal-trigger="overview">Tổng quan sản phẩm</button>');
     }
 
     if (product.specifications.length) {
-      buttons.push('<button class="btn product-detail__modal-button" type="button" data-product-modal-trigger="specifications">Thông số chi tiết</button>');
+      buttons.push('<button class="btn product-detail__modal-button product-detail__modal-button--specifications" type="button" data-product-modal-trigger="specifications">Thông số chi tiết</button>');
     }
 
     if (!buttons.length) return '';
@@ -289,12 +289,12 @@
           <ul>${features}</ul>
         </div>
 
+        ${renderDetailModalButtons(product)}
+
         <div class="product-detail__price-box">
           ${oldPrice}
           <p class="product-detail__price"><span>Giá bán:</span> <strong>${escapeDetailHtml(product.price)}</strong></p>
         </div>
-
-        ${renderDetailModalButtons(product)}
 
         <div class="product-detail__actions">
           <a class="btn btn--primary" href="tel:0905111223" aria-label="Gọi tư vấn sản phẩm ${escapeDetailHtml(label)}">Gọi tư vấn</a>
