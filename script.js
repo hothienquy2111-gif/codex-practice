@@ -16,6 +16,10 @@ const dom = {
   brandLogoImages: document.querySelectorAll('.brand-logo-box img'),
   serviceIconImages: document.querySelectorAll('[data-service-icon]'),
   productFilterLinks: document.querySelectorAll('[data-product-filter]'),
+  usedTvSizeRow: document.querySelector('[data-old-tv-size-row]'),
+  usedTvBrandRow: document.querySelector('[data-old-tv-brand-row]'),
+  usedTvCards: document.querySelectorAll('[data-used-tv-card]'),
+  usedTvEmpty: document.querySelector('[data-used-tv-empty]'),
 };
 
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -125,6 +129,53 @@ dom.serviceIconImages.forEach((image) => {
     image.decode().then(() => showServiceIconImage(image)).catch(() => showServiceIconFallback(image));
   }
 });
+
+
+const usedTvFilter = {
+  size: '',
+  brand: '',
+};
+
+const updatePressedState = (container, activeButton) => {
+  container?.querySelectorAll('button[aria-pressed]').forEach((button) => {
+    const isActive = button === activeButton;
+    button.classList.toggle('is-active', isActive);
+    button.setAttribute('aria-pressed', String(isActive));
+  });
+};
+
+const filterUsedTvCards = () => {
+  if (!dom.usedTvCards.length) return;
+  let visibleCount = 0;
+
+  dom.usedTvCards.forEach((card) => {
+    const matchesSize = usedTvFilter.size ? card.dataset.usedSize === usedTvFilter.size : true;
+    const matchesBrand = usedTvFilter.brand ? card.dataset.usedBrand === usedTvFilter.brand : true;
+    const isVisible = matchesSize && matchesBrand;
+    card.hidden = !isVisible;
+    if (isVisible) visibleCount += 1;
+  });
+
+  if (dom.usedTvEmpty) dom.usedTvEmpty.hidden = visibleCount > 0;
+};
+
+dom.usedTvSizeRow?.addEventListener('click', (event) => {
+  const button = event.target.closest('.old-tv-size-pill');
+  if (!button) return;
+  usedTvFilter.size = button.dataset.usedSize || '';
+  updatePressedState(dom.usedTvSizeRow, button);
+  filterUsedTvCards();
+});
+
+dom.usedTvBrandRow?.addEventListener('click', (event) => {
+  const button = event.target.closest('.old-tv-brand-card');
+  if (!button) return;
+  usedTvFilter.brand = button.dataset.usedBrand || '';
+  updatePressedState(dom.usedTvBrandRow, button);
+  filterUsedTvCards();
+});
+
+filterUsedTvCards();
 
 const setMenuState = (isOpen) => {
   if (!dom.menuWrap || !dom.hamburger) return;
