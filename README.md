@@ -1,135 +1,104 @@
-# ANH MINH STORE - Website tivi tại Đà Nẵng
+# Anh Minh Store - Website bán tivi
 
-Website tĩnh cho **Công ty kỹ thuật điện tử Anh Minh** tại Đà Nẵng, dùng để giới thiệu dịch vụ tivi cũ, tivi mới, thu hư đổi mới, sửa tivi và tư vấn sản phẩm cho khách hàng.
+Website tĩnh giới thiệu dịch vụ và danh sách tivi của Anh Minh Store. Giao diện giữ phong cách bán lẻ trắng + xanh dương đậm, dùng font Aptos toàn cục và toàn bộ nội dung hiển thị bằng tiếng Việt.
 
-Thiết kế giữ phong cách bán lẻ điện máy chuyên nghiệp với nền trắng, xanh dương đậm, điểm nhấn cam cho hành động gọi điện. Toàn bộ giao diện dùng font:
+## Sản phẩm Samsung QA55Q7FA
 
-```css
-font-family: Aptos, "Segoe UI", Arial, Helvetica, sans-serif;
-```
+Sản phẩm mẫu Samsung 55 inch cũ đã được thay thế bằng sản phẩm thật:
 
-## Tóm tắt tối ưu production
+- `id`: `samsung-qa55q7fa`
+- `brand`: `Samsung`
+- `model`: `QA55Q7FA`
+- `fullName`: `Smart Tivi Samsung QLED 4K Vision AI 55 Inch QA55Q7FA`
+- `size`: `55 inch`
+- `type`: `Tivi mới`
+- `condition`: `Mới`
+- `warranty`: `Bảo hành 2 năm`
+- `oldPrice`: `14.299.000đ`
+- `price`: `11.690.000đ`
 
-Website đã được tối ưu theo hướng nhẹ, ổn định và dễ bảo trì:
-
-- Chỉ dùng **HTML, CSS, JavaScript thuần**, không framework và không thư viện ngoài.
-- Dữ liệu sản phẩm tập trung ở `products.js`, trang chủ và trang chi tiết dùng chung một nguồn dữ liệu.
-- Carousel 16:9 hỗ trợ kéo chuột, vuốt mobile, nút mũi tên, chấm điều hướng, autoplay và tự tạm dừng khi hover/kéo.
-- Menu danh mục hỗ trợ hover/click trên desktop, click trên mobile, đóng khi bấm ngoài hoặc nhấn Escape.
-- Điều hướng nội bộ cuộn mượt, có active state và `scroll-margin-top` để header sticky không che tiêu đề.
-- Product card được render tự động, link mở trong cùng tab theo dạng `product-detail.html?id={product.id}`.
-- Panel **DANH MỤC HÃNG TIVI** dùng các file logo ảnh đã tải lên ở thư mục gốc repository; Hisense giữ logo hiện có và badge chữ chỉ hiện khi một logo không tải được.
-- Các thẻ dịch vụ nổi bật trên trang chủ dùng icon ảnh thật từ thư mục gốc repository và có badge chữ xanh đậm để dự phòng khi ảnh không tải được.
-- Nếu chưa có ảnh sản phẩm hoặc ảnh sản phẩm tải lỗi, website dùng placeholder tivi bằng CSS để tránh vỡ layout.
-- Sản phẩm thật **Samsung 43U8500F** đã được thêm với thư viện 4 ảnh thật lưu ở thư mục gốc repository.
-- Nếu thiếu danh sách sản phẩm hoặc id sản phẩm không hợp lệ, website hiển thị thông báo tiếng Việt thân thiện.
-- Có SEO metadata, Open Graph, alt text ảnh, focus state, aria attributes và hỗ trợ `prefers-reduced-motion`.
-- Có nút liên hệ nổi **Gọi ngay / Zalo** và nút **lên đầu trang**.
-
-## Cấu trúc file
+Card sản phẩm trên trang chủ dùng ảnh chính `55Q7 trước.webp`, hiển thị giá cũ gạch ngang và giá bán nổi bật. Nút **Xem chi tiết** mở cùng tab tại:
 
 ```text
-index.html             # Trang chủ, header, menu, carousel, danh sách sản phẩm, dịch vụ, liên hệ
-styles.css             # Toàn bộ giao diện responsive, placeholder tivi, trạng thái hover/focus/mobile
-script.js              # Menu, carousel, tìm kiếm, lọc kích thước/hãng/loại, render product card, back-to-top
-products.js            # Nguồn dữ liệu sản phẩm duy nhất
-product-detail.html    # Khung trang chi tiết sản phẩm
-product-detail.js      # Đọc id từ URLSearchParams, render chi tiết và thư viện ảnh sản phẩm
-README.md              # Hướng dẫn vận hành và bảo trì website
+product-detail.html?id=samsung-qa55q7fa
 ```
 
-## Icon dịch vụ trên trang chủ
+Trang chi tiết hiển thị thư viện 4 ảnh, thông tin thương hiệu, model, tên đầy đủ, kích thước, loại sản phẩm, tình trạng, bảo hành, đặc điểm nổi bật, mô tả, giá cũ, giá bán và các nút CTA **Gọi tư vấn**, **Nhắn Zalo**, **Quay lại danh sách**.
 
-Các thẻ dịch vụ nổi bật trên trang chủ dùng icon ảnh được lưu trực tiếp ở thư mục gốc repository, cùng cấp với `index.html`. Bốn file đang dùng là:
+## Ảnh sản phẩm
 
-- `tivicu.jpeg` cho dịch vụ **Tivi cũ**.
-- `tivimoi.jpeg` cho dịch vụ **Tivi mới**.
-- `thucudoimoi.jpeg` cho dịch vụ **Thu hư đổi mới**.
-- `suachua.jpeg` cho dịch vụ **Sửa tivi**.
+Các ảnh của Samsung QA55Q7FA được lưu ngay tại thư mục gốc repository, cùng cấp với `index.html` và `products.js`. Tên file phải được giữ nguyên chính xác vì GitHub Pages phân biệt chữ hoa/thường, dấu tiếng Việt và khoảng trắng:
 
-Các icon này được đặt trong hộp icon bo góc nền trắng xanh nhẹ để giữ giao diện bán lẻ trắng + xanh dương đậm gọn gàng. Nếu một file ảnh dịch vụ bị thiếu hoặc tải lỗi, `script.js` sẽ ẩn ảnh lỗi và hiện badge chữ màu xanh dương đậm thay thế để không làm vỡ bố cục.
+- `55Q7 trước.webp`
+- `55q7 nghiên trái.webp`
+- `55q7 nghiên phải.webp`
+- `55q7 viền.webp`
 
-### Cách thay icon dịch vụ sau này
+Không đổi tên, không di chuyển và không chỉnh sửa các file ảnh/binary khi chỉ cập nhật dữ liệu sản phẩm.
 
-1. Chuẩn bị file icon mới có dung lượng tối ưu và hình ảnh rõ nét.
-2. Đưa file icon mới vào thư mục gốc repository.
-3. Mở `index.html` và cập nhật thuộc tính `src` trong thẻ `<img>` của dịch vụ tương ứng, ví dụ đổi `src="tivicu.jpeg"` sang tên file mới.
-4. Giữ hoặc cập nhật `alt` tiếng Việt cho đúng nội dung, ví dụ `alt="Biểu tượng tivi cũ"`.
-5. Nếu cần đổi chữ dự phòng, cập nhật `data-fallback` và nội dung trong `.service-icon-fallback` của đúng thẻ dịch vụ.
-6. Kiểm tra lại trên desktop, tablet và mobile để đảm bảo icon không bị méo, không tràn khỏi thẻ và các thẻ dịch vụ vẫn xếp hàng/cột gọn gàng.
+## Modal tổng quan và thông số chi tiết
 
-Lưu ý: chỉ thay đường dẫn trong code khi muốn đổi icon; không chỉnh sửa trực tiếp file ảnh gốc nếu không có yêu cầu riêng.
+Sản phẩm `samsung-qa55q7fa` có sẵn dữ liệu:
 
-## Cách dữ liệu sản phẩm hoạt động trong products.js
+- `overview`: nội dung **Tổng quan sản phẩm** gồm giới thiệu, đặc điểm nổi bật, thiết kế, màn hình QLED 4K, công nghệ hình ảnh, Samsung Vision AI, trải nghiệm chuyển động, âm thanh và hệ điều hành.
+- `specifications`: nội dung **Thông số chi tiết** theo nhóm gồm tổng quan sản phẩm, công nghệ hình ảnh, công nghệ âm thanh, cổng kết nối, tiện ích, thông tin lắp đặt, xuất xứ và bảo hành.
+
+Trang chi tiết tự hiển thị hai nút **Tổng quan sản phẩm** và **Thông số chi tiết** nếu sản phẩm có dữ liệu tương ứng. Hai nút mở modal nổi trên cùng trang, không chuyển trang, không mở tab mới. Modal có thể đóng bằng nút X, bấm nền mờ hoặc phím Escape; nội dung modal có vùng cuộn để dùng tốt trên mobile.
+
+## Cách dữ liệu sản phẩm hoạt động
 
 `products.js` khai báo mảng toàn cục:
 
 ```js
 window.products = [
   {
-    id: "samsung-55-du7000",
+    id: "samsung-qa55q7fa",
     brand: "Samsung",
-    model: "UA55DU7000",
+    model: "QA55Q7FA",
+    fullName: "Smart Tivi Samsung QLED 4K Vision AI 55 Inch QA55Q7FA",
     size: "55 inch",
     type: "Tivi mới",
     condition: "Mới",
-    features: ["4K UHD", "Smart TV", "Bảo hành chính hãng"],
-    oldPrice: "",
-    price: "Liên hệ nhận giá tốt",
-    image: "",
-    badge: "Hàng mới",
-    description: "Phù hợp phòng khách, hình ảnh sắc nét, dễ sử dụng.",
+    warranty: "Bảo hành 2 năm",
+    oldPrice: "14.299.000đ",
+    price: "11.690.000đ",
+    image: "55Q7 trước.webp",
+    images: [
+      "55Q7 trước.webp",
+      "55q7 nghiên trái.webp",
+      "55q7 nghiên phải.webp",
+      "55q7 viền.webp",
+    ],
   },
 ];
 ```
 
-`script.js` đọc `window.products`, chuẩn hóa dữ liệu thiếu và render danh sách sản phẩm vào:
+`script.js` đọc `window.products`, chuẩn hóa dữ liệu thiếu và render sản phẩm vào trang chủ. Bộ lọc trang chủ hoạt động theo `brand`, `size` và `type`, vì vậy Samsung QA55Q7FA xuất hiện khi chọn **Tất cả**, **Samsung**, **55 inch** hoặc **Tivi mới**.
 
-```html
-<div class="product-grid" data-product-grid aria-live="polite"></div>
-```
+`product-detail.html` nạp `products.js` và `product-detail.js`. `product-detail.js` đọc tham số `id` trên URL, tìm đúng sản phẩm trong `window.products` rồi render chi tiết, thư viện ảnh và modal nếu có dữ liệu.
 
-Nếu mảng sản phẩm bị thiếu hoặc trống, trang chủ hiển thị:
+## Cách thêm một sản phẩm mới có ảnh, giá cũ, giá bán, tổng quan và thông số
 
-```text
-Sản phẩm đang được cập nhật.
-```
-
-### Sản phẩm thật Samsung 43U8500F
-
-Website đã thêm sản phẩm thật:
-
-- `id`: `samsung-43u8500f`
-- `brand`: `Samsung`
-- `model`: `UA43U8500F`
-- `fullName`: `Smart Tivi Crystal UHD Samsung 4K 43 inch UA43U8500F`
-- `size`: `43 inch`
-- `type`: `Tivi mới`
-- `condition`: `Mới`
-- `warranty`: `Bảo hành 2 năm`
-- `price`: `7.700.000đ`
-
-Ảnh sản phẩm được lưu ngay tại thư mục gốc repository, cùng cấp với `index.html`, và được tham chiếu trực tiếp trong `products.js`. Tên file ảnh giữ nguyên tiếng Việt có dấu và khoảng trắng:
-
-- `mặt trước tivi.jpg`
-- `mặt nghiêng trái tivi.jpg`
-- `màu nghiêng phải tivi.jpg`
-- `viền tivi.jpg`
-
-Trong đó `image: "mặt trước tivi.jpg"` là ảnh chính dùng cho card ở trang chủ, còn mảng `images` chứa 4 ảnh dùng cho thư viện ảnh ở trang chi tiết.
-
-### Modal thông tin trên trang chi tiết sản phẩm
-
-Trang chi tiết sản phẩm hiện hỗ trợ hai modal/popup mở ngay trên cùng trang, không chuyển hướng, không mở tab mới và không dùng `target="_blank"`:
-
-- **Tổng quan sản phẩm**: hiển thị nội dung giới thiệu được khai báo trong trường `overview` của sản phẩm.
-- **Thông số chi tiết**: hiển thị bảng hoặc nhóm thông số được khai báo trong trường `specifications` của sản phẩm.
-
-Riêng sản phẩm `samsung-43u8500f` có hai nút **Tổng quan sản phẩm** và **Thông số chi tiết** đặt trong vùng thông tin chi tiết, gần khu vực giá và nút CTA. Khi bấm nút, modal nổi trên trang hiện tại với nền mờ, có nút đóng X, có thể đóng bằng cách bấm ngoài nền mờ hoặc nhấn Escape. Nội dung modal có vùng cuộn riêng để đọc tốt trên mobile.
-
-#### Cách thêm nội dung tổng quan cho sản phẩm tương lai
-
-Trong object sản phẩm ở `products.js`, thêm trường `overview` dạng mảng section. Section có thể có `heading` và `paragraphs`; nếu không cần tiêu đề phụ, chỉ cần dùng `paragraphs`:
+1. Mở `products.js`.
+2. Thêm object sản phẩm mới vào mảng `window.products` hoặc cập nhật object hiện có nếu đang thay sản phẩm mẫu.
+3. Đặt `id` duy nhất, không dấu, chữ thường và nên nối bằng dấu gạch ngang.
+4. Điền các trường hiển thị chính:
+   - `brand`
+   - `model`
+   - `fullName`
+   - `size`
+   - `type`
+   - `condition`
+   - `warranty`
+   - `oldPrice`
+   - `price`
+   - `badge`
+   - `description`
+   - `features`
+5. Lưu ảnh vào đúng vị trí mong muốn, sau đó tham chiếu chính xác tên file trong:
+   - `image`: ảnh chính dùng cho card sản phẩm.
+   - `images`: danh sách ảnh dùng cho thư viện ảnh trang chi tiết.
+6. Thêm `overview` dạng mảng section. Mỗi section có thể có `heading` và `paragraphs`:
 
 ```js
 overview: [
@@ -141,25 +110,21 @@ overview: [
   {
     heading: "Thiết kế",
     paragraphs: [
-      "Mô tả thiết kế, kích thước, cách bố trí sản phẩm.",
+      "Mô tả thiết kế, kích thước và không gian sử dụng.",
     ],
   },
 ]
 ```
 
-Nếu sản phẩm có `overview`, trang chi tiết sẽ tự hiện nút **Tổng quan sản phẩm** và render nội dung vào modal trên cùng trang.
-
-#### Cách thêm thông số chi tiết cho sản phẩm tương lai
-
-Trong object sản phẩm ở `products.js`, thêm trường `specifications` dạng mảng nhóm. Mỗi nhóm có `group` và `rows`; mỗi dòng có `label` và `value`. `value` có thể là chuỗi hoặc mảng chuỗi nếu cần nhiều dòng:
+7. Thêm `specifications` dạng mảng nhóm. Mỗi nhóm có `group` và `rows`; mỗi dòng có `label` và `value`. `value` có thể là chuỗi hoặc mảng chuỗi:
 
 ```js
 specifications: [
   {
-    group: "Tổng quan",
+    group: "Tổng quan sản phẩm",
     rows: [
-      { label: "Loại Tivi", value: "Smart Tivi Crystal UHD" },
-      { label: "Kích cỡ màn hình", value: "43 inch" },
+      { label: "Loại Tivi", value: "Smart Tivi QLED" },
+      { label: "Kích cỡ màn hình", value: "55 Inch" },
     ],
   },
   {
@@ -167,460 +132,18 @@ specifications: [
     rows: [
       {
         label: "Công nghệ hình ảnh",
-        value: ["HDR10+", "4K Upscaling", "Motion Xcelerator"],
+        value: ["Quantum Dot", "Quantum HDR+", "Motion Xcelerator"],
       },
     ],
   },
 ]
 ```
 
-Nếu sản phẩm có `specifications`, trang chi tiết sẽ tự hiện nút **Thông số chi tiết** và render bảng thông số gọn gàng trong modal trên cùng trang.
+8. Kiểm tra trang chủ, các bộ lọc, card sản phẩm, trang chi tiết, thư viện ảnh và hai modal trước khi đưa lên GitHub Pages.
 
-## Cách điều hướng chi tiết sản phẩm hoạt động
+## Lưu ý bảo trì
 
-Mỗi card sản phẩm trên trang chủ là một liên kết bình thường trong cùng tab:
-
-```text
-product-detail.html?id={product.id}
-```
-
-Ví dụ:
-
-```text
-product-detail.html?id=samsung-55-du7000
-```
-
-URL chi tiết của sản phẩm Samsung 43U8500F là:
-
-```text
-product-detail.html?id=samsung-43u8500f
-```
-
-Trang `product-detail.html` nạp `products.js`, sau đó `product-detail.js` đọc id bằng:
-
-```js
-const detailParams = new URLSearchParams(window.location.search);
-const productId = detailParams.get("id");
-```
-
-Nếu tìm thấy sản phẩm đúng id, trang chi tiết hiển thị thương hiệu, model, tên đầy đủ, kích thước, loại sản phẩm, tình trạng, bảo hành, đặc điểm nổi bật, mô tả, giá, nút liên hệ và các nút modal thông tin nếu sản phẩm có dữ liệu `overview` hoặc `specifications`. Nếu sản phẩm có mảng `images`, trang chi tiết hiển thị ảnh lớn và hàng thumbnail; khi bấm một thumbnail, JavaScript đổi `src` của ảnh lớn sang đúng file ảnh được chọn và đánh dấu thumbnail đang active bằng viền xanh dương đậm. Nếu không tìm thấy id, trang hiển thị:
-
-```text
-Không tìm thấy sản phẩm. Vui lòng quay lại trang chủ.
-```
-
-## Cách thêm một sản phẩm tivi mới
-
-1. Mở file `products.js`.
-2. Thêm một object mới vào cuối mảng `window.products`.
-3. Đảm bảo `id` là duy nhất, không dấu, chữ thường và nên nối bằng dấu gạch ngang.
-
-Ví dụ:
-
-```js
-{
-  id: "lg-55-ur7550",
-  brand: "LG",
-  model: "UR7550",
-  fullName: "Smart Tivi LG 4K UHD 55 inch",
-  size: "55 inch",
-  type: "Tivi mới",
-  condition: "Mới",
-  warranty: "Bảo hành chính hãng",
-  features: ["4K UHD", "Smart TV", "Phù hợp phòng khách"],
-  oldPrice: "",
-  price: "Liên hệ nhận giá tốt",
-  image: "anh-chinh.jpg",
-  images: ["anh-chinh.jpg", "anh-nghieng.jpg", "anh-can-canh.jpg"],
-  badge: "Hàng mới",
-  description: "Mẫu tivi 55 inch phù hợp nhu cầu xem phim, thể thao và giải trí gia đình.",
-}
-```
-
-Gợi ý các trường nên có:
-
-- `id`: mã sản phẩm dùng trong URL chi tiết.
-- `brand`: hãng tivi.
-- `model`: mã model ngắn hiển thị trên card và trang chi tiết.
-- `fullName`: tên sản phẩm đầy đủ.
-- `size`: kích thước như `43 inch`, `55 inch`, `65 inch`.
-- `type`: tivi cũ, tivi mới hoặc nhóm tư vấn.
-- `condition`: tình trạng sản phẩm.
-- `warranty`: thông tin bảo hành nếu có.
-- `features`: 2-6 điểm nổi bật.
-- `oldPrice`: giá cũ nếu có, để `""` nếu không dùng.
-- `price`: giá bán hoặc dòng liên hệ.
-- `image`: đường dẫn ảnh chính cho card trang chủ, để `""` nếu chưa có ảnh.
-- `images`: mảng nhiều ảnh cho gallery trang chi tiết; ảnh đầu tiên thường trùng với `image`.
-- `badge`: nhãn ngắn như `Hàng mới`, `Tư vấn nhiều`, `Bảo hành 2 năm`.
-- `description`: mô tả ngắn cho trang chi tiết.
-
-## Logo hãng tivi trong panel DANH MỤC HÃNG TIVI
-
-Các logo hãng tivi được lưu trực tiếp ở thư mục gốc repository, cùng cấp với `index.html`. Panel **DANH MỤC HÃNG TIVI** hiện dùng các file logo ảnh đã tải lên từ thư mục gốc theo đúng thứ tự hiển thị từ trên xuống:
-
-- Samsung: `samsung.jpeg`
-- LG: `LG.jpeg`
-- Sony: `sony.jpeg`
-- Toshiba: `toshiba.jpeg`
-- Hisense: giữ nguyên logo/path hiện có
-- TCL: `TCL.jpeg`
-- Panasonic: `panasonic.jpeg`
-- Sharp: `sharp.jpeg`
-- Xiaomi: `xiaomi.jpeg`
-- Casper: `casper.jpeg`
-- Coocaa: `coocaa.jpeg`
-- Skyworth: `skyworth.png`
-- Philips: `philips.jpeg`
-- Hitachi: `hitachi.jpeg`
-
-Mỗi dòng hãng trong `index.html` hiển thị hộp logo nhỏ bên trái và tên hãng bên phải. Logo được căn giữa trong hộp 42px, dùng `object-fit: contain` để giữ ảnh sắc nét, không méo, không cắt, đồng thời giữ giao diện trắng + xanh dương đậm gọn gàng, không làm panel lớn hơn và không che nhiều banner.
-
-### Cách thay logo một hãng sau này
-
-1. Tải file logo mới lên thư mục gốc repository và giữ đúng chữ hoa/thường của tên file vì GitHub Pages phân biệt hoa thường.
-2. Cập nhật đường dẫn logo trong thẻ `<img src="...">` tương ứng trong `index.html` của panel **DANH MỤC HÃNG TIVI**.
-3. Kiểm tra lại `alt` của ảnh trong `index.html`, ví dụ `alt="Logo Samsung"`, để đảm bảo mô tả vẫn đúng và giữ badge chữ bên trong hộp logo ở trạng thái ẩn mặc định.
-4. Mở website trên desktop và mobile để kiểm tra logo không bị méo, không bị cắt và không gây tràn ngang.
-
-### Cách thêm logo cho một hãng mới sau này
-
-1. Đưa file logo mới vào thư mục gốc repository.
-2. Thêm hoặc cập nhật dòng hãng trong `index.html` theo mẫu:
-
-```html
-<li>
-  <a href="#san-pham">
-    <span class="brand-logo-box">
-      <img src="ten-logo.jpeg" alt="Logo Tên hãng" />
-      <span class="brand-fallback-badge" aria-hidden="true">T</span>
-    </span>
-    <span class="brand-name">Tên hãng</span>
-  </a>
-</li>
-```
-
-3. Nếu tạm thời chưa có logo, vẫn có thể dùng badge chữ fallback gọn gàng; khi dùng ảnh thật, đặt badge bên trong `.brand-logo-box` để script chỉ hiện badge nếu ảnh lỗi.
-
-Nếu file logo bị thiếu hoặc chưa được tải lên, `script.js` sẽ ẩn ảnh bị lỗi và chỉ lúc đó mới hiện badge chữ fallback trong hộp logo. Khi logo tải thành công, badge fallback vẫn bị ẩn nên không che ảnh logo.
-
-## Khu vực “Tivi cũ đã kiểm tra” trên trang chủ
-
-Khu vực **Tivi cũ đã kiểm tra** trong `index.html` đã được mở rộng thành một khu danh mục bán lẻ chuyên nghiệp hơn nhưng vẫn giữ nền trắng, xanh dương đậm và font Aptos toàn site.
-
-Hiện khu vực này có:
-
-- Hàng lọc kích thước ngang với nhãn **Chọn kích thước tivi cũ**.
-- Các nút pill kích thước: `Tất cả`, `32 inch`, `43 inch`, `49 inch`, `50 inch`, `55 inch`, `65 inch`, `75 inch`, `85 inch`.
-- Hàng logo hãng ngang với nhãn **Chọn hãng tivi cũ**.
-- Logo hãng dùng file ảnh có sẵn ở thư mục gốc repository: Samsung, LG, Sony, Toshiba, Hisense, TCL, Panasonic, Sharp, Xiaomi, Casper, Coocaa, Skyworth, Philips và Hitachi.
-- Mỗi logo dùng `object-fit: contain` để không bị méo, không bị cắt. Nếu ảnh logo thiếu hoặc lỗi tải, `script.js` hiển thị badge chữ cái đầu để bố cục vẫn gọn.
-- Card sản phẩm tivi cũ được render từ `products.js`, gồm các sản phẩm có `type: "Tivi cũ"`.
-- Bộ lọc kích thước và hãng trong khu vực này có active state khi bấm, đồng thời render lại riêng lưới Tivi cũ theo `size` và `brand` trong dữ liệu sản phẩm.
-- Trên mobile, hàng kích thước và hàng logo cuộn ngang trong phạm vi màn hình; card sản phẩm xếp 1 cột để tránh tràn ngang.
-
-### Cách thêm sản phẩm tivi cũ vào khu vực này
-
-1. Mở `products.js` và thêm object mới vào mảng `window.products`.
-2. Đặt `type: "Tivi cũ"` để sản phẩm xuất hiện đúng khu vực.
-3. Đặt `size` trùng chính xác với nút lọc, ví dụ `"43 inch"` hoặc `"55 inch"`.
-4. Đặt `brand` đúng tên hãng để bộ lọc hãng hoạt động; việc so khớp hãng không phân biệt chữ hoa/thường.
-5. Nếu chưa có ảnh sản phẩm thật, để `image: ""` và `images: []` để giao diện tự hiển thị placeholder tivi CSS.
-6. Link **Xem chi tiết** được tạo tự động theo dạng `product-detail.html?id=ma-san-pham`.
-
-### Cách cập nhật danh sách logo hãng tivi cũ
-
-1. Mở `index.html` và tìm khối:
-
-```html
-<div class="old-tv-brand-row" role="group" aria-label="Chọn hãng tivi cũ" data-old-tv-brand-row>
-```
-
-2. Để đổi logo, chỉ cập nhật `src` và `alt` của thẻ `<img>` trong đúng nút hãng. Không chỉnh sửa file ảnh/SVG/binary gốc nếu không có yêu cầu riêng.
-3. Để thêm hãng mới, thêm một nút theo mẫu:
-
-```html
-<button class="old-tv-brand-card" type="button" data-used-brand="Tên hãng" aria-pressed="false">
-  <span class="brand-logo-box old-tv-brand-card__logo">
-    <img class="brand-logo-image--wide" src="ten-logo.jpeg" alt="Logo Tên hãng" />
-    <span class="brand-fallback-badge" aria-hidden="true">T</span>
-  </span>
-  <span class="old-tv-brand-card__name">Tên hãng</span>
-</button>
-```
-
-4. Nếu thêm hãng mới vào hàng lọc, giá trị `data-used-brand` trên nút hãng nên trùng với `brand` trong `products.js`.
-
-### Cách cập nhật lựa chọn kích thước tivi cũ
-
-1. Mở `index.html` và tìm khối:
-
-```html
-<div class="old-tv-size-row" role="group" aria-label="Chọn kích thước tivi cũ" data-old-tv-size-row>
-```
-
-2. Thêm, xóa hoặc đổi nút kích thước theo mẫu:
-
-```html
-<button class="old-tv-size-pill" type="button" data-used-size="60 inch" aria-pressed="false">60 inch</button>
-```
-
-3. Nếu thêm kích thước mới, giá trị `data-used-size` trên nút phải trùng chính xác với `size` trong `products.js`.
-4. Giữ nút `Tất cả` với `data-used-size=""` để khách hàng có thể quay lại xem toàn bộ mẫu tivi cũ.
-
-## Khu vực “Tivi mới chính hãng” trên trang chủ
-
-Khu vực **Tivi mới chính hãng** trong `index.html` đã được cập nhật để đồng bộ phong cách bán lẻ với khu vực **Tivi cũ đã kiểm tra**, vẫn giữ thiết kế nền trắng/xanh dương đậm và font Aptos toàn site.
-
-Hiện khu vực này có:
-
-- Đã bỏ hoàn toàn cụm pill thương hiệu cũ ở bên phải gồm `Tivi mới`, `Samsung`, `LG`, `Sony`, `Toshiba`, `Hisense`, `TCL`, `Panasonic`.
-- Hàng lọc kích thước ngang nằm ngay dưới mô tả với nhãn **Chọn kích thước tivi mới**.
-- Các nút pill kích thước: `Tất cả`, `32 inch`, `43 inch`, `49 inch`, `50 inch`, `55 inch`, `65 inch`, `75 inch`, `85 inch`.
-- Hàng logo hãng ngang nằm dưới hàng kích thước với nhãn **Chọn hãng tivi mới**.
-- Logo hãng dùng file có sẵn ở thư mục gốc repository: Samsung, LG, Sony, Toshiba, Hisense, TCL, Panasonic, Sharp, Xiaomi, Casper, Coocaa, Skyworth, Philips và Hitachi.
-- Mỗi logo dùng `object-fit: contain` để không bị kéo méo, không bị cắt. Nếu ảnh logo thiếu hoặc lỗi tải, `script.js` hiển thị badge chữ cái đầu trong ô logo.
-- Card sản phẩm tivi mới được render từ `products.js`, gồm các sản phẩm có `type: "Tivi mới"`.
-- Bộ lọc kích thước và hãng trong khu vực này có active state khi bấm, đồng thời render lại riêng lưới Tivi mới theo `size` và `brand` trong dữ liệu sản phẩm.
-- Trên mobile, hàng kích thước và hàng logo cuộn ngang trong phạm vi màn hình; card sản phẩm xếp 1 cột để tránh tràn ngang.
-
-### Cách thêm sản phẩm tivi mới vào khu vực này
-
-1. Mở `products.js` và thêm object mới vào mảng `window.products`.
-2. Đặt `type: "Tivi mới"` để sản phẩm xuất hiện đúng khu vực.
-3. Đặt `size` trùng chính xác với nút lọc, ví dụ `"43 inch"` hoặc `"55 inch"`.
-4. Đặt `brand` đúng tên hãng để bộ lọc hãng hoạt động; việc so khớp hãng không phân biệt chữ hoa/thường.
-5. Nếu chưa có ảnh sản phẩm thật, để `image: ""` và `images: []` để giao diện tự hiển thị placeholder tivi CSS.
-6. Link **Xem chi tiết** được tạo tự động theo dạng `product-detail.html?id=ma-san-pham`.
-
-### Cách cập nhật danh sách logo hãng tivi mới
-
-1. Mở `index.html` và tìm khối:
-
-```html
-<div class="old-tv-brand-row new-tv-brand-row" role="group" aria-label="Chọn hãng tivi mới" data-new-tv-brand-row>
-```
-
-2. Để đổi logo, chỉ cập nhật `src` và `alt` của thẻ `<img>` trong đúng nút hãng. Không chỉnh sửa file ảnh/SVG/binary gốc nếu không có yêu cầu riêng.
-3. Để thêm hãng mới, thêm một nút theo mẫu:
-
-```html
-<button class="old-tv-brand-card new-tv-brand-card" type="button" data-new-brand="Tên hãng" aria-pressed="false">
-  <span class="brand-logo-box old-tv-brand-card__logo new-tv-brand-card__logo">
-    <img class="brand-logo-image--wide" src="ten-logo.jpeg" alt="Logo Tên hãng" />
-    <span class="brand-fallback-badge" aria-hidden="true">T</span>
-  </span>
-  <span class="old-tv-brand-card__name">Tên hãng</span>
-</button>
-```
-
-4. Nếu thêm hãng mới vào hàng lọc, giá trị `data-new-brand` trên nút hãng nên trùng với `brand` trong `products.js`.
-
-### Cách cập nhật lựa chọn kích thước tivi mới
-
-1. Mở `index.html` và tìm khối:
-
-```html
-<div class="old-tv-size-row new-tv-size-row" role="group" aria-label="Chọn kích thước tivi mới" data-new-tv-size-row>
-```
-
-2. Thêm, xóa hoặc đổi nút kích thước theo mẫu:
-
-```html
-<button class="old-tv-size-pill new-tv-size-pill" type="button" data-new-size="60 inch" aria-pressed="false">60 inch</button>
-```
-
-3. Nếu thêm kích thước mới, giá trị `data-new-size` trên nút phải trùng chính xác với `size` trong `products.js`.
-4. Giữ nút `Tất cả` với `data-new-size=""` để khách hàng có thể quay lại xem toàn bộ mẫu tivi mới.
-
-## Cách cập nhật hình ảnh sau này
-
-Hiện tại nhiều sản phẩm dùng placeholder tivi bằng CSS. Khi muốn thêm ảnh thật:
-
-1. Chuẩn bị ảnh tối ưu dung lượng, ưu tiên tỷ lệ ngang rõ nét.
-2. Đưa file ảnh vào thư mục website.
-3. Cập nhật trường `image` trong `products.js`:
-
-```js
-image: "ten-file-anh.jpg"
-```
-
-Lưu ý: khi cập nhật nội dung hoặc code, không chỉnh sửa file ảnh/SVG/binary nếu không có yêu cầu riêng. Với ảnh có tên tiếng Việt, khoảng trắng hoặc dấu, hãy dùng đúng tên file trong `products.js`, không tự đổi sang dấu gạch ngang và không bỏ dấu. Nên nén ảnh trước khi đưa lên production để tải nhanh hơn.
-
-## Cách cập nhật số điện thoại và địa chỉ
-
-Các số hotline hiện tại:
-
-- `0905111223`
-- `0774111223`
-
-Địa chỉ hiện tại:
-
-- `100 Tiểu La, Hải Châu, Đà Nẵng`
-- `540B Nguyễn Hữu Thọ, Cẩm Lệ, Đà Nẵng`
-
-Khi cần đổi thông tin, tìm và cập nhật trong:
-
-- `index.html`: header, phần liên hệ, footer, floating contact.
-- `product-detail.html`: header, footer, floating contact.
-- `product-detail.js`: nút gọi tư vấn trên trang chi tiết nếu đổi số chính.
-- `script.js`: nút gọi mobile nếu đổi số chính.
-
-Các link gọi điện nên giữ dạng:
-
-```html
-<a href="tel:0905111223">Gọi ngay</a>
-```
-
-## Cách cập nhật link Zalo
-
-Link Zalo hiện đang để placeholder:
-
-```html
-href="#"
-```
-
-Khi có link Zalo chính thức, thay `#` bằng URL Zalo trong:
-
-- `index.html`
-- `product-detail.html`
-- `product-detail.js`
-
-Ví dụ:
-
-```html
-<a href="https://zalo.me/0905111223">Nhắn Zalo</a>
-```
-
-## Cách kiểm tra carousel, menu và trang sản phẩm
-
-Chạy server tĩnh tại thư mục dự án:
-
-```bash
-python3 -m http.server 8000
-```
-
-Mở trình duyệt:
-
-```text
-http://localhost:8000
-```
-
-Checklist kiểm tra nhanh:
-
-- Carousel giữ tỷ lệ 16:9 trên desktop/mobile.
-- Kéo chuột và vuốt mobile chuyển slide mượt.
-- Bấm mũi tên và dots chuyển đúng slide.
-- Autoplay chạy khoảng 4,5 giây/lần và không tạo nhiều interval.
-- Hover hoặc kéo carousel sẽ tạm dừng autoplay, rời chuột sẽ chạy lại.
-- Menu danh mục mở bằng hover/click trên desktop.
-- Menu danh mục mở/đóng bằng click trên mobile.
-- Bấm ngoài menu hoặc nhấn Escape sẽ đóng menu.
-- Link menu cuộn đến đúng section và không bị header che tiêu đề.
-- Size filter đổi trạng thái active và cập nhật danh sách sản phẩm.
-- Tìm kiếm trong header lọc sản phẩm theo hãng/model/kích thước/tính năng.
-- Card sản phẩm mở trang chi tiết trong cùng tab.
-- URL thiếu hoặc sai id hiển thị thông báo lỗi thân thiện.
-
-Ví dụ trang chi tiết hợp lệ:
-
-```text
-http://localhost:8000/product-detail.html?id=samsung-55-du7000
-```
-
-Ví dụ trang chi tiết lỗi:
-
-```text
-http://localhost:8000/product-detail.html?id=khong-ton-tai
-```
-
-## Cách deploy với GitHub Pages
-
-1. Đưa toàn bộ file website lên repository GitHub.
-2. Vào **Settings** của repository.
-3. Chọn **Pages**.
-4. Trong mục **Build and deployment**, chọn deploy từ branch chính, thường là `main`.
-5. Chọn thư mục root nếu các file `index.html`, `styles.css`, `script.js` đang nằm ở thư mục gốc.
-6. Lưu cấu hình và chờ GitHub Pages tạo đường dẫn public.
-7. Mở URL GitHub Pages để kiểm tra lại giao diện desktop/mobile.
-
-Website là web tĩnh nên không cần build, không cần cài dependency và không cần backend.
-
-## Checklist trước khi đưa website vào sử dụng kinh doanh
-
-- [ ] Số hotline `0905111223` và `0774111223` chính xác.
-- [ ] Hai địa chỉ cửa hàng chính xác.
-- [ ] Link Zalo đã được đổi từ `#` sang link chính thức nếu có.
-- [ ] Tất cả sản phẩm trong `products.js` có `id` duy nhất.
-- [ ] Giá, tình trạng và mô tả sản phẩm đã được kiểm tra.
-- [ ] Ảnh sản phẩm đã được tối ưu dung lượng nếu dùng ảnh thật.
-- [ ] Trang chủ không bị cuộn ngang trên mobile.
-- [ ] Hamburger menu hoạt động trên mobile.
-- [ ] Carousel hoạt động bằng kéo/vuốt/mũi tên/dots/autoplay.
-- [ ] Product card mở `product-detail.html?id=...` trong cùng tab.
-- [ ] Trang chi tiết lỗi hiển thị thông báo thân thiện.
-- [ ] Nút gọi điện dùng đúng `tel:0905111223`.
-- [ ] Nút nổi Gọi ngay/Zalo không che nội dung quan trọng trên mobile.
-- [ ] SEO title, meta description và Open Graph hiển thị đúng.
-- [ ] Kiểm tra website trên Chrome, Safari mobile hoặc trình duyệt điện thoại thật trước khi chạy quảng cáo.
-
-## Cập nhật bộ lọc sản phẩm trang chủ
-
-Trang chủ hiện render hai khu vực **Tivi cũ đã kiểm tra** và **Tivi mới chính hãng** trực tiếp từ `products.js` thay vì phụ thuộc vào card sản phẩm viết cứng trong HTML.
-
-### Bộ lọc Tivi cũ và Tivi mới
-
-- Khu vực **Tivi cũ đã kiểm tra** chỉ lấy sản phẩm có `type: "Tivi cũ"`.
-- Khu vực **Tivi mới chính hãng** chỉ lấy sản phẩm có `type: "Tivi mới"`.
-- Mỗi khu vực có trạng thái lọc riêng:
-  - `selectedSize`, mặc định là `"Tất cả"`.
-  - `selectedBrand`, mặc định là `"Tất cả"`.
-- Khi bấm kích thước hoặc hãng trong khu vực Tivi cũ, chỉ danh sách Tivi cũ được render lại.
-- Khi bấm kích thước hoặc hãng trong khu vực Tivi mới, chỉ danh sách Tivi mới được render lại.
-- Nếu chọn `"Tất cả"`, bộ lọc tương ứng được reset.
-- Nếu không có sản phẩm phù hợp, trang hiển thị thông báo: `Chưa có sản phẩm phù hợp. Vui lòng chọn bộ lọc khác hoặc liên hệ Anh Minh Store.`
-- Mỗi khu vực có dòng đếm: `Đang hiển thị: X sản phẩm` và số lượng được cập nhật sau mỗi lần lọc.
-
-### Cách thêm sản phẩm mới vào `products.js`
-
-Thêm một object sản phẩm mới vào mảng `window.products`. Mỗi sản phẩm nên có đầy đủ các trường sau:
-
-```js
-{
-  id: "ma-san-pham-duy-nhat",
-  brand: "Samsung",
-  model: "Model sản phẩm",
-  fullName: "Tên đầy đủ hiển thị trên card và trang chi tiết",
-  size: "55 inch",
-  type: "Tivi mới",
-  condition: "Mới",
-  warranty: "Bảo hành 2 năm",
-  oldPrice: "",
-  price: "Liên hệ nhận giá tốt",
-  badge: "Hàng mới",
-  description: "Mô tả ngắn bằng tiếng Việt.",
-  features: ["4K UHD", "Smart TV"],
-  image: "",
-  images: []
-}
-```
-
-Lưu ý quan trọng:
-
-- `id` phải là duy nhất vì link chi tiết dùng dạng `product-detail.html?id={id}`.
-- `type` phải là đúng một trong hai giá trị:
-  - `"Tivi cũ"` để sản phẩm xuất hiện trong khu vực **Tivi cũ đã kiểm tra**.
-  - `"Tivi mới"` để sản phẩm xuất hiện trong khu vực **Tivi mới chính hãng**.
-- `size` cần khớp chính xác với text trên nút lọc, ví dụ `"43 inch"`, `"55 inch"`.
-- `brand` được so sánh không phân biệt chữ hoa/thường, nhưng nên viết đúng tên hãng để hiển thị đẹp.
-- Nếu chưa có ảnh sản phẩm, để `image: ""` và `images: []`; giao diện sẽ dùng khung tivi minh họa bằng CSS.
-
-### Cách kiểm thử bộ lọc
-
-1. Mở `index.html` trên trình duyệt.
-2. Trong khu vực **Tivi cũ đã kiểm tra**, bấm một hãng như `Samsung`, `LG`, `Sony` hoặc `Toshiba` và kiểm tra chỉ card Tivi cũ thay đổi.
-3. Trong khu vực **Tivi cũ đã kiểm tra**, bấm một kích thước như `43 inch`, `50 inch`, `55 inch` và kiểm tra danh sách lọc đúng theo kích thước.
-4. Trong khu vực **Tivi mới chính hãng**, bấm một hãng hoặc kích thước và kiểm tra danh sách Tivi mới thay đổi độc lập với khu vực Tivi cũ.
-5. Chọn kết hợp cả hãng và kích thước để kiểm tra lọc đồng thời theo cả hai điều kiện.
-6. Chọn `Tất cả` ở hàng kích thước hoặc hãng để reset riêng bộ lọc đó.
-7. Bấm nút **Xem chi tiết** trên sản phẩm để kiểm tra link mở cùng tab theo dạng `product-detail.html?id={id}`.
+- Luôn giữ nội dung hiển thị bằng tiếng Việt.
+- Giữ font Aptos và phong cách trắng + xanh dương đậm hiện tại.
+- Không dùng `target="_blank"` cho nút xem chi tiết sản phẩm.
+- Nếu ảnh sản phẩm lỗi tải, giao diện sẽ hiển thị placeholder tivi CSS sạch có sẵn.
