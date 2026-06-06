@@ -91,7 +91,7 @@
             <ul class="category-dropdown" id="category-menu">
               <li><a href="#trang-chu" data-menu-link>Trang chủ</a></li>
               <li><a href="#tivi-cu" data-menu-link>Tivi cũ</a></li>
-              <li><a href="#tivi-moi" data-menu-link>Tivi mới</a></li>
+              <li><a href="#san-pham" data-menu-link data-product-filter="type" data-filter-value="Tivi mới">Tivi mới</a></li>
               <li><a href="#doi-moi" data-menu-link>Thu hư đổi mới</a></li>
               <li><a href="#sua-tivi" data-menu-link>Sửa tivi tất cả các dòng</a></li>
               <li><a href="#kich-thuoc" data-menu-link>Tivi theo kích thước</a></li>
@@ -103,7 +103,7 @@
           <ul class="nav-links">
             <li><a class="nav-link is-active" href="#trang-chu">Trang chủ</a></li>
             <li><a class="nav-link" href="#tivi-cu">Tivi cũ</a></li>
-            <li><a class="nav-link" href="#tivi-moi">Tivi mới</a></li>
+            <li><a class="nav-link" href="#san-pham" data-product-filter="type" data-filter-value="Tivi mới">Tivi mới</a></li>
             <li><a class="nav-link" href="#doi-moi">Thu hư đổi mới</a></li>
             <li><a class="nav-link" href="#sua-tivi">Sửa tivi</a></li>
             <li><a class="nav-link" href="#lien-he">Liên hệ</a></li>
@@ -121,7 +121,7 @@
               <!-- Samsung uses samsung1.svg -->
               <!-- Sharp uses sharp1.svg -->
               <li>
-                <a href="#san-pham">
+                <a href="#san-pham" data-product-filter="brand" data-filter-value="Samsung">
                   <span class="brand-logo-box">
                     <img class="brand-logo-image--wide" src="samsung1.svg" alt="Logo Samsung" />
                     <span class="brand-fallback-badge" aria-hidden="true">S</span>
@@ -299,14 +299,15 @@
         <div class="container size-filter__inner">
           <div>
             <h2 id="size-title">Chọn kích thước tivi</h2>
-            <p class="selected-size" aria-live="polite">Đang xem: <span>55 inch</span></p>
+            <p class="selected-size" aria-live="polite">Đang xem: <span>Tất cả</span></p>
           </div>
           <div class="size-options" role="group" aria-label="Chọn kích thước tivi">
+            <button class="size-pill is-active" type="button" data-size="" aria-pressed="true">Tất cả</button>
             <button class="size-pill" type="button" data-size="32 inch" aria-pressed="false">32 inch</button>
             <button class="size-pill" type="button" data-size="43 inch" aria-pressed="false">43 inch</button>
             <button class="size-pill" type="button" data-size="49 inch" aria-pressed="false">49 inch</button>
             <button class="size-pill" type="button" data-size="50 inch" aria-pressed="false">50 inch</button>
-            <button class="size-pill is-active" type="button" data-size="55 inch" aria-pressed="true">55 inch</button>
+            <button class="size-pill" type="button" data-size="55 inch" aria-pressed="false">55 inch</button>
             <button class="size-pill" type="button" data-size="65 inch" aria-pressed="false">65 inch</button>
             <button class="size-pill" type="button" data-size="75 inch" aria-pressed="false">75 inch</button>
             <button class="size-pill" type="button" data-size="85 inch" aria-pressed="false">85 inch</button>
@@ -348,7 +349,7 @@
             <p>Cập nhật nhiều dòng tivi mới từ các thương hiệu phổ biến, hỗ trợ tư vấn theo diện tích phòng và nhu cầu sử dụng.</p>
           </div>
           <div class="chip-list" aria-label="Thương hiệu tivi mới">
-            <span>Samsung</span><span>LG</span><span>Sony</span><span>Toshiba</span><span>Hisense</span><span>TCL</span><span>Panasonic</span>
+            <a href="#san-pham" data-product-filter="type" data-filter-value="Tivi mới">Tivi mới</a><a href="#san-pham" data-product-filter="brand" data-filter-value="Samsung">Samsung</a><span>LG</span><span>Sony</span><span>Toshiba</span><span>Hisense</span><span>TCL</span><span>Panasonic</span>
           </div>
         </div>
       </section>
