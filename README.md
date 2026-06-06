@@ -101,8 +101,8 @@ Website đã thêm sản phẩm thật:
 
 - `id`: `samsung-43u8500f`
 - `brand`: `Samsung`
-- `model`: `43U8500F`
-- `fullName`: `Smart Tivi Crystal UHD Samsung 4K 43 inch`
+- `model`: `UA43U8500F`
+- `fullName`: `Smart Tivi Crystal UHD Samsung 4K 43 inch UA43U8500F`
 - `size`: `43 inch`
 - `type`: `Tivi mới`
 - `condition`: `Mới`
@@ -117,6 +117,64 @@ Website đã thêm sản phẩm thật:
 - `viền tivi.jpg`
 
 Trong đó `image: "mặt trước tivi.jpg"` là ảnh chính dùng cho card ở trang chủ, còn mảng `images` chứa 4 ảnh dùng cho thư viện ảnh ở trang chi tiết.
+
+### Modal thông tin trên trang chi tiết sản phẩm
+
+Trang chi tiết sản phẩm hiện hỗ trợ hai modal/popup mở ngay trên cùng trang, không chuyển hướng, không mở tab mới và không dùng `target="_blank"`:
+
+- **Tổng quan sản phẩm**: hiển thị nội dung giới thiệu được khai báo trong trường `overview` của sản phẩm.
+- **Thông số chi tiết**: hiển thị bảng hoặc nhóm thông số được khai báo trong trường `specifications` của sản phẩm.
+
+Riêng sản phẩm `samsung-43u8500f` có hai nút **Tổng quan sản phẩm** và **Thông số chi tiết** đặt trong vùng thông tin chi tiết, gần khu vực giá và nút CTA. Khi bấm nút, modal nổi trên trang hiện tại với nền mờ, có nút đóng X, có thể đóng bằng cách bấm ngoài nền mờ hoặc nhấn Escape. Nội dung modal có vùng cuộn riêng để đọc tốt trên mobile.
+
+#### Cách thêm nội dung tổng quan cho sản phẩm tương lai
+
+Trong object sản phẩm ở `products.js`, thêm trường `overview` dạng mảng section. Section có thể có `heading` và `paragraphs`; nếu không cần tiêu đề phụ, chỉ cần dùng `paragraphs`:
+
+```js
+overview: [
+  {
+    paragraphs: [
+      "Đoạn giới thiệu tổng quan sản phẩm bằng tiếng Việt.",
+    ],
+  },
+  {
+    heading: "Thiết kế",
+    paragraphs: [
+      "Mô tả thiết kế, kích thước, cách bố trí sản phẩm.",
+    ],
+  },
+]
+```
+
+Nếu sản phẩm có `overview`, trang chi tiết sẽ tự hiện nút **Tổng quan sản phẩm** và render nội dung vào modal trên cùng trang.
+
+#### Cách thêm thông số chi tiết cho sản phẩm tương lai
+
+Trong object sản phẩm ở `products.js`, thêm trường `specifications` dạng mảng nhóm. Mỗi nhóm có `group` và `rows`; mỗi dòng có `label` và `value`. `value` có thể là chuỗi hoặc mảng chuỗi nếu cần nhiều dòng:
+
+```js
+specifications: [
+  {
+    group: "Tổng quan",
+    rows: [
+      { label: "Loại Tivi", value: "Smart Tivi Crystal UHD" },
+      { label: "Kích cỡ màn hình", value: "43 inch" },
+    ],
+  },
+  {
+    group: "Công nghệ hình ảnh",
+    rows: [
+      {
+        label: "Công nghệ hình ảnh",
+        value: ["HDR10+", "4K Upscaling", "Motion Xcelerator"],
+      },
+    ],
+  },
+]
+```
+
+Nếu sản phẩm có `specifications`, trang chi tiết sẽ tự hiện nút **Thông số chi tiết** và render bảng thông số gọn gàng trong modal trên cùng trang.
 
 ## Cách điều hướng chi tiết sản phẩm hoạt động
 
@@ -145,7 +203,7 @@ const detailParams = new URLSearchParams(window.location.search);
 const productId = detailParams.get("id");
 ```
 
-Nếu tìm thấy sản phẩm đúng id, trang chi tiết hiển thị thương hiệu, model, tên đầy đủ, kích thước, loại sản phẩm, tình trạng, bảo hành, đặc điểm nổi bật, mô tả, giá và nút liên hệ. Nếu sản phẩm có mảng `images`, trang chi tiết hiển thị ảnh lớn và hàng thumbnail; khi bấm một thumbnail, JavaScript đổi `src` của ảnh lớn sang đúng file ảnh được chọn và đánh dấu thumbnail đang active bằng viền xanh dương đậm. Nếu không tìm thấy id, trang hiển thị:
+Nếu tìm thấy sản phẩm đúng id, trang chi tiết hiển thị thương hiệu, model, tên đầy đủ, kích thước, loại sản phẩm, tình trạng, bảo hành, đặc điểm nổi bật, mô tả, giá, nút liên hệ và các nút modal thông tin nếu sản phẩm có dữ liệu `overview` hoặc `specifications`. Nếu sản phẩm có mảng `images`, trang chi tiết hiển thị ảnh lớn và hàng thumbnail; khi bấm một thumbnail, JavaScript đổi `src` của ảnh lớn sang đúng file ảnh được chọn và đánh dấu thumbnail đang active bằng viền xanh dương đậm. Nếu không tìm thấy id, trang hiển thị:
 
 ```text
 Không tìm thấy sản phẩm. Vui lòng quay lại trang chủ.
