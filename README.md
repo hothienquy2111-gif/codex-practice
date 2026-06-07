@@ -1,6 +1,12 @@
 # Anh Minh Store - Website bán tivi
 
-Website tĩnh giới thiệu dịch vụ và danh sách tivi của Anh Minh Store. Giao diện giữ phong cách bán lẻ trắng + xanh dương đậm, dùng font Aptos toàn cục và toàn bộ nội dung hiển thị bằng tiếng Việt.
+Website tĩnh giới thiệu dịch vụ và danh sách tivi của Anh Minh Store. Giao diện giữ phong cách bán lẻ trắng + xanh dương đậm, dùng hệ chữ trang trọng toàn cục và toàn bộ nội dung hiển thị bằng tiếng Việt.
+
+## Tối ưu typography
+
+Typography của website đã được tối ưu theo phong cách doanh nghiệp trang trọng, lịch sự và chuyên nghiệp hơn cho một cửa hàng điện tử thật. Toàn site dùng font stack toàn cục `Aptos, "Segoe UI", "Noto Sans", Arial, Helvetica, sans-serif;` để ưu tiên chữ sạch, dễ đọc, hỗ trợ tốt dấu tiếng Việt và vẫn tương thích với nhiều hệ điều hành.
+
+Các cấp tiêu đề, menu, nút bấm, tên sản phẩm, giá, thông tin sản phẩm và bảng thông số được cân chỉnh lại về độ đậm, line-height và khoảng cách chữ để tạo cảm giác tinh tế, đáng tin cậy hơn mà vẫn giữ thiết kế bán lẻ trắng + xanh dương đậm hiện tại. Không có file font bên ngoài, font trả phí/proprietary hoặc tài nguyên font bổ sung nào được thêm vào.
 
 ## Sản phẩm Samsung QA55Q7FA
 
@@ -144,6 +150,6 @@ specifications: [
 ## Lưu ý bảo trì
 
 - Luôn giữ nội dung hiển thị bằng tiếng Việt.
-- Giữ font Aptos và phong cách trắng + xanh dương đậm hiện tại.
+- Giữ font stack `Aptos, "Segoe UI", "Noto Sans", Arial, Helvetica, sans-serif;` và phong cách trắng + xanh dương đậm hiện tại.
 - Không dùng `target="_blank"` cho nút xem chi tiết sản phẩm.
 - Nếu ảnh sản phẩm lỗi tải, giao diện sẽ hiển thị placeholder tivi CSS sạch có sẵn.
