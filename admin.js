@@ -56,7 +56,11 @@
     });
     return Array.from(groups, ([group, rows]) => ({ group, rows }));
   };
-  const formatSpecifications = (specifications = []) => specifications.flatMap((group) => (group.rows || []).map((row) => `${group.group || ''} | ${row.label || ''} | ${Array.isArray(row.value) ? row.value.join(', ') : row.value || ''}`)).join('\n');
+  const formatSpecifications = (specifications = []) => {
+    if (typeof specifications === 'string') return specifications;
+    if (!Array.isArray(specifications)) return '';
+    return specifications.flatMap((group) => (group.rows || []).map((row) => `${group.group || ''} | ${row.label || ''} | ${Array.isArray(row.value) ? row.value.join(', ') : row.value || ''}`)).join('\n');
+  };
   const formatOverview = (overview = []) => overview.map((section) => section.content || (Array.isArray(section.paragraphs) ? section.paragraphs.join('\n') : '')).filter(Boolean).join('\n\n');
 
   const requireSupabase = () => {
@@ -140,7 +144,7 @@
       form.description.value = product.description || '';
       form.features.value = Array.isArray(product.features) ? product.features.join('\n') : '';
       form.overview.value = formatOverview(product.overview || []);
-      form.specifications.value = formatSpecifications(product.specifications || []);
+      form.specifications.value = formatSpecifications(product.specifications ?? product.specificationsText ?? []);
       form.isActive.value = String(Boolean(product.is_active));
     }
     renderExistingImages(product);
