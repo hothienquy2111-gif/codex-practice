@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Trang quản trị sản phẩm ANH MINH STORE." />
+    <title>Quản trị sản phẩm - ANH MINH STORE</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="admin-page">
+    <main class="admin-shell" id="noi-dung-chinh">
+      <section class="admin-login" data-admin-login aria-labelledby="admin-login-title">
+        <div class="admin-login__card">
+          <p class="admin-eyebrow">ANH MINH STORE</p>
+          <h1 id="admin-login-title">Quản trị sản phẩm</h1>
+          <p class="admin-muted">Đăng nhập bằng tài khoản quản trị Supabase để thêm, sửa và ẩn hiện sản phẩm.</p>
+          <form class="admin-form" data-login-form novalidate>
+            <div class="admin-field">
+              <label for="admin-email">Email</label>
+              <input id="admin-email" name="email" type="email" autocomplete="email" required />
+            </div>
+            <div class="admin-field">
+              <label for="admin-password">Mật khẩu</label>
+              <input id="admin-password" name="password" type="password" autocomplete="current-password" required />
+            </div>
+            <p class="admin-message" data-login-message aria-live="polite"></p>
+            <button class="btn btn--primary admin-submit" type="submit" data-login-button>Đăng nhập quản trị</button>
+          </form>
+        </div>
+      </section>
+
+      <section class="admin-dashboard" data-admin-dashboard hidden aria-labelledby="admin-dashboard-title">
+        <header class="admin-dashboard__header">
+          <div>
+            <p class="admin-eyebrow">ANH MINH STORE</p>
+            <h1 id="admin-dashboard-title">Quản lý sản phẩm</h1>
+          </div>
+          <div class="admin-actions">
+            <a class="btn btn--secondary" href="index.html">Xem website</a>
+            <button class="btn btn--primary" type="button" data-open-product-form>+ Thêm sản phẩm</button>
+            <button class="btn btn--ghost" type="button" data-logout-button>Đăng xuất</button>
+          </div>
+        </header>
+        <p class="admin-message" data-admin-message aria-live="polite"></p>
+        <div class="admin-products" data-admin-products aria-live="polite"></div>
+      </section>
+    </main>
+
+    <div class="admin-modal" data-product-modal hidden>
+      <div class="admin-modal__backdrop" data-close-product-form></div>
+      <section class="admin-modal__card" role="dialog" aria-modal="true" aria-labelledby="product-form-title">
+        <header class="admin-modal__header">
+          <h2 id="product-form-title" data-form-title>Thêm sản phẩm</h2>
+          <button class="admin-modal__close" type="button" aria-label="Đóng biểu mẫu sản phẩm" data-close-product-form>×</button>
+        </header>
+        <form class="admin-product-form" data-product-form novalidate>
+          <input type="hidden" name="editingOriginalId" />
+          <div class="admin-form-grid">
+            <div class="admin-field"><label for="product-brand">Hãng</label><input id="product-brand" name="brand" required /></div>
+            <div class="admin-field"><label for="product-model">Model</label><input id="product-model" name="model" required /></div>
+            <div class="admin-field admin-field--full"><label for="product-full-name">Tên đầy đủ</label><input id="product-full-name" name="fullName" required /></div>
+            <div class="admin-field"><label for="product-size">Kích thước</label><input id="product-size" name="size" placeholder="55 inch" required /></div>
+            <div class="admin-field"><label for="product-type">Loại sản phẩm</label><select id="product-type" name="type" required><option value="">Chọn loại sản phẩm</option><option>Tivi mới</option><option>Tivi cũ</option></select></div>
+            <div class="admin-field"><label for="product-id">Mã sản phẩm</label><input id="product-id" name="id" placeholder="Tự tạo từ hãng, model, kích thước" /></div>
+            <div class="admin-field"><label for="product-condition">Tình trạng</label><input id="product-condition" name="condition" /></div>
+            <div class="admin-field"><label for="product-warranty">Bảo hành</label><input id="product-warranty" name="warranty" /></div>
+            <div class="admin-field"><label for="product-old-price">Giá gạch</label><input id="product-old-price" name="oldPrice" /></div>
+            <div class="admin-field"><label for="product-price">Giá bán</label><input id="product-price" name="price" required /></div>
+            <div class="admin-field"><label for="product-badge">Badge</label><input id="product-badge" name="badge" /></div>
+            <div class="admin-field"><label for="product-sort-order">Thứ tự hiển thị</label><input id="product-sort-order" name="sortOrder" type="number" value="0" /></div>
+            <div class="admin-field admin-field--full"><label for="product-description">Mô tả ngắn</label><textarea id="product-description" name="description" rows="3"></textarea></div>
+            <div class="admin-field admin-field--full"><label for="product-features">Đặc điểm nổi bật</label><textarea id="product-features" name="features" rows="5" placeholder="Mỗi dòng một đặc điểm"></textarea></div>
+            <div class="admin-field admin-field--full"><label for="product-overview">Tổng quan sản phẩm</label><textarea id="product-overview" name="overview" rows="5" placeholder="Nhập nội dung tổng quan theo từng đoạn"></textarea></div>
+            <div class="admin-field admin-field--full"><label for="product-specifications">Thông số chi tiết</label><textarea id="product-specifications" name="specifications" rows="7" placeholder="Nhập thông số theo mẫu: Nhóm | Tên thông số | Giá trị&#10;Tổng quan | Loại Tivi | Smart Tivi QLED&#10;Tổng quan | Kích cỡ màn hình | 55 inch"></textarea></div>
+            <div class="admin-field"><label for="product-main-image">Ảnh chính</label><input id="product-main-image" name="mainImage" type="file" accept="image/*" /></div>
+            <div class="admin-field"><label for="product-gallery-images">Ảnh gallery nhiều ảnh</label><input id="product-gallery-images" name="galleryImages" type="file" accept="image/*" multiple /></div>
+            <div class="admin-field"><label for="product-active">Trạng thái</label><select id="product-active" name="isActive"><option value="true">Hiển thị</option><option value="false">Ẩn</option></select></div>
+            <div class="admin-field admin-field--full"><p class="admin-muted">Ảnh hiện có</p><div class="admin-image-preview" data-existing-images>Chưa có ảnh.</div></div>
+          </div>
+          <p class="admin-message" data-form-message aria-live="polite"></p>
+          <div class="admin-form-actions">
+            <button class="btn btn--secondary" type="button" data-close-product-form>Huỷ</button>
+            <button class="btn btn--primary" type="submit" data-save-product> Lưu sản phẩm</button>
+          </div>
+        </form>
+      </section>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script src="supabase-client.js"></script>
+    <script src="products.js"></script>
+    <script src="admin.js"></script>
+  </body>
+</html>
