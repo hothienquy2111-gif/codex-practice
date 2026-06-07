@@ -147,6 +147,18 @@ specifications: [
 
 8. Kiểm tra trang chủ, các bộ lọc, card sản phẩm, trang chi tiết, thư viện ảnh và hai modal trước khi đưa lên GitHub Pages.
 
+
+## Liên hệ và fanpage Facebook
+
+Khu vực **Liên hệ Anh Minh Store** trên trang chủ hiện có thêm hai nút fanpage Facebook:
+
+- **Fanpage mua bán tivi**: `https://www.facebook.com/profile.php?id=100043105376248&locale=vi_VN`
+- **Fanpage sửa tivi**: `https://www.facebook.com/anhminhsuachuativimongdanang/`
+
+Hai nút fanpage mở trong tab mới bằng `target="_blank"` và dùng `rel="noopener noreferrer"` để an toàn hơn. Các nút xem chi tiết sản phẩm vẫn mở trong cùng tab; không thêm `target="_blank"` cho liên kết chi tiết sản phẩm.
+
+Để cập nhật URL fanpage sau này, mở `index.html`, tìm tiêu đề **Liên hệ Anh Minh Store**, rồi thay giá trị `href` của hai liên kết có nhãn **Fanpage mua bán tivi** và **Fanpage sửa tivi**. Giữ nguyên `target="_blank"`, `rel="noopener noreferrer"`, nội dung tiếng Việt và phong cách nút hiện tại.
+
 ## Lưu ý bảo trì
 
 - Luôn giữ nội dung hiển thị bằng tiếng Việt.
