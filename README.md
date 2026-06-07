@@ -113,6 +113,14 @@ const SUPABASE_ANON_KEY = "your-anon-public-key";
 
 Không đưa service role key vào file này.
 
+Trong `admin.html`, thứ tự script bắt buộc là Supabase JS CDN, `supabase-config.js`, `supabase-client.js`, rồi mới đến `admin.js`. File `supabase-config.js` phải được gọi bằng đường dẫn tương đối `supabase-config.js` để chạy đúng trên GitHub Pages.
+
+Nếu trang admin báo “Chưa cấu hình Supabase”, hãy kiểm tra:
+
+- File `/supabase-config.js` đã có trên bản deploy và không phải file mẫu.
+- `admin.html` đang tải `supabase-config.js` trước `supabase-client.js` và `admin.js`.
+- GitHub Actions đã deploy bản mới nhất có file cấu hình đúng.
+
 ## 11. Cách đăng nhập admin.html
 1. Mở `admin.html` trên website.
 2. Nhập Email và Mật khẩu của tài khoản đã tạo trong Supabase Auth.

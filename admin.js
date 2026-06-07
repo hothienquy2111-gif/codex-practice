@@ -1,6 +1,6 @@
 (() => {
-  const supabaseState = window.AnhMinhSupabase || {};
-  const client = supabaseState.client;
+  const supabaseState = window.anhMinhSupabase || window.AnhMinhSupabase || {};
+  const client = supabaseState.isReady ? supabaseState.client : null;
   const bucketName = supabaseState.bucketName || 'product-images';
 
   const dom = {
