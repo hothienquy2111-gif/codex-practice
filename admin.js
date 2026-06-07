@@ -1,0 +1,360 @@
+(() => {
+  const supabaseState = window.AnhMinhSupabase || {};
+  const client = supabaseState.client;
+  const bucketName = supabaseState.bucketName || 'product-images';
+
+  const dom = {
+    loginSection: document.querySelector('[data-admin-login]'),
+    dashboard: document.querySelector('[data-admin-dashboard]'),
+    loginForm: document.querySelector('[data-login-form]'),
+    loginButton: document.querySelector('[data-login-button]'),
+    loginMessage: document.querySelector('[data-login-message]'),
+    adminMessage: document.querySelector('[data-admin-message]'),
+    products: document.querySelector('[data-admin-products]'),
+    logoutButton: document.querySelector('[data-logout-button]'),
+    openFormButton: document.querySelector('[data-open-product-form]'),
+    modal: document.querySelector('[data-product-modal]'),
+    form: document.querySelector('[data-product-form]'),
+    formTitle: document.querySelector('[data-form-title]'),
+    formMessage: document.querySelector('[data-form-message]'),
+    existingImages: document.querySelector('[data-existing-images]'),
+    saveButton: document.querySelector('[data-save-product]'),
+  };
+
+  let products = [];
+  let editingProduct = null;
+  let productIdManuallyEdited = false;
+
+  const escapeHtml = (value = '') => String(value).replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
+  const showMessage = (node, text = '', type = '') => {
+    if (!node) return;
+    node.textContent = text;
+    node.className = `admin-message${type ? ` admin-message--${type}` : ''}`;
+  };
+  const normalizeText = (value = '') => String(value).trim();
+  const slugify = (value = '') => normalizeText(value).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+  const generateProductId = (brand, model, size) => slugify(`${brand} ${model} ${size}`);
+  const sanitizeFileName = (name = '') => {
+    const parts = name.split('.');
+    const extension = parts.length > 1 ? `.${slugify(parts.pop())}` : '';
+    const base = slugify(parts.join('.') || 'anh-minh-store') || `anh-minh-store-${Date.now()}`;
+    return `${base}-${Date.now()}${extension}`;
+  };
+  const parseLines = (value = '') => value.split('\n').map((line) => line.trim()).filter(Boolean);
+  const parseOverview = (value = '') => {
+    const content = normalizeText(value);
+    return content ? [{ title: 'Tổng quan sản phẩm', content }] : [];
+  };
+  const parseSpecifications = (value = '') => {
+    const groups = new Map();
+    parseLines(value).forEach((line) => {
+      const [group, label, ...rest] = line.split('|').map((part) => part.trim());
+      const specValue = rest.join(' | ').trim();
+      if (!group || !label || !specValue) return;
+      if (!groups.has(group)) groups.set(group, []);
+      groups.get(group).push({ label, value: specValue });
+    });
+    return Array.from(groups, ([group, rows]) => ({ group, rows }));
+  };
+  const formatSpecifications = (specifications = []) => specifications.flatMap((group) => (group.rows || []).map((row) => `${group.group || ''} | ${row.label || ''} | ${Array.isArray(row.value) ? row.value.join(', ') : row.value || ''}`)).join('\n');
+  const formatOverview = (overview = []) => overview.map((section) => section.content || (Array.isArray(section.paragraphs) ? section.paragraphs.join('\n') : '')).filter(Boolean).join('\n\n');
+
+  const requireSupabase = () => {
+    if (!supabaseState.isConfigured || !client) {
+      showLoginOnly();
+      showMessage(dom.loginMessage, supabaseState.missingMessage || 'Chưa cấu hình Supabase. Vui lòng kiểm tra supabase-config.js.', 'error');
+      return false;
+    }
+    return true;
+  };
+  const showLoginOnly = () => { if (dom.loginSection) dom.loginSection.hidden = false; if (dom.dashboard) dom.dashboard.hidden = true; };
+  const showDashboard = () => { if (dom.loginSection) dom.loginSection.hidden = true; if (dom.dashboard) dom.dashboard.hidden = false; };
+
+  const isAdmin = async () => {
+    const { data: { user } } = await client.auth.getUser();
+    if (!user) return false;
+    const { data, error } = await client.from('profiles').select('role').eq('id', user.id).maybeSingle();
+    if (error) throw error;
+    return data?.role === 'admin';
+  };
+
+  const loadProducts = async () => {
+    showMessage(dom.adminMessage, 'Đang tải danh sách sản phẩm...');
+    try {
+      const { data, error } = await client.from('products').select('*').order('sort_order', { ascending: true }).order('created_at', { ascending: false });
+      if (error) throw error;
+      products = Array.isArray(data) ? data : [];
+      renderProducts();
+      showMessage(dom.adminMessage, '');
+    } catch (error) {
+      console.warn(error);
+      showMessage(dom.adminMessage, 'Không thể kết nối dữ liệu. Vui lòng thử lại.', 'error');
+    }
+  };
+
+  const renderProducts = () => {
+    if (!dom.products) return;
+    if (!products.length) {
+      dom.products.innerHTML = '<p class="admin-empty">Chưa có sản phẩm nào.</p>';
+      return;
+    }
+    dom.products.innerHTML = products.map((product) => `
+      <article class="admin-product-card" data-product-id="${escapeHtml(product.id)}">
+        <div>
+          <p class="admin-product-card__brand">${escapeHtml(product.brand)} · ${escapeHtml(product.model)}</p>
+          <h2>${escapeHtml(product.full_name || product.fullName || product.model)}</h2>
+          <p>${escapeHtml(product.size)} · ${escapeHtml(product.type)} · ${escapeHtml(product.price)}</p>
+          <span class="admin-status ${product.is_active ? 'is-active' : 'is-hidden'}">${product.is_active ? 'Hiển thị' : 'Ẩn'}</span>
+        </div>
+        <div class="admin-product-card__actions">
+          <button type="button" class="btn btn--secondary" data-edit-product="${escapeHtml(product.id)}">Sửa</button>
+          <button type="button" class="btn btn--ghost" data-toggle-product="${escapeHtml(product.id)}">${product.is_active ? 'Ẩn' : 'Hiện'}</button>
+          <button type="button" class="btn btn--danger" data-delete-product="${escapeHtml(product.id)}">Xoá</button>
+        </div>
+      </article>`).join('');
+  };
+
+  const openForm = (product = null) => {
+    editingProduct = product;
+    productIdManuallyEdited = Boolean(product);
+    dom.form?.reset();
+    showMessage(dom.formMessage, '');
+    if (dom.formTitle) dom.formTitle.textContent = product ? 'Sửa sản phẩm' : 'Thêm sản phẩm';
+    if (dom.modal) dom.modal.hidden = false;
+    document.body.classList.add('admin-modal-open');
+    const form = dom.form;
+    if (form && product) {
+      form.editingOriginalId.value = product.id || '';
+      form.brand.value = product.brand || '';
+      form.model.value = product.model || '';
+      form.fullName.value = product.full_name || product.fullName || '';
+      form.size.value = product.size || '';
+      form.type.value = product.type || '';
+      form.id.value = product.id || '';
+      form.condition.value = product.condition || '';
+      form.warranty.value = product.warranty || '';
+      form.oldPrice.value = product.old_price || product.oldPrice || '';
+      form.price.value = product.price || '';
+      form.badge.value = product.badge || '';
+      form.sortOrder.value = product.sort_order ?? 0;
+      form.description.value = product.description || '';
+      form.features.value = Array.isArray(product.features) ? product.features.join('\n') : '';
+      form.overview.value = formatOverview(product.overview || []);
+      form.specifications.value = formatSpecifications(product.specifications || []);
+      form.isActive.value = String(Boolean(product.is_active));
+    }
+    renderExistingImages(product);
+    setTimeout(() => form?.brand?.focus(), 0);
+  };
+
+  const closeForm = () => {
+    if (dom.modal) dom.modal.hidden = true;
+    document.body.classList.remove('admin-modal-open');
+    editingProduct = null;
+  };
+
+  const renderExistingImages = (product) => {
+    const images = [product?.image, ...(Array.isArray(product?.images) ? product.images : [])].filter(Boolean);
+    const unique = Array.from(new Set(images));
+    dom.existingImages.innerHTML = unique.length ? unique.map((src) => `<img src="${escapeHtml(src)}" alt="Ảnh sản phẩm hiện có" loading="lazy" />`).join('') : 'Chưa có ảnh.';
+  };
+
+  const validateForm = (form) => {
+    const checks = [
+      ['brand', 'Vui lòng nhập hãng.'],
+      ['model', 'Vui lòng nhập model.'],
+      ['fullName', 'Vui lòng nhập tên sản phẩm.'],
+      ['size', 'Vui lòng chọn kích thước.'],
+      ['type', 'Vui lòng chọn loại sản phẩm.'],
+      ['price', 'Vui lòng nhập giá bán.'],
+    ];
+    for (const [name, message] of checks) {
+      if (!normalizeText(form[name].value)) {
+        showMessage(dom.formMessage, message, 'error');
+        form[name].focus();
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const uploadFile = async (file, productId) => {
+    const path = `${productId}/${sanitizeFileName(file.name)}`;
+    const { error } = await client.storage.from(bucketName).upload(path, file, { cacheControl: '3600', upsert: false });
+    if (error) throw error;
+    const { data } = client.storage.from(bucketName).getPublicUrl(path);
+    return data?.publicUrl || '';
+  };
+
+  const uploadImages = async (form, productId) => {
+    const mainFile = form.mainImage.files?.[0];
+    const galleryFiles = Array.from(form.galleryImages.files || []);
+    let image = editingProduct?.image || '';
+    let images = Array.isArray(editingProduct?.images) ? [...editingProduct.images] : [];
+    if (mainFile || galleryFiles.length) showMessage(dom.formMessage, 'Đang tải ảnh lên...', 'info');
+    try {
+      if (mainFile) {
+        image = await uploadFile(mainFile, productId);
+        if (!images.includes(image)) images.unshift(image);
+      }
+      for (const file of galleryFiles) {
+        const url = await uploadFile(file, productId);
+        if (url && !images.includes(url)) images.push(url);
+      }
+      return { image, images };
+    } catch (error) {
+      console.warn(error);
+      throw new Error('Không thể tải ảnh lên. Vui lòng thử lại.');
+    }
+  };
+
+  const buildProduct = (form, imageData) => ({
+    id: normalizeText(form.id.value) || generateProductId(form.brand.value, form.model.value, form.size.value),
+    brand: normalizeText(form.brand.value),
+    model: normalizeText(form.model.value),
+    full_name: normalizeText(form.fullName.value),
+    size: normalizeText(form.size.value),
+    type: normalizeText(form.type.value),
+    condition: normalizeText(form.condition.value),
+    warranty: normalizeText(form.warranty.value),
+    old_price: normalizeText(form.oldPrice.value),
+    price: normalizeText(form.price.value),
+    badge: normalizeText(form.badge.value),
+    description: normalizeText(form.description.value),
+    features: parseLines(form.features.value),
+    overview: parseOverview(form.overview.value),
+    specifications: parseSpecifications(form.specifications.value),
+    image: imageData.image || '',
+    images: imageData.images || [],
+    is_active: form.isActive.value === 'true',
+    sort_order: Number(form.sortOrder.value || 0),
+    updated_at: new Date().toISOString(),
+  });
+
+  const handleSave = async (event) => {
+    event.preventDefault();
+    const form = dom.form;
+    if (!form || !validateForm(form)) return;
+    const productId = normalizeText(form.id.value) || generateProductId(form.brand.value, form.model.value, form.size.value);
+    form.id.value = productId;
+    dom.saveButton.disabled = true;
+    try {
+      if (!editingProduct || editingProduct.id !== productId) {
+        const { data: existing, error: existingError } = await client.from('products').select('id').eq('id', productId).maybeSingle();
+        if (existingError) throw existingError;
+        if (existing) {
+          showMessage(dom.formMessage, 'Mã sản phẩm đã tồn tại. Vui lòng đổi model hoặc mã sản phẩm.', 'error');
+          return;
+        }
+      }
+      const imageData = await uploadImages(form, productId);
+      const product = buildProduct(form, imageData);
+      const { error } = editingProduct
+        ? await client.from('products').update(product).eq('id', editingProduct.id)
+        : await client.from('products').insert(product);
+      if (error) throw error;
+      showMessage(dom.adminMessage, 'Đã lưu sản phẩm thành công.', 'success');
+      await loadProducts();
+      closeForm();
+    } catch (error) {
+      console.warn(error);
+      showMessage(dom.formMessage, error.message || 'Không thể kết nối dữ liệu. Vui lòng thử lại.', 'error');
+    } finally {
+      dom.saveButton.disabled = false;
+    }
+  };
+
+  const toggleProduct = async (product) => {
+    try {
+      const { error } = await client.from('products').update({ is_active: !product.is_active, updated_at: new Date().toISOString() }).eq('id', product.id);
+      if (error) throw error;
+      await loadProducts();
+    } catch (error) {
+      console.warn(error);
+      showMessage(dom.adminMessage, 'Không thể kết nối dữ liệu. Vui lòng thử lại.', 'error');
+    }
+  };
+
+  const deleteProduct = async (product) => {
+    if (!window.confirm('Bạn có chắc muốn xoá sản phẩm này không?')) return;
+    try {
+      const { error } = await client.from('products').delete().eq('id', product.id);
+      if (error) throw error;
+      await loadProducts();
+    } catch (error) {
+      console.warn(error);
+      showMessage(dom.adminMessage, 'Không thể kết nối dữ liệu. Vui lòng thử lại.', 'error');
+    }
+  };
+
+  const init = async () => {
+    if (!requireSupabase()) return;
+    const { data: { session } } = await client.auth.getSession();
+    if (!session) { showLoginOnly(); return; }
+    try {
+      if (!(await isAdmin())) {
+        showLoginOnly();
+        showMessage(dom.loginMessage, 'Tài khoản này không có quyền quản trị.', 'error');
+        await client.auth.signOut();
+        return;
+      }
+      showDashboard();
+      await loadProducts();
+    } catch (error) {
+      console.warn(error);
+      showLoginOnly();
+      showMessage(dom.loginMessage, 'Không thể kết nối dữ liệu. Vui lòng thử lại.', 'error');
+    }
+  };
+
+  dom.loginForm?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!requireSupabase()) return;
+    showMessage(dom.loginMessage, 'Đang đăng nhập...', 'info');
+    dom.loginButton.disabled = true;
+    const form = new FormData(dom.loginForm);
+    try {
+      const { error } = await client.auth.signInWithPassword({ email: normalizeText(form.get('email')), password: String(form.get('password') || '') });
+      if (error) throw error;
+      if (!(await isAdmin())) {
+        await client.auth.signOut();
+        showMessage(dom.loginMessage, 'Tài khoản này không có quyền quản trị.', 'error');
+        return;
+      }
+      showDashboard();
+      await loadProducts();
+    } catch (error) {
+      console.warn(error);
+      showMessage(dom.loginMessage, 'Sai tài khoản hoặc mật khẩu. Vui lòng thử lại.', 'error');
+    } finally {
+      dom.loginButton.disabled = false;
+    }
+  });
+
+  dom.logoutButton?.addEventListener('click', async () => { await client?.auth.signOut(); showLoginOnly(); });
+  dom.openFormButton?.addEventListener('click', () => openForm());
+  dom.form?.addEventListener('submit', handleSave);
+  document.querySelectorAll('[data-close-product-form]').forEach((button) => button.addEventListener('click', closeForm));
+  document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && !dom.modal?.hidden) closeForm(); });
+  dom.modal?.addEventListener('click', (event) => { if (event.target.matches('.admin-modal__backdrop')) closeForm(); });
+  dom.form?.addEventListener('input', (event) => {
+    if (event.target?.name === 'id') {
+      productIdManuallyEdited = true;
+      return;
+    }
+    if (editingProduct || productIdManuallyEdited) return;
+    const form = dom.form;
+    form.id.value = generateProductId(form.brand.value, form.model.value, form.size.value);
+  });
+  dom.products?.addEventListener('click', (event) => {
+    const id = event.target.dataset.editProduct || event.target.dataset.toggleProduct || event.target.dataset.deleteProduct;
+    if (!id) return;
+    const product = products.find((item) => item.id === id);
+    if (!product) return;
+    if (event.target.dataset.editProduct) openForm(product);
+    if (event.target.dataset.toggleProduct) toggleProduct(product);
+    if (event.target.dataset.deleteProduct) deleteProduct(product);
+  });
+
+  init();
+})();

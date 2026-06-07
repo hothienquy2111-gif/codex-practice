@@ -30,8 +30,8 @@ const dom = {
 };
 
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-const PRODUCTS = Array.isArray(window.products) ? window.products : [];
-const productIds = new Set();
+const FALLBACK_PRODUCTS = Array.isArray(window.products) ? window.products : [];
+let productIds = new Set();
 let activeSize = dom.selectedSize?.textContent?.trim() === 'Tất cả' ? '' : dom.selectedSize?.textContent?.trim() || '';
 let activeBrand = '';
 let activeType = '';
@@ -76,22 +76,30 @@ const normalizeProduct = (product = {}, index = 0) => {
     id,
     brand: product.brand || 'Anh Minh Store',
     model: product.model || 'Tivi đang cập nhật',
-    fullName: product.fullName || product.model || 'Tivi đang cập nhật',
+    fullName: product.fullName || product.full_name || product.model || 'Tivi đang cập nhật',
     size: product.size || 'Liên hệ tư vấn',
     type: product.type || 'Tivi',
     condition: product.condition || 'Liên hệ kiểm tra tình trạng',
     warranty: product.warranty || '',
     features: Array.isArray(product.features) && product.features.length ? product.features : ['Thông tin đang được cập nhật'],
-    oldPrice: product.oldPrice || '',
+    oldPrice: product.oldPrice || product.old_price || '',
     price: product.price || 'Giá đang cập nhật',
     image: product.image || '',
     images: Array.isArray(product.images) ? product.images : [],
     badge: product.badge || 'Tư vấn',
     description: product.description || 'Vui lòng liên hệ Anh Minh Store để được tư vấn chi tiết.',
+    sortOrder: Number(product.sort_order ?? product.sortOrder ?? index),
   };
 };
 
-const products = PRODUCTS.map(normalizeProduct);
+let products = [];
+
+const normalizeSourceProducts = (sourceProducts = []) => {
+  productIds = new Set();
+  return sourceProducts.map(normalizeProduct).sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+};
+
+products = normalizeSourceProducts(FALLBACK_PRODUCTS);
 
 const getBrandNameFromLogo = (image) => image.alt.replace(/^Logo\s+/i, '').trim();
 const normalizeFilterValue = (value = '') => String(value).trim();
@@ -595,6 +603,37 @@ dom.productFilterLinks.forEach((link) => {
     scrollToHash('#san-pham');
   });
 });
+
+
+const refreshPublicProductsFromSupabase = async () => {
+  const storeSupabase = window.AnhMinhSupabase;
+  if (!storeSupabase?.isConfigured || !storeSupabase.client) return;
+
+  try {
+    const { data, error } = await storeSupabase.client
+      .from('products')
+      .select('*')
+      .eq('is_active', true)
+      .order('sort_order', { ascending: true })
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    if (!Array.isArray(data)) return;
+
+    products = normalizeSourceProducts(data);
+    renderBrandFilterRow({ container: dom.usedTvBrandRow, sectionType: 'used' });
+    renderBrandFilterRow({ container: dom.newTvBrandRow, sectionType: 'new' });
+    syncBrandPanelActive();
+    syncSectionBrandRows();
+    renderProductCards();
+    renderUsedTvSection();
+    renderNewTvSection();
+  } catch (error) {
+    console.warn('Không thể tải sản phẩm từ Supabase, dùng dữ liệu products.js dự phòng.', error);
+  }
+};
+
+refreshPublicProductsFromSupabase();
 
 const initCarousel = () => {
   const carousel = dom.carousel;

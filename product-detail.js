@@ -37,13 +37,13 @@
       id: product.id || '',
       brand: product.brand || 'Anh Minh Store',
       model: product.model || 'Tivi đang cập nhật',
-      fullName: product.fullName || product.model || 'Tivi đang cập nhật',
+      fullName: product.fullName || product.full_name || product.model || 'Tivi đang cập nhật',
       size: product.size || 'Liên hệ tư vấn',
       type: product.type || 'Tivi',
       condition: product.condition || 'Liên hệ kiểm tra tình trạng',
       warranty: product.warranty || '',
       features: Array.isArray(product.features) && product.features.length ? product.features : ['Thông tin đang được cập nhật'],
-      oldPrice: product.oldPrice || '',
+      oldPrice: product.oldPrice || product.old_price || '',
       price: product.price || 'Giá đang cập nhật',
       image: product.image || imageList[0] || '',
       images: imageList,
@@ -102,10 +102,10 @@
     return `
       <div class="product-overview-modal">
         ${overview.map((section) => {
-          const heading = section.heading ? `<h3>${escapeDetailHtml(section.heading)}</h3>` : '';
-          const paragraphs = Array.isArray(section.paragraphs)
-            ? section.paragraphs.map((paragraph) => `<p>${escapeDetailHtml(paragraph)}</p>`).join('')
-            : '';
+          const headingText = section.heading || section.title || '';
+          const heading = headingText ? `<h3>${escapeDetailHtml(headingText)}</h3>` : '';
+          const sourceParagraphs = Array.isArray(section.paragraphs) ? section.paragraphs : (section.content ? String(section.content).split(/\n+/).filter(Boolean) : []);
+          const paragraphs = sourceParagraphs.map((paragraph) => `<p>${escapeDetailHtml(paragraph)}</p>`).join('');
           return `<section>${heading}${paragraphs}</section>`;
         }).join('')}
       </div>`;
@@ -307,18 +307,42 @@
     bindProductModalButtons(product);
   };
 
-  if (!Array.isArray(window.products)) {
-    console.warn('Dữ liệu window.products chưa sẵn sàng hoặc products.js chưa tải thành công.');
-    renderProductsUpdating();
-    return;
-  }
+  const findFallbackProduct = () => (Array.isArray(window.products) ? window.products.find((item) => item.id === productId) : null);
 
-  const product = window.products.find((item) => item.id === productId);
+  const loadProductDetail = async () => {
+    if (!productId) {
+      renderMissingProduct();
+      return;
+    }
 
-  if (!productId || !product) {
-    renderMissingProduct();
-    return;
-  }
+    const storeSupabase = window.AnhMinhSupabase;
+    if (storeSupabase?.isConfigured && storeSupabase.client) {
+      try {
+        const { data, error } = await storeSupabase.client
+          .from('products')
+          .select('*')
+          .eq('id', productId)
+          .eq('is_active', true)
+          .maybeSingle();
 
-  renderProductDetail(product);
+        if (error) throw error;
+        if (data) {
+          renderProductDetail(data);
+          return;
+        }
+      } catch (error) {
+        console.warn('Không thể tải chi tiết sản phẩm từ Supabase, dùng dữ liệu products.js dự phòng.', error);
+      }
+    }
+
+    const product = findFallbackProduct();
+    if (!product) {
+      renderMissingProduct();
+      return;
+    }
+
+    renderProductDetail(product);
+  };
+
+  loadProductDetail();
 })();

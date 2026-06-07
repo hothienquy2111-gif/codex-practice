@@ -1,229 +1,195 @@
-# Anh Minh Store - Website bán tivi
+# ANH MINH STORE - Website tivi và hệ thống quản trị Supabase
 
-Website tĩnh giới thiệu dịch vụ và danh sách tivi của Anh Minh Store. Giao diện giữ phong cách bán lẻ trắng + xanh dương đậm, dùng hệ chữ trang trọng toàn cục và toàn bộ nội dung hiển thị bằng tiếng Việt.
+## 1. Tổng quan hệ thống admin
+Website ANH MINH STORE vẫn là website tĩnh chạy bằng HTML, CSS và JavaScript trên GitHub Pages. Hệ thống mới bổ sung trang `admin.html` để chủ cửa hàng đăng nhập, thêm sản phẩm, upload ảnh, sửa, ẩn/hiện và xoá sản phẩm mà không cần sửa code GitHub thủ công.
 
-## Tối ưu typography
+## 2. Vì sao cần Supabase
+Supabase được dùng cho 3 phần chính:
 
-Typography của website đã được tối ưu theo phong cách doanh nghiệp trang trọng, lịch sự và chuyên nghiệp hơn cho một cửa hàng điện tử thật. Toàn site dùng font stack toàn cục `Aptos, "Segoe UI", "Noto Sans", Arial, Helvetica, sans-serif;` để ưu tiên chữ sạch, dễ đọc, hỗ trợ tốt dấu tiếng Việt và vẫn tương thích với nhiều hệ điều hành.
+- **Supabase Auth**: đăng nhập/đăng xuất tài khoản quản trị.
+- **Supabase Database**: lưu dữ liệu sản phẩm trong bảng `products`.
+- **Supabase Storage**: lưu ảnh sản phẩm trong bucket `product-images`.
 
-Các cấp tiêu đề, menu, nút bấm, tên sản phẩm, giá, thông tin sản phẩm và bảng thông số được cân chỉnh lại về độ đậm, line-height và khoảng cách chữ để tạo cảm giác tinh tế, đáng tin cậy hơn mà vẫn giữ thiết kế bán lẻ trắng + xanh dương đậm hiện tại. Không có file font bên ngoài, font trả phí/proprietary hoặc tài nguyên font bổ sung nào được thêm vào.
+GitHub Pages chỉ phục vụ file tĩnh, vì vậy cần Supabase để có cơ sở dữ liệu, đăng nhập và kho ảnh động.
 
-## Sản phẩm Samsung QA55Q7FA
+## 3. File mới được tạo
+- `admin.html`: giao diện đăng nhập và quản lý sản phẩm.
+- `admin.js`: xử lý Auth, kiểm tra quyền admin, upload ảnh, thêm/sửa/ẩn/xoá sản phẩm.
+- `supabase-client.js`: khởi tạo Supabase an toàn, không làm hỏng website nếu chưa cấu hình.
+- `supabase-config.example.js`: file mẫu chứa placeholder URL và anon key.
+- `supabase-schema.sql`: schema bảng, RLS policy và storage policy mẫu.
 
-Sản phẩm mẫu Samsung 55 inch cũ đã được thay thế bằng sản phẩm thật:
+Các file được cập nhật:
 
-- `id`: `samsung-qa55q7fa`
-- `brand`: `Samsung`
-- `model`: `QA55Q7FA`
-- `fullName`: `Smart Tivi Samsung QLED 4K Vision AI 55 Inch QA55Q7FA`
-- `size`: `55 inch`
-- `type`: `Tivi mới`
-- `condition`: `Mới`
-- `warranty`: `Bảo hành 2 năm`
-- `oldPrice`: `14.299.000đ`
-- `price`: `11.690.000đ`
+- `index.html`, `script.js`: tải sản phẩm từ Supabase trước, fallback về `products.js` nếu chưa cấu hình hoặc lỗi mạng.
+- `product-detail.html`, `product-detail.js`: tải chi tiết sản phẩm từ Supabase trước, fallback về `products.js`.
+- `styles.css`: thêm giao diện admin responsive, giữ phong cách trắng + xanh đậm và font Aptos.
 
-Card sản phẩm trên trang chủ dùng ảnh chính `55Q7 trước.webp`, hiển thị giá cũ gạch ngang và giá bán nổi bật. Nút **Xem chi tiết** mở cùng tab tại:
+## 4. Cách tạo Supabase project
+1. Vào Supabase Dashboard.
+2. Tạo project mới.
+3. Chọn region phù hợp.
+4. Sau khi project sẵn sàng, vào **Project Settings > API** để lấy:
+   - Project URL.
+   - `anon public` key.
 
-```text
-product-detail.html?id=samsung-qa55q7fa
+> Với GitHub Pages, Supabase anon key có thể nằm công khai ở frontend **chỉ khi Row Level Security (RLS) được cấu hình đúng**.
+
+## 5. Cách tạo bảng products
+1. Mở Supabase Dashboard.
+2. Vào **SQL Editor**.
+3. Mở file `supabase-schema.sql` trong repo.
+4. Copy toàn bộ SQL và chạy.
+
+Bảng `products` chứa các trường: `id`, `brand`, `model`, `full_name`, `size`, `type`, `condition`, `warranty`, `old_price`, `price`, `badge`, `description`, `features`, `image`, `images`, `overview`, `specifications`, `is_active`, `sort_order`, `created_at`, `updated_at`.
+
+## 6. Cách tạo bảng profiles
+File `supabase-schema.sql` cũng tạo bảng `profiles` với các trường:
+
+- `id`: trỏ tới `auth.users(id)`.
+- `role`: mặc định là `staff`, admin phải có role là `admin`.
+- `full_name`: tên chủ cửa hàng hoặc nhân viên.
+- `created_at`: thời điểm tạo.
+
+## 7. Cách bật RLS
+SQL đã bật RLS cho `profiles` và `products`:
+
+- Khách truy cập chỉ đọc được sản phẩm `is_active = true`.
+- Người đăng nhập có role `admin` đọc được toàn bộ sản phẩm.
+- Chỉ role `admin` được thêm, sửa, xoá sản phẩm.
+
+Admin policy dùng kiểm tra:
+
+```sql
+exists (
+  select 1 from public.profiles
+  where profiles.id = auth.uid()
+  and profiles.role = 'admin'
+)
 ```
 
-Trang chi tiết hiển thị thư viện 4 ảnh, thông tin thương hiệu, model, tên đầy đủ, kích thước, loại sản phẩm, tình trạng, bảo hành, đặc điểm nổi bật, mô tả, giá cũ, giá bán và các nút CTA **Gọi tư vấn**, **Nhắn Zalo**, **Quay lại danh sách**.
+## 8. Cách tạo storage bucket product-images
+Có 2 cách:
 
-## Ảnh sản phẩm
+### Cách 1: Chạy SQL
+`supabase-schema.sql` có câu lệnh tạo bucket `product-images` và policy cho storage.
 
-Các ảnh của Samsung QA55Q7FA được lưu ngay tại thư mục gốc repository, cùng cấp với `index.html` và `products.js`. Tên file phải được giữ nguyên chính xác vì GitHub Pages phân biệt chữ hoa/thường, dấu tiếng Việt và khoảng trắng:
+### Cách 2: Tạo trong Dashboard
+Nếu SQL không tạo bucket được do quyền dashboard:
 
-- `55Q7 trước.webp`
-- `55q7 nghiên trái.webp`
-- `55q7 nghiên phải.webp`
-- `55q7 viền.webp`
+1. Vào **Storage**.
+2. Chọn **New bucket**.
+3. Bucket name: `product-images`.
+4. Bật public bucket để website đọc ảnh công khai.
+5. Tạo policy để public được đọc ảnh và chỉ admin được upload/update/delete.
 
-Không đổi tên, không di chuyển và không chỉnh sửa các file ảnh/binary khi chỉ cập nhật dữ liệu sản phẩm.
+## 9. Cách tạo tài khoản admin
+1. Vào **Authentication > Users** trong Supabase.
+2. Tạo user bằng email và mật khẩu mạnh.
+3. Copy user id của tài khoản đó.
+4. Chèn profile admin trong SQL Editor:
 
-## Modal tổng quan và thông số chi tiết
+```sql
+insert into public.profiles (id, role, full_name)
+values ('AUTH_USER_ID_HERE', 'admin', 'Tên chủ cửa hàng')
+on conflict (id) do update set role = 'admin', full_name = excluded.full_name;
+```
 
-Sản phẩm `samsung-qa55q7fa` có sẵn dữ liệu:
+Chỉ tài khoản có `profiles.role = 'admin'` mới thêm/sửa/xoá sản phẩm được.
 
-- `overview`: nội dung **Tổng quan sản phẩm** gồm giới thiệu, đặc điểm nổi bật, thiết kế, màn hình QLED 4K, công nghệ hình ảnh, Samsung Vision AI, trải nghiệm chuyển động, âm thanh và hệ điều hành.
-- `specifications`: nội dung **Thông số chi tiết** theo nhóm gồm tổng quan sản phẩm, công nghệ hình ảnh, công nghệ âm thanh, cổng kết nối, tiện ích, thông tin lắp đặt, xuất xứ và bảo hành.
+## 10. Cách cấu hình supabase-config.js
+1. Copy file mẫu:
 
-Trang chi tiết tự hiển thị hai nút **Tổng quan sản phẩm** và **Thông số chi tiết** nếu sản phẩm có dữ liệu tương ứng. Hai nút mở modal nổi trên cùng trang, không chuyển trang, không mở tab mới. Modal có thể đóng bằng nút X, bấm nền mờ hoặc phím Escape; nội dung modal có vùng cuộn để dùng tốt trên mobile.
+```bash
+cp supabase-config.example.js supabase-config.js
+```
 
-
-## Banner carousel trang chủ World Cup
-
-Carousel/banner chính trên trang chủ hiện giữ đủ 5 ảnh riêng biệt và hiển thị theo đúng thứ tự mới, trong đó ảnh World 2026 xuất hiện đầu tiên khi tải trang:
-
-1. `Create_an_ultra-realistic_premium_World_202606042116.jpeg`
-2. `Create_a_premium_16_9_commercial_202605091429.jpeg`
-3. `WC2.jpeg`
-4. `WC1.jpeg`
-5. `WC3.jpeg`
-
-Các file ảnh này được lưu trực tiếp trong thư mục gốc repository, cùng cấp với `index.html`, nên đường dẫn trong carousel dùng tên file tương đối. Không cần thêm dấu `/` ở đầu đường dẫn để tránh lỗi khi chạy trên GitHub Pages dưới thư mục con. Carousel tự tạo 5 chấm điều hướng tương ứng với 5 slide trong HTML.
-
-Để thay ảnh carousel sau này:
-
-1. Đặt file ảnh mới vào thư mục gốc repository hoặc dùng file ảnh đã có sẵn.
-2. Mở `index.html` và tìm khu vực `<section class="hero-carousel" ... data-carousel>`.
-3. Cập nhật từng thẻ `<img src="...">` trong `.carousel-slide` theo thứ tự banner mong muốn.
-4. Giữ mỗi ảnh trong một `.carousel-slide` riêng để hệ thống tự tạo đúng số chấm điều hướng.
-5. Giữ `draggable="false"`, alt tiếng Việt, nút mũi tên, vùng `.carousel-dots` và cấu trúc `.carousel-viewport`/`.carousel-track` để không ảnh hưởng kéo chuột, vuốt mobile, autoplay và chấm điều hướng.
-6. Không chỉnh sửa trực tiếp file ảnh gốc nếu chỉ cần thay đường dẫn banner.
-
-Carousel vẫn giữ tỷ lệ 16:9; CSS dùng `object-fit: cover` để ảnh phủ đầy khung, không bị méo và giữ phong cách bán lẻ trắng + xanh dương đậm hiện tại.
-
-## Cách dữ liệu sản phẩm hoạt động
-
-`products.js` khai báo mảng toàn cục:
+2. Sửa `supabase-config.js`:
 
 ```js
-window.products = [
-  {
-    id: "samsung-qa55q7fa",
-    brand: "Samsung",
-    model: "QA55Q7FA",
-    fullName: "Smart Tivi Samsung QLED 4K Vision AI 55 Inch QA55Q7FA",
-    size: "55 inch",
-    type: "Tivi mới",
-    condition: "Mới",
-    warranty: "Bảo hành 2 năm",
-    oldPrice: "14.299.000đ",
-    price: "11.690.000đ",
-    image: "55Q7 trước.webp",
-    images: [
-      "55Q7 trước.webp",
-      "55q7 nghiên trái.webp",
-      "55q7 nghiên phải.webp",
-      "55q7 viền.webp",
-    ],
-  },
-];
+const SUPABASE_URL = "https://your-project.supabase.co";
+const SUPABASE_ANON_KEY = "your-anon-public-key";
 ```
 
-`script.js` đọc `window.products`, chuẩn hóa dữ liệu thiếu và render sản phẩm vào trang chủ. Bộ lọc trang chủ hoạt động theo `brand`, `size` và `type`, vì vậy Samsung QA55Q7FA xuất hiện khi chọn **Tất cả**, **Samsung**, **55 inch** hoặc **Tivi mới**.
+Không đưa service role key vào file này.
 
-`product-detail.html` nạp `products.js` và `product-detail.js`. `product-detail.js` đọc tham số `id` trên URL, tìm đúng sản phẩm trong `window.products` rồi render chi tiết, thư viện ảnh và modal nếu có dữ liệu.
+## 11. Cách đăng nhập admin.html
+1. Mở `admin.html` trên website.
+2. Nhập Email và Mật khẩu của tài khoản đã tạo trong Supabase Auth.
+3. Bấm **Đăng nhập quản trị**.
+4. Nếu chưa cấu hình Supabase, trang admin sẽ báo: “Chưa cấu hình Supabase. Vui lòng kiểm tra supabase-config.js.”
+5. Nếu tài khoản không có role `admin`, hệ thống sẽ báo: “Tài khoản này không có quyền quản trị.”
 
-## Cách thêm một sản phẩm mới có ảnh, giá cũ, giá bán, tổng quan và thông số
+## 12. Cách thêm sản phẩm mới
+1. Đăng nhập `admin.html`.
+2. Bấm **+ Thêm sản phẩm**.
+3. Nhập thông tin tivi: hãng, model, tên đầy đủ, kích thước, loại sản phẩm, giá bán...
+4. Mã sản phẩm được tự tạo từ hãng + model + kích thước, ví dụ `Samsung + QA55Q7FA + 55 inch` thành `samsung-qa55q7fa-55-inch`.
+5. Có thể sửa mã sản phẩm thủ công nếu cần.
+6. Bấm **Lưu sản phẩm**.
 
-1. Mở `products.js`.
-2. Thêm object sản phẩm mới vào mảng `window.products` hoặc cập nhật object hiện có nếu đang thay sản phẩm mẫu.
-3. Đặt `id` duy nhất, không dấu, chữ thường và nên nối bằng dấu gạch ngang.
-4. Điền các trường hiển thị chính:
-   - `brand`
-   - `model`
-   - `fullName`
-   - `size`
-   - `type`
-   - `condition`
-   - `warranty`
-   - `oldPrice`
-   - `price`
-   - `badge`
-   - `description`
-   - `features`
-5. Lưu ảnh vào đúng vị trí mong muốn, sau đó tham chiếu chính xác tên file trong:
-   - `image`: ảnh chính dùng cho card sản phẩm.
-   - `images`: danh sách ảnh dùng cho thư viện ảnh trang chi tiết.
-6. Thêm `overview` dạng mảng section. Mỗi section có thể có `heading` và `paragraphs`:
+Nếu mã sản phẩm đã tồn tại, trang admin sẽ báo: “Mã sản phẩm đã tồn tại. Vui lòng đổi model hoặc mã sản phẩm.”
 
-```js
-overview: [
-  {
-    paragraphs: [
-      "Đoạn giới thiệu tổng quan sản phẩm bằng tiếng Việt.",
-    ],
-  },
-  {
-    heading: "Thiết kế",
-    paragraphs: [
-      "Mô tả thiết kế, kích thước và không gian sử dụng.",
-    ],
-  },
-]
-```
+## 13. Cách upload ảnh sản phẩm
+Trong form sản phẩm có:
 
-7. Thêm `specifications` dạng mảng nhóm. Mỗi nhóm có `group` và `rows`; mỗi dòng có `label` và `value`. `value` có thể là chuỗi hoặc mảng chuỗi:
+- **Ảnh chính**: ảnh đại diện sản phẩm.
+- **Ảnh gallery nhiều ảnh**: nhiều ảnh chi tiết.
 
-```js
-specifications: [
-  {
-    group: "Tổng quan sản phẩm",
-    rows: [
-      { label: "Loại Tivi", value: "Smart Tivi QLED" },
-      { label: "Kích cỡ màn hình", value: "55 Inch" },
-    ],
-  },
-  {
-    group: "Công nghệ hình ảnh",
-    rows: [
-      {
-        label: "Công nghệ hình ảnh",
-        value: ["Quantum Dot", "Quantum HDR+", "Motion Xcelerator"],
-      },
-    ],
-  },
-]
-```
+Ảnh được upload lên bucket `product-images` theo thư mục của mã sản phẩm. Nếu upload lỗi, trang admin báo: “Không thể tải ảnh lên. Vui lòng thử lại.”
 
-8. Kiểm tra trang chủ, các bộ lọc, card sản phẩm, trang chi tiết, thư viện ảnh và hai modal trước khi đưa lên GitHub Pages.
+Nếu không upload ảnh, sản phẩm vẫn lưu được và website public sẽ hiển thị placeholder tivi bằng CSS.
 
+## 14. Cách sản phẩm hiện trên website
+Trang chủ tải dữ liệu theo thứ tự:
 
-## Liên hệ và fanpage Facebook
+1. Supabase `products` với `is_active = true`.
+2. Nếu Supabase thiếu cấu hình, lỗi mạng hoặc query lỗi, website fallback về `products.js`.
 
-Khu vực **Liên hệ Anh Minh Store** trên trang chủ hiện có thêm hai nút fanpage Facebook:
+Sản phẩm loại **Tivi mới** hiện ở phần “Tivi mới chính hãng”. Sản phẩm loại **Tivi cũ** hiện ở phần “Tivi cũ đã kiểm tra”. Link chi tiết vẫn là `product-detail.html?id=MA_SAN_PHAM` và mở trong cùng tab.
 
-- **Fanpage mua bán tivi**: `https://www.facebook.com/profile.php?id=100043105376248&locale=vi_VN`
-- **Fanpage sửa tivi**: `https://www.facebook.com/anhminhsuachuativimongdanang/`
+## 15. Cách sửa/ẩn/xoá sản phẩm
+Trong dashboard admin:
 
-Hai nút fanpage mở trong tab mới bằng `target="_blank"` và dùng `rel="noopener noreferrer"` để an toàn hơn. Các nút xem chi tiết sản phẩm vẫn mở trong cùng tab; không thêm `target="_blank"` cho liên kết chi tiết sản phẩm.
+- **Sửa**: mở form với dữ liệu hiện có. Ảnh cũ được giữ lại nếu không upload ảnh mới.
+- **Ẩn/Hiện**: đổi `is_active`; sản phẩm ẩn không hiện trên website public nhưng vẫn thấy trong admin.
+- **Xoá**: xoá row trong bảng `products` sau khi xác nhận “Bạn có chắc muốn xoá sản phẩm này không?”.
 
-Để cập nhật URL fanpage sau này, mở `index.html`, tìm tiêu đề **Liên hệ Anh Minh Store**, rồi thay giá trị `href` của hai liên kết có nhãn **Fanpage mua bán tivi** và **Fanpage sửa tivi**. Giữ nguyên `target="_blank"`, `rel="noopener noreferrer"`, nội dung tiếng Việt và phong cách nút hiện tại.
+Ảnh trong Storage không bị xoá tự động. Có thể bổ sung chức năng dọn ảnh storage sau.
 
-## Lưu ý bảo trì
+## 16. Cách test website sau khi thêm sản phẩm
+1. Thêm sản phẩm trong `admin.html`.
+2. Mở `index.html` hoặc website GitHub Pages.
+3. Kiểm tra sản phẩm xuất hiện đúng mục Tivi mới/Tivi cũ.
+4. Dùng bộ lọc hãng, kích thước, loại sản phẩm.
+5. Bấm “Xem chi tiết” để mở `product-detail.html?id=...` trong cùng tab.
+6. Kiểm tra gallery, giá gạch, giá bán, đặc điểm nổi bật, modal tổng quan và modal thông số.
+7. Kiểm tra trên màn hình điện thoại, không bị tràn ngang.
 
-- Luôn giữ nội dung hiển thị bằng tiếng Việt.
-- Giữ font stack `Aptos, "Segoe UI", "Noto Sans", Arial, Helvetica, sans-serif;` và phong cách trắng + xanh dương đậm hiện tại.
-- Không dùng `target="_blank"` cho nút xem chi tiết sản phẩm.
-- Nếu ảnh sản phẩm lỗi tải, giao diện sẽ hiển thị placeholder tivi CSS sạch có sẵn.
+## 17. Cảnh báo bảo mật
+- **Không bao giờ expose Supabase service role key trong frontend code.**
+- **Không bao giờ lưu mật khẩu admin trong JavaScript.**
+- Chỉ dùng Supabase Auth để đăng nhập.
+- Luôn bật RLS cho bảng và storage.
+- Supabase anon key có thể public trên GitHub Pages, nhưng chỉ an toàn khi RLS policy đúng.
+- Admin actions phải yêu cầu user đã đăng nhập và có `profiles.role = 'admin'`.
 
-## Danh mục hãng tivi và logo thương hiệu
+## 18. Fallback products.js nếu Supabase chưa cấu hình
+Nếu chưa có `supabase-config.js`, config sai, mất mạng hoặc Supabase query lỗi:
 
-Logo trong khung **DANH MỤC HÃNG TIVI** được khai báo tập trung trong `script.js` bằng một danh sách thương hiệu duy nhất. Các file logo đang được lưu ngay tại thư mục gốc repository, cùng cấp với `index.html`, nên đường dẫn dùng dạng tương đối như `samsung.jpeg`, `LG.jpeg`, `sony.jpeg`, `toshiba.jpeg`, `TCL.jpeg`, `skyworth.png`.
+- Trang public không crash.
+- Trang chủ vẫn dùng `products.js`.
+- Trang chi tiết vẫn dùng `products.js`.
+- Người dùng không thấy lỗi kỹ thuật; console có thể có cảnh báo để debug.
 
-GitHub Pages phân biệt chữ hoa/thường, vì vậy tên file phải khớp chính xác với file thật trong repository. Ví dụ `LG.jpeg` khác `lg.jpeg`, `TCL.jpeg` khác `tcl.jpeg`. Không dùng đường dẫn bắt đầu bằng `/` vì website có thể được phục vụ dưới thư mục con của GitHub Pages.
-
-Panel thương hiệu luôn ưu tiên hiển thị ảnh logo đã tải lên. Mỗi logo được render với `loading="eager"`, `decoding="async"`, kích thước cố định và alt tiếng Việt như `Logo Samsung`, `Logo LG`, `Logo Sony`. Badge chữ cái dự phòng được ẩn mặc định và chỉ hiện khi sự kiện `onerror` của ảnh xảy ra. Nếu ảnh tải thành công, ảnh vẫn hiển thị và badge dự phòng không phủ lên logo.
-
-Để thay logo một thương hiệu sau này:
-
-1. Đặt file ảnh mới vào thư mục gốc repository, cùng cấp với `index.html`.
-2. Không đổi hoặc chỉnh sửa file ảnh cũ nếu không cần thiết.
-3. Mở `script.js` và cập nhật đúng trường `logo` trong danh sách `BRAND_DATA`.
-4. Kiểm tra tên file chính xác từng ký tự, gồm chữ hoa/thường và phần mở rộng `.jpeg`, `.png` hoặc `.svg`.
-5. Giữ alt tự động theo tên hãng để người dùng và công cụ hỗ trợ đọc được nội dung logo.
-
-## Cách lọc sản phẩm theo hãng
-
-Khi bấm một hãng trong **DANH MỤC HÃNG TIVI**, website cập nhật trạng thái hãng đang chọn và lọc sản phẩm theo `product.brand` không phân biệt chữ hoa/thường nhưng yêu cầu tên hãng khớp chính xác, ví dụ `Samsung`, `LG`, `Sony`.
-
-Bộ lọc hãng bên trái đồng bộ với hai khu vực:
-
-- **Tivi cũ đã kiểm tra**.
-- **Tivi mới chính hãng**.
-
-Nút **Tất cả hãng** ở đầu panel dùng để bỏ lọc hãng và hiển thị lại toàn bộ sản phẩm. Các bộ lọc kích thước riêng của từng khu vực vẫn kết hợp với hãng đang chọn, nên nếu đang chọn một kích thước cụ thể rồi chọn hãng trong khu vực đó, danh sách sẽ lọc theo cả hãng và kích thước.
-
-Nếu một khu vực không có sản phẩm thuộc hãng đang chọn, website hiển thị thông báo tiếng Việt: **“Chưa có sản phẩm thuộc hãng này. Vui lòng chọn hãng khác hoặc liên hệ Anh Minh Store.”** Nếu dữ liệu sản phẩm trống, website hiển thị **“Sản phẩm đang được cập nhật.”**
-
-## Cách kiểm tra logo và lọc hãng
-
-1. Mở trang chủ rồi nhấn **Ctrl + F5** để hard refresh.
-2. Kiểm tra các logo trong **DANH MỤC HÃNG TIVI** vẫn hiển thị, không bị badge chữ cái phủ lên.
-3. Bấm các hãng như **Samsung**, **LG**, **Sony**, **Toshiba**.
-4. Kiểm tra **Sản phẩm nổi bật**, **Tivi cũ đã kiểm tra** và **Tivi mới chính hãng** được lọc theo hãng đã chọn.
-5. Bấm **Tất cả hãng** để reset bộ lọc và hiển thị lại toàn bộ sản phẩm.
-6. Trên mobile, kiểm tra panel vẫn cuộn được, không tràn ngang và logo không bị kéo giãn.
+## 19. Pre-launch checklist
+- [ ] Supabase URL/anon key configured.
+- [ ] RLS enabled.
+- [ ] Admin profile role = admin.
+- [ ] product-images bucket created.
+- [ ] Public website loads products.
+- [ ] Admin can add product.
+- [ ] Admin can upload images.
+- [ ] Product detail page opens correctly.
+- [ ] Mobile layout checked.
+- [ ] No private keys in repository.
