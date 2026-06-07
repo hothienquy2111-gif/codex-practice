@@ -54,13 +54,15 @@ Trang chi tiết tự hiển thị hai nút **Tổng quan sản phẩm** và **T
 
 ## Banner carousel trang chủ World Cup
 
-Carousel/banner chính trên trang chủ hiện dùng 3 ảnh World Cup mới theo đúng thứ tự:
+Carousel/banner chính trên trang chủ hiện giữ đủ 5 ảnh riêng biệt và hiển thị theo đúng thứ tự mới, trong đó ảnh World 2026 xuất hiện đầu tiên khi tải trang:
 
-1. `WC2.jpeg`
-2. `WC1.jpeg`
-3. `WC3.jpeg`
+1. `Create_an_ultra-realistic_premium_World_202606042116.jpeg`
+2. `Create_a_premium_16_9_commercial_202605091429.jpeg`
+3. `WC2.jpeg`
+4. `WC1.jpeg`
+5. `WC3.jpeg`
 
-Các file ảnh này được lưu trực tiếp trong thư mục gốc repository, cùng cấp với `index.html`, nên đường dẫn trong carousel dùng tên file tương đối. Không cần thêm dấu `/` ở đầu đường dẫn để tránh lỗi khi chạy trên GitHub Pages dưới thư mục con.
+Các file ảnh này được lưu trực tiếp trong thư mục gốc repository, cùng cấp với `index.html`, nên đường dẫn trong carousel dùng tên file tương đối. Không cần thêm dấu `/` ở đầu đường dẫn để tránh lỗi khi chạy trên GitHub Pages dưới thư mục con. Carousel tự tạo 5 chấm điều hướng tương ứng với 5 slide trong HTML.
 
 Để thay ảnh carousel sau này:
 
