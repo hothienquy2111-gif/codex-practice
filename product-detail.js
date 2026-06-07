@@ -31,6 +31,66 @@
     setDetailMessage('Dữ liệu sản phẩm đang được cập nhật', 'Dữ liệu sản phẩm đang được cập nhật.');
   };
 
+  const parseSpecificationText = (value = '') => {
+    const groups = new Map();
+    String(value)
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .forEach((line) => {
+        const [group, label, ...rest] = line.split('|').map((part) => part.trim());
+        const specValue = rest.join(' | ').trim();
+        if (!group || !label || !specValue) return;
+        if (!groups.has(group)) groups.set(group, []);
+        groups.get(group).push({ label, value: specValue });
+      });
+
+    return Array.from(groups, ([group, rows]) => ({ group, rows }));
+  };
+
+  const normalizeSpecificationValue = (value) => {
+    if (Array.isArray(value)) {
+      return value.map((item) => String(item).trim()).filter(Boolean);
+    }
+
+    return String(value || '').trim();
+  };
+
+  const getSpecificationSource = (product = {}) => {
+    const candidates = [product.specifications, product.specificationsText];
+    return candidates.find((candidate) => {
+      if (typeof candidate === 'string') return candidate.trim();
+      if (Array.isArray(candidate)) return candidate.length;
+      return candidate != null;
+    }) ?? '';
+  };
+
+  const normalizeSpecifications = (product = {}) => {
+    const source = getSpecificationSource(product);
+
+    if (typeof source === 'string') {
+      return parseSpecificationText(source);
+    }
+
+    if (!Array.isArray(source)) return [];
+
+    return source
+      .map((group) => {
+        const groupName = String(group?.group || group?.title || '').trim();
+        const rows = Array.isArray(group?.rows)
+          ? group.rows
+              .map((row) => ({
+                label: String(row?.label || row?.name || '').trim(),
+                value: normalizeSpecificationValue(row?.value),
+              }))
+              .filter((row) => row.label && (Array.isArray(row.value) ? row.value.length : row.value))
+          : [];
+
+        return { group: groupName, rows };
+      })
+      .filter((group) => group.group && group.rows.length);
+  };
+
   const normalizeDetailProduct = (product = {}) => {
     const imageList = Array.isArray(product.images) && product.images.length ? product.images : product.image ? [product.image] : [];
     return {
@@ -50,7 +110,7 @@
       badge: product.badge || 'Tư vấn',
       description: product.description || 'Vui lòng liên hệ Anh Minh Store để được tư vấn chi tiết.',
       overview: Array.isArray(product.overview) ? product.overview : [],
-      specifications: Array.isArray(product.specifications) ? product.specifications : [],
+      specifications: normalizeSpecifications(product),
     };
   };
 

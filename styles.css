@@ -401,6 +401,7 @@ p { line-height: 1.65; }
 }
 .product-detail__modal-button {
   flex: 1 1 190px;
+  min-height: 48px;
   border-color: var(--color-primary-deep);
   border-radius: 14px;
   box-shadow: 0 8px 20px rgba(6, 42, 86, 0.08);
@@ -869,6 +870,7 @@ body.product-modal-open { overflow: hidden; }
 .admin-eyebrow { margin: 0 0 6px; color: var(--color-primary); font-weight: 800; letter-spacing: .08em; }
 .admin-login h1, .admin-dashboard h1, .admin-modal h2 { margin: 0; color: var(--color-primary-deep); letter-spacing: -0.02em; }
 .admin-muted { margin: 8px 0 16px; color: var(--color-gray-600); line-height: 1.55; }
+.admin-help-text { margin-top: -2px; color: var(--color-gray-500); font-size: 0.92rem; line-height: 1.45; }
 .admin-form, .admin-product-form { display: grid; gap: 14px; }
 .admin-field { display: grid; gap: 7px; min-width: 0; }
 .admin-field label, .admin-field p { font-weight: 750; color: var(--color-primary-deep); }
