@@ -13,6 +13,7 @@ const dom = {
   searchInput: document.querySelector('#search-input'),
   backToTop: document.querySelector('.back-to-top'),
   mobileCall: document.querySelector('[data-call-button]'),
+  brandList: document.querySelector('[data-brand-list]'),
   brandLogoImages: document.querySelectorAll('.brand-logo-box img'),
   serviceIconImages: document.querySelectorAll('[data-service-icon]'),
   productFilterLinks: document.querySelectorAll('[data-product-filter]'),
@@ -35,6 +36,29 @@ let activeSize = dom.selectedSize?.textContent?.trim() === 'Tất cả' ? '' : d
 let activeBrand = '';
 let activeType = '';
 let searchTerm = '';
+
+
+const BRAND_LOGO_WIDTH = 48;
+const BRAND_LOGO_HEIGHT = 48;
+const BRAND_DATA = [
+  { name: 'Samsung', logo: 'samsung.jpeg', wide: true },
+  { name: 'LG', logo: 'LG.jpeg', wide: true },
+  { name: 'Sony', logo: 'sony.jpeg', wide: true },
+  { name: 'Toshiba', logo: 'toshiba.jpeg', wide: true },
+  { name: 'Hisense', logo: 'Hisense.svg', wide: true },
+  { name: 'TCL', logo: 'TCL.jpeg', wide: true },
+  { name: 'Panasonic', logo: 'panasonic.jpeg', wide: true },
+  { name: 'Sharp', logo: 'sharp.jpeg', wide: true },
+  { name: 'Xiaomi', logo: 'xiaomi.jpeg', wide: true },
+  { name: 'Casper', logo: 'casper.jpeg', wide: true },
+  { name: 'Coocaa', logo: 'coocaa.jpeg', wide: true },
+  { name: 'Skyworth', logo: 'skyworth.png', wide: true },
+  { name: 'Philips', logo: 'philips.jpeg', wide: true },
+  { name: 'Hitachi', logo: 'hitachi.jpeg', wide: true },
+];
+const FILTER_ALL_LABEL = 'Tất cả';
+const BRAND_ALL_LABEL = 'Tất cả hãng';
+const FILTER_EMPTY_MESSAGE = 'Chưa có sản phẩm thuộc hãng này. Vui lòng chọn hãng khác hoặc liên hệ Anh Minh Store.';
 
 const escapeHtml = (value = '') =>
   String(value).replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
@@ -70,6 +94,25 @@ const normalizeProduct = (product = {}, index = 0) => {
 const products = PRODUCTS.map(normalizeProduct);
 
 const getBrandNameFromLogo = (image) => image.alt.replace(/^Logo\s+/i, '').trim();
+const normalizeFilterValue = (value = '') => String(value).trim();
+const isAllFilter = (value = '') => normalizeFilterValue(value) === '' || normalizeFilterValue(value) === FILTER_ALL_LABEL;
+const normalizeBrand = (value = '') => normalizeFilterValue(value).toLowerCase();
+const getBrandInitial = (brandName = '') => normalizeFilterValue(brandName).charAt(0).toUpperCase() || 'T';
+
+const createBrandLogoElement = (brand, extraClass = '') => {
+  const brandName = brand?.name || BRAND_ALL_LABEL;
+  if (!brand?.logo) {
+    return `<span class="brand-logo-box ${extraClass} is-logo-error" aria-label="${escapeHtml(brandName)}">
+      <span class="brand-fallback-badge" aria-hidden="false">${escapeHtml(getBrandInitial(brandName))}</span>
+    </span>`;
+  }
+
+  const wideClass = brand.wide ? ' is-wide' : '';
+  return `<span class="brand-logo-box ${extraClass}">
+    <img class="brand-logo-img${wideClass}" src="${escapeHtml(brand.logo)}" alt="Logo ${escapeHtml(brandName)}" loading="eager" decoding="async" width="${BRAND_LOGO_WIDTH}" height="${BRAND_LOGO_HEIGHT}" />
+    <span class="brand-fallback-badge" aria-hidden="true">${escapeHtml(getBrandInitial(brandName))}</span>
+  </span>`;
+};
 
 const showBrandLogoImage = (image) => {
   const logoBox = image.closest('.brand-logo-box');
@@ -89,23 +132,69 @@ const showBrandLogoFallback = (image) => {
   logoBox.classList.add('is-logo-error');
   image.hidden = true;
   if (fallback) {
-    fallback.textContent = brandName.charAt(0).toUpperCase() || '?';
+    fallback.textContent = getBrandInitial(brandName);
     fallback.setAttribute('aria-hidden', 'false');
   }
   logoBox.setAttribute('aria-label', `Logo ${brandName || 'hãng tivi'} đang được cập nhật`);
 };
 
-dom.brandLogoImages.forEach((image) => {
-  image.addEventListener('load', () => showBrandLogoImage(image));
-  image.addEventListener('error', () => showBrandLogoFallback(image));
+const initBrandLogoFallbacks = (root = document) => {
+  root.querySelectorAll('.brand-logo-box img').forEach((image) => {
+    image.addEventListener('load', () => showBrandLogoImage(image));
+    image.addEventListener('error', () => showBrandLogoFallback(image));
 
-  if (image.complete && typeof image.decode === 'function') {
-    image.decode().then(() => showBrandLogoImage(image)).catch(() => showBrandLogoFallback(image));
-  } else if (image.complete) {
-    if (image.naturalWidth > 0) showBrandLogoImage(image);
-    else showBrandLogoFallback(image);
-  }
-});
+    if (image.complete) {
+      if (image.naturalWidth > 0) showBrandLogoImage(image);
+      else showBrandLogoFallback(image);
+    }
+  });
+};
+
+const syncBrandPanelActive = () => {
+  dom.brandList?.querySelectorAll('.brand-list__button').forEach((button) => {
+    const isActive = normalizeBrand(button.dataset.brand || '') === normalizeBrand(activeBrand || '');
+    button.classList.toggle('is-active', isActive);
+    button.setAttribute('aria-pressed', String(isActive));
+  });
+};
+
+const renderBrandPanel = () => {
+  if (!dom.brandList) return;
+  const allButton = `<li>
+    <button class="brand-list__button is-active" type="button" data-brand="" aria-pressed="true">
+      ${createBrandLogoElement(null)}
+      <span class="brand-name">${BRAND_ALL_LABEL}</span>
+    </button>
+  </li>`;
+  const brandButtons = BRAND_DATA.map((brand) => `<li>
+    <button class="brand-list__button" type="button" data-brand="${escapeHtml(brand.name)}" aria-pressed="false">
+      ${createBrandLogoElement(brand)}
+      <span class="brand-name">${escapeHtml(brand.name)}</span>
+    </button>
+  </li>`).join('');
+
+  dom.brandList.innerHTML = `${allButton}${brandButtons}`;
+  initBrandLogoFallbacks(dom.brandList);
+};
+
+const renderBrandFilterRow = ({ container, sectionType }) => {
+  if (!container) return;
+  const isUsed = sectionType === 'used';
+  const dataAttr = isUsed ? 'data-used-brand' : 'data-new-brand';
+  const cardClass = isUsed ? 'old-tv-brand-card' : 'old-tv-brand-card new-tv-brand-card';
+  const logoClass = isUsed ? 'old-tv-brand-card__logo' : 'old-tv-brand-card__logo new-tv-brand-card__logo';
+  const allCard = `<button class="${cardClass} is-active" type="button" ${dataAttr}="" aria-pressed="true">
+    ${createBrandLogoElement(null, logoClass)}
+    <span class="old-tv-brand-card__name">Tất cả</span>
+  </button>`;
+  const brandCards = BRAND_DATA.map((brand) => `<button class="${cardClass}" type="button" ${dataAttr}="${escapeHtml(brand.name)}" aria-pressed="false">
+    ${createBrandLogoElement(brand, logoClass)}
+    <span class="old-tv-brand-card__name">${escapeHtml(brand.name)}</span>
+  </button>`).join('');
+
+  container.innerHTML = `${allCard}${brandCards}`;
+  initBrandLogoFallbacks(container);
+};
 
 const showServiceIconImage = (image) => {
   const iconBox = image.closest('.service-icon-box');
@@ -147,13 +236,6 @@ const newTvFilter = {
   selectedSize: 'Tất cả',
   selectedBrand: 'Tất cả',
 };
-
-const FILTER_ALL_LABEL = 'Tất cả';
-const FILTER_EMPTY_MESSAGE = 'Chưa có sản phẩm phù hợp. Vui lòng chọn bộ lọc khác hoặc liên hệ Anh Minh Store.';
-
-const normalizeFilterValue = (value = '') => String(value).trim();
-const isAllFilter = (value = '') => normalizeFilterValue(value) === '' || normalizeFilterValue(value) === FILTER_ALL_LABEL;
-const normalizeBrand = (value = '') => normalizeFilterValue(value).toLowerCase();
 
 const updatePressedState = (container, activeButton) => {
   container?.querySelectorAll('button[aria-pressed]').forEach((button) => {
@@ -219,6 +301,43 @@ const renderTvSection = ({ grid, empty, count, type, filterState, sectionType })
 const renderUsedTvSection = () => renderTvSection({ grid: dom.usedTvGrid, empty: dom.usedTvEmpty, count: dom.usedTvCount, type: 'Tivi cũ', filterState: usedTvFilter, sectionType: 'used' });
 const renderNewTvSection = () => renderTvSection({ grid: dom.newTvGrid, empty: dom.newTvEmpty, count: dom.newTvCount, type: 'Tivi mới', filterState: newTvFilter, sectionType: 'new' });
 
+const syncSectionBrandRows = () => {
+  dom.usedTvBrandRow?.querySelectorAll('.old-tv-brand-card').forEach((button) => {
+    const isActive = normalizeBrand(button.dataset.usedBrand || '') === normalizeBrand(usedTvFilter.selectedBrand || '');
+    button.classList.toggle('is-active', isActive);
+    button.setAttribute('aria-pressed', String(isActive));
+  });
+  dom.newTvBrandRow?.querySelectorAll('.new-tv-brand-card').forEach((button) => {
+    const isActive = normalizeBrand(button.dataset.newBrand || '') === normalizeBrand(newTvFilter.selectedBrand || '');
+    button.classList.toggle('is-active', isActive);
+    button.setAttribute('aria-pressed', String(isActive));
+  });
+};
+
+const applyBrandFilter = (brand = '') => {
+  const selectedBrand = normalizeFilterValue(brand);
+  activeBrand = selectedBrand;
+  activeSize = '';
+  activeType = '';
+  searchTerm = '';
+  usedTvFilter.selectedBrand = selectedBrand || FILTER_ALL_LABEL;
+  newTvFilter.selectedBrand = selectedBrand || FILTER_ALL_LABEL;
+  if (dom.searchInput) dom.searchInput.value = '';
+  if (dom.selectedSize) dom.selectedSize.textContent = selectedBrand || FILTER_ALL_LABEL;
+  syncBrandPanelActive();
+  syncSectionBrandRows();
+  renderProductCards();
+  renderUsedTvSection();
+  renderNewTvSection();
+};
+
+dom.brandList?.addEventListener('click', (event) => {
+  const button = event.target.closest('.brand-list__button');
+  if (!button) return;
+  applyBrandFilter(button.dataset.brand || '');
+  scrollToHash('#san-pham');
+});
+
 dom.usedTvSizeRow?.addEventListener('click', (event) => {
   const button = event.target.closest('.old-tv-size-pill');
   if (!button) return;
@@ -230,9 +349,7 @@ dom.usedTvSizeRow?.addEventListener('click', (event) => {
 dom.usedTvBrandRow?.addEventListener('click', (event) => {
   const button = event.target.closest('.old-tv-brand-card');
   if (!button) return;
-  usedTvFilter.selectedBrand = button.dataset.usedBrand || FILTER_ALL_LABEL;
-  updatePressedState(dom.usedTvBrandRow, button);
-  renderUsedTvSection();
+  applyBrandFilter(button.dataset.usedBrand || '');
 });
 
 dom.newTvSizeRow?.addEventListener('click', (event) => {
@@ -246,9 +363,7 @@ dom.newTvSizeRow?.addEventListener('click', (event) => {
 dom.newTvBrandRow?.addEventListener('click', (event) => {
   const button = event.target.closest('.new-tv-brand-card');
   if (!button) return;
-  newTvFilter.selectedBrand = button.dataset.newBrand || FILTER_ALL_LABEL;
-  updatePressedState(dom.newTvBrandRow, button);
-  renderNewTvSection();
+  applyBrandFilter(button.dataset.newBrand || '');
 });
 
 
@@ -401,6 +516,9 @@ const renderProductCards = () => {
   });
 };
 
+renderBrandPanel();
+renderBrandFilterRow({ container: dom.usedTvBrandRow, sectionType: 'used' });
+renderBrandFilterRow({ container: dom.newTvBrandRow, sectionType: 'new' });
 renderProductCards();
 renderUsedTvSection();
 renderNewTvSection();
@@ -410,6 +528,10 @@ dom.sizeOptions?.addEventListener('click', (event) => {
   if (!pill) return;
   activeSize = pill.dataset.size || '';
   activeBrand = '';
+  usedTvFilter.selectedBrand = FILTER_ALL_LABEL;
+  newTvFilter.selectedBrand = FILTER_ALL_LABEL;
+  syncBrandPanelActive();
+  syncSectionBrandRows();
   activeType = '';
   searchTerm = '';
   if (dom.searchInput) dom.searchInput.value = '';
@@ -429,6 +551,10 @@ dom.searchForm?.addEventListener('submit', (event) => {
   activeSize = '';
   activeBrand = '';
   activeType = '';
+  usedTvFilter.selectedBrand = FILTER_ALL_LABEL;
+  newTvFilter.selectedBrand = FILTER_ALL_LABEL;
+  syncBrandPanelActive();
+  syncSectionBrandRows();
   if (dom.selectedSize) dom.selectedSize.textContent = searchTerm ? `Tìm: ${dom.searchInput.value.trim()}` : 'Tất cả';
   dom.sizeOptions?.querySelectorAll('.size-pill').forEach((button) => {
     button.classList.remove('is-active');
@@ -454,6 +580,13 @@ dom.productFilterLinks.forEach((link) => {
       button.classList.toggle('is-active', isActive);
       button.setAttribute('aria-pressed', String(isActive));
     });
+
+    usedTvFilter.selectedBrand = filterType === 'brand' ? filterValue || FILTER_ALL_LABEL : FILTER_ALL_LABEL;
+    newTvFilter.selectedBrand = filterType === 'brand' ? filterValue || FILTER_ALL_LABEL : FILTER_ALL_LABEL;
+    syncBrandPanelActive();
+    syncSectionBrandRows();
+    renderUsedTvSection();
+    renderNewTvSection();
 
     const label = filterValue || 'Tất cả';
     if (dom.selectedSize) dom.selectedSize.textContent = label;

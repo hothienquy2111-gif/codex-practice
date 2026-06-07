@@ -101,17 +101,21 @@ p { line-height: 1.65; }
 .hero__grid { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: var(--space-4); align-items: stretch; }
 .brand-panel { display: flex; flex-direction: column; min-height: 0; border: 1px solid var(--color-gray-200); border-radius: var(--radius-lg); background: var(--color-white); box-shadow: var(--shadow-sm); overflow: hidden; }
 .brand-panel h2 { margin: 0; padding: 13px 14px; background: var(--color-primary-deep); color: var(--color-white); font-size: 0.98rem; font-weight: 700; letter-spacing: 0.01em; }
-.brand-list { display: grid; flex: 1 1 0; min-height: 0; max-height: none; margin: 0; padding: 8px; overflow-y: auto; overflow-x: hidden; list-style: none; }
-.brand-list a { display: flex; align-items: center; gap: 10px; min-width: 0; min-height: 50px; border-radius: 12px; padding: 5px 8px; color: var(--color-gray-700); font-weight: 750; }
-.brand-list a:hover { background: var(--color-gray-100); color: var(--color-primary); }
+.brand-list { display: grid; flex: 1 1 0; min-height: 0; max-height: 620px; margin: 0; padding: 8px; overflow-y: auto; overflow-x: hidden; list-style: none; }
+.brand-list__button { display: flex; align-items: center; gap: 10px; width: 100%; min-width: 0; min-height: 54px; border: 1px solid transparent; border-radius: 12px; padding: 5px 8px; background: transparent; color: var(--color-gray-700); font: inherit; font-weight: 750; text-align: left; }
+.brand-list__button:hover,
+.brand-list__button.is-active { border-color: rgba(2, 56, 113, 0.28); background: #eef6ff; color: var(--color-primary-deep); }
 .brand-logo-box, .brand-fallback-badge { flex: 0 0 auto; }
-.brand-logo-box { display: flex; align-items: center; justify-content: center; width: 42px; height: 42px; border: 1px solid rgba(2, 56, 113, 0.12); border-radius: 12px; background: #ffffff; overflow: hidden; }
-.brand-logo-box img { display: block; width: auto; height: auto; max-width: 34px; max-height: 28px; object-fit: contain; }
-.brand-logo-box img.brand-logo-image--wide { max-width: 38px; }
+.brand-logo-box { display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; min-width: 48px; border: 1px solid rgba(2, 56, 113, 0.14); border-radius: 14px; background: #ffffff; overflow: hidden; }
+.brand-logo-box img,
+.brand-logo-img { display: block; width: auto; height: auto; max-width: 40px; max-height: 30px; object-fit: contain; opacity: 1; visibility: visible; }
+.brand-logo-img.is-wide,
+.brand-logo-box img.is-wide,
+.brand-logo-box img.brand-logo-image--wide { max-width: 42px; max-height: 28px; }
 .brand-logo-box .brand-fallback-badge { display: none; width: 100%; height: 100%; border: 0; border-radius: 0; }
 .brand-logo-box.is-logo-error img { display: none; }
 .brand-logo-box.is-logo-error .brand-fallback-badge { display: inline-grid; }
-.brand-fallback-badge { display: inline-grid; place-items: center; width: 42px; height: 42px; border: 1px solid rgba(2, 56, 113, 0.12); border-radius: 12px; background: #e8f2ff; color: var(--color-primary); font-size: 0.8rem; font-weight: 750; }
+.brand-fallback-badge { display: inline-grid; place-items: center; width: 48px; height: 48px; border: 1px solid rgba(2, 56, 113, 0.14); border-radius: 14px; background: #e8f2ff; color: var(--color-primary); font-size: 0.8rem; font-weight: 750; }
 .brand-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .hero__main { min-width: 0; }
 .hero-intro { margin-bottom: var(--space-3); }
@@ -213,15 +217,15 @@ p { line-height: 1.65; }
 .old-tv-size-pill.is-active { border-color: var(--color-primary-deep); background: var(--color-primary-deep); color: var(--color-white); }
 .old-tv-size-pill:hover { transform: translateY(-1px); }
 .old-tv-brand-row { gap: 12px; }
-.old-tv-brand-card { display: grid; flex: 0 0 112px; place-items: center; gap: 8px; min-height: 94px; border: 1px solid var(--color-gray-200); border-radius: var(--radius-md); padding: 12px 10px; background: var(--color-white); color: var(--color-primary-deep); font-weight: 700; box-shadow: 0 8px 20px rgba(6, 42, 86, 0.06); transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition), background var(--transition), color var(--transition); }
+.old-tv-brand-card { display: grid; flex: 0 0 112px; place-items: center; gap: 8px; min-height: 94px; border: 1px solid var(--color-gray-200); border-radius: var(--radius-md); padding: 12px 10px; background: var(--color-white); color: var(--color-primary-deep); font: inherit; font-weight: 700; box-shadow: 0 8px 20px rgba(6, 42, 86, 0.06); transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition), background var(--transition), color var(--transition); }
 .old-tv-brand-card:hover,
 .old-tv-brand-card.is-active { border-color: var(--color-primary-deep); box-shadow: var(--shadow-sm); transform: translateY(-2px); }
-.old-tv-brand-card.is-active { background: var(--color-primary-deep); color: var(--color-white); }
+.old-tv-brand-card.is-active { background: #eef6ff; color: var(--color-primary-deep); }
 .old-tv-brand-card.is-active .old-tv-brand-card__logo { background: var(--color-white); }
 .old-tv-brand-card.is-active .brand-fallback-badge { color: var(--color-primary-deep); }
-.old-tv-brand-card__logo { width: 64px; height: 42px; border-radius: 12px; }
-.old-tv-brand-card__logo img { max-width: 54px; max-height: 30px; object-fit: contain; }
-.old-tv-brand-card__logo img.brand-logo-image--wide { max-width: 58px; }
+.old-tv-brand-card__logo { width: 48px; height: 48px; min-width: 48px; border-radius: 14px; }
+.old-tv-brand-card__logo img { max-width: 40px; max-height: 30px; object-fit: contain; }
+.old-tv-brand-card__logo img.is-wide, .old-tv-brand-card__logo img.brand-logo-image--wide { max-width: 42px; max-height: 28px; }
 .old-tv-brand-card__name { font-size: 0.9rem; line-height: 1.2; text-align: center; }
 .used-tv-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-4); min-width: 0; }
 .used-tv-card { position: relative; display: grid; min-width: 0; height: 100%; gap: 9px; border: 1px solid var(--color-gray-200); border-radius: var(--radius-lg); padding: 14px; background: var(--color-white); box-shadow: var(--shadow-sm); transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition); }
@@ -242,7 +246,7 @@ p { line-height: 1.65; }
 .new-tv-size-row,
 .new-tv-brand-row { max-width: 100%; }
 .new-tv-brand-card:hover,
-.new-tv-brand-card.is-active { border-color: var(--color-primary-deep); background: var(--color-primary-deep); color: var(--color-white); }
+.new-tv-brand-card.is-active { border-color: var(--color-primary-deep); background: #eef6ff; color: var(--color-primary-deep); }
 .new-tv-brand-card:hover .new-tv-brand-card__logo,
 .new-tv-brand-card.is-active .new-tv-brand-card__logo { background: var(--color-white); }
 .new-tv-brand-card:hover .brand-fallback-badge,

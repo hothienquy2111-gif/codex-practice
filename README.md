@@ -153,3 +153,41 @@ specifications: [
 - Giữ font stack `Aptos, "Segoe UI", "Noto Sans", Arial, Helvetica, sans-serif;` và phong cách trắng + xanh dương đậm hiện tại.
 - Không dùng `target="_blank"` cho nút xem chi tiết sản phẩm.
 - Nếu ảnh sản phẩm lỗi tải, giao diện sẽ hiển thị placeholder tivi CSS sạch có sẵn.
+
+## Danh mục hãng tivi và logo thương hiệu
+
+Logo trong khung **DANH MỤC HÃNG TIVI** được khai báo tập trung trong `script.js` bằng một danh sách thương hiệu duy nhất. Các file logo đang được lưu ngay tại thư mục gốc repository, cùng cấp với `index.html`, nên đường dẫn dùng dạng tương đối như `samsung.jpeg`, `LG.jpeg`, `sony.jpeg`, `toshiba.jpeg`, `TCL.jpeg`, `skyworth.png`.
+
+GitHub Pages phân biệt chữ hoa/thường, vì vậy tên file phải khớp chính xác với file thật trong repository. Ví dụ `LG.jpeg` khác `lg.jpeg`, `TCL.jpeg` khác `tcl.jpeg`. Không dùng đường dẫn bắt đầu bằng `/` vì website có thể được phục vụ dưới thư mục con của GitHub Pages.
+
+Panel thương hiệu luôn ưu tiên hiển thị ảnh logo đã tải lên. Mỗi logo được render với `loading="eager"`, `decoding="async"`, kích thước cố định và alt tiếng Việt như `Logo Samsung`, `Logo LG`, `Logo Sony`. Badge chữ cái dự phòng được ẩn mặc định và chỉ hiện khi sự kiện `onerror` của ảnh xảy ra. Nếu ảnh tải thành công, ảnh vẫn hiển thị và badge dự phòng không phủ lên logo.
+
+Để thay logo một thương hiệu sau này:
+
+1. Đặt file ảnh mới vào thư mục gốc repository, cùng cấp với `index.html`.
+2. Không đổi hoặc chỉnh sửa file ảnh cũ nếu không cần thiết.
+3. Mở `script.js` và cập nhật đúng trường `logo` trong danh sách `BRAND_DATA`.
+4. Kiểm tra tên file chính xác từng ký tự, gồm chữ hoa/thường và phần mở rộng `.jpeg`, `.png` hoặc `.svg`.
+5. Giữ alt tự động theo tên hãng để người dùng và công cụ hỗ trợ đọc được nội dung logo.
+
+## Cách lọc sản phẩm theo hãng
+
+Khi bấm một hãng trong **DANH MỤC HÃNG TIVI**, website cập nhật trạng thái hãng đang chọn và lọc sản phẩm theo `product.brand` không phân biệt chữ hoa/thường nhưng yêu cầu tên hãng khớp chính xác, ví dụ `Samsung`, `LG`, `Sony`.
+
+Bộ lọc hãng bên trái đồng bộ với hai khu vực:
+
+- **Tivi cũ đã kiểm tra**.
+- **Tivi mới chính hãng**.
+
+Nút **Tất cả hãng** ở đầu panel dùng để bỏ lọc hãng và hiển thị lại toàn bộ sản phẩm. Các bộ lọc kích thước riêng của từng khu vực vẫn kết hợp với hãng đang chọn, nên nếu đang chọn một kích thước cụ thể rồi chọn hãng trong khu vực đó, danh sách sẽ lọc theo cả hãng và kích thước.
+
+Nếu một khu vực không có sản phẩm thuộc hãng đang chọn, website hiển thị thông báo tiếng Việt: **“Chưa có sản phẩm thuộc hãng này. Vui lòng chọn hãng khác hoặc liên hệ Anh Minh Store.”** Nếu dữ liệu sản phẩm trống, website hiển thị **“Sản phẩm đang được cập nhật.”**
+
+## Cách kiểm tra logo và lọc hãng
+
+1. Mở trang chủ rồi nhấn **Ctrl + F5** để hard refresh.
+2. Kiểm tra các logo trong **DANH MỤC HÃNG TIVI** vẫn hiển thị, không bị badge chữ cái phủ lên.
+3. Bấm các hãng như **Samsung**, **LG**, **Sony**, **Toshiba**.
+4. Kiểm tra **Sản phẩm nổi bật**, **Tivi cũ đã kiểm tra** và **Tivi mới chính hãng** được lọc theo hãng đã chọn.
+5. Bấm **Tất cả hãng** để reset bộ lọc và hiển thị lại toàn bộ sản phẩm.
+6. Trên mobile, kiểm tra panel vẫn cuộn được, không tràn ngang và logo không bị kéo giãn.
