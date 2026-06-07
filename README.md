@@ -51,6 +51,28 @@ Sản phẩm `samsung-qa55q7fa` có sẵn dữ liệu:
 
 Trang chi tiết tự hiển thị hai nút **Tổng quan sản phẩm** và **Thông số chi tiết** nếu sản phẩm có dữ liệu tương ứng. Hai nút mở modal nổi trên cùng trang, không chuyển trang, không mở tab mới. Modal có thể đóng bằng nút X, bấm nền mờ hoặc phím Escape; nội dung modal có vùng cuộn để dùng tốt trên mobile.
 
+
+## Banner carousel trang chủ World Cup
+
+Carousel/banner chính trên trang chủ hiện dùng 3 ảnh World Cup mới theo đúng thứ tự:
+
+1. `WC2.jpeg`
+2. `WC1.jpeg`
+3. `WC3.jpeg`
+
+Các file ảnh này được lưu trực tiếp trong thư mục gốc repository, cùng cấp với `index.html`, nên đường dẫn trong carousel dùng tên file tương đối. Không cần thêm dấu `/` ở đầu đường dẫn để tránh lỗi khi chạy trên GitHub Pages dưới thư mục con.
+
+Để thay ảnh carousel sau này:
+
+1. Đặt file ảnh mới vào thư mục gốc repository hoặc dùng file ảnh đã có sẵn.
+2. Mở `index.html` và tìm khu vực `<section class="hero-carousel" ... data-carousel>`.
+3. Cập nhật từng thẻ `<img src="...">` trong `.carousel-slide` theo thứ tự banner mong muốn.
+4. Giữ mỗi ảnh trong một `.carousel-slide` riêng để hệ thống tự tạo đúng số chấm điều hướng.
+5. Giữ `draggable="false"`, alt tiếng Việt, nút mũi tên, vùng `.carousel-dots` và cấu trúc `.carousel-viewport`/`.carousel-track` để không ảnh hưởng kéo chuột, vuốt mobile, autoplay và chấm điều hướng.
+6. Không chỉnh sửa trực tiếp file ảnh gốc nếu chỉ cần thay đường dẫn banner.
+
+Carousel vẫn giữ tỷ lệ 16:9; CSS dùng `object-fit: cover` để ảnh phủ đầy khung, không bị méo và giữ phong cách bán lẻ trắng + xanh dương đậm hiện tại.
+
 ## Cách dữ liệu sản phẩm hoạt động
 
 `products.js` khai báo mảng toàn cục:
