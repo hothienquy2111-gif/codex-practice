@@ -185,3 +185,145 @@ using (
 -- insert into public.profiles (id, role, full_name)
 -- values ('AUTH_USER_ID_HERE', 'admin', 'Chủ cửa hàng')
 -- on conflict (id) do update set role = 'admin', full_name = excluded.full_name;
+
+-- Homepage hero/banner management.
+create table if not exists public.hero_banners (
+  id uuid primary key default gen_random_uuid(),
+  title text,
+  image_url text not null,
+  storage_path text,
+  alt_text text,
+  sort_order integer default 0,
+  is_active boolean default true,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+drop trigger if exists hero_banners_set_updated_at on public.hero_banners;
+create trigger hero_banners_set_updated_at
+before update on public.hero_banners
+for each row execute function public.set_updated_at();
+
+alter table public.hero_banners enable row level security;
+
+drop policy if exists "Public can read active hero banners" on public.hero_banners;
+drop policy if exists "Admins can read all hero banners" on public.hero_banners;
+drop policy if exists "Admins can insert hero banners" on public.hero_banners;
+drop policy if exists "Admins can update hero banners" on public.hero_banners;
+drop policy if exists "Admins can delete hero banners" on public.hero_banners;
+
+create policy "Public can read active hero banners"
+on public.hero_banners for select
+to anon, authenticated
+using (is_active = true);
+
+create policy "Admins can read all hero banners"
+on public.hero_banners for select
+to authenticated
+using (
+  exists (
+    select 1 from public.profiles
+    where profiles.id = auth.uid()
+    and profiles.role = 'admin'
+  )
+);
+
+create policy "Admins can insert hero banners"
+on public.hero_banners for insert
+to authenticated
+with check (
+  exists (
+    select 1 from public.profiles
+    where profiles.id = auth.uid()
+    and profiles.role = 'admin'
+  )
+);
+
+create policy "Admins can update hero banners"
+on public.hero_banners for update
+to authenticated
+using (
+  exists (
+    select 1 from public.profiles
+    where profiles.id = auth.uid()
+    and profiles.role = 'admin'
+  )
+)
+with check (
+  exists (
+    select 1 from public.profiles
+    where profiles.id = auth.uid()
+    and profiles.role = 'admin'
+  )
+);
+
+create policy "Admins can delete hero banners"
+on public.hero_banners for delete
+to authenticated
+using (
+  exists (
+    select 1 from public.profiles
+    where profiles.id = auth.uid()
+    and profiles.role = 'admin'
+  )
+);
+
+-- Storage bucket site-banners:
+-- Có thể tạo trong Dashboard: Storage > New bucket > site-banners > Public bucket ON.
+insert into storage.buckets (id, name, public)
+values ('site-banners', 'site-banners', true)
+on conflict (id) do update set public = true;
+
+drop policy if exists "Public can read site banners" on storage.objects;
+drop policy if exists "Admins can upload site banners" on storage.objects;
+drop policy if exists "Admins can update site banners" on storage.objects;
+drop policy if exists "Admins can delete site banners" on storage.objects;
+
+create policy "Public can read site banners"
+on storage.objects for select
+to anon, authenticated
+using (bucket_id = 'site-banners');
+
+create policy "Admins can upload site banners"
+on storage.objects for insert
+to authenticated
+with check (
+  bucket_id = 'site-banners'
+  and exists (
+    select 1 from public.profiles
+    where profiles.id = auth.uid()
+    and profiles.role = 'admin'
+  )
+);
+
+create policy "Admins can update site banners"
+on storage.objects for update
+to authenticated
+using (
+  bucket_id = 'site-banners'
+  and exists (
+    select 1 from public.profiles
+    where profiles.id = auth.uid()
+    and profiles.role = 'admin'
+  )
+)
+with check (
+  bucket_id = 'site-banners'
+  and exists (
+    select 1 from public.profiles
+    where profiles.id = auth.uid()
+    and profiles.role = 'admin'
+  )
+);
+
+create policy "Admins can delete site banners"
+on storage.objects for delete
+to authenticated
+using (
+  bucket_id = 'site-banners'
+  and exists (
+    select 1 from public.profiles
+    where profiles.id = auth.uid()
+    and profiles.role = 'admin'
+  )
+);

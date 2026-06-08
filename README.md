@@ -266,3 +266,42 @@ Nếu chưa có `supabase-config.js`, config sai, mất mạng hoặc Supabase q
 - [ ] Product detail page opens correctly.
 - [ ] Mobile layout checked.
 - [ ] No private keys in repository.
+
+## 15. Quản lý ảnh banner trang chủ bằng Supabase
+Homepage carousel ưu tiên đọc ảnh đang bật từ bảng `hero_banners` trên Supabase theo `sort_order` tăng dần, sau đó theo `created_at` tăng dần. Nếu Supabase chưa cấu hình, query lỗi hoặc chưa có banner đang hiển thị, website tự dùng các ảnh banner mặc định đang có trong code để không làm hỏng trang chủ.
+
+### 15.1. Tạo bucket `site-banners`
+Có thể chạy toàn bộ file `supabase-schema.sql` trong SQL Editor để tạo bucket và policy. Nếu Supabase Dashboard không cho tạo bucket bằng SQL, làm thủ công:
+
+1. Vào **Storage**.
+2. Chọn **New bucket**.
+3. Bucket name: `site-banners`.
+4. Bật **Public bucket ON** để trang chủ đọc ảnh công khai.
+5. Chạy phần policy storage `site-banners` trong `supabase-schema.sql` để public được đọc ảnh và chỉ tài khoản admin được upload/update/delete.
+
+### 15.2. Chạy SQL tạo bảng `hero_banners`
+1. Vào **SQL Editor** trong Supabase Dashboard.
+2. Mở file `supabase-schema.sql` trong repo.
+3. Copy và chạy phần **Homepage hero/banner management** hoặc chạy toàn bộ file nếu project mới.
+
+Bảng `hero_banners` gồm các trường: `id`, `title`, `image_url`, `storage_path`, `alt_text`, `sort_order`, `is_active`, `created_at`, `updated_at`. RLS đã bật để khách chỉ xem banner `is_active = true`, còn admin có role `admin` trong `public.profiles` được đọc, thêm, sửa và xoá toàn bộ banner.
+
+### 15.3. Thêm ảnh banner từ admin
+1. Đăng nhập `admin.html` bằng tài khoản có `public.profiles.role = 'admin'`.
+2. Mở khu vực **Quản lý ảnh banner trang chủ**.
+3. Bấm **+ Thêm ảnh banner**.
+4. Nhập **Tiêu đề ảnh**, **Alt text** nếu cần.
+5. Chọn **Thứ tự hiển thị**, **Trạng thái** và upload ảnh JPG, PNG hoặc WebP tối đa khoảng 10MB.
+6. Bấm **Lưu ảnh banner**. Ảnh sẽ được upload vào bucket `site-banners`, URL công khai được lưu vào `hero_banners.image_url`, còn đường dẫn file được lưu vào `hero_banners.storage_path`.
+
+### 15.4. Đổi thứ tự ảnh banner
+Trong admin, bấm **Sửa** ở banner cần đổi, nhập lại **Thứ tự hiển thị** rồi bấm **Lưu ảnh banner**. Số nhỏ hơn sẽ xuất hiện trước trên carousel trang chủ.
+
+### 15.5. Ẩn/hiện ảnh banner
+Trong danh sách banner, bấm **Ẩn** để đặt `is_active = false` hoặc bấm **Hiện** để đặt `is_active = true`. Banner bị ẩn vẫn còn trong admin nhưng không xuất hiện ngoài trang chủ.
+
+### 15.6. Xoá ảnh banner
+Trong danh sách banner, bấm **Xoá** và xác nhận. Hệ thống xoá dòng dữ liệu trong `hero_banners`, sau đó cố gắng xoá file trong Supabase Storage nếu có `storage_path`. Nếu xoá file Storage lỗi nhưng xoá dữ liệu thành công, admin sẽ thấy cảnh báo thân thiện thay vì làm crash trang.
+
+### 15.7. Lưu ý bảo mật frontend
+Không dùng **service role key** trong `supabase-config.js` hoặc bất kỳ file frontend nào. Frontend chỉ dùng `anon public` key; quyền thêm/sửa/xoá được kiểm soát bằng RLS và policy kiểm tra `public.profiles.role = 'admin'`.
