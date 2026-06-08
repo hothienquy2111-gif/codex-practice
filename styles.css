@@ -166,7 +166,7 @@ p { line-height: 1.65; }
 .section-heading p, .info-copy p { color: var(--color-gray-700); margin: 0; line-height: 1.65; }
 .product-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-4); }
 .product-card-wrap { min-width: 0; }
-.product-card { position: relative; display: grid; height: 100%; gap: 9px; border: 1px solid var(--color-gray-200); border-radius: var(--radius-lg); padding: 14px; background: var(--color-white); box-shadow: var(--shadow-sm); transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition); }
+.product-card { position: relative; display: flex; flex-direction: column; height: 100%; gap: 8px; border: 1px solid var(--color-gray-200); border-radius: var(--radius-lg); padding: 14px; background: var(--color-white); box-shadow: var(--shadow-sm); transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition); }
 .product-card:hover { transform: translateY(-3px); border-color: rgba(19, 111, 206, 0.34); box-shadow: var(--shadow-md); }
 .product-card__badge, .product-detail__badge { justify-self: start; border-radius: 999px; padding: 5px 10px; background: #e9f3ff; color: var(--color-primary); font-size: 0.78rem; font-weight: 750; }
 .product-card__media { position: relative; width: 100%; aspect-ratio: 16 / 10; overflow: hidden; border: 1px solid var(--color-gray-200); border-radius: var(--radius-md); background: linear-gradient(145deg, #f7fbff, #ffffff); }
@@ -181,15 +181,19 @@ p { line-height: 1.65; }
 .tv-mockup span::after { content: ''; position: absolute; left: 38%; right: 38%; bottom: 13%; height: 8px; border-radius: 99px; background: #14213d; }
 .product-brand { color: var(--color-primary-highlight); font-weight: 750; }
 .product-card h3 { margin: 0; color: var(--color-primary-deep); font-size: 1.06rem; font-weight: 650; line-height: 1.32; letter-spacing: -0.005em; }
-.product-full-name { margin: 0; color: var(--color-gray-700); font-weight: 600; line-height: 1.45; }
-.product-size, .product-type { margin: 0; color: var(--color-gray-500); font-weight: 650; line-height: 1.35; }
+.product-card-title, .product-card-description, .product-card-feature { display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; }
+.product-card-title { -webkit-line-clamp: 2; line-clamp: 2; }
+.product-card-description { -webkit-line-clamp: 2; line-clamp: 2; }
+.product-card-feature { -webkit-line-clamp: 2; line-clamp: 2; }
+.product-full-name { margin: 0; color: var(--color-gray-700); font-weight: 600; line-height: 1.42; }
+.product-size, .product-type { margin: 0; color: var(--color-gray-500); font-weight: 650; line-height: 1.3; }
 .product-type { color: var(--color-primary-deep); }
-.product-card ul { margin: 0; padding-left: 18px; color: var(--color-gray-700); font-size: 0.94rem; line-height: 1.55; }
-.product-price { display: grid; gap: 2px; margin-top: auto; color: var(--color-accent); font-size: 1.02rem; }
+.product-card-features, .product-card ul { margin: 0; padding-left: 18px; color: var(--color-gray-700); font-size: 0.92rem; line-height: 1.45; }
+.product-price { display: grid; gap: 1px; margin-top: auto; color: var(--color-accent); font-size: 1rem; line-height: 1.25; }
 .product-price > span:first-child { color: var(--color-gray-700); }
 .product-price__old { color: var(--color-gray-500); font-size: 0.92rem; font-weight: 600; text-decoration: line-through; }
 .product-price__sale { color: var(--color-accent); font-size: 1.1rem; font-weight: 750; line-height: 1.25; }
-.product-card__cta { width: 100%; margin-top: 4px; }
+.product-card__cta { width: 100%; margin-top: 4px; flex: 0 0 auto; }
 .empty-state { grid-column: 1 / -1; margin: 0; border: 1px dashed var(--color-gray-200); border-radius: var(--radius-md); padding: 24px; background: var(--color-white); color: var(--color-gray-700); text-align: center; font-weight: 700; }
 
 .info-section { background: var(--color-white); }
@@ -228,14 +232,14 @@ p { line-height: 1.65; }
 .old-tv-brand-card__logo img.is-wide, .old-tv-brand-card__logo img.brand-logo-image--wide { max-width: 42px; max-height: 28px; }
 .old-tv-brand-card__name { font-size: 0.9rem; line-height: 1.2; text-align: center; }
 .used-tv-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-4); min-width: 0; }
-.used-tv-card { position: relative; display: grid; min-width: 0; height: 100%; gap: 9px; border: 1px solid var(--color-gray-200); border-radius: var(--radius-lg); padding: 14px; background: var(--color-white); box-shadow: var(--shadow-sm); transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition); }
+.used-tv-card { position: relative; display: flex; flex-direction: column; min-width: 0; height: 100%; gap: 8px; border: 1px solid var(--color-gray-200); border-radius: var(--radius-lg); padding: 14px; background: var(--color-white); box-shadow: var(--shadow-sm); transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition); }
 .used-tv-card:hover { transform: translateY(-3px); border-color: rgba(19, 111, 206, 0.34); box-shadow: var(--shadow-md); }
 .used-tv-card h3 { margin: 0; color: var(--color-primary-deep); font-size: 1.06rem; font-weight: 650; line-height: 1.32; letter-spacing: -0.005em; }
-.used-tv-card__meta { display: grid; gap: 6px; margin: 0; }
-.used-tv-card__meta div { display: flex; justify-content: space-between; gap: 10px; border-bottom: 1px dashed var(--color-gray-200); padding-bottom: 5px; }
+.used-tv-card__meta { display: grid; gap: 5px; margin: 0; }
+.used-tv-card__meta div { display: flex; justify-content: space-between; gap: 10px; border-bottom: 1px dashed var(--color-gray-200); padding-bottom: 4px; }
 .used-tv-card__meta dt { color: var(--color-gray-500); font-weight: 700; }
 .used-tv-card__meta dd { margin: 0; color: var(--color-primary-deep); font-weight: 700; text-align: right; }
-.used-tv-card ul { margin: 0; padding-left: 18px; color: var(--color-gray-700); font-size: 0.94rem; }
+.used-tv-card .product-card-features { margin: 0; padding-left: 18px; color: var(--color-gray-700); font-size: 0.92rem; line-height: 1.45; }
 .used-tv-empty { display: block; }
 .used-tv-empty[hidden] { display: none; }
 
@@ -252,7 +256,7 @@ p { line-height: 1.65; }
 .new-tv-brand-card:hover .brand-fallback-badge,
 .new-tv-brand-card.is-active .brand-fallback-badge { color: var(--color-primary-deep); }
 .new-tv-grid { min-width: 0; }
-.new-tv-card h3 { min-height: 2.8em; }
+.new-tv-card h3 { min-height: 0; }
 
 .exchange { background: linear-gradient(135deg, var(--color-primary-deep), var(--color-primary)); color: var(--color-white); }
 .exchange h2, .exchange .section-kicker, .exchange p { color: var(--color-white); }
