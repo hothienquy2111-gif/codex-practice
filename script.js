@@ -280,8 +280,10 @@ const renderSectionProductCard = (product, sectionType) => {
     <article class="${classes}" ${cardDataset}>
       <span class="product-card__badge">${escapeHtml(product.badge)}</span>
       ${renderProductMedia(product, title)}
-      <span class="product-brand">${escapeHtml(product.brand)}</span>
-      <h3 class="product-card-title">${escapeHtml(product.model)}</h3>
+      <div class="product-meta-row">
+        <span class="product-brand">${escapeHtml(product.brand)}</span>
+        <h3 class="product-model product-card-title">${escapeHtml(product.model)}</h3>
+      </div>
       <p class="product-full-name product-card-description">${escapeHtml(title)}</p>
       <p class="product-size">${escapeHtml(formatProductCardSize(product.size))}</p>
       <p class="product-type">${escapeHtml(product.type)}</p>
@@ -502,8 +504,10 @@ const renderProductCards = () => {
           <a class="product-card" href="${createProductDetailUrl(product)}" aria-label="Xem chi tiết ${escapeHtml(label)}">
             <span class="product-card__badge">${escapeHtml(product.badge)}</span>
             ${media}
-            <span class="product-brand">${escapeHtml(product.brand)}</span>
-            <h3 class="product-card-title">${escapeHtml(product.model)}</h3>
+            <div class="product-meta-row">
+              <span class="product-brand">${escapeHtml(product.brand)}</span>
+              <h3 class="product-model product-card-title">${escapeHtml(product.model)}</h3>
+            </div>
             <p class="product-full-name product-card-description">${escapeHtml(product.fullName)}</p>
             <p class="product-size">${escapeHtml(formatProductCardSize(product.size))}</p>
             <p class="product-type">${escapeHtml(product.type)}</p>
