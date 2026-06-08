@@ -652,8 +652,8 @@ const initCarousel = () => {
   const viewport = carousel.querySelector('.carousel-viewport');
   const track = carousel.querySelector('.carousel-track');
   const slides = Array.from(carousel.querySelectorAll('.carousel-slide'));
-  const prevButton = carousel.querySelector('.carousel-btn--prev');
-  const nextButton = carousel.querySelector('.carousel-btn--next');
+  const prevButton = carousel.querySelector('.hero-carousel-arrow-prev');
+  const nextButton = carousel.querySelector('.hero-carousel-arrow-next');
   const dotsWrap = carousel.querySelector('.carousel-dots');
   if (!viewport || !track || !slides.length) return;
 
