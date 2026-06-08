@@ -316,6 +316,16 @@ p { line-height: 1.65; }
 .product-specs div { display: grid; grid-template-columns: 130px 1fr; gap: 12px; border-bottom: 1px solid var(--color-gray-200); padding-bottom: 8px; }
 .product-specs dt { color: var(--color-gray-500); font-weight: 600; }
 .product-specs dd { margin: 0; color: var(--color-primary-deep); font-weight: 650; }
+.product-spec-value,
+.product-specification-value,
+.spec-value,
+.specification-value,
+.spec-row-value {
+  white-space: pre-line;
+  line-height: 1.65;
+  word-break: normal;
+  overflow-wrap: anywhere;
+}
 .product-detail__features h2 { color: var(--color-primary-deep); font-size: 1.2rem; font-weight: 700; line-height: 1.18; }
 .product-detail__features ul { padding-left: 20px; color: var(--color-gray-700); line-height: 1.6; }
 .product-detail__price-box { border-radius: var(--radius-md); padding: 16px; background: #fff5ef; }

@@ -183,7 +183,7 @@
               ${(Array.isArray(group.rows) ? group.rows : []).map((row) => `
                 <div class="product-specification-row">
                   <dt>${escapeDetailHtml(row.label)}</dt>
-                  <dd>${renderModalValue(row.value)}</dd>
+                  <dd class="product-specification-value product-spec-value">${renderModalValue(row.value)}</dd>
                 </div>`).join('')}
             </dl>
           </section>`).join('')}
@@ -321,7 +321,7 @@
     const oldPrice = product.oldPrice
       ? `<p class="product-detail__old-price"><span>Giá cũ:</span> <del>${escapeDetailHtml(product.oldPrice)}</del></p>`
       : '';
-    const warrantySpec = product.warranty ? `<div><dt>Bảo hành</dt><dd>${escapeDetailHtml(product.warranty)}</dd></div>` : '';
+    const warrantySpec = product.warranty ? `<div><dt>Bảo hành</dt><dd class="product-spec-value">${escapeDetailHtml(product.warranty)}</dd></div>` : '';
 
     productDetailRoot.classList.remove('product-detail-card--message');
     productDetailRoot.innerHTML = `
@@ -336,11 +336,11 @@
         <p class="product-detail__description">${escapeDetailHtml(product.description)}</p>
 
         <dl class="product-specs">
-          <div><dt>Thương hiệu</dt><dd>${escapeDetailHtml(product.brand)}</dd></div>
-          <div><dt>Model</dt><dd>${escapeDetailHtml(product.model)}</dd></div>
-          <div><dt>Kích thước</dt><dd>${escapeDetailHtml(product.size)}</dd></div>
-          <div><dt>Loại sản phẩm</dt><dd>${escapeDetailHtml(product.type)}</dd></div>
-          <div><dt>Tình trạng</dt><dd>${escapeDetailHtml(product.condition)}</dd></div>
+          <div><dt>Thương hiệu</dt><dd class="product-spec-value">${escapeDetailHtml(product.brand)}</dd></div>
+          <div><dt>Model</dt><dd class="product-spec-value">${escapeDetailHtml(product.model)}</dd></div>
+          <div><dt>Kích thước</dt><dd class="product-spec-value">${escapeDetailHtml(product.size)}</dd></div>
+          <div><dt>Loại sản phẩm</dt><dd class="product-spec-value">${escapeDetailHtml(product.type)}</dd></div>
+          <div><dt>Tình trạng</dt><dd class="product-spec-value">${escapeDetailHtml(product.condition)}</dd></div>
           ${warrantySpec}
         </dl>
 
