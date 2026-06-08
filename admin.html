@@ -71,7 +71,19 @@
             <div class="admin-field admin-field--full"><label for="product-description">Mô tả ngắn</label><textarea id="product-description" name="description" rows="3"></textarea></div>
             <div class="admin-field admin-field--full"><label for="product-features">Đặc điểm nổi bật</label><textarea id="product-features" name="features" rows="5" placeholder="Mỗi dòng một đặc điểm"></textarea></div>
             <div class="admin-field admin-field--full"><label for="product-overview">Tổng quan sản phẩm</label><textarea id="product-overview" name="overview" rows="5" placeholder="Nhập nội dung tổng quan theo từng đoạn"></textarea></div>
-            <div class="admin-field admin-field--full"><label for="product-specifications">Thông số chi tiết</label><textarea id="product-specifications" name="specifications" rows="7" placeholder="Tổng quan | Loại Tivi | Smart Tivi QLED&#10;Tổng quan | Kích cỡ màn hình | 55 inch&#10;Công nghệ hình ảnh | Bộ xử lý | Q4 AI Processor"></textarea><small class="admin-help-text">Nhập mỗi dòng theo mẫu: Nhóm | Tên thông số | Giá trị</small></div>
+            <div class="admin-field admin-field--full admin-spec-field">
+              <label for="product-specifications">Thông số chi tiết</label>
+              <p class="admin-help-text">Bạn có thể dán thông số dạng văn bản thường. Mỗi nhóm như Tổng quan, Công nghệ hình ảnh, Tiện ích... sẽ được tự động tách khi bấm Tự động căn thông số.</p>
+              <textarea id="product-specifications" name="specifications" rows="12" placeholder="Loại Tivi:&#10;Smart Tivi Neo QLED&#10;Kích cỡ màn hình:&#10;65 inch&#10;Độ phân giải:&#10;4K (Ultra HD)&#10;&#10;Công nghệ hình ảnh&#10;Công nghệ hình ảnh:&#10;Công nghệ Color Booster Pro&#10;AI Generative Wallpaper&#10;Supreme UHD Dimming&#10;Bộ xử lý:&#10;Bộ xử lý AI NQ4 thế hệ 2"></textarea>
+              <small class="admin-help-text">Mẹo: Bạn chỉ cần dán thông số như văn bản thường, hệ thống sẽ tự căn thành bảng.</small>
+              <div class="admin-spec-actions" aria-label="Công cụ thông số chi tiết">
+                <button class="btn btn--primary" type="button" data-format-specifications>Tự động căn thông số</button>
+                <button class="btn btn--secondary" type="button" data-preview-specifications>Xem trước thông số</button>
+                <button class="btn btn--ghost" type="button" data-clear-specifications>Xoá thông số</button>
+              </div>
+              <p class="admin-spec-count" data-specifications-count aria-live="polite"></p>
+              <div class="admin-spec-preview" data-specifications-preview hidden></div>
+            </div>
             <div class="admin-field"><label for="product-main-image">Ảnh chính</label><input id="product-main-image" name="mainImage" type="file" accept="image/*" /></div>
             <div class="admin-field"><label for="product-gallery-images">Ảnh gallery nhiều ảnh</label><input id="product-gallery-images" name="galleryImages" type="file" accept="image/*" multiple /></div>
             <div class="admin-field"><label for="product-active">Trạng thái</label><select id="product-active" name="isActive"><option value="true">Hiển thị</option><option value="false">Ẩn</option></select></div>

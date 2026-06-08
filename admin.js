@@ -19,6 +19,11 @@
     formMessage: document.querySelector('[data-form-message]'),
     existingImages: document.querySelector('[data-existing-images]'),
     saveButton: document.querySelector('[data-save-product]'),
+    formatSpecificationsButton: document.querySelector('[data-format-specifications]'),
+    previewSpecificationsButton: document.querySelector('[data-preview-specifications]'),
+    clearSpecificationsButton: document.querySelector('[data-clear-specifications]'),
+    specificationsPreview: document.querySelector('[data-specifications-preview]'),
+    specificationsCount: document.querySelector('[data-specifications-count]'),
   };
 
   let products = [];
@@ -45,21 +50,116 @@
     const content = normalizeText(value);
     return content ? [{ title: 'Tổng quan sản phẩm', content }] : [];
   };
-  const parseSpecifications = (value = '') => {
-    const groups = new Map();
-    parseLines(value).forEach((line) => {
-      const [group, label, ...rest] = line.split('|').map((part) => part.trim());
-      const specValue = rest.join(' | ').trim();
-      if (!group || !label || !specValue) return;
-      if (!groups.has(group)) groups.set(group, []);
-      groups.get(group).push({ label, value: specValue });
-    });
-    return Array.from(groups, ([group, rows]) => ({ group, rows }));
+  const specificationGroupNames = [
+    'Tổng quan',
+    'Tổng quan sản phẩm',
+    'Công nghệ hình ảnh',
+    'Tiện ích',
+    'Công nghệ âm thanh',
+    'Cổng kết nối',
+    'Thông tin lắp đặt',
+    'Xuất xứ và bảo hành',
+    'Truyền hình và phát sóng',
+    'Kết nối',
+    'Thiết kế và lắp đặt',
+    'Điện năng và tiết kiệm năng lượng',
+    'Phụ kiện',
+  ];
+  const normalizedSpecificationGroups = new Map(specificationGroupNames.map((group) => [group.toLocaleLowerCase('vi-VN'), group]));
+  const stripValueMarker = (line = '') => normalizeText(line).replace(/^[-–—•*]+\s*/, '');
+  const isSpecificationGroupHeading = (line = '') => {
+    const text = normalizeText(line);
+    if (!text || text.endsWith(':') || text.includes('|')) return '';
+    return normalizedSpecificationGroups.get(text.toLocaleLowerCase('vi-VN')) || '';
   };
-  const formatSpecifications = (specifications = []) => {
+  const formatSpecificationValue = (lines = []) => {
+    const values = lines.map(stripValueMarker).filter(Boolean);
+    if (values.length <= 1) return values[0] || '';
+    return values.map((line) => `• ${line}`).join('\n');
+  };
+  const parseSpecifications = (rawText = '') => {
+    const lines = parseLines(rawText);
+    if (!lines.length) return [];
+
+    const groups = [];
+    let currentGroup = 'Tổng quan';
+    let currentLabel = '';
+    let currentValueLines = [];
+
+    const ensureGroup = (groupName) => {
+      const group = normalizeText(groupName) || 'Tổng quan';
+      let target = groups.find((item) => item.group === group);
+      if (!target) {
+        target = { group, rows: [] };
+        groups.push(target);
+      }
+      return target;
+    };
+
+    const addRow = (groupName, label, value) => {
+      const cleanLabel = normalizeText(label).replace(/:$/, '').trim();
+      const cleanValue = normalizeText(value);
+      if (!cleanLabel || !cleanValue) return;
+      ensureGroup(groupName).rows.push({ label: cleanLabel, value: cleanValue });
+    };
+
+    const flushCurrentRow = () => {
+      if (!currentLabel) return;
+      addRow(currentGroup, currentLabel, formatSpecificationValue(currentValueLines));
+      currentLabel = '';
+      currentValueLines = [];
+    };
+
+    lines.forEach((line) => {
+      const pipeParts = line.split('|').map((part) => part.trim());
+      if (pipeParts.length >= 3 && pipeParts[0] && pipeParts[1] && pipeParts.slice(2).join(' | ').trim()) {
+        flushCurrentRow();
+        addRow(pipeParts[0], pipeParts[1], pipeParts.slice(2).join(' | '));
+        return;
+      }
+
+      const groupHeading = isSpecificationGroupHeading(line);
+      if (groupHeading) {
+        flushCurrentRow();
+        currentGroup = groupHeading;
+        ensureGroup(currentGroup);
+        return;
+      }
+
+      const labelMatch = line.match(/^(.+?):\s*(.*)$/);
+      if (labelMatch) {
+        flushCurrentRow();
+        currentLabel = labelMatch[1];
+        currentValueLines = labelMatch[2] ? [labelMatch[2]] : [];
+        return;
+      }
+
+      if (currentLabel) currentValueLines.push(line);
+    });
+
+    flushCurrentRow();
+    return groups.filter((group) => group.rows.length);
+  };
+  const stringifySpecificationsForAdmin = (specifications = []) => {
     if (typeof specifications === 'string') return specifications;
     if (!Array.isArray(specifications)) return '';
-    return specifications.flatMap((group) => (group.rows || []).map((row) => `${group.group || ''} | ${row.label || ''} | ${Array.isArray(row.value) ? row.value.join(', ') : row.value || ''}`)).join('\n');
+    return specifications
+      .map((group) => {
+        const rows = Array.isArray(group?.rows) ? group.rows : [];
+        const rowText = rows
+          .map((row) => {
+            const label = normalizeText(row?.label || row?.name || '');
+            const rawValue = Array.isArray(row?.value) ? row.value.map((item) => `• ${stripValueMarker(item)}`).join('\n') : normalizeText(row?.value || '');
+            if (!label || !rawValue) return '';
+            return `${label}:\n${rawValue}`;
+          })
+          .filter(Boolean)
+          .join('\n');
+        if (!rowText) return '';
+        return `${normalizeText(group?.group || group?.title || 'Tổng quan')}\n${rowText}`;
+      })
+      .filter(Boolean)
+      .join('\n\n');
   };
   const formatOverview = (overview = []) => overview.map((section) => section.content || (Array.isArray(section.paragraphs) ? section.paragraphs.join('\n') : '')).filter(Boolean).join('\n\n');
 
@@ -118,11 +218,69 @@
       </article>`).join('');
   };
 
+
+  const getSpecificationCounts = (specifications = []) => ({
+    groups: specifications.length,
+    rows: specifications.reduce((total, group) => total + (Array.isArray(group.rows) ? group.rows.length : 0), 0),
+  });
+
+  const renderPreviewValue = (value = '') => escapeHtml(value).replace(/\n/g, '<br />');
+
+  const updateSpecificationPreview = (specifications = [], { showEmpty = true } = {}) => {
+    if (!dom.specificationsPreview || !dom.specificationsCount) return;
+    const counts = getSpecificationCounts(specifications);
+    dom.specificationsCount.textContent = counts.rows ? `Đã nhận diện ${counts.groups} nhóm thông số, ${counts.rows} dòng thông số.` : '';
+
+    if (!counts.rows) {
+      dom.specificationsPreview.hidden = !showEmpty;
+      dom.specificationsPreview.innerHTML = showEmpty ? '<p>Chưa có thông số để xem trước.</p>' : '';
+      return;
+    }
+
+    dom.specificationsPreview.hidden = false;
+    dom.specificationsPreview.innerHTML = specifications.map((group) => `
+      <section class="admin-spec-preview__group">
+        <h3>${escapeHtml(group.group)}</h3>
+        <dl>
+          ${(group.rows || []).map((row) => `
+            <div class="admin-spec-preview__row">
+              <dt>${escapeHtml(row.label)}</dt>
+              <dd>${renderPreviewValue(row.value)}</dd>
+            </div>`).join('')}
+        </dl>
+      </section>`).join('');
+  };
+
+  const clearSpecificationPreview = () => {
+    if (dom.specificationsPreview) {
+      dom.specificationsPreview.hidden = true;
+      dom.specificationsPreview.innerHTML = '';
+    }
+    if (dom.specificationsCount) dom.specificationsCount.textContent = '';
+  };
+
+  const handleSpecificationAction = ({ format = false } = {}) => {
+    const textarea = dom.form?.specifications;
+    if (!textarea) return [];
+    try {
+      const specifications = parseSpecifications(textarea.value);
+      if (format) textarea.value = stringifySpecificationsForAdmin(specifications);
+      updateSpecificationPreview(specifications);
+      if (format) showMessage(dom.formMessage, 'Đã tự động căn thông số chi tiết.', 'success');
+      return specifications;
+    } catch (error) {
+      console.warn(error);
+      showMessage(dom.formMessage, 'Không thể tự động căn thông số. Vui lòng kiểm tra lại nội dung nhập.', 'error');
+      return null;
+    }
+  };
+
   const openForm = (product = null) => {
     editingProduct = product;
     productIdManuallyEdited = Boolean(product);
     dom.form?.reset();
     showMessage(dom.formMessage, '');
+    clearSpecificationPreview();
     if (dom.formTitle) dom.formTitle.textContent = product ? 'Sửa sản phẩm' : 'Thêm sản phẩm';
     if (dom.modal) dom.modal.hidden = false;
     document.body.classList.add('admin-modal-open');
@@ -144,7 +302,8 @@
       form.description.value = product.description || '';
       form.features.value = Array.isArray(product.features) ? product.features.join('\n') : '';
       form.overview.value = formatOverview(product.overview || []);
-      form.specifications.value = formatSpecifications(product.specifications ?? product.specificationsText ?? []);
+      form.specifications.value = stringifySpecificationsForAdmin(product.specifications ?? product.specificationsText ?? []);
+      updateSpecificationPreview(parseSpecifications(form.specifications.value), { showEmpty: false });
       form.isActive.value = String(Boolean(product.is_active));
     }
     renderExistingImages(product);
@@ -212,6 +371,17 @@
     }
   };
 
+  const getParsedSpecificationsForSave = (form) => {
+    try {
+      const specifications = parseSpecifications(form.specifications.value);
+      updateSpecificationPreview(specifications, { showEmpty: false });
+      return specifications;
+    } catch (error) {
+      console.warn(error);
+      throw new Error('Không thể tự động căn thông số. Vui lòng kiểm tra lại nội dung nhập.');
+    }
+  };
+
   const buildProduct = (form, imageData) => ({
     id: normalizeText(form.id.value) || generateProductId(form.brand.value, form.model.value, form.size.value),
     brand: normalizeText(form.brand.value),
@@ -227,7 +397,7 @@
     description: normalizeText(form.description.value),
     features: parseLines(form.features.value),
     overview: parseOverview(form.overview.value),
-    specifications: parseSpecifications(form.specifications.value),
+    specifications: getParsedSpecificationsForSave(form),
     image: imageData.image || '',
     images: imageData.images || [],
     is_active: form.isActive.value === 'true',
@@ -337,6 +507,13 @@
 
   dom.logoutButton?.addEventListener('click', async () => { await client?.auth.signOut(); showLoginOnly(); });
   dom.openFormButton?.addEventListener('click', () => openForm());
+  dom.formatSpecificationsButton?.addEventListener('click', () => handleSpecificationAction({ format: true }));
+  dom.previewSpecificationsButton?.addEventListener('click', () => handleSpecificationAction());
+  dom.clearSpecificationsButton?.addEventListener('click', () => {
+    if (dom.form?.specifications) dom.form.specifications.value = '';
+    clearSpecificationPreview();
+    showMessage(dom.formMessage, 'Đã xoá thông số chi tiết.', 'success');
+  });
   dom.form?.addEventListener('submit', handleSave);
   document.querySelectorAll('[data-close-product-form]').forEach((button) => button.addEventListener('click', closeForm));
   document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && !dom.modal?.hidden) closeForm(); });
