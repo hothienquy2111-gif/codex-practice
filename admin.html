@@ -70,7 +70,19 @@
             <div class="admin-field"><label for="product-sort-order">Thứ tự hiển thị</label><input id="product-sort-order" name="sortOrder" type="number" value="0" /></div>
             <div class="admin-field admin-field--full"><label for="product-description">Mô tả ngắn</label><textarea id="product-description" name="description" rows="3"></textarea></div>
             <div class="admin-field admin-field--full"><label for="product-features">Đặc điểm nổi bật</label><textarea id="product-features" name="features" rows="5" placeholder="Mỗi dòng một đặc điểm"></textarea></div>
-            <div class="admin-field admin-field--full"><label for="product-overview">Tổng quan sản phẩm</label><textarea id="product-overview" name="overview" rows="5" placeholder="Nhập nội dung tổng quan theo từng đoạn"></textarea></div>
+            <div class="admin-field admin-field--full admin-overview-field">
+              <label for="product-overview">Tổng quan sản phẩm</label>
+              <p class="admin-help-text">Bạn có thể dán nội dung tổng quan dạng văn bản thường. Hệ thống sẽ tự nhận diện tiêu đề, căn đoạn và hiển thị đẹp trên trang chi tiết.</p>
+              <textarea id="product-overview" name="overview" rows="8" placeholder="Smart Tivi Samsung Neo QLED 4K 65 inch...&#10;&#10;Thiết kế&#10;Tivi sở hữu thiết kế hiện đại...&#10;&#10;Công nghệ hình ảnh&#10;Công nghệ Neo Quantum HDR..."></textarea>
+              <small class="admin-help-text">Mẹo: Mỗi tiêu đề như Thiết kế, Công nghệ hình ảnh, Công nghệ âm thanh nên nằm trên một dòng riêng. Nội dung bên dưới sẽ tự được gom vào tiêu đề đó.</small>
+              <div class="admin-overview-actions" aria-label="Công cụ tổng quan sản phẩm">
+                <button class="btn btn--primary" type="button" data-format-overview>Tự động căn tổng quan</button>
+                <button class="btn btn--secondary" type="button" data-preview-overview>Xem trước tổng quan</button>
+                <button class="btn btn--ghost" type="button" data-clear-overview>Xoá tổng quan</button>
+              </div>
+              <p class="admin-overview-count" data-overview-count aria-live="polite"></p>
+              <div class="admin-overview-preview" data-overview-preview hidden></div>
+            </div>
             <div class="admin-field admin-field--full admin-spec-field">
               <label for="product-specifications">Thông số chi tiết</label>
               <p class="admin-help-text">Bạn có thể dán thông số dạng văn bản thường. Mỗi nhóm như Tổng quan, Công nghệ hình ảnh, Tiện ích... sẽ được tự động tách khi bấm Tự động căn thông số.</p>

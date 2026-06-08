@@ -91,6 +91,12 @@
       .filter((group) => group.group && group.rows.length);
   };
 
+  const normalizeOverview = (overview) => {
+    if (Array.isArray(overview)) return overview;
+    if (typeof overview === 'string' && overview.trim()) return [{ title: 'Tổng quan sản phẩm', content: overview.trim() }];
+    return [];
+  };
+
   const normalizeDetailProduct = (product = {}) => {
     const imageList = Array.isArray(product.images) && product.images.length ? product.images : product.image ? [product.image] : [];
     return {
@@ -109,7 +115,7 @@
       images: imageList,
       badge: product.badge || 'Tư vấn',
       description: product.description || 'Vui lòng liên hệ Anh Minh Store để được tư vấn chi tiết.',
-      overview: Array.isArray(product.overview) ? product.overview : [],
+      overview: normalizeOverview(product.overview),
       specifications: normalizeSpecifications(product),
     };
   };
@@ -163,10 +169,13 @@
       <div class="product-overview-modal">
         ${overview.map((section) => {
           const headingText = section.heading || section.title || '';
-          const heading = headingText ? `<h3>${escapeDetailHtml(headingText)}</h3>` : '';
-          const sourceParagraphs = Array.isArray(section.paragraphs) ? section.paragraphs : (section.content ? String(section.content).split(/\n+/).filter(Boolean) : []);
-          const paragraphs = sourceParagraphs.map((paragraph) => `<p>${escapeDetailHtml(paragraph)}</p>`).join('');
-          return `<section>${heading}${paragraphs}</section>`;
+          const heading = headingText ? `<h3 class="overview-section-title">${escapeDetailHtml(headingText)}</h3>` : '';
+          const content = section.content || (Array.isArray(section.paragraphs) ? section.paragraphs.join('\n\n') : '');
+          return `
+            <section class="overview-section">
+              ${heading}
+              <div class="overview-section-content">${escapeDetailHtml(content)}</div>
+            </section>`;
         }).join('')}
       </div>`;
   };

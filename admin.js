@@ -22,6 +22,11 @@
     formatSpecificationsButton: document.querySelector('[data-format-specifications]'),
     previewSpecificationsButton: document.querySelector('[data-preview-specifications]'),
     clearSpecificationsButton: document.querySelector('[data-clear-specifications]'),
+    formatOverviewButton: document.querySelector('[data-format-overview]'),
+    previewOverviewButton: document.querySelector('[data-preview-overview]'),
+    clearOverviewButton: document.querySelector('[data-clear-overview]'),
+    overviewPreview: document.querySelector('[data-overview-preview]'),
+    overviewCount: document.querySelector('[data-overview-count]'),
     specificationsPreview: document.querySelector('[data-specifications-preview]'),
     specificationsCount: document.querySelector('[data-specifications-count]'),
   };
@@ -46,9 +51,78 @@
     return `${base}-${Date.now()}${extension}`;
   };
   const parseLines = (value = '') => value.split('\n').map((line) => line.trim()).filter(Boolean);
-  const parseOverview = (value = '') => {
-    const content = normalizeText(value);
-    return content ? [{ title: 'Tổng quan sản phẩm', content }] : [];
+  const overviewHeadingNames = [
+    'Thiết kế',
+    'Công nghệ hình ảnh',
+    'Công nghệ âm thanh',
+    'Tiện ích thông minh',
+    'Hệ điều hành',
+    'Trải nghiệm giải trí',
+    'Trải nghiệm chơi game',
+    'Kết nối',
+    'Lắp đặt',
+    'Bảo hành',
+    'Tổng quan',
+    'Tổng quan sản phẩm',
+    'Đặc điểm nổi bật',
+  ];
+  const normalizeHeadingKey = (value = '') => normalizeText(value).replace(/:$/, '').toLocaleLowerCase('vi-VN');
+  const normalizedOverviewHeadings = new Map(overviewHeadingNames.map((heading) => [normalizeHeadingKey(heading), heading]));
+  const cleanOverviewContent = (lines = []) => lines
+    .join('\n')
+    .replace(/[ \t]+\n/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+  const isSentenceLikeLine = (line = '') => /[.!?…]$/.test(normalizeText(line));
+  const findNextOverviewLine = (lines, startIndex) => {
+    for (let index = startIndex + 1; index < lines.length; index += 1) {
+      if (normalizeText(lines[index])) return index;
+    }
+    return -1;
+  };
+  const getOverviewHeading = (line = '', lines = [], index = 0) => {
+    const text = normalizeText(line);
+    if (!text) return '';
+    const headingText = text.replace(/:$/, '').trim();
+    const knownHeading = normalizedOverviewHeadings.get(normalizeHeadingKey(text));
+    const nextIndex = findNextOverviewLine(lines, index);
+    if (nextIndex === -1) return '';
+    if (knownHeading) return headingText;
+    if (text.length > 80 || isSentenceLikeLine(text) || text.includes('|')) return '';
+    return headingText;
+  };
+  const parseOverview = (rawText = '') => {
+    const text = String(rawText || '').replace(/\r\n?/g, '\n').trim();
+    if (!text) return [];
+
+    const lines = text.split('\n').map((line) => line.trim());
+    const sections = [];
+    let currentTitle = '';
+    let currentLines = [];
+
+    const flushSection = () => {
+      const content = cleanOverviewContent(currentLines);
+      if (content) sections.push({ title: currentTitle || 'Tổng quan sản phẩm', content });
+      currentLines = [];
+    };
+
+    lines.forEach((line, index) => {
+      const heading = getOverviewHeading(line, lines, index);
+      if (heading) {
+        flushSection();
+        currentTitle = heading;
+        return;
+      }
+
+      if (!normalizeText(line)) {
+        if (currentLines.length && currentLines[currentLines.length - 1] !== '') currentLines.push('');
+        return;
+      }
+      currentLines.push(line);
+    });
+
+    flushSection();
+    return sections;
   };
   const specificationGroupNames = [
     'Tổng quan',
@@ -161,7 +235,19 @@
       .filter(Boolean)
       .join('\n\n');
   };
-  const formatOverview = (overview = []) => overview.map((section) => section.content || (Array.isArray(section.paragraphs) ? section.paragraphs.join('\n') : '')).filter(Boolean).join('\n\n');
+  const stringifyOverviewForAdmin = (overview = []) => {
+    if (typeof overview === 'string') return overview;
+    if (!Array.isArray(overview)) return '';
+    return overview
+      .map((section) => {
+        const title = normalizeText(section?.title || section?.heading || 'Tổng quan sản phẩm');
+        const content = normalizeText(section?.content || (Array.isArray(section?.paragraphs) ? section.paragraphs.join('\n\n') : ''));
+        if (!title && !content) return '';
+        return [title, content].filter(Boolean).join('\n');
+      })
+      .filter(Boolean)
+      .join('\n\n');
+  };
 
   const requireSupabase = () => {
     if (!supabaseState.isConfigured || !client) {
@@ -259,6 +345,48 @@
     if (dom.specificationsCount) dom.specificationsCount.textContent = '';
   };
 
+  const updateOverviewPreview = (overview = [], { showEmpty = true } = {}) => {
+    if (!dom.overviewPreview || !dom.overviewCount) return;
+    dom.overviewCount.textContent = overview.length ? `Đã nhận diện ${overview.length} mục tổng quan.` : '';
+
+    if (!overview.length) {
+      dom.overviewPreview.hidden = !showEmpty;
+      dom.overviewPreview.innerHTML = showEmpty ? '<p>Chưa có nội dung tổng quan để xem trước.</p>' : '';
+      return;
+    }
+
+    dom.overviewPreview.hidden = false;
+    dom.overviewPreview.innerHTML = overview.map((section) => `
+      <section class="admin-overview-preview__section overview-section">
+        ${section.title ? `<h3 class="overview-section-title">${escapeHtml(section.title)}</h3>` : ''}
+        <div class="overview-section-content">${escapeHtml(section.content || '')}</div>
+      </section>`).join('');
+  };
+
+  const clearOverviewPreview = () => {
+    if (dom.overviewPreview) {
+      dom.overviewPreview.hidden = true;
+      dom.overviewPreview.innerHTML = '';
+    }
+    if (dom.overviewCount) dom.overviewCount.textContent = '';
+  };
+
+  const handleOverviewAction = ({ format = false } = {}) => {
+    const textarea = dom.form?.overview;
+    if (!textarea) return [];
+    try {
+      const overview = parseOverview(textarea.value);
+      if (format) textarea.value = stringifyOverviewForAdmin(overview);
+      updateOverviewPreview(overview);
+      if (format) showMessage(dom.formMessage, 'Đã tự động căn tổng quan sản phẩm.', 'success');
+      return overview;
+    } catch (error) {
+      console.warn(error);
+      showMessage(dom.formMessage, 'Không thể tự động căn tổng quan. Vui lòng kiểm tra lại nội dung nhập.', 'error');
+      return null;
+    }
+  };
+
   const handleSpecificationAction = ({ format = false } = {}) => {
     const textarea = dom.form?.specifications;
     if (!textarea) return [];
@@ -280,6 +408,7 @@
     productIdManuallyEdited = Boolean(product);
     dom.form?.reset();
     showMessage(dom.formMessage, '');
+    clearOverviewPreview();
     clearSpecificationPreview();
     if (dom.formTitle) dom.formTitle.textContent = product ? 'Sửa sản phẩm' : 'Thêm sản phẩm';
     if (dom.modal) dom.modal.hidden = false;
@@ -301,7 +430,8 @@
       form.sortOrder.value = product.sort_order ?? 0;
       form.description.value = product.description || '';
       form.features.value = Array.isArray(product.features) ? product.features.join('\n') : '';
-      form.overview.value = formatOverview(product.overview || []);
+      form.overview.value = stringifyOverviewForAdmin(product.overview || []);
+      updateOverviewPreview(parseOverview(form.overview.value), { showEmpty: false });
       form.specifications.value = stringifySpecificationsForAdmin(product.specifications ?? product.specificationsText ?? []);
       updateSpecificationPreview(parseSpecifications(form.specifications.value), { showEmpty: false });
       form.isActive.value = String(Boolean(product.is_active));
@@ -371,6 +501,17 @@
     }
   };
 
+  const getParsedOverviewForSave = (form) => {
+    try {
+      const overview = parseOverview(form.overview.value);
+      updateOverviewPreview(overview, { showEmpty: false });
+      return overview;
+    } catch (error) {
+      console.warn(error);
+      throw new Error('Không thể tự động căn tổng quan. Vui lòng kiểm tra lại nội dung nhập.');
+    }
+  };
+
   const getParsedSpecificationsForSave = (form) => {
     try {
       const specifications = parseSpecifications(form.specifications.value);
@@ -396,7 +537,7 @@
     badge: normalizeText(form.badge.value),
     description: normalizeText(form.description.value),
     features: parseLines(form.features.value),
-    overview: parseOverview(form.overview.value),
+    overview: getParsedOverviewForSave(form),
     specifications: getParsedSpecificationsForSave(form),
     image: imageData.image || '',
     images: imageData.images || [],
@@ -507,6 +648,13 @@
 
   dom.logoutButton?.addEventListener('click', async () => { await client?.auth.signOut(); showLoginOnly(); });
   dom.openFormButton?.addEventListener('click', () => openForm());
+  dom.formatOverviewButton?.addEventListener('click', () => handleOverviewAction({ format: true }));
+  dom.previewOverviewButton?.addEventListener('click', () => handleOverviewAction());
+  dom.clearOverviewButton?.addEventListener('click', () => {
+    if (dom.form?.overview) dom.form.overview.value = '';
+    clearOverviewPreview();
+    showMessage(dom.formMessage, 'Đã xoá tổng quan sản phẩm.', 'success');
+  });
   dom.formatSpecificationsButton?.addEventListener('click', () => handleSpecificationAction({ format: true }));
   dom.previewSpecificationsButton?.addEventListener('click', () => handleSpecificationAction());
   dom.clearSpecificationsButton?.addEventListener('click', () => {
