@@ -2,6 +2,9 @@
   const supabaseState = window.anhMinhSupabase || window.AnhMinhSupabase || {};
   const client = supabaseState.isReady ? supabaseState.client : null;
   const bucketName = supabaseState.bucketName || 'product-images';
+  const bannerBucketName = 'site-banners';
+  const maxBannerFileSize = 10 * 1024 * 1024;
+  const allowedBannerTypes = new Set(['image/jpeg', 'image/png', 'image/webp']);
 
   const dom = {
     loginSection: document.querySelector('[data-admin-login]'),
@@ -29,11 +32,19 @@
     overviewCount: document.querySelector('[data-overview-count]'),
     specificationsPreview: document.querySelector('[data-specifications-preview]'),
     specificationsCount: document.querySelector('[data-specifications-count]'),
+    openBannerFormButton: document.querySelector('[data-open-banner-form]'),
+    bannerForm: document.querySelector('[data-banner-form]'),
+    bannerMessage: document.querySelector('[data-banner-message]'),
+    banners: document.querySelector('[data-admin-banners]'),
+    saveBannerButton: document.querySelector('[data-save-banner]'),
+    cancelBannerFormButton: document.querySelector('[data-cancel-banner-form]'),
   };
 
   let products = [];
   let editingProduct = null;
   let productIdManuallyEdited = false;
+  let banners = [];
+  let editingBanner = null;
 
   const escapeHtml = (value = '') => String(value).replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
   const showMessage = (node, text = '', type = '') => {
@@ -50,6 +61,13 @@
     const base = slugify(parts.join('.') || 'anh-minh-store') || `anh-minh-store-${Date.now()}`;
     return `${base}-${Date.now()}${extension}`;
   };
+  const sanitizeBannerFileName = (name = '') => {
+    const parts = name.split('.');
+    const extension = parts.length > 1 ? `.${slugify(parts.pop())}` : '';
+    const base = slugify(parts.join('.') || 'anh-minh-store-banner') || 'anh-minh-store-banner';
+    return `${Date.now()}-${base}${extension}`;
+  };
+  const getBannerStorageObjectPath = (storagePath = '') => normalizeText(storagePath).replace(/^site-banners\//, '');
   const getFormField = (name) => dom.form?.elements?.[name] || dom.form?.[name] || null;
   const parseLines = (value = '') => value.split('\n').map((line) => line.trim()).filter(Boolean);
   const overviewHeadingNames = [
@@ -323,6 +341,163 @@
           <button type="button" class="btn btn--danger" data-delete-product="${escapeHtml(product.id)}">Xoá</button>
         </div>
       </article>`).join('');
+  };
+
+
+  const loadBanners = async () => {
+    if (!dom.banners) return;
+    try {
+      const { data, error } = await client
+        .from('hero_banners')
+        .select('*')
+        .order('sort_order', { ascending: true })
+        .order('created_at', { ascending: true });
+      if (error) throw error;
+      banners = Array.isArray(data) ? data : [];
+      renderBanners();
+    } catch (error) {
+      console.warn(error);
+      showMessage(dom.adminMessage, 'Không thể tải danh sách banner. Vui lòng kiểm tra bảng hero_banners.', 'error');
+    }
+  };
+
+  const renderBanners = () => {
+    if (!dom.banners) return;
+    if (!banners.length) {
+      dom.banners.innerHTML = '<p class="admin-empty">Chưa có ảnh banner nào.</p>';
+      return;
+    }
+    dom.banners.innerHTML = banners.map((banner) => `
+      <article class="admin-banner-card" data-banner-id="${escapeHtml(banner.id)}">
+        <div class="admin-banner-card__thumb">
+          <img src="${escapeHtml(banner.image_url)}" alt="${escapeHtml(banner.alt_text || banner.title || 'Ảnh banner trang chủ')}" loading="lazy" />
+        </div>
+        <div>
+          <h3>${escapeHtml(banner.title || 'Ảnh banner trang chủ')}</h3>
+          <p>Thứ tự: ${Number(banner.sort_order || 0)} · ${banner.is_active ? 'Đang hiển thị' : 'Đang ẩn'}</p>
+          <span class="admin-status ${banner.is_active ? 'is-active' : 'is-hidden'}">${banner.is_active ? 'Hiển thị' : 'Ẩn'}</span>
+        </div>
+        <div class="admin-banner-card__actions">
+          <button type="button" class="btn btn--secondary" data-edit-banner="${escapeHtml(banner.id)}">Sửa</button>
+          <button type="button" class="btn btn--ghost" data-toggle-banner="${escapeHtml(banner.id)}">${banner.is_active ? 'Ẩn' : 'Hiện'}</button>
+          <button type="button" class="btn btn--danger" data-delete-banner="${escapeHtml(banner.id)}">Xoá</button>
+        </div>
+      </article>`).join('');
+  };
+
+  const openBannerForm = (banner = null) => {
+    editingBanner = banner;
+    dom.bannerForm?.reset();
+    showMessage(dom.bannerMessage, '');
+    if (dom.bannerForm) {
+      dom.bannerForm.hidden = false;
+      dom.bannerForm.bannerId.value = banner?.id || '';
+      dom.bannerForm.existingImageUrl.value = banner?.image_url || '';
+      dom.bannerForm.existingStoragePath.value = banner?.storage_path || '';
+      dom.bannerForm.title.value = banner?.title || '';
+      dom.bannerForm.altText.value = banner?.alt_text || '';
+      dom.bannerForm.sortOrder.value = banner?.sort_order ?? 0;
+      dom.bannerForm.isActive.value = String(banner ? Boolean(banner.is_active) : true);
+      setTimeout(() => dom.bannerForm?.title?.focus(), 0);
+    }
+  };
+
+  const closeBannerForm = () => {
+    if (dom.bannerForm) dom.bannerForm.hidden = true;
+    editingBanner = null;
+    showMessage(dom.bannerMessage, '');
+  };
+
+  const validateBannerFile = (file) => {
+    if (!file) return true;
+    if (!allowedBannerTypes.has(file.type) || file.size > maxBannerFileSize) {
+      showMessage(dom.bannerMessage, 'Ảnh banner phải là JPG, PNG hoặc WebP và dung lượng tối đa khoảng 10MB.', 'error');
+      return false;
+    }
+    return true;
+  };
+
+  const uploadBannerFile = async (file) => {
+    const objectPath = sanitizeBannerFileName(file.name);
+    const { error } = await client.storage.from(bannerBucketName).upload(objectPath, file, { cacheControl: '3600', upsert: false });
+    if (error) throw error;
+    const { data } = client.storage.from(bannerBucketName).getPublicUrl(objectPath);
+    return { imageUrl: data?.publicUrl || '', storagePath: `${bannerBucketName}/${objectPath}` };
+  };
+
+  const handleBannerSave = async (event) => {
+    event.preventDefault();
+    const form = dom.bannerForm;
+    if (!form) return;
+    const file = form.bannerImage.files?.[0];
+    if (!editingBanner && !file) {
+      showMessage(dom.bannerMessage, 'Vui lòng chọn ảnh banner.', 'error');
+      form.bannerImage.focus();
+      return;
+    }
+    if (!validateBannerFile(file)) return;
+    dom.saveBannerButton.disabled = true;
+    try {
+      let imageUrl = form.existingImageUrl.value;
+      let storagePath = form.existingStoragePath.value;
+      if (file) {
+        showMessage(dom.bannerMessage, 'Đang tải ảnh banner lên...', 'info');
+        const uploaded = await uploadBannerFile(file);
+        imageUrl = uploaded.imageUrl;
+        storagePath = uploaded.storagePath;
+      }
+      const payload = {
+        title: normalizeText(form.title.value) || null,
+        image_url: imageUrl,
+        storage_path: storagePath || null,
+        alt_text: normalizeText(form.altText.value) || normalizeText(form.title.value) || 'Ảnh banner trang chủ Anh Minh Store',
+        sort_order: Number(form.sortOrder.value || 0),
+        is_active: form.isActive.value === 'true',
+        updated_at: new Date().toISOString(),
+      };
+      const { error } = editingBanner
+        ? await client.from('hero_banners').update(payload).eq('id', editingBanner.id)
+        : await client.from('hero_banners').insert(payload);
+      if (error) throw error;
+      showMessage(dom.adminMessage, 'Đã lưu ảnh banner.', 'success');
+      closeBannerForm();
+      await loadBanners();
+    } catch (error) {
+      console.warn(error);
+      showMessage(dom.bannerMessage, 'Không thể tải ảnh banner lên. Vui lòng thử lại.', 'error');
+    } finally {
+      dom.saveBannerButton.disabled = false;
+    }
+  };
+
+  const toggleBanner = async (banner) => {
+    try {
+      const { error } = await client.from('hero_banners').update({ is_active: !banner.is_active, updated_at: new Date().toISOString() }).eq('id', banner.id);
+      if (error) throw error;
+      await loadBanners();
+    } catch (error) {
+      console.warn(error);
+      showMessage(dom.adminMessage, 'Không thể cập nhật trạng thái banner. Vui lòng thử lại.', 'error');
+    }
+  };
+
+  const deleteBanner = async (banner) => {
+    if (!window.confirm('Bạn có chắc muốn xoá ảnh banner này không?')) return;
+    try {
+      const { error } = await client.from('hero_banners').delete().eq('id', banner.id);
+      if (error) throw error;
+      let storageWarning = false;
+      if (banner.storage_path) {
+        const { error: storageError } = await client.storage.from(bannerBucketName).remove([getBannerStorageObjectPath(banner.storage_path)]);
+        storageWarning = Boolean(storageError);
+        if (storageError) console.warn(storageError);
+      }
+      await loadBanners();
+      showMessage(dom.adminMessage, storageWarning ? 'Đã xoá banner khỏi danh sách, nhưng chưa xoá được file trong Storage.' : 'Đã xoá ảnh banner.', storageWarning ? 'info' : 'success');
+    } catch (error) {
+      console.warn(error);
+      showMessage(dom.adminMessage, 'Không thể xoá ảnh banner. Vui lòng thử lại.', 'error');
+    }
   };
 
 
@@ -657,6 +832,7 @@
       }
       showDashboard();
       await loadProducts();
+      await loadBanners();
     } catch (error) {
       console.warn(error);
       showLoginOnly();
@@ -680,6 +856,7 @@
       }
       showDashboard();
       await loadProducts();
+      await loadBanners();
     } catch (error) {
       console.warn(error);
       showMessage(dom.loginMessage, 'Sai tài khoản hoặc mật khẩu. Vui lòng thử lại.', 'error');
@@ -690,6 +867,9 @@
 
   dom.logoutButton?.addEventListener('click', async () => { await client?.auth.signOut(); showLoginOnly(); });
   dom.openFormButton?.addEventListener('click', () => openForm());
+  dom.openBannerFormButton?.addEventListener('click', () => openBannerForm());
+  dom.cancelBannerFormButton?.addEventListener('click', closeBannerForm);
+  dom.bannerForm?.addEventListener('submit', handleBannerSave);
   dom.formatOverviewButton?.addEventListener('click', handleAutoFormatOverview);
   dom.previewOverviewButton?.addEventListener('click', handlePreviewOverview);
   dom.clearOverviewButton?.addEventListener('click', () => {
@@ -726,6 +906,15 @@
     if (event.target.dataset.editProduct) openForm(product);
     if (event.target.dataset.toggleProduct) toggleProduct(product);
     if (event.target.dataset.deleteProduct) deleteProduct(product);
+  });
+  dom.banners?.addEventListener('click', (event) => {
+    const id = event.target.dataset.editBanner || event.target.dataset.toggleBanner || event.target.dataset.deleteBanner;
+    if (!id) return;
+    const banner = banners.find((item) => item.id === id);
+    if (!banner) return;
+    if (event.target.dataset.editBanner) openBannerForm(banner);
+    if (event.target.dataset.toggleBanner) toggleBanner(banner);
+    if (event.target.dataset.deleteBanner) deleteBanner(banner);
   });
 
   init();

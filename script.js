@@ -646,16 +646,50 @@ const refreshPublicProductsFromSupabase = async () => {
 
 refreshPublicProductsFromSupabase();
 
-const initCarousel = () => {
+const escapeAttribute = (value = '') => String(value).replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
+
+const loadSupabaseHeroBanners = async (track) => {
+  const storeSupabase = window.AnhMinhSupabase || window.anhMinhSupabase;
+  if (!track || !storeSupabase?.isConfigured || !storeSupabase.client) return false;
+
+  try {
+    const { data, error } = await storeSupabase.client
+      .from('hero_banners')
+      .select('title,image_url,alt_text,sort_order,created_at')
+      .eq('is_active', true)
+      .order('sort_order', { ascending: true })
+      .order('created_at', { ascending: true });
+
+    if (error) throw error;
+    const banners = Array.isArray(data) ? data.filter((banner) => banner?.image_url) : [];
+    if (!banners.length) return false;
+
+    track.innerHTML = banners.map((banner, index) => {
+      const label = banner.title || banner.alt_text || `Banner trang chủ ${index + 1}`;
+      const altText = banner.alt_text || banner.title || 'Banner trang chủ Anh Minh Store';
+      return `<article class="carousel-slide" aria-label="${escapeAttribute(label)}">
+        <img src="${escapeAttribute(banner.image_url)}" alt="${escapeAttribute(altText)}" draggable="false" />
+      </article>`;
+    }).join('');
+    return true;
+  } catch (error) {
+    console.warn('Không thể tải banner từ Supabase, dùng ảnh banner mặc định.', error);
+    return false;
+  }
+};
+
+const initCarousel = async () => {
   const carousel = dom.carousel;
   if (!carousel) return;
   const viewport = carousel.querySelector('.carousel-viewport');
   const track = carousel.querySelector('.carousel-track');
-  const slides = Array.from(carousel.querySelectorAll('.carousel-slide'));
-  const prevButton = carousel.querySelector('.hero-carousel-arrow-prev');
-  const nextButton = carousel.querySelector('.hero-carousel-arrow-next');
   const dotsWrap = carousel.querySelector('.carousel-dots');
-  if (!viewport || !track || !slides.length) return;
+  if (!viewport || !track) return;
+
+  await loadSupabaseHeroBanners(track);
+  const slides = Array.from(carousel.querySelectorAll('.carousel-slide'));
+  if (!slides.length) return;
+  dotsWrap.innerHTML = '';
 
   let currentIndex = 0;
   let slideWidth = viewport.clientWidth;
@@ -699,8 +733,8 @@ const initCarousel = () => {
   };
 
   const startAutoplay = () => {
-    if (reduceMotion || slides.length < 2 || autoplayId) return;
-    autoplayId = window.setInterval(() => goToSlide(currentIndex + 1), 4500);
+    if (reduceMotion || slides.length < 2 || autoplayId || document.hidden) return;
+    autoplayId = window.setInterval(() => goToSlide(currentIndex + 1), 5000);
   };
 
   const restartAutoplay = () => {
@@ -739,15 +773,6 @@ const initCarousel = () => {
     startAutoplay();
   };
 
-  prevButton?.addEventListener('click', () => {
-    goToSlide(currentIndex - 1);
-    restartAutoplay();
-  });
-
-  nextButton?.addEventListener('click', () => {
-    goToSlide(currentIndex + 1);
-    restartAutoplay();
-  });
 
   dots.forEach((dot, index) => {
     dot.addEventListener('click', () => {
@@ -763,6 +788,10 @@ const initCarousel = () => {
   carousel.addEventListener('mouseenter', stopAutoplay);
   carousel.addEventListener('mouseleave', () => {
     if (!isDragging) startAutoplay();
+  });
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) stopAutoplay();
+    else startAutoplay();
   });
 
   let resizeId = 0;

@@ -42,7 +42,43 @@
           </div>
         </header>
         <p class="admin-message" data-admin-message aria-live="polite"></p>
-        <div class="admin-products" data-admin-products aria-live="polite"></div>
+        <section class="admin-management-section" aria-labelledby="admin-products-title">
+          <div class="admin-section-header">
+            <div>
+              <h2 id="admin-products-title">Danh sách sản phẩm</h2>
+              <p class="admin-muted">Quản lý sản phẩm đang bán trên website.</p>
+            </div>
+          </div>
+          <div class="admin-products" data-admin-products aria-live="polite"></div>
+        </section>
+
+        <section class="admin-management-section" aria-labelledby="admin-banners-title">
+          <div class="admin-section-header">
+            <div>
+              <h2 id="admin-banners-title">Quản lý ảnh banner trang chủ</h2>
+              <p class="admin-muted">Ảnh có số thứ tự thấp hơn sẽ hiển thị trước trên carousel trang chủ.</p>
+            </div>
+            <button class="btn btn--primary" type="button" data-open-banner-form>+ Thêm ảnh banner</button>
+          </div>
+          <form class="admin-banner-form" data-banner-form hidden novalidate>
+            <input type="hidden" name="bannerId" />
+            <input type="hidden" name="existingImageUrl" />
+            <input type="hidden" name="existingStoragePath" />
+            <div class="admin-form-grid">
+              <div class="admin-field"><label for="banner-title">Tiêu đề ảnh</label><input id="banner-title" name="title" placeholder="Banner khuyến mại tivi" /></div>
+              <div class="admin-field"><label for="banner-alt-text">Alt text</label><input id="banner-alt-text" name="altText" placeholder="Ảnh banner trang chủ Anh Minh Store" /></div>
+              <div class="admin-field"><label for="banner-sort-order">Thứ tự hiển thị</label><input id="banner-sort-order" name="sortOrder" type="number" value="0" /></div>
+              <div class="admin-field"><label for="banner-active">Trạng thái</label><select id="banner-active" name="isActive"><option value="true">Hiển thị</option><option value="false">Ẩn</option></select></div>
+              <div class="admin-field admin-field--full"><label for="banner-image">Upload ảnh banner</label><input id="banner-image" name="bannerImage" type="file" accept="image/jpeg,image/png,image/webp" /><small class="admin-help-text">Hỗ trợ JPG, PNG, WebP. Dung lượng tối đa khoảng 10MB.</small></div>
+            </div>
+            <p class="admin-message" data-banner-message aria-live="polite"></p>
+            <div class="admin-form-actions">
+              <button class="btn btn--secondary" type="button" data-cancel-banner-form>Huỷ</button>
+              <button class="btn btn--primary" type="submit" data-save-banner>Lưu ảnh banner</button>
+            </div>
+          </form>
+          <div class="admin-banner-list" data-admin-banners aria-live="polite"></div>
+        </section>
       </section>
     </main>
 
