@@ -652,8 +652,6 @@ const initCarousel = () => {
   const viewport = carousel.querySelector('.carousel-viewport');
   const track = carousel.querySelector('.carousel-track');
   const slides = Array.from(carousel.querySelectorAll('.carousel-slide'));
-  const prevButton = carousel.querySelector('.hero-carousel-arrow-prev');
-  const nextButton = carousel.querySelector('.hero-carousel-arrow-next');
   const dotsWrap = carousel.querySelector('.carousel-dots');
   if (!viewport || !track || !slides.length) return;
 
@@ -699,8 +697,8 @@ const initCarousel = () => {
   };
 
   const startAutoplay = () => {
-    if (reduceMotion || slides.length < 2 || autoplayId) return;
-    autoplayId = window.setInterval(() => goToSlide(currentIndex + 1), 4500);
+    if (slides.length < 2 || autoplayId || document.hidden) return;
+    autoplayId = window.setInterval(() => goToSlide(currentIndex + 1), 5000);
   };
 
   const restartAutoplay = () => {
@@ -736,18 +734,8 @@ const initCarousel = () => {
     carousel.classList.remove('is-dragging');
     document.body.classList.remove('is-dragging');
     goToSlide(currentIndex + direction, true);
-    startAutoplay();
+    if (!document.hidden) startAutoplay();
   };
-
-  prevButton?.addEventListener('click', () => {
-    goToSlide(currentIndex - 1);
-    restartAutoplay();
-  });
-
-  nextButton?.addEventListener('click', () => {
-    goToSlide(currentIndex + 1);
-    restartAutoplay();
-  });
 
   dots.forEach((dot, index) => {
     dot.addEventListener('click', () => {
@@ -762,6 +750,15 @@ const initCarousel = () => {
   viewport.addEventListener('pointercancel', endDrag);
   carousel.addEventListener('mouseenter', stopAutoplay);
   carousel.addEventListener('mouseleave', () => {
+    if (!isDragging && !document.hidden) startAutoplay();
+  });
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      stopAutoplay();
+      return;
+    }
+
     if (!isDragging) startAutoplay();
   });
 
