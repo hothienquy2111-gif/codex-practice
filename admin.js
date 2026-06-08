@@ -50,6 +50,7 @@
     const base = slugify(parts.join('.') || 'anh-minh-store') || `anh-minh-store-${Date.now()}`;
     return `${base}-${Date.now()}${extension}`;
   };
+  const getFormField = (name) => dom.form?.elements?.[name] || dom.form?.[name] || null;
   const parseLines = (value = '') => value.split('\n').map((line) => line.trim()).filter(Boolean);
   const overviewHeadingNames = [
     'Thiết kế',
@@ -73,6 +74,24 @@
     .replace(/[ \t]+\n/g, '\n')
     .replace(/\n{3,}/g, '\n\n')
     .trim();
+  const tryParseJsonArray = (value = '') => {
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) ? parsed : null;
+    } catch (error) {
+      return null;
+    }
+  };
+  const normalizeOverviewSections = (overview = []) => {
+    if (!Array.isArray(overview)) return [];
+    return overview
+      .map((section) => {
+        const title = normalizeText(section?.title || section?.heading || 'Tổng quan sản phẩm').replace(/:$/, '').trim() || 'Tổng quan sản phẩm';
+        const content = cleanOverviewContent(Array.isArray(section?.paragraphs) ? section.paragraphs : String(section?.content || '').split('\n'));
+        return { title, content };
+      })
+      .filter((section) => section.content);
+  };
   const isSentenceLikeLine = (line = '') => /[.!?…]$/.test(normalizeText(line));
   const findNextOverviewLine = (lines, startIndex) => {
     for (let index = startIndex + 1; index < lines.length; index += 1) {
@@ -94,6 +113,8 @@
   const parseOverview = (rawText = '') => {
     const text = String(rawText || '').replace(/\r\n?/g, '\n').trim();
     if (!text) return [];
+    const jsonOverview = tryParseJsonArray(text);
+    if (jsonOverview) return normalizeOverviewSections(jsonOverview);
 
     const lines = text.split('\n').map((line) => line.trim());
     const sections = [];
@@ -122,7 +143,7 @@
     });
 
     flushSection();
-    return sections;
+    return normalizeOverviewSections(sections);
   };
   const specificationGroupNames = [
     'Tổng quan',
@@ -236,12 +257,12 @@
       .join('\n\n');
   };
   const stringifyOverviewForAdmin = (overview = []) => {
-    if (typeof overview === 'string') return overview;
-    if (!Array.isArray(overview)) return '';
-    return overview
+    const sections = typeof overview === 'string' ? parseOverview(overview) : normalizeOverviewSections(overview);
+    if (!sections.length) return '';
+    return sections
       .map((section) => {
-        const title = normalizeText(section?.title || section?.heading || 'Tổng quan sản phẩm');
-        const content = normalizeText(section?.content || (Array.isArray(section?.paragraphs) ? section.paragraphs.join('\n\n') : ''));
+        const title = normalizeText(section?.title || 'Tổng quan sản phẩm');
+        const content = cleanOverviewContent(String(section?.content || '').split('\n'));
         if (!title && !content) return '';
         return [title, content].filter(Boolean).join('\n');
       })
@@ -345,22 +366,26 @@
     if (dom.specificationsCount) dom.specificationsCount.textContent = '';
   };
 
-  const updateOverviewPreview = (overview = [], { showEmpty = true } = {}) => {
+  const renderOverviewPreview = (overview = [], { showEmpty = true } = {}) => {
     if (!dom.overviewPreview || !dom.overviewCount) return;
-    dom.overviewCount.textContent = overview.length ? `Đã nhận diện ${overview.length} mục tổng quan.` : '';
+    const sections = normalizeOverviewSections(overview);
+    dom.overviewCount.textContent = sections.length ? `Đã nhận diện ${sections.length} mục tổng quan.` : '';
 
-    if (!overview.length) {
+    if (!sections.length) {
       dom.overviewPreview.hidden = !showEmpty;
       dom.overviewPreview.innerHTML = showEmpty ? '<p>Chưa có nội dung tổng quan để xem trước.</p>' : '';
       return;
     }
 
     dom.overviewPreview.hidden = false;
-    dom.overviewPreview.innerHTML = overview.map((section) => `
-      <section class="admin-overview-preview__section overview-section">
-        ${section.title ? `<h3 class="overview-section-title">${escapeHtml(section.title)}</h3>` : ''}
-        <div class="overview-section-content">${escapeHtml(section.content || '')}</div>
-      </section>`).join('');
+    dom.overviewPreview.innerHTML = `
+      <h3 class="admin-overview-preview__heading">Xem trước tổng quan</h3>
+      ${sections.map((section) => `
+      <section class="admin-overview-preview__section overview-preview-section overview-section">
+        ${section.title ? `<h4 class="overview-preview-title overview-section-title">${escapeHtml(section.title)}</h4>` : ''}
+        <div class="overview-preview-content overview-section-content">${escapeHtml(section.content || '')}</div>
+      </section>`).join('')}
+    `;
   };
 
   const clearOverviewPreview = () => {
@@ -372,12 +397,19 @@
   };
 
   const handleOverviewAction = ({ format = false } = {}) => {
-    const textarea = dom.form?.overview;
+    const textarea = getFormField('overview');
     if (!textarea) return [];
     try {
+      if (!normalizeText(textarea.value)) {
+        clearOverviewPreview();
+        showMessage(dom.formMessage, 'Vui lòng nhập nội dung tổng quan trước.', 'error');
+        textarea.focus();
+        return [];
+      }
       const overview = parseOverview(textarea.value);
+      if (!overview.length) throw new Error('Không nhận diện được tổng quan.');
       if (format) textarea.value = stringifyOverviewForAdmin(overview);
-      updateOverviewPreview(overview);
+      renderOverviewPreview(overview);
       if (format) showMessage(dom.formMessage, 'Đã tự động căn tổng quan sản phẩm.', 'success');
       return overview;
     } catch (error) {
@@ -385,6 +417,16 @@
       showMessage(dom.formMessage, 'Không thể tự động căn tổng quan. Vui lòng kiểm tra lại nội dung nhập.', 'error');
       return null;
     }
+  };
+
+  const handleAutoFormatOverview = (event) => {
+    event?.preventDefault();
+    return handleOverviewAction({ format: true });
+  };
+
+  const handlePreviewOverview = (event) => {
+    event?.preventDefault();
+    return handleOverviewAction();
   };
 
   const handleSpecificationAction = ({ format = false } = {}) => {
@@ -431,7 +473,7 @@
       form.description.value = product.description || '';
       form.features.value = Array.isArray(product.features) ? product.features.join('\n') : '';
       form.overview.value = stringifyOverviewForAdmin(product.overview || []);
-      updateOverviewPreview(parseOverview(form.overview.value), { showEmpty: false });
+      renderOverviewPreview(parseOverview(form.overview.value), { showEmpty: false });
       form.specifications.value = stringifySpecificationsForAdmin(product.specifications ?? product.specificationsText ?? []);
       updateSpecificationPreview(parseSpecifications(form.specifications.value), { showEmpty: false });
       form.isActive.value = String(Boolean(product.is_active));
@@ -504,7 +546,7 @@
   const getParsedOverviewForSave = (form) => {
     try {
       const overview = parseOverview(form.overview.value);
-      updateOverviewPreview(overview, { showEmpty: false });
+      renderOverviewPreview(overview, { showEmpty: false });
       return overview;
     } catch (error) {
       console.warn(error);
@@ -648,10 +690,11 @@
 
   dom.logoutButton?.addEventListener('click', async () => { await client?.auth.signOut(); showLoginOnly(); });
   dom.openFormButton?.addEventListener('click', () => openForm());
-  dom.formatOverviewButton?.addEventListener('click', () => handleOverviewAction({ format: true }));
-  dom.previewOverviewButton?.addEventListener('click', () => handleOverviewAction());
+  dom.formatOverviewButton?.addEventListener('click', handleAutoFormatOverview);
+  dom.previewOverviewButton?.addEventListener('click', handlePreviewOverview);
   dom.clearOverviewButton?.addEventListener('click', () => {
-    if (dom.form?.overview) dom.form.overview.value = '';
+    const textarea = getFormField('overview');
+    if (textarea) textarea.value = '';
     clearOverviewPreview();
     showMessage(dom.formMessage, 'Đã xoá tổng quan sản phẩm.', 'success');
   });

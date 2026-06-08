@@ -76,12 +76,12 @@
               <textarea id="product-overview" name="overview" rows="8" placeholder="Smart Tivi Samsung Neo QLED 4K 65 inch...&#10;&#10;Thiết kế&#10;Tivi sở hữu thiết kế hiện đại...&#10;&#10;Công nghệ hình ảnh&#10;Công nghệ Neo Quantum HDR..."></textarea>
               <small class="admin-help-text">Mẹo: Mỗi tiêu đề như Thiết kế, Công nghệ hình ảnh, Công nghệ âm thanh nên nằm trên một dòng riêng. Nội dung bên dưới sẽ tự được gom vào tiêu đề đó.</small>
               <div class="admin-overview-actions" aria-label="Công cụ tổng quan sản phẩm">
-                <button class="btn btn--primary" type="button" data-format-overview>Tự động căn tổng quan</button>
+                <button class="btn btn--primary" id="auto-format-overview" type="button" data-format-overview>Tự động căn tổng quan</button>
                 <button class="btn btn--secondary" type="button" data-preview-overview>Xem trước tổng quan</button>
                 <button class="btn btn--ghost" type="button" data-clear-overview>Xoá tổng quan</button>
               </div>
               <p class="admin-overview-count" data-overview-count aria-live="polite"></p>
-              <div class="admin-overview-preview" data-overview-preview hidden></div>
+              <div class="admin-overview-preview" data-overview-preview hidden aria-live="polite"></div>
             </div>
             <div class="admin-field admin-field--full admin-spec-field">
               <label for="product-specifications">Thông số chi tiết</label>
