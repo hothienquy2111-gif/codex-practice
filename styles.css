@@ -531,14 +531,16 @@ body.product-modal-open { overflow: hidden; }
   display: grid;
   gap: var(--space-5);
 }
+.overview-preview-section,
 .overview-section {
-  margin-bottom: 22px;
+  margin-bottom: 20px;
   min-width: 0;
 }
 .product-overview-modal .overview-section:last-child,
 .admin-overview-preview .overview-section:last-child {
   margin-bottom: 0;
 }
+.overview-preview-title,
 .overview-section-title,
 .product-specification-group h3 {
   margin: 0 0 8px;
@@ -553,6 +555,7 @@ body.product-modal-open { overflow: hidden; }
   border-left: 5px solid var(--color-primary-highlight);
   padding-left: 12px;
 }
+.overview-preview-content,
 .overview-section-content {
   color: #26364a;
   line-height: 1.75;
@@ -961,6 +964,7 @@ body.product-modal-open { overflow: hidden; }
 .admin-overview-preview p,
 .admin-spec-preview p { margin: 0; color: var(--color-gray-600); }
 .admin-overview-preview { color: var(--color-gray-700); }
+.admin-overview-preview__heading { margin: 0 0 4px; color: var(--color-primary-deep); font-size: 1rem; font-weight: 800; }
 .admin-spec-preview__group h3 { margin: 0 0 8px; color: var(--color-primary-deep); font-size: 1rem; }
 .admin-spec-preview__group dl { margin: 0; overflow: hidden; border: 1px solid var(--color-gray-200); border-radius: var(--radius-sm); background: var(--color-white); }
 .admin-spec-preview__row { display: grid; grid-template-columns: minmax(170px, 0.34fr) 1fr; gap: 12px; padding: 10px 12px; border-bottom: 1px solid var(--color-gray-200); line-height: 1.6; }

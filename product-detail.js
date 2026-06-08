@@ -91,9 +91,28 @@
       .filter((group) => group.group && group.rows.length);
   };
 
+  const normalizeOverviewSections = (overview = []) => {
+    if (!Array.isArray(overview)) return [];
+
+    return overview
+      .map((section) => ({
+        title: String(section?.title || section?.heading || 'Tổng quan sản phẩm').trim(),
+        content: String(section?.content || (Array.isArray(section?.paragraphs) ? section.paragraphs.join('\n\n') : '')).trim(),
+      }))
+      .filter((section) => section.title && section.content);
+  };
+
   const normalizeOverview = (overview) => {
-    if (Array.isArray(overview)) return overview;
-    if (typeof overview === 'string' && overview.trim()) return [{ title: 'Tổng quan sản phẩm', content: overview.trim() }];
+    if (Array.isArray(overview)) return normalizeOverviewSections(overview);
+    if (typeof overview === 'string' && overview.trim()) {
+      try {
+        const parsed = JSON.parse(overview);
+        if (Array.isArray(parsed)) return normalizeOverviewSections(parsed);
+      } catch (error) {
+        // Nội dung cũ có thể là văn bản thường, không phải JSON.
+      }
+      return [{ title: 'Tổng quan sản phẩm', content: overview.trim() }];
+    }
     return [];
   };
 
