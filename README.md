@@ -184,7 +184,32 @@ Công nghệ hình ảnh | Bộ xử lý | Bộ xử lý AI NQ4 thế hệ 2
 
 Nếu muốn xuống dòng trong một thông số, nhập mỗi ý trên một dòng dưới cùng một nhãn. Hệ thống sẽ tự lưu thành nhiều dòng bullet để modal **Thông số chi tiết** hiển thị rõ ràng.
 
-## 15. Cách sản phẩm hiện trên website
+## 15. Cách nhập Tổng quan sản phẩm nhanh trong Admin
+Không cần viết JSON hoặc HTML thủ công để phần **Tổng quan sản phẩm** hiển thị đẹp trên trang chi tiết. Trong `admin.html`, bạn có thể nhập nhanh như sau:
+
+1. Mở form thêm/sửa sản phẩm trong Admin.
+2. Dán nội dung tổng quan dạng văn bản thường vào ô **Tổng quan sản phẩm**.
+3. Đặt mỗi tiêu đề như **Thiết kế**, **Công nghệ hình ảnh**, **Công nghệ âm thanh**, **Tiện ích thông minh** trên một dòng riêng.
+4. Bấm **Tự động căn tổng quan** để hệ thống tự nhận diện tiêu đề và gom nội dung bên dưới.
+5. Bấm **Xem trước tổng quan** để kiểm tra cách hiển thị trước khi lưu.
+6. Bấm **Lưu sản phẩm**.
+7. Website sẽ tự in đậm tiêu đề, dùng màu xanh đậm và căn đoạn rõ ràng trong modal **Tổng quan sản phẩm** trên trang chi tiết.
+
+Ví dụ nhập nhanh:
+
+```text
+Smart Tivi Samsung Neo QLED 4K 65 inch QA65QN70F mang đến trải nghiệm giải trí cao cấp với màn hình Mini LED, công nghệ Neo QLED và bộ xử lý AI NQ4 thế hệ 2.
+
+Thiết kế
+Tivi sở hữu thiết kế hiện đại, viền mỏng, phù hợp với nhiều không gian phòng khách, phòng ngủ hoặc phòng giải trí gia đình.
+
+Công nghệ hình ảnh
+Công nghệ Neo Quantum HDR, Supreme UHD Dimming và 4K AI Upscaling giúp hình ảnh rõ nét, màu sắc sống động và độ tương phản tốt hơn.
+```
+
+Khi lưu sản phẩm, nội dung này được chuyển thành JSON có cấu trúc trong trường `overview`; admin vẫn chỉ cần chỉnh sửa bằng văn bản thường ở lần sửa tiếp theo.
+
+## 16. Cách sản phẩm hiện trên website
 Trang chủ tải dữ liệu theo thứ tự:
 
 1. Supabase `products` với `is_active = true`.
@@ -196,7 +221,7 @@ Trên trang chi tiết sản phẩm, khu vực dưới đặc điểm nổi bậ
 
 Thông số nhập trong admin được tự động chuyển thành JSON có cấu trúc và lưu vào trường `specifications`. Trang chi tiết sẽ nhóm các dòng theo “Nhóm”, giữ xuống dòng trong giá trị nhiều ý và hiển thị trong modal **Thông số chi tiết** trên cùng trang.
 
-## 16. Cách sửa/ẩn/xoá sản phẩm
+## 17. Cách sửa/ẩn/xoá sản phẩm
 Trong dashboard admin:
 
 - **Sửa**: mở form với dữ liệu hiện có. Ảnh cũ được giữ lại nếu không upload ảnh mới.
@@ -205,7 +230,7 @@ Trong dashboard admin:
 
 Ảnh trong Storage không bị xoá tự động. Có thể bổ sung chức năng dọn ảnh storage sau.
 
-## 17. Cách test website sau khi thêm sản phẩm
+## 18. Cách test website sau khi thêm sản phẩm
 1. Thêm sản phẩm trong `admin.html`.
 2. Mở `index.html` hoặc website GitHub Pages.
 3. Kiểm tra sản phẩm xuất hiện đúng mục Tivi mới/Tivi cũ.
@@ -214,7 +239,7 @@ Trong dashboard admin:
 6. Kiểm tra gallery, giá gạch, giá bán, đặc điểm nổi bật, modal tổng quan và modal thông số.
 7. Kiểm tra trên màn hình điện thoại, không bị tràn ngang.
 
-## 18. Cảnh báo bảo mật
+## 19. Cảnh báo bảo mật
 - **Không bao giờ expose Supabase service role key trong frontend code.**
 - **Không bao giờ lưu mật khẩu admin trong JavaScript.**
 - Chỉ dùng Supabase Auth để đăng nhập.
@@ -222,7 +247,7 @@ Trong dashboard admin:
 - Supabase anon key có thể public trên GitHub Pages, nhưng chỉ an toàn khi RLS policy đúng.
 - Admin actions phải yêu cầu user đã đăng nhập và có `profiles.role = 'admin'`.
 
-## 19. Fallback products.js nếu Supabase chưa cấu hình
+## 20. Fallback products.js nếu Supabase chưa cấu hình
 Nếu chưa có `supabase-config.js`, config sai, mất mạng hoặc Supabase query lỗi:
 
 - Trang public không crash.
@@ -230,7 +255,7 @@ Nếu chưa có `supabase-config.js`, config sai, mất mạng hoặc Supabase q
 - Trang chi tiết vẫn dùng `products.js`.
 - Người dùng không thấy lỗi kỹ thuật; console có thể có cảnh báo để debug.
 
-## 20. Pre-launch checklist
+## 21. Pre-launch checklist
 - [ ] Supabase URL/anon key configured.
 - [ ] RLS enabled.
 - [ ] Admin profile role = admin.
