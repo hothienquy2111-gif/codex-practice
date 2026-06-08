@@ -268,26 +268,31 @@ const getSectionProducts = (type, filterState) =>
   });
 
 const renderSectionProductCard = (product, sectionType) => {
+  const brand = product.brand || '';
+  const model = product.model || '';
+  const fullName = product.fullName || product.full_name || '';
+  const oldPrice = product.oldPrice || product.old_price || '';
+  const price = product.price || '';
   const isUsed = sectionType === 'used';
   const cardDataset = isUsed
-    ? `data-used-tv-card data-used-size="${escapeHtml(product.size)}" data-used-brand="${escapeHtml(product.brand)}"`
-    : `data-new-tv-card data-new-size="${escapeHtml(product.size)}" data-new-brand="${escapeHtml(product.brand)}"`;
+    ? `data-used-tv-card data-used-size="${escapeHtml(product.size)}" data-used-brand="${escapeHtml(brand)}"`
+    : `data-new-tv-card data-new-size="${escapeHtml(product.size)}" data-new-brand="${escapeHtml(brand)}"`;
   const classes = isUsed ? 'used-tv-card' : 'used-tv-card new-tv-card';
-  const oldPrice = product.oldPrice ? `<span class="product-price__old">${escapeHtml(product.oldPrice)}</span>` : '';
-  const title = product.fullName || product.model;
+  const renderedOldPrice = oldPrice ? `<span class="product-price__old">${escapeHtml(oldPrice)}</span>` : '';
+  const title = fullName || model;
 
   return `
     <article class="${classes}" ${cardDataset}>
       <span class="product-card__badge">${escapeHtml(product.badge)}</span>
       ${renderProductMedia(product, title)}
-      <div class="product-meta-row">
-        <span class="product-brand">${escapeHtml(product.brand)}</span>
-        <h3 class="product-model product-card-title">${escapeHtml(product.model)}</h3>
+      <div class="product-card-meta">
+        <span class="product-card-brand">${escapeHtml(brand)}</span>
+        <span class="product-card-model">${escapeHtml(model)}</span>
       </div>
-      <p class="product-full-name product-card-description">${escapeHtml(title)}</p>
+      <h3 class="product-card-name">${escapeHtml(title)}</h3>
       <p class="product-size">${escapeHtml(formatProductCardSize(product.size))}</p>
       <p class="product-type">${escapeHtml(product.type)}</p>
-      <strong class="product-price"><span>Giá:</span> ${oldPrice}<span class="product-price__sale">${escapeHtml(product.price)}</span></strong>
+      <strong class="product-price"><span>Giá:</span> ${renderedOldPrice}<span class="product-price__sale">${escapeHtml(price)}</span></strong>
       <a class="btn btn--primary product-card__cta" href="${createProductDetailUrl(product)}">Xem chi tiết</a>
     </article>`;
 };
@@ -495,23 +500,28 @@ const renderProductCards = () => {
 
   dom.productGrid.innerHTML = visibleProducts
     .map((product) => {
-      const label = `${product.fullName} ${product.model}`.trim();
+      const brand = product.brand || '';
+      const model = product.model || '';
+      const fullName = product.fullName || product.full_name || '';
+      const oldPrice = product.oldPrice || product.old_price || '';
+      const price = product.price || '';
+      const label = `${fullName} ${model}`.trim();
       const media = renderProductMedia(product, label);
-      const oldPrice = product.oldPrice ? `<span class="product-price__old">${escapeHtml(product.oldPrice)}</span>` : '';
+      const renderedOldPrice = oldPrice ? `<span class="product-price__old">${escapeHtml(oldPrice)}</span>` : '';
 
       return `
         <article class="product-card-wrap">
           <a class="product-card" href="${createProductDetailUrl(product)}" aria-label="Xem chi tiết ${escapeHtml(label)}">
             <span class="product-card__badge">${escapeHtml(product.badge)}</span>
             ${media}
-            <div class="product-meta-row">
-              <span class="product-brand">${escapeHtml(product.brand)}</span>
-              <h3 class="product-model product-card-title">${escapeHtml(product.model)}</h3>
+            <div class="product-card-meta">
+              <span class="product-card-brand">${escapeHtml(brand)}</span>
+              <span class="product-card-model">${escapeHtml(model)}</span>
             </div>
-            <p class="product-full-name product-card-description">${escapeHtml(product.fullName)}</p>
+            <h3 class="product-card-name">${escapeHtml(fullName || model)}</h3>
             <p class="product-size">${escapeHtml(formatProductCardSize(product.size))}</p>
             <p class="product-type">${escapeHtml(product.type)}</p>
-            <strong class="product-price"><span>Giá:</span> ${oldPrice}<span class="product-price__sale">${escapeHtml(product.price)}</span></strong>
+            <strong class="product-price"><span>Giá:</span> ${renderedOldPrice}<span class="product-price__sale">${escapeHtml(price)}</span></strong>
             <span class="btn btn--primary product-card__cta" aria-hidden="true">Xem chi tiết</span>
           </a>
         </article>`;
