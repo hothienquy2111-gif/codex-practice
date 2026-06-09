@@ -9,7 +9,7 @@ const dom = {
   productGrid: document.querySelector('[data-product-grid]'),
   featuredLoadMoreButton: document.querySelector('[data-load-more="featured"]'),
   sizeOptions: document.querySelector('.size-options'),
-  selectedSize: document.querySelector('.selected-size span'),
+  featuredSelectedSize: document.querySelector('.selected-size span'),
   searchForm: document.querySelector('.search-box'),
   searchInput: document.querySelector('#search-input'),
   backToTop: document.querySelector('.back-to-top'),
@@ -45,11 +45,11 @@ const dom = {
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const FALLBACK_PRODUCTS = Array.isArray(window.products) ? window.products : [];
 let productIds = new Set();
-let activeSize = dom.selectedSize?.textContent?.trim() === 'Tất cả' ? '' : dom.selectedSize?.textContent?.trim() || '';
+let activeSize = dom.featuredSelectedSize?.textContent?.trim() === 'Tất cả' ? '' : dom.featuredSelectedSize?.textContent?.trim() || '';
 let activeBrand = '';
 let activeType = '';
-let selectedBrand = '';
-let selectedSize = activeSize;
+let featuredSelectedBrand = '';
+let featuredSelectedSize = activeSize;
 let searchTerm = '';
 
 
@@ -226,7 +226,9 @@ const GENERAL_TV_SERIES_OPTIONS = [
   { label: 'Android TV', aliases: ['android tv'] },
   { label: 'Smart TV', aliases: ['smart tv', 'smart tivi'] },
 ];
+const FILTER_ALL_VALUE = 'all';
 const FILTER_ALL_LABEL = 'Tất cả';
+const TV_SERIES_ALL_LABEL = 'Tất cả dòng';
 const BRAND_ALL_LABEL = 'Tất cả hãng';
 const PRODUCTS_BATCH_SIZE = 12;
 const visibleCounts = {
@@ -303,7 +305,11 @@ publishProductsForChatbot();
 
 const getBrandNameFromLogo = (image) => image.alt.replace(/^Logo\s+/i, '').trim();
 const normalizeFilterValue = (value = '') => String(value).trim();
-const isAllFilter = (value = '') => normalizeFilterValue(value) === '' || normalizeFilterValue(value) === FILTER_ALL_LABEL;
+const isAllFilter = (value = '') => {
+  const normalizedValue = normalizeText(normalizeFilterValue(value));
+  return ['', FILTER_ALL_VALUE, normalizeText(FILTER_ALL_LABEL), normalizeText(BRAND_ALL_LABEL), normalizeText(TV_SERIES_ALL_LABEL)].includes(normalizedValue);
+};
+const normalizeFilterSelection = (value = '') => (isAllFilter(value) ? FILTER_ALL_VALUE : normalizeFilterValue(value));
 const normalizeBrand = (value = '') => normalizeFilterValue(value).toLowerCase();
 const getBrandInitial = (brandName = '') => normalizeFilterValue(brandName).charAt(0).toUpperCase() || 'T';
 const normalizeVietnameseText = (value = '') => String(value)
@@ -363,22 +369,22 @@ const findSeriesMatch = (text = '', options = []) => {
   return matches[0]?.label || '';
 };
 
-const detectProductSeries = (product = {}, brand = selectedBrand) => {
+const detectProductSeries = (product = {}, brand = FILTER_ALL_VALUE) => {
   const options = isAllFilter(brand) ? GENERAL_TV_SERIES_OPTIONS : getSeriesOptionsForBrand(brand);
   const explicitSeries = [product.series, product.line, product.tv_line, product.product_line].map(stringifySearchPart).find((value) => value.trim());
   if (explicitSeries) return findSeriesMatch(explicitSeries, options) || explicitSeries.trim();
   return findSeriesMatch(getProductSearchText(product), options) || 'Dòng phổ thông';
 };
 
-const productMatchesBrand = (product = {}, brand = selectedBrand) => (isAllFilter(brand) ? true : normalizeBrand(product.brand) === normalizeBrand(brand));
-const productMatchesSize = (product = {}, size = selectedSize) => (isAllFilter(size) ? true : normalizeText(product.size).includes(normalizeText(size)));
+const productMatchesBrand = (product = {}, brand = FILTER_ALL_VALUE) => (isAllFilter(brand) ? true : normalizeBrand(product.brand) === normalizeBrand(brand));
+const productMatchesSize = (product = {}, size = FILTER_ALL_VALUE) => (isAllFilter(size) ? true : normalizeText(product.size).includes(normalizeText(size)));
 const productMatchesSeries = (product = {}, series = FILTER_ALL_LABEL, brand = '') => (
   isAllFilter(series) ? true : normalizeText(detectProductSeries(product, brand)) === normalizeText(series)
 );
 
 const productMatchesGlobalFilters = (product = {}) => (
-  productMatchesBrand(product, selectedBrand)
-  && productMatchesSize(product, selectedSize)
+  productMatchesBrand(product, featuredSelectedBrand)
+  && productMatchesSize(product, featuredSelectedSize)
 );
 
 const getSectionDomConfig = (sectionKey) => {
@@ -417,7 +423,7 @@ const getSeriesCountForSection = (sectionKey, filterState, seriesLabel = '') => 
 
 const resetSeriesForSection = (sectionKey) => {
   const config = getSectionDomConfig(sectionKey);
-  if (config?.filterState) config.filterState.series = FILTER_ALL_LABEL;
+  if (config?.filterState) config.filterState.series = FILTER_ALL_VALUE;
 };
 
 const renderSeriesSelectorForSection = (sectionKey, brand) => {
@@ -431,17 +437,17 @@ const renderSeriesSelectorForSection = (sectionKey, brand) => {
   const options = getSeriesOptionsForBrand(brand);
   const optionLabels = options.map((option) => option.label);
   if (!isAllFilter(filterState.series) && !optionLabels.some((label) => normalizeText(label) === normalizeText(filterState.series))) {
-    filterState.series = FILTER_ALL_LABEL;
+    filterState.series = FILTER_ALL_VALUE;
   }
 
   const normalizedBrandLabel = normalizeFilterValue(brand);
-  const allLabel = isAllBrand ? 'Tất cả dòng' : `Tất cả dòng ${normalizedBrandLabel}`;
+  const allLabel = isAllBrand ? TV_SERIES_ALL_LABEL : `Tất cả dòng ${normalizedBrandLabel}`;
   if (config.title) config.title.textContent = isAllBrand ? 'Dòng tivi' : `Dòng tivi ${normalizedBrandLabel}`;
   if (config.status) config.status.textContent = `Đang chọn: ${isAllFilter(filterState.series) ? allLabel : filterState.series}`;
 
   const allCount = getSeriesCountForSection(sectionKey, filterState, '');
   const allActive = isAllFilter(filterState.series);
-  const allButton = `<button class="tv-series-pill${allActive ? ' is-active' : ''}" type="button" data-series="" aria-pressed="${String(allActive)}">${escapeHtml(allLabel)} <span>${allCount}</span></button>`;
+  const allButton = `<button class="tv-series-pill${allActive ? ' is-active' : ''}" type="button" data-series="all" aria-pressed="${String(allActive)}">${escapeHtml(allLabel)} <span>${allCount}</span></button>`;
   const buttons = options.map((option) => {
     const count = getSeriesCountForSection(sectionKey, filterState, option.label);
     const isActive = normalizeText(filterState.series) === normalizeText(option.label);
@@ -549,7 +555,7 @@ const renderBrandFilterRow = ({ container, sectionType }) => {
   const dataAttr = isUsed ? 'data-used-brand' : 'data-new-brand';
   const cardClass = isUsed ? 'old-tv-brand-card' : 'old-tv-brand-card new-tv-brand-card';
   const logoClass = isUsed ? 'old-tv-brand-card__logo' : 'old-tv-brand-card__logo new-tv-brand-card__logo';
-  const allCard = `<button class="${cardClass} is-active" type="button" ${dataAttr}="" aria-pressed="true">
+  const allCard = `<button class="${cardClass} is-active" type="button" ${dataAttr}="all" aria-pressed="true">
     ${createBrandLogoElement(null, logoClass)}
     <span class="old-tv-brand-card__name">Tất cả</span>
   </button>`;
@@ -595,15 +601,15 @@ dom.serviceIconImages.forEach((image) => {
 
 
 const oldTvFilters = {
-  size: FILTER_ALL_LABEL,
-  brand: FILTER_ALL_LABEL,
-  series: FILTER_ALL_LABEL,
+  brand: FILTER_ALL_VALUE,
+  series: FILTER_ALL_VALUE,
+  size: FILTER_ALL_VALUE,
 };
 
 const newTvFilters = {
-  size: FILTER_ALL_LABEL,
-  brand: FILTER_ALL_LABEL,
-  series: FILTER_ALL_LABEL,
+  brand: FILTER_ALL_VALUE,
+  series: FILTER_ALL_VALUE,
+  size: FILTER_ALL_VALUE,
 };
 
 const updatePressedState = (container, activeButton) => {
@@ -620,7 +626,7 @@ const syncSectionSizeRow = (sectionKey) => {
     : { row: dom.usedTvSizeRow, filterState: oldTvFilters, dataKey: 'usedSize' };
 
   config.row?.querySelectorAll('button[aria-pressed]').forEach((button) => {
-    const buttonSize = button.dataset[config.dataKey] || FILTER_ALL_LABEL;
+    const buttonSize = button.dataset[config.dataKey] || FILTER_ALL_VALUE;
     const isActive = (isAllFilter(buttonSize) && isAllFilter(config.filterState.size)) || normalizeText(buttonSize) === normalizeText(config.filterState.size);
     button.classList.toggle('is-active', isActive);
     button.setAttribute('aria-pressed', String(isActive));
@@ -766,13 +772,13 @@ const syncSectionBrandRows = () => {
 const applyBrandFilter = (brand = '') => {
   const nextBrand = normalizeFilterValue(brand);
   activeBrand = nextBrand;
-  selectedBrand = nextBrand;
+  featuredSelectedBrand = nextBrand;
   activeSize = '';
-  selectedSize = '';
+  featuredSelectedSize = '';
   activeType = '';
   searchTerm = '';
   if (dom.searchInput) dom.searchInput.value = '';
-  if (dom.selectedSize) dom.selectedSize.textContent = nextBrand || FILTER_ALL_LABEL;
+  if (dom.featuredSelectedSize) dom.featuredSelectedSize.textContent = nextBrand || FILTER_ALL_LABEL;
   dom.sizeOptions?.querySelectorAll('.size-pill').forEach((button) => {
     const isActive = !(button.dataset.size || '');
     button.classList.toggle('is-active', isActive);
@@ -785,7 +791,7 @@ const applyBrandFilter = (brand = '') => {
 const applySectionBrandFilter = (sectionKey, brand = '') => {
   const config = getSectionDomConfig(sectionKey);
   if (!config?.filterState) return;
-  config.filterState.brand = normalizeFilterValue(brand) || FILTER_ALL_LABEL;
+  config.filterState.brand = normalizeFilterSelection(brand);
   resetSeriesForSection(sectionKey);
   syncSectionSizeRow(sectionKey);
   syncSectionBrandRows();
@@ -795,7 +801,7 @@ const applySectionBrandFilter = (sectionKey, brand = '') => {
 const applySectionSeriesFilter = (sectionKey, series = '') => {
   const config = getSectionDomConfig(sectionKey);
   if (!config?.filterState) return;
-  config.filterState.series = normalizeFilterValue(series) || FILTER_ALL_LABEL;
+  config.filterState.series = normalizeFilterSelection(series);
   applyFiltersForSection(sectionKey);
 };
 
@@ -809,7 +815,7 @@ dom.brandList?.addEventListener('click', (event) => {
 dom.usedTvSizeRow?.addEventListener('click', (event) => {
   const button = event.target.closest('.old-tv-size-pill');
   if (!button) return;
-  oldTvFilters.size = button.dataset.usedSize || FILTER_ALL_LABEL;
+  oldTvFilters.size = normalizeFilterSelection(button.dataset.usedSize || FILTER_ALL_VALUE);
   updatePressedState(dom.usedTvSizeRow, button);
   applyFiltersForSection('oldTv');
 });
@@ -823,7 +829,7 @@ dom.usedTvBrandRow?.addEventListener('click', (event) => {
 dom.newTvSizeRow?.addEventListener('click', (event) => {
   const button = event.target.closest('.new-tv-size-pill');
   if (!button) return;
-  newTvFilters.size = button.dataset.newSize || FILTER_ALL_LABEL;
+  newTvFilters.size = normalizeFilterSelection(button.dataset.newSize || FILTER_ALL_VALUE);
   updatePressedState(dom.newTvSizeRow, button);
   applyFiltersForSection('newTv');
 });
@@ -1042,14 +1048,14 @@ dom.sizeOptions?.addEventListener('click', (event) => {
   const pill = event.target.closest('.size-pill');
   if (!pill) return;
   activeSize = pill.dataset.size || '';
-  selectedSize = activeSize;
+  featuredSelectedSize = activeSize;
   activeType = '';
   dom.sizeOptions.querySelectorAll('.size-pill').forEach((button) => {
     const isActive = button === pill;
     button.classList.toggle('is-active', isActive);
     button.setAttribute('aria-pressed', String(isActive));
   });
-  if (dom.selectedSize) dom.selectedSize.textContent = activeSize || 'Tất cả';
+  if (dom.featuredSelectedSize) dom.featuredSelectedSize.textContent = activeSize || 'Tất cả';
   applyProductFilters();
   dom.productGrid?.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'nearest' });
 });
@@ -1057,7 +1063,7 @@ dom.sizeOptions?.addEventListener('click', (event) => {
 dom.searchForm?.addEventListener('submit', (event) => {
   event.preventDefault();
   searchTerm = normalizeText(dom.searchInput?.value.trim() || '');
-  if (dom.selectedSize) dom.selectedSize.textContent = searchTerm ? `Tìm: ${dom.searchInput.value.trim()}` : (selectedSize || selectedBrand || 'Tất cả');
+  if (dom.featuredSelectedSize) dom.featuredSelectedSize.textContent = searchTerm ? `Tìm: ${dom.searchInput.value.trim()}` : (featuredSelectedSize || featuredSelectedBrand || 'Tất cả');
   applyProductFilters();
   scrollToHash('#san-pham');
 });
@@ -1068,9 +1074,9 @@ dom.productFilterLinks.forEach((link) => {
     const filterType = link.dataset.productFilter;
     const filterValue = link.dataset.filterValue || '';
     activeSize = filterType === 'size' ? filterValue : '';
-    selectedSize = activeSize;
+    featuredSelectedSize = activeSize;
     activeBrand = filterType === 'brand' ? filterValue : '';
-    selectedBrand = activeBrand;
+    featuredSelectedBrand = activeBrand;
         activeType = filterType === 'type' ? filterValue : '';
     searchTerm = '';
     if (dom.searchInput) dom.searchInput.value = '';
@@ -1085,7 +1091,7 @@ dom.productFilterLinks.forEach((link) => {
     applyProductFilters();
 
     const label = filterValue || 'Tất cả';
-    if (dom.selectedSize) dom.selectedSize.textContent = label;
+    if (dom.featuredSelectedSize) dom.featuredSelectedSize.textContent = label;
     setMenuState(false);
     scrollToHash('#san-pham');
   });
