@@ -85,7 +85,8 @@
 
 .am-chatbot-status-dot {
   position: absolute;
-  right: 4px;
+  left: 43px;
+  right: auto;
   bottom: 5px;
   width: 15px;
   height: 15px;
@@ -433,4 +434,95 @@
   .am-chatbot-button-wrap { bottom: 14px; }
   .am-chatbot-header { padding: 13px; }
   .am-chatbot-subtitle { font-size: 0.78rem; }
+}
+
+/* AM AI chatbot forced bottom-left positioning */
+.am-chatbot-root {
+  position: fixed !important;
+  left: 24px !important;
+  right: auto !important;
+  bottom: 24px !important;
+  z-index: 9999 !important;
+  pointer-events: none !important;
+}
+
+.am-chatbot-root .am-chatbot-button-wrap {
+  position: fixed !important;
+  left: 24px !important;
+  right: auto !important;
+  bottom: 24px !important;
+  z-index: 10000 !important;
+  justify-items: start !important;
+  transform: none !important;
+  pointer-events: auto !important;
+}
+
+.am-chatbot-root .am-chatbot-label {
+  display: inline-flex !important;
+  position: relative !important;
+  left: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  z-index: 10001 !important;
+  transform: none !important;
+}
+
+.am-chatbot-root .am-chatbot-button {
+  position: relative !important;
+  left: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  z-index: 10000 !important;
+}
+
+.am-chatbot-root .am-chatbot-window {
+  position: fixed !important;
+  left: 24px !important;
+  right: auto !important;
+  bottom: 110px !important;
+  width: min(400px, calc(100vw - 48px)) !important;
+  max-height: min(620px, calc(100vh - 134px)) !important;
+  transform-origin: bottom left !important;
+  z-index: 10002 !important;
+  pointer-events: none !important;
+}
+
+.am-chatbot-root .am-chatbot-window.open {
+  pointer-events: auto !important;
+}
+
+@media (max-width: 640px) {
+  .am-chatbot-root {
+    left: 14px !important;
+    right: auto !important;
+    bottom: 14px !important;
+  }
+
+  .am-chatbot-root .am-chatbot-button-wrap {
+    left: 14px !important;
+    right: auto !important;
+    bottom: 14px !important;
+  }
+
+  .am-chatbot-root .am-chatbot-label {
+    display: inline-flex !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+  }
+
+  .am-chatbot-root .am-chatbot-button {
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+  }
+
+  .am-chatbot-root .am-chatbot-window {
+    left: 14px !important;
+    right: auto !important;
+    bottom: 96px !important;
+    width: calc(100vw - 28px) !important;
+    max-width: 420px !important;
+    max-height: calc(100vh - 110px) !important;
+  }
 }
