@@ -379,7 +379,7 @@ const detectProductSeries = (product = {}, brand = FILTER_ALL_VALUE) => {
 const productMatchesBrand = (product = {}, brand = FILTER_ALL_VALUE) => (isAllFilter(brand) ? true : normalizeBrand(product.brand) === normalizeBrand(brand));
 const productMatchesSize = (product = {}, size = FILTER_ALL_VALUE) => (isAllFilter(size) ? true : normalizeText(product.size).includes(normalizeText(size)));
 const productMatchesSeries = (product = {}, series = FILTER_ALL_LABEL, brand = '') => (
-  isAllFilter(series) ? true : normalizeText(detectProductSeries(product, brand)) === normalizeText(series)
+  isAllFilter(brand) || isAllFilter(series) ? true : normalizeText(detectProductSeries(product, brand)) === normalizeText(series)
 );
 
 const productMatchesGlobalFilters = (product = {}) => (
@@ -432,16 +432,17 @@ const renderSeriesSelectorForSection = (sectionKey, brand) => {
 
   const filterState = config.filterState;
   const isAllBrand = isAllFilter(brand);
-  config.block.hidden = false;
-  config.block.classList.toggle('is-series-hidden', isAllBrand);
 
   if (isAllBrand) {
     filterState.series = FILTER_ALL_VALUE;
-    if (config.title) config.title.textContent = 'Dòng tivi';
-    if (config.status) config.status.textContent = `Đang chọn: ${TV_SERIES_ALL_LABEL}`;
     config.options.innerHTML = '';
+    config.block.hidden = true;
+    config.block.classList.add('is-series-hidden');
     return;
   }
+
+  config.block.hidden = false;
+  config.block.classList.remove('is-series-hidden');
 
   const options = getSeriesOptionsForBrand(brand);
   const optionLabels = options.map((option) => option.label);
