@@ -360,3 +360,42 @@ Banner/carousel được bảo vệ bằng khung 16:9 ổn định:
 - Logic autoplay, drag/swipe, dots, Supabase banner và banner fallback mặc định vẫn nằm trong JavaScript hiện có.
 
 Không có file ảnh, SVG hoặc binary nào cần chỉnh sửa cho bố cục này. Không đổi tên file ảnh, không đổi đường dẫn ảnh, không crop/nén/tối ưu ảnh và không thay đổi `linh vật AM.jpeg` của chatbot.
+
+## 17. AM AI tư vấn sản phẩm theo dữ liệu web
+
+AM AI hiện có chế độ tư vấn tivi thông minh chạy hoàn toàn ở frontend bằng HTML/CSS/JS thuần. Phiên bản này:
+
+- Không dùng OpenAI API.
+- Không dùng bất kỳ AI API nào.
+- Không dùng API key và không tiêu thụ token.
+- Không dùng Supabase Edge Functions.
+- Không tạo bảng SQL mới.
+- Không gọi dịch vụ chatbot hoặc search API bên ngoài.
+- Chỉ gợi ý tivi dựa trên dữ liệu sản phẩm website đã có sẵn: dữ liệu Supabase public đang được trang chủ tải, dữ liệu `products.js` dự phòng hoặc thẻ sản phẩm đã render trong DOM.
+
+Khi khách hỏi như “phòng khách 30m2 tầm 15 triệu nên mua con nào”, “có Samsung 55 inch không”, “tivi cũ giá rẻ” hoặc “xem bóng đá World Cup nên mua tivi nào”, AM AI sẽ đọc dữ liệu sản phẩm hiện có và chuẩn hoá các trường như hãng, model, tên sản phẩm, kích thước, giá, loại tivi, bảo hành, tính năng, mô tả, tổng quan và thông số. Sau đó chatbot dùng bộ luật chấm điểm nội bộ để xếp hạng sản phẩm phù hợp nhất theo nhu cầu.
+
+Bộ tư vấn có thể nhận diện các nhóm thông tin chính:
+
+- Diện tích/phòng sử dụng: phòng ngủ, phòng khách, phòng nhỏ, phòng rộng, 20m², 25m², 30m², 40m²...
+- Kích thước mong muốn: 32, 43, 49, 50, 55, 65, 75, 85 inch.
+- Ngân sách: dưới 10 triệu, tầm 12 triệu, khoảng 15tr, 10–15 triệu, 20 triệu đổ lại, giá rẻ, cao cấp.
+- Hãng: Samsung, LG, Sony, Toshiba, TCL, Panasonic, Sharp, Xiaomi, Casper, Coocaa, Skyworth, Philips, Hitachi, Hisense.
+- Loại sản phẩm: tivi mới, hàng mới, mới 100%, tivi cũ, đã qua sử dụng, second hand.
+- Mục đích dùng: xem phim, bóng đá, World Cup, chơi game, phòng ngủ, phòng khách, người lớn tuổi, YouTube, Netflix, học online, karaoke.
+- Ưu tiên chất lượng: QLED, OLED, Mini LED, 4K, Google TV, Tizen, webOS, âm thanh tốt, hình ảnh đẹp, tiết kiệm điện, bảo hành lâu.
+
+Mỗi sản phẩm được chấm điểm theo mức độ khớp hãng, loại tivi, kích thước, ngân sách, mục đích sử dụng, sản phẩm nổi bật và thông tin bảo hành. Chatbot sẽ hiển thị tối đa 3 gợi ý phù hợp nhất kèm lý do ngắn, ảnh thu nhỏ nếu có, giá bán và nút **Xem chi tiết** trỏ về `product-detail.html?id=MA_SAN_PHAM`. Nếu dữ liệu sản phẩm chưa tải kịp, AM AI sẽ trả lời an toàn và gợi ý khách bấm **Gọi ngay** hoặc **Nhắn Zalo**.
+
+Để AM AI tư vấn chính xác hơn, khi thêm/sửa sản phẩm trong Admin nên nhập đầy đủ:
+
+- `brand`
+- `model`
+- `size`
+- `price`
+- `type`
+- `features`
+- `overview`
+- `specifications`
+
+Sau này có thể bổ sung AI API thật nếu cửa hàng cần, nhưng phiên bản hiện tại là bộ gợi ý rule-based chạy local trên trình duyệt và không dùng API AI.

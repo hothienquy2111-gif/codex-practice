@@ -113,12 +113,17 @@ const normalizeProduct = (product = {}, index = 0) => {
 
 let products = [];
 
+const publishProductsForChatbot = () => {
+  window.anhMinhProducts = products;
+};
+
 const normalizeSourceProducts = (sourceProducts = []) => {
   productIds = new Set();
   return sourceProducts.map(normalizeProduct).sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
 };
 
 products = normalizeSourceProducts(FALLBACK_PRODUCTS);
+publishProductsForChatbot();
 
 const getBrandNameFromLogo = (image) => image.alt.replace(/^Logo\s+/i, '').trim();
 const normalizeFilterValue = (value = '') => String(value).trim();
@@ -736,6 +741,7 @@ const refreshPublicProductsFromSupabase = async () => {
     if (!Array.isArray(data)) return;
 
     products = normalizeSourceProducts(data);
+    publishProductsForChatbot();
     renderBrandFilterRow({ container: dom.usedTvBrandRow, sectionType: 'used' });
     renderBrandFilterRow({ container: dom.newTvBrandRow, sectionType: 'new' });
     syncBrandPanelActive();

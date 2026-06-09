@@ -204,6 +204,7 @@
   font-size: 0.94rem;
   line-height: 1.5;
   white-space: pre-line;
+  overflow-wrap: anywhere;
   box-shadow: 0 8px 20px rgba(6, 42, 86, 0.08);
 }
 
@@ -277,25 +278,78 @@
 }
 
 .am-chatbot-product-card {
-  padding: 11px;
-  border: 1px solid rgba(2, 56, 113, 0.14);
+  display: grid;
+  grid-template-columns: 74px minmax(0, 1fr);
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid rgba(142, 232, 255, 0.8);
   border-radius: 16px;
   background: #ffffff;
   box-shadow: 0 8px 20px rgba(6, 42, 86, 0.08);
 }
 
+.am-chatbot-product-thumb {
+  display: grid;
+  place-items: center;
+  width: 74px;
+  height: 62px;
+  overflow: hidden;
+  border: 1px solid rgba(1, 52, 108, 0.08);
+  border-radius: 13px;
+  background: linear-gradient(135deg, #f6fbff 0%, #eef8ff 100%);
+}
+
+.am-chatbot-product-thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.am-chatbot-product-placeholder {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 34px;
+  border: 2px solid rgba(1, 52, 108, 0.28);
+  border-radius: 8px;
+  color: var(--am-chatbot-blue);
+  font-size: 0.8rem;
+  font-weight: 900;
+}
+
+.am-chatbot-product-info {
+  min-width: 0;
+}
+
 .am-chatbot-product-card strong {
   display: block;
   color: var(--am-chatbot-blue);
-  font-size: 0.92rem;
-  line-height: 1.35;
+  font-size: 0.9rem;
+  line-height: 1.32;
 }
 
 .am-chatbot-product-card span {
   display: block;
   margin-top: 3px;
   color: #52667f;
-  font-size: 0.82rem;
+  font-size: 0.8rem;
+}
+
+.am-chatbot-product-card .am-chatbot-product-price {
+  color: var(--am-chatbot-accent);
+  font-size: 0.88rem;
+  font-weight: 900;
+}
+
+.am-chatbot-product-card p {
+  margin: 5px 0 0;
+  color: #40536a;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  white-space: normal;
 }
 
 .am-chatbot-product-card a {
@@ -304,9 +358,11 @@
   border-radius: 999px;
   background: var(--am-chatbot-accent);
   color: #ffffff;
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   font-weight: 800;
+  line-height: 1;
   padding: 7px 10px;
+  text-decoration: none;
 }
 
 .am-chatbot-typing {
@@ -420,6 +476,17 @@
 
   .am-chatbot-form {
     grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .am-chatbot-product-card {
+    grid-template-columns: 64px minmax(0, 1fr);
+    gap: 9px;
+    padding: 9px;
+  }
+
+  .am-chatbot-product-thumb {
+    width: 64px;
+    height: 56px;
   }
 
   .am-chatbot-send { padding-inline: 14px; }
