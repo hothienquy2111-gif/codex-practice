@@ -125,9 +125,20 @@
     if (typeof value === 'number' && Number.isFinite(value)) return value;
     const raw = String(value ?? '').trim();
     if (!raw) return null;
-    const normalized = normalizeVietnameseText(raw).replace(/,/g, '.');
-    const millionMatch = normalized.match(/(\d+(?:[.,]\d+)?)\s*(trieu|tr\b|m\b)/);
-    if (millionMatch) return Math.round(Number(millionMatch[1].replace(',', '.')) * 1000000);
+    const normalized = normalizeVietnameseText(raw)
+      .replace(/vnd|vnđ|dong|dồng|đồng|₫|đ/g, ' ')
+      .replace(/,/g, '.');
+    const rangeMillionMatch = normalized.match(/(\d+(?:[.]\d+)?)\s*(?:-|den|toi|–)\s*(\d+(?:[.]\d+)?)\s*(trieu|tr\b|m\b)/);
+    if (rangeMillionMatch) return Math.round(Number(rangeMillionMatch[2]) * 1000000);
+    const millionMatch = normalized.match(/(\d+(?:[.]\d+)?)\s*(trieu|tr\b|m\b)/);
+    if (millionMatch) return Math.round(Number(millionMatch[1]) * 1000000);
+
+    const compact = normalized.replace(/\s+/g, '');
+    const groupedMatch = compact.match(/\d{1,3}(?:[.]\d{3}){1,3}/);
+    if (groupedMatch) {
+      const groupedNumber = Number(groupedMatch[0].replace(/\./g, ''));
+      if (Number.isFinite(groupedNumber) && groupedNumber > 0) return groupedNumber;
+    }
 
     const digits = normalized.replace(/[^\d]/g, '');
     if (!digits) return null;
@@ -147,18 +158,18 @@
   };
 
   const normalizeProductForChatbot = (product = {}, index = 0) => {
-    const id = getProductValue(product, ['id', 'slug', 'code']);
-    const brand = String(getProductValue(product, ['brand']) || '').trim();
-    const model = String(getProductValue(product, ['model']) || '').trim();
-    const name = String(getProductValue(product, ['full_name', 'fullName', 'name', 'title']) || model || brand || 'Sản phẩm tivi').trim();
-    const size = getProductValue(product, ['size']);
-    const type = String(getProductValue(product, ['type']) || '').trim();
-    const condition = String(getProductValue(product, ['condition']) || '').trim();
+    const id = getProductValue(product, ['id', 'slug', 'code', 'product_id', 'productId', 'sku']);
+    const brand = String(getProductValue(product, ['brand', 'manufacturer', 'vendor']) || '').trim();
+    const model = String(getProductValue(product, ['model', 'model_name', 'modelName', 'sku']) || '').trim();
+    const name = String(getProductValue(product, ['full_name', 'fullName', 'name', 'title', 'product_name', 'productName']) || model || brand || 'Sản phẩm tivi').trim();
+    const size = getProductValue(product, ['size', 'screen_size', 'screenSize']);
+    const type = String(getProductValue(product, ['type', 'product_type', 'productType', 'category']) || '').trim();
+    const condition = String(getProductValue(product, ['condition', 'status']) || '').trim();
     const warranty = String(getProductValue(product, ['warranty', 'badge']) || '').trim();
-    const price = getProductValue(product, ['price', 'salePrice', 'sale_price']);
-    const oldPrice = getProductValue(product, ['old_price', 'oldPrice']);
+    const price = getProductValue(product, ['price', 'salePrice', 'sale_price', 'sellingPrice', 'selling_price', 'finalPrice', 'final_price']);
+    const oldPrice = getProductValue(product, ['old_price', 'oldPrice', 'compareAtPrice', 'compare_at_price', 'originalPrice', 'original_price']);
     const images = getProductValue(product, ['images']);
-    const image = String(getProductValue(product, ['image']) || (Array.isArray(images) ? images[0] : '') || '').trim();
+    const image = String(getProductValue(product, ['image', 'image_url', 'imageUrl', 'thumbnail', 'thumbnail_url']) || (Array.isArray(images) ? images[0] : '') || '').trim();
     const featuresText = stringifyProductInfo([
       getProductValue(product, ['features']),
       getProductValue(product, ['description']),
@@ -183,10 +194,10 @@
       detailUrl: '',
       featuresText,
       isFeatured: Boolean(product.is_featured ?? product.isFeatured ?? product.featured ?? false),
-      href: product.href || '',
+      href: product.href || product.detailUrl || product.detail_url || product.url || '',
       sourceIndex: index,
     };
-    normalizedProduct.detailUrl = product.href || createProductDetailUrl(normalizedProduct);
+    normalizedProduct.detailUrl = normalizedProduct.href || createProductDetailUrl(normalizedProduct);
     normalizedProduct.searchableText = normalizeVietnameseText([
       normalizedProduct.id,
       normalizedProduct.brand,
@@ -202,50 +213,173 @@
     return normalizedProduct;
   };
 
+  const pickText = (root, selectors = []) => {
+    for (const selector of selectors) {
+      const element = root.querySelector(selector);
+      const text = element?.textContent?.trim();
+      if (text) return text;
+      const attrText = element?.getAttribute?.('aria-label')?.trim();
+      if (attrText) return attrText;
+    }
+    return '';
+  };
+
+  const pickAttribute = (root, selectors = [], attribute = 'src') => {
+    for (const selector of selectors) {
+      const element = root.querySelector(selector);
+      const value = element?.getAttribute?.(attribute)?.trim();
+      if (value) return value;
+    }
+    return '';
+  };
+
+  const findProductIdFromHref = (href = '') => {
+    if (!href) return '';
+    try {
+      const url = new URL(href, window.location.href);
+      return url.searchParams.get('id') || '';
+    } catch (error) {
+      const match = String(href).match(/[?&]id=([^&]+)/);
+      return match ? decodeURIComponent(match[1]) : '';
+    }
+  };
+
   const readDomProductsForChatbot = () => {
     const productsFromDom = [];
-    document.querySelectorAll('.product-card, .used-tv-card, [data-product-card]').forEach((card, index) => {
-      const name = card.querySelector('.product-card-name, h3, [data-product-name]')?.textContent || '';
-      const model = card.querySelector('.product-card-model, [data-product-model]')?.textContent || '';
-      const brand = card.querySelector('.product-card-brand, [data-product-brand]')?.textContent || '';
-      const size = card.querySelector('.product-size, .product-card__size, [data-product-size]')?.textContent || '';
-      const type = card.querySelector('.product-type, .product-card__type, [data-product-type]')?.textContent || '';
-      const price = card.querySelector('.product-price__sale, .product-price, [data-product-price]')?.textContent || '';
-      const image = card.querySelector('img')?.getAttribute('src') || '';
-      const href = card.matches('a') ? card.getAttribute('href') : card.querySelector('a[href]')?.getAttribute('href');
-      if (name || model || brand || price) {
-        productsFromDom.push({ id: href?.includes('id=') ? href.replace(/^.*id=/, '') : '', fullName: name, model, brand, size, type, price, image, href });
+    const cardSelector = [
+      '.product-card',
+      '.product-card-wrap',
+      '.used-tv-card',
+      '.product-item',
+      '.product',
+      '[data-product-id]',
+      '[data-product-card]',
+      '[data-used-tv-card]',
+      '[data-new-tv-card]',
+    ].join(', ');
+
+    document.querySelectorAll(cardSelector).forEach((card, index) => {
+      if (card.closest(`#${CHATBOT_ID}`)) return;
+      const productRoot = card.matches('.product-card-wrap') ? card : card.closest('.product-card-wrap') || card;
+      const link = card.matches('a[href]') ? card : productRoot.querySelector('a[href]');
+      const href = link?.getAttribute('href') || '';
+      const name = pickText(productRoot, ['.product-card-name', '.product-title', '.product-name', 'h3', 'h2', '[data-product-name]', '[data-title]']);
+      const model = pickText(productRoot, ['.product-card-model', '.product-model', '.model', '[data-product-model]', '[data-model]']);
+      const brand = pickText(productRoot, ['.product-card-brand', '.product-brand', '.brand', '[data-product-brand]', '[data-brand]'])
+        || productRoot.getAttribute('data-used-brand')
+        || productRoot.getAttribute('data-new-brand')
+        || '';
+      const size = pickText(productRoot, ['.product-size', '.product-card__size', '.screen-size', '[data-product-size]', '[data-size]'])
+        || productRoot.getAttribute('data-used-size')
+        || productRoot.getAttribute('data-new-size')
+        || '';
+      const type = pickText(productRoot, ['.product-type', '.product-card__type', '.category', '[data-product-type]', '[data-type]']);
+      const salePrice = pickText(productRoot, ['.product-price__sale', '.sale-price', '.price-sale', '[data-product-price]', '[data-price]']);
+      const price = salePrice || pickText(productRoot, ['.product-price', '.price', '.product-card-price']);
+      const oldPrice = pickText(productRoot, ['.product-price__old', '.old-price', '.compare-price', '[data-old-price]']);
+      const image = pickAttribute(productRoot, ['img.product-card__image', 'img'], 'src') || pickAttribute(productRoot, ['img'], 'data-src');
+      const badge = pickText(productRoot, ['.product-card__badge', '.badge']);
+      const allText = productRoot.textContent?.trim() || '';
+
+      if (name || model || brand || price || allText) {
+        productsFromDom.push({
+          id: productRoot.getAttribute('data-product-id') || findProductIdFromHref(href) || `dom-product-${index}`,
+          fullName: name || allText.slice(0, 90),
+          model,
+          brand,
+          size,
+          type,
+          price,
+          oldPrice,
+          image,
+          href,
+          badge,
+          features: allText,
+        });
       }
-      if (!name && !model && !brand && card.textContent) productsFromDom.push({ id: `dom-product-${index}`, fullName: card.textContent.trim().slice(0, 90) });
     });
     return productsFromDom;
+  };
+
+  const collectProductArraysFromObject = (source, rawProducts) => {
+    if (!source || typeof source !== 'object') return;
+    [
+      'products',
+      'allProducts',
+      'loadedProducts',
+      'siteProducts',
+      'currentProducts',
+      'filteredProducts',
+      'visibleProducts',
+      'supabaseProducts',
+      'productCache',
+      'cachedProducts',
+      'items',
+    ].forEach((key) => {
+      if (Array.isArray(source[key])) rawProducts.push(...source[key]);
+    });
   };
 
   const getAvailableProductsForChatbot = () => {
     const rawProducts = [];
     try {
-      ['anhMinhProducts', 'products', 'PRODUCTS', 'allProducts', 'loadedProducts', 'supabaseProducts'].forEach((key) => {
+      [
+        'products',
+        'PRODUCTS',
+        'allProducts',
+        'loadedProducts',
+        'siteProducts',
+        'currentProducts',
+        'filteredProducts',
+        'visibleProducts',
+        'anhMinhProducts',
+        'supabaseProducts',
+        'productCache',
+        'cachedProducts',
+      ].forEach((key) => {
         if (Array.isArray(window[key])) rawProducts.push(...window[key]);
       });
-      const appStates = [window.AnhMinhStore, window.anhMinhStore, window.AnhMinhProductsState].filter(Boolean);
-      appStates.forEach((state) => {
-        ['products', 'allProducts', 'loadedProducts', 'supabaseProducts'].forEach((key) => {
-          if (Array.isArray(state[key])) rawProducts.push(...state[key]);
-        });
-      });
-      if (!rawProducts.length) rawProducts.push(...readDomProductsForChatbot());
+
+      [
+        window.AnhMinhStore,
+        window.anhMinhStore,
+        window.AnhMinhProductsState,
+        window.AnhMinhProductStore,
+        window.anhMinhProductStore,
+        window.AnhMinhSupabase,
+        window.anhMinhSupabase,
+      ].forEach((state) => collectProductArraysFromObject(state, rawProducts));
+
+      // Always include rendered cards as a safe fallback/current-page source. This lets AM AI
+      // recommend visible products even when Supabase data is loaded into a local-only variable.
+      rawProducts.push(...readDomProductsForChatbot());
     } catch (error) {
+      console.warn('[AM AI] Could not collect product data for chatbot.', error);
       return [];
     }
 
     const unique = new Map();
     rawProducts.forEach((item, index) => {
       const product = normalizeProductForChatbot(item, index);
-      if (!product.name && !product.model && !product.brand) return;
-      const key = product.id || `${product.brand}-${product.model}-${product.name}-${product.priceText}` || `product-${index}`;
-      if (!unique.has(key)) unique.set(key, product);
+      if (!product.name && !product.model && !product.brand && !product.priceText) return;
+      const key = normalizeVietnameseText(product.id || `${product.brand}-${product.model}-${product.name}-${product.priceText}` || `product-${index}`);
+      const existing = unique.get(key);
+      if (!existing) {
+        unique.set(key, product);
+        return;
+      }
+      unique.set(key, {
+        ...existing,
+        ...product,
+        priceNumber: product.priceNumber || existing.priceNumber,
+        priceText: product.priceNumber ? product.priceText : existing.priceText,
+        oldPriceText: product.oldPriceText || existing.oldPriceText,
+        image: product.image || existing.image,
+        detailUrl: product.detailUrl || existing.detailUrl,
+        searchableText: `${existing.searchableText} ${product.searchableText}`.trim(),
+      });
     });
-    return Array.from(unique.values());
+    return Array.from(unique.values()).filter((product) => product.name || product.model || product.priceNumber);
   };
 
   const getRecommendedRangeForArea = (area, roomType) => {
@@ -260,28 +394,30 @@
 
   const parseBudgetFromMessage = (message, normalizedMessage) => {
     const need = {};
+    const toMillion = (numberText) => Math.round(Number(String(numberText).replace(',', '.')) * 1000000);
     const rangeMatch = normalizedMessage.match(/(?:tu\s*)?(\d+(?:[.,]\d+)?)\s*(?:-|den|toi|–)\s*(\d+(?:[.,]\d+)?)\s*(trieu|tr\b|m\b)?/);
     if (rangeMatch) {
-      need.minBudget = Math.round(Number(rangeMatch[1].replace(',', '.')) * 1000000);
-      need.maxBudget = Math.round(Number(rangeMatch[2].replace(',', '.')) * 1000000);
+      need.minBudget = toMillion(rangeMatch[1]);
+      need.maxBudget = toMillion(rangeMatch[2]);
       need.budgetLabel = `${rangeMatch[1]}–${rangeMatch[2]} triệu`;
       return need;
     }
 
-    const belowMatch = normalizedMessage.match(/(?:duoi|khong qua|toi da|do lai)\s*(\d+(?:[.,]\d+)?)\s*(trieu|tr\b|m\b)?|(?:tam|khoang)?\s*(\d+(?:[.,]\d+)?)\s*(trieu|tr\b|m\b)?\s*(?:do lai|tro xuong)/);
+    const belowMatch = normalizedMessage.match(/(?:duoi|khong qua|toi da|duoi muc|nho hon|be hon)\s*(\d+(?:[.,]\d+)?)\s*(trieu|tr\b|m\b)?|(?:tam|khoang)?\s*(\d+(?:[.,]\d+)?)\s*(trieu|tr\b|m\b)?\s*(?:do lai|tro xuong|tro lai|quay dau)/);
     if (belowMatch) {
-      const value = Number((belowMatch[1] || belowMatch[3]).replace(',', '.'));
-      need.maxBudget = Math.round(value * 1000000);
+      const valueText = belowMatch[1] || belowMatch[3];
+      const value = Number(valueText.replace(',', '.'));
+      need.maxBudget = toMillion(valueText);
       need.budgetLabel = `dưới ${value} triệu`;
       return need;
     }
 
-    const aroundMatch = normalizedMessage.match(/(?:tam|khoang|khoan|gan)\s*(\d+(?:[.,]\d+)?)\s*(trieu|tr\b|m\b)/);
+    const aroundMatch = normalizedMessage.match(/(?:tam|khoang|khoan|gan|tam gia|budget)\s*(\d+(?:[.,]\d+)?)\s*(trieu|tr\b|m\b)/);
     if (aroundMatch) {
       const value = Number(aroundMatch[1].replace(',', '.'));
       need.targetBudget = Math.round(value * 1000000);
       need.minBudget = Math.round(value * 0.85 * 1000000);
-      need.maxBudget = Math.round(value * 1.125 * 1000000);
+      need.maxBudget = Math.round(value * 1.135 * 1000000);
       need.budgetLabel = `tầm ${value} triệu`;
       return need;
     }
@@ -372,8 +508,8 @@
   const productMatchesType = (product, type) => {
     if (!type) return false;
     const haystack = normalizeVietnameseText([product.type, product.condition, product.searchableText].join(' '));
-    if (type === 'Tivi mới') return hasAny(haystack, ['tivi moi', 'hang moi', 'moi 100%', 'chinh hang', 'moi']);
-    if (type === 'Tivi cũ') return hasAny(haystack, ['tivi cu', 'da qua su dung', 'second hand', 'cu']);
+    if (type === 'Tivi mới') return /\b(tivi moi|tv moi|hang moi|moi 100|chinh hang|moi)\b/.test(haystack);
+    if (type === 'Tivi cũ') return /\b(tivi cu|tv cu|da qua su dung|second hand|cu)\b/.test(haystack);
     return false;
   };
 
@@ -389,9 +525,13 @@
       reasons.push(`đúng hãng ${need.brand}`);
     }
 
-    if (need.type && productMatchesType(product, need.type)) {
-      score += 25;
-      reasons.push(`phù hợp nhu cầu ${need.type.toLowerCase()}`);
+    if (need.type) {
+      if (productMatchesType(product, need.type)) {
+        score += 25;
+        reasons.push(`phù hợp nhu cầu ${need.type.toLowerCase()}`);
+      } else if (product.type || product.condition) {
+        score -= 40;
+      }
     }
 
     if (need.requestedSize && size) {
@@ -413,21 +553,22 @@
       }
     }
 
-    if ((need.minBudget || need.maxBudget || need.targetBudget) && price) {
+    if ((need.minBudget || need.maxBudget || need.targetBudget || need.budgetPreference === 'cheap') && price) {
       const min = need.minBudget || 0;
       const max = need.maxBudget || need.targetBudget || Infinity;
       if (price >= min && price <= max) {
-        score += 35;
+        score += 50;
         reasons.push(`giá phù hợp ${need.budgetLabel || 'ngân sách'}`);
       } else if (Number.isFinite(max) && price > max && price <= max * 1.1) {
-        score += 20;
+        score += 35;
         reasons.push('giá chỉ nhỉnh hơn ngân sách khoảng 10%');
-      } else if (price < min || (Number.isFinite(max) && price < max)) {
-        score += 10;
+      } else if (price < min) {
+        score += 15;
         reasons.push('giá thấp hơn ngân sách dự kiến');
       } else if (Number.isFinite(max) && price > max * 1.1) {
-        score -= 30;
+        score -= 50;
       }
+      if (need.budgetPreference === 'cheap' && price <= 10000000) score += 10;
     }
 
     if (need.usage.includes('movies') || need.usage.includes('sports')) {
@@ -499,6 +640,7 @@
   };
 
   const buildRecommendationSummary = (need, hasStrongMatch) => {
+    if (need.budgetLabel && !need.brand && !need.requestedSize && !need.recommendedRange && !need.type) return `${need.budgetLabel.charAt(0).toUpperCase()}${need.budgetLabel.slice(1)} thì hiện trên web mình có vài mẫu phù hợp. Mình gợi ý bạn xem trước các mẫu này:`;
     if (need.recommendedRange) return `Dựa trên nhu cầu này, mình gợi ý ưu tiên tivi ${need.recommendedRange.label} để xem cân đối với không gian.`;
     if (need.requestedSize) return `Mình sẽ ưu tiên các mẫu ${need.requestedSize} inch đang có trong dữ liệu sản phẩm của Anh Minh Store.`;
     if (need.usage.includes('sports')) return 'Với nhu cầu xem bóng đá/World Cup, mình ưu tiên tivi màn hình lớn, 4K và có công nghệ chuyển động tốt.';
@@ -523,6 +665,9 @@
 
     const products = getAvailableProductsForChatbot();
     if (!products.length) {
+      console.debug('[AM AI] Available products for chatbot:', products);
+      console.debug('[AM AI] Parsed need:', need);
+      console.debug('[AM AI] Recommendations:', []);
       return {
         text: 'Hiện mình chưa tải được dữ liệu sản phẩm trên web. Bạn có thể thử lại sau vài giây hoặc bấm Gọi ngay/Nhắn Zalo để Anh Minh Store tư vấn nhanh hơn.',
         actions: [callAction(), zaloAction()],
@@ -537,10 +682,16 @@
     const selected = (strongMatches.length ? strongMatches : scored.filter((item) => item.score > 0)).slice(0, 3);
 
     if (!selected.length) {
+      const nearbyProducts = scored.filter((item) => item.product.priceNumber || item.product.model || item.product.name).slice(0, 3);
+      console.debug('[AM AI] Available products for chatbot:', products);
+      console.debug('[AM AI] Parsed need:', need);
+      console.debug('[AM AI] Recommendations:', nearbyProducts);
       return {
-        text: 'Mình chưa thấy mẫu nào khớp rõ với nhu cầu này trong dữ liệu hiện có. Bạn có thể cho mình thêm diện tích phòng, ngân sách và thích tivi mới hay cũ; hoặc bấm Gọi ngay/Nhắn Zalo để Anh Minh Store tư vấn chính xác hơn.',
+        text: nearbyProducts.length
+          ? 'Mình chưa thấy mẫu nào khớp thật mạnh, nhưng website đang có các mẫu gần nhất dưới đây để bạn tham khảo trước.'
+          : 'Hiện mình chưa tìm thấy sản phẩm phù hợp trong dữ liệu đang hiển thị. Bạn có thể cho mình thêm diện tích phòng, ngân sách và thích tivi mới hay cũ; hoặc bấm Gọi ngay/Nhắn Zalo để Anh Minh Store tư vấn chính xác hơn.',
         actions: [featuredAction(), callAction(), zaloAction()],
-        products: scored.slice(0, 3).map((item) => ({ ...item.product, reason: 'Mẫu gần nhất trong dữ liệu hiện có.' })),
+        products: nearbyProducts.map((item) => ({ ...item.product, reason: 'Mẫu gần nhất trong dữ liệu hiện có.' })),
       };
     }
 
@@ -608,9 +759,7 @@
   const getBotReply = (message) => {
     const normalizedMessage = normalizeText(message);
     const recommendationReply = recommendProductsForMessage(message);
-    if (recommendationReply?.products?.length || recommendationReply?.quickReplies?.length || recommendationReply?.text?.includes('chưa tải được dữ liệu')) {
-      return recommendationReply;
-    }
+    if (recommendationReply) return recommendationReply;
 
     const matchedProducts = findMatchingProducts(message);
     const likelyProductSearch = /\d{2}|qled|oled|mini led|4k|smart|model|gia|inch|inh|ua|qa|kd|tcl|sony|samsung|lg/i.test(message);
