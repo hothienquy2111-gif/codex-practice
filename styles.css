@@ -636,6 +636,23 @@ body.product-modal-open { overflow: hidden; }
 .order-modal__product p { margin: 4px 0; color: var(--color-gray-700); }
 .order-modal__price strong { color: var(--color-accent); font-size: 1.12rem; }
 .order-modal__old-price del { color: var(--color-gray-500); font-weight: 650; }
+.order-modal__notice {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid rgba(2, 91, 177, 0.14);
+  border-radius: 14px;
+  background: #eef7ff;
+  color: var(--color-primary-deep);
+  font-size: 0.94rem;
+  line-height: 1.5;
+  box-shadow: 0 10px 24px rgba(2, 56, 113, 0.06);
+}
+.order-modal__notice-icon { line-height: 1.5; }
+.order-modal__notice p { min-width: 0; margin: 0; overflow-wrap: anywhere; }
 .order-modal__fields { display: grid; gap: 12px; }
 .order-modal__field { display: grid; gap: 7px; }
 .order-modal__field label { color: var(--color-primary-deep); font-weight: 800; }
