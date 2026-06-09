@@ -15,8 +15,8 @@ const dom = {
   backToTop: document.querySelector('.back-to-top'),
   mobileCall: document.querySelector('[data-call-button]'),
   brandList: document.querySelector('[data-brand-list]'),
-  otherCategoryList: document.querySelector('[data-other-category-list]'),
-  otherCategoryMessage: document.querySelector('[data-other-category-message]'),
+  otherProductsMenus: document.querySelectorAll('[data-other-products-menu]'),
+  otherProductsToggles: document.querySelectorAll('[data-other-products-toggle]'),
   brandLogoImages: document.querySelectorAll('.brand-logo-box img'),
   serviceIconImages: document.querySelectorAll('[data-service-icon]'),
   productFilterLinks: document.querySelectorAll('[data-product-filter]'),
@@ -283,18 +283,6 @@ dom.serviceIconImages.forEach((image) => {
 
 
 
-const showOtherCategoryPlaceholder = (categoryName = '') => {
-  if (!dom.otherCategoryMessage) return;
-  const safeName = categoryName || 'Danh mục';
-  dom.otherCategoryMessage.textContent = `${safeName} đang được chuẩn bị, Anh Minh Store sẽ cập nhật sau.`;
-};
-
-dom.otherCategoryList?.addEventListener('click', (event) => {
-  const button = event.target.closest('.other-category-item');
-  if (!button) return;
-  showOtherCategoryPlaceholder(button.dataset.otherCategory || button.textContent.trim());
-});
-
 const usedTvFilter = {
   selectedSize: 'Tất cả',
   selectedBrand: 'Tất cả',
@@ -502,6 +490,41 @@ dom.newTvBrandRow?.addEventListener('click', (event) => {
 });
 
 
+
+const setOtherProductsMenuState = (menu, isOpen) => {
+  if (!menu) return;
+  menu.classList.toggle('is-open', isOpen);
+  const toggle = menu.querySelector('[data-other-products-toggle]');
+  toggle?.setAttribute('aria-expanded', String(isOpen));
+};
+
+const closeOtherProductsMenus = (exceptMenu = null) => {
+  dom.otherProductsMenus.forEach((menu) => {
+    if (menu !== exceptMenu) setOtherProductsMenuState(menu, false);
+  });
+};
+
+dom.otherProductsToggles.forEach((toggle) => {
+  toggle.addEventListener('click', (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    const menu = toggle.closest('[data-other-products-menu]');
+    const isOpen = !menu?.classList.contains('is-open');
+    closeOtherProductsMenus(menu);
+    setOtherProductsMenuState(menu, isOpen);
+  });
+});
+
+dom.otherProductsMenus.forEach((menu) => {
+  menu.addEventListener('mouseleave', () => setOtherProductsMenuState(menu, false));
+  menu.querySelectorAll('a').forEach((link) => {
+    link.addEventListener('click', () => {
+      closeOtherProductsMenus();
+      setMenuState(false);
+    });
+  });
+});
+
 const setMenuState = (isOpen) => {
   if (!dom.menuWrap || !dom.hamburger) return;
   dom.menuWrap.classList.toggle('is-open', isOpen);
@@ -550,10 +573,14 @@ dom.hashLinks.forEach((link) => link.addEventListener('click', handleNavClick));
 
 document.addEventListener('click', (event) => {
   if (dom.menuWrap && !dom.menuWrap.contains(event.target)) setMenuState(false);
+  if (!event.target.closest('[data-other-products-menu]')) closeOtherProductsMenus();
 });
 
 document.addEventListener('keydown', (event) => {
-  if (event.key === 'Escape') setMenuState(false);
+  if (event.key === 'Escape') {
+    setMenuState(false);
+    closeOtherProductsMenus();
+  }
 });
 
 dom.mobileCall?.addEventListener('click', () => {

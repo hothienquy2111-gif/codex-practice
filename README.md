@@ -399,3 +399,38 @@ Mỗi sản phẩm được chấm điểm theo mức độ khớp hãng, loại
 - `specifications`
 
 Sau này có thể bổ sung AI API thật nếu cửa hàng cần, nhưng phiên bản hiện tại là bộ gợi ý rule-based chạy local trên trình duyệt và không dùng API AI.
+
+## 22. Điều hướng “Sản phẩm khác” và bố cục hero mới
+
+Phiên bản này đã bỏ panel bên phải **“DANH MỤC KHÁC”** khỏi khu vực hero/banner trang chủ. Hero trang chủ hiện chỉ còn cột trái **“DANH MỤC HÃNG TIVI”** và vùng banner/carousel trung tâm rộng hơn, không chừa khoảng trống cho panel cũ.
+
+Thanh điều hướng trên cùng đã thêm mục **“Sản phẩm khác”** sau **“Tivi mới”** và trước **“Thu hư đổi mới”**. Trên máy tính, rê chuột hoặc bấm vào **“Sản phẩm khác”** sẽ mở dropdown; dropdown vẫn hiển thị khi trỏ chuột nằm trong vùng menu và tự đóng khi rời khỏi menu. Trên điện thoại, mục **“Sản phẩm khác”** trong menu hamburger có thể bấm để bung/thu danh sách theo chiều dọc, không gây tràn ngang.
+
+Các mục trong dropdown hiện là placeholder cho nhóm sản phẩm tương lai:
+
+- Loa
+- Điều khiển tivi
+- Giá treo tivi
+- Phụ kiện tivi
+- Dây HDMI
+- Sản phẩm gia đình
+- Dịch vụ sửa chữa
+- Thu hư đổi mới
+
+Khi bấm vào từng mục, trình duyệt mở cùng tab tới `other-products.html?category=...`. Trang `other-products.html` đọc query `category` để đổi tiêu đề danh mục và hiển thị thông báo: **“Danh mục này đang được Anh Minh Store cập nhật. Vui lòng quay lại sau hoặc liên hệ cửa hàng để được tư vấn nhanh.”** Trang có các nút **“Gọi ngay”**, **“Nhắn Zalo”** và **“Quay lại trang chủ”**.
+
+Riêng mục **“Sản phẩm gia đình”** đang là placeholder tương lai và hiển thị thêm các thẻ danh mục con:
+
+- Tivi
+- Điều hoà
+- Tủ lạnh
+- Máy giặt
+- Gia dụng khác
+
+Các danh mục này chưa nối với sản phẩm thật, chưa tạo bộ lọc thật và chưa trộn vào logic Tivi hiện tại. Phiên bản này **không cần SQL**, **không tạo bảng Supabase mới** và **không thay đổi cơ sở dữ liệu**.
+
+### Cách cập nhật dropdown “Sản phẩm khác” sau này
+
+1. Sửa các link trong header của `index.html`, `product-detail.html` và `other-products.html` nếu muốn thêm/bớt danh mục hiển thị.
+2. Nếu thêm query `category` mới, cập nhật `CATEGORY_MAP` trong `other-products.js` để trang placeholder đổi đúng tiêu đề tiếng Việt.
+3. Khi có dữ liệu thật trong tương lai, chỉ nối từng danh mục vào logic sản phẩm sau khi đã có thiết kế dữ liệu rõ ràng; không cần tạo SQL hoặc bảng mới cho placeholder hiện tại.
