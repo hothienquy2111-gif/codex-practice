@@ -229,8 +229,8 @@ window.products = [
     type: "Tivi mới",
     condition: "Mới",
     warranty: "Bảo hành 2 năm",
-    oldPrice: "",
-    price: "7.700.000đ",
+    oldPrice: "14.260.000đ",
+    price: "11.890.000đ",
     badge: "Bảo hành 2 năm",
     description: "Smart Tivi Crystal UHD Samsung 4K 43 inch UA43U8500F phù hợp cho phòng khách, phòng ngủ hoặc không gian giải trí gia đình. Thiết kế hiện đại, hình ảnh sắc nét, dễ sử dụng và được Anh Minh Store tư vấn tận tình.",
     overview: [
