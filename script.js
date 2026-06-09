@@ -1,7 +1,8 @@
 const dom = {
   menuWrap: document.querySelector('.menu-wrap'),
   hamburger: document.querySelector('.hamburger'),
-  dropdownLinks: document.querySelectorAll('[data-menu-link]'),
+  dropdownLinks: document.querySelectorAll('[data-menu-link], [data-other-product-link]'),
+  submenuToggles: document.querySelectorAll('[data-submenu-toggle]'),
   navLinks: document.querySelectorAll('.nav-link, [data-menu-link]'),
   hashLinks: document.querySelectorAll('a[href^="#"]'),
   sections: document.querySelectorAll('.section-anchor[id]'),
@@ -544,6 +545,17 @@ if (dom.hamburger) {
     setMenuState(!dom.menuWrap?.classList.contains('is-open'));
   });
 }
+
+dom.submenuToggles.forEach((toggle) => {
+  toggle.addEventListener('click', (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    const submenuItem = toggle.closest('.category-dropdown__item--submenu');
+    const willOpen = !submenuItem?.classList.contains('is-open');
+    submenuItem?.classList.toggle('is-open', willOpen);
+    toggle.setAttribute('aria-expanded', String(willOpen));
+  });
+});
 
 dom.dropdownLinks.forEach((link) => link.addEventListener('click', () => setMenuState(false)));
 dom.hashLinks.forEach((link) => link.addEventListener('click', handleNavClick));

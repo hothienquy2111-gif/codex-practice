@@ -97,6 +97,28 @@
               <li><a href="#sua-tivi" data-menu-link>Sửa tivi tất cả các dòng</a></li>
               <li><a href="#kich-thuoc" data-menu-link>Tivi theo kích thước</a></li>
               <li><a href="#hang-tivi" data-menu-link>Tivi theo hãng</a></li>
+              <li class="category-dropdown__item category-dropdown__item--submenu">
+                <button
+                  class="category-submenu-toggle"
+                  type="button"
+                  aria-expanded="false"
+                  aria-controls="mobile-other-products-menu"
+                  data-submenu-toggle
+                >
+                  <span>Sản phẩm khác</span>
+                  <span aria-hidden="true">⌄</span>
+                </button>
+                <ul class="category-submenu" id="mobile-other-products-menu" data-submenu>
+                  <li><a href="other-products.html?category=loa" data-other-product-link>Loa</a></li>
+                  <li><a href="other-products.html?category=dieu-khien-tivi" data-other-product-link>Điều khiển tivi</a></li>
+                  <li><a href="other-products.html?category=gia-treo-tivi" data-other-product-link>Giá treo tivi</a></li>
+                  <li><a href="other-products.html?category=phu-kien-tivi" data-other-product-link>Phụ kiện tivi</a></li>
+                  <li><a href="other-products.html?category=day-hdmi" data-other-product-link>Dây HDMI</a></li>
+                  <li><a href="other-products.html?category=san-pham-gia-dinh" data-other-product-link>Sản phẩm gia đình</a></li>
+                  <li><a href="other-products.html?category=dich-vu-sua-chua" data-other-product-link>Dịch vụ sửa chữa</a></li>
+                  <li><a href="other-products.html?category=thu-hu-doi-moi" data-other-product-link>Thu hư đổi mới</a></li>
+                </ul>
+              </li>
               <li><a href="#lien-he" data-menu-link>Liên hệ tư vấn</a></li>
             </ul>
           </div>
@@ -107,6 +129,19 @@
             <li><a class="nav-link" href="#san-pham" data-product-filter="type" data-filter-value="Tivi mới">Tivi mới</a></li>
             <li><a class="nav-link" href="#doi-moi">Thu hư đổi mới</a></li>
             <li><a class="nav-link" href="#sua-tivi">Sửa tivi</a></li>
+            <li class="nav-item nav-item--has-dropdown">
+              <a class="nav-link" href="other-products.html" aria-haspopup="true" aria-expanded="false">Sản phẩm khác</a>
+              <ul class="nav-dropdown" aria-label="Danh mục sản phẩm khác">
+                <li><a href="other-products.html?category=loa" data-other-product-link>Loa</a></li>
+                <li><a href="other-products.html?category=dieu-khien-tivi" data-other-product-link>Điều khiển tivi</a></li>
+                <li><a href="other-products.html?category=gia-treo-tivi" data-other-product-link>Giá treo tivi</a></li>
+                <li><a href="other-products.html?category=phu-kien-tivi" data-other-product-link>Phụ kiện tivi</a></li>
+                <li><a href="other-products.html?category=day-hdmi" data-other-product-link>Dây HDMI</a></li>
+                <li><a href="other-products.html?category=san-pham-gia-dinh" data-other-product-link>Sản phẩm gia đình</a></li>
+                <li><a href="other-products.html?category=dich-vu-sua-chua" data-other-product-link>Dịch vụ sửa chữa</a></li>
+                <li><a href="other-products.html?category=thu-hu-doi-moi" data-other-product-link>Thu hư đổi mới</a></li>
+              </ul>
+            </li>
             <li><a class="nav-link" href="#lien-he">Liên hệ</a></li>
           </ul>
         </div>
@@ -187,19 +222,6 @@
             </div>
           </div>
 
-          <aside class="other-category-panel" aria-labelledby="other-category-title">
-            <h2 id="other-category-title">DANH MỤC KHÁC</h2>
-            <ul class="other-category-list" aria-label="Danh mục khác" data-other-category-list>
-              <li><button class="other-category-item" type="button" data-other-category="Loa"><span class="other-category-icon" aria-hidden="true">🔊</span><span>Loa</span></button></li>
-              <li><button class="other-category-item" type="button" data-other-category="Điều khiển tivi"><span class="other-category-icon" aria-hidden="true">🎛️</span><span>Điều khiển tivi</span></button></li>
-              <li><button class="other-category-item" type="button" data-other-category="Giá treo tivi"><span class="other-category-icon" aria-hidden="true">🧩</span><span>Giá treo tivi</span></button></li>
-              <li><button class="other-category-item" type="button" data-other-category="Phụ kiện tivi"><span class="other-category-icon" aria-hidden="true">🔌</span><span>Phụ kiện tivi</span></button></li>
-              <li><button class="other-category-item" type="button" data-other-category="Dây HDMI"><span class="other-category-icon" aria-hidden="true">🖥️</span><span>Dây HDMI</span></button></li>
-              <li><button class="other-category-item" type="button" data-other-category="Dịch vụ sửa chữa"><span class="other-category-icon" aria-hidden="true">🛠️</span><span>Dịch vụ sửa chữa</span></button></li>
-              <li><button class="other-category-item" type="button" data-other-category="Thu hư đổi mới"><span class="other-category-icon" aria-hidden="true">🔁</span><span>Thu hư đổi mới</span></button></li>
-            </ul>
-            <p class="other-category-note" data-other-category-message aria-live="polite">Danh mục này đang được chuẩn bị.</p>
-          </aside>
         </div>
       </section>
 
