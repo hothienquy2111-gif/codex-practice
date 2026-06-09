@@ -331,10 +331,7 @@
         <form class="order-modal__form" data-order-form novalidate>
           <div class="product-modal__content order-modal__content">
             ${renderOrderProductSummary(product)}
-            <div class="order-modal__notice" role="note">
-              <span class="order-modal__notice-icon" aria-hidden="true">ℹ️</span>
-              <p>Lưu ý: Anh Minh Store sẽ liên hệ với bạn để xác nhận thông tin đơn hàng trước khi sản phẩm được giao.</p>
-            </div>
+            <div class="order-modal-note" role="note">ℹ️ Lưu ý: Anh Minh Store sẽ liên hệ với bạn để xác nhận thông tin đơn hàng trước khi sản phẩm được giao.</div>
             <div class="order-modal__fields">
               <div class="order-modal__field">
                 <label for="order-customer-name">Họ và tên <span aria-hidden="true">*</span></label>
