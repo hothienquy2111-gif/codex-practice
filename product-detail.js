@@ -297,6 +297,142 @@
     });
   };
 
+  const renderOrderProductSummary = (product) => {
+    const thumbnail = product.image
+      ? `<img src="${escapeDetailHtml(product.image)}" alt="Ảnh sản phẩm ${escapeDetailHtml(product.fullName)}" loading="lazy" decoding="async" />`
+      : renderTvPlaceholder(product.fullName);
+    const oldPrice = product.oldPrice ? `<p class="order-modal__old-price">Giá cũ: <del>${escapeDetailHtml(product.oldPrice)}</del></p>` : '';
+
+    return `
+      <div class="order-modal__summary">
+        <div class="order-modal__thumb">${thumbnail}</div>
+        <div class="order-modal__product">
+          <h3>${escapeDetailHtml(product.fullName)}</h3>
+          <p>Model: <strong>${escapeDetailHtml(product.model)}</strong></p>
+          <p class="order-modal__price">Giá bán: <strong>${escapeDetailHtml(product.price)}</strong></p>
+          ${oldPrice}
+        </div>
+      </div>`;
+  };
+
+  const openOrderModal = (product) => {
+    if (activeModal) activeModal.remove();
+
+    const titleId = `order-modal-title-${Date.now()}`;
+    const modal = document.createElement('div');
+    modal.className = 'product-modal order-modal';
+    modal.innerHTML = `
+      <div class="product-modal__backdrop" data-order-modal-close></div>
+      <section class="product-modal__card order-modal__card" role="dialog" aria-modal="true" aria-labelledby="${titleId}">
+        <header class="product-modal__header order-modal__header">
+          <h2 id="${titleId}">Đặt hàng sản phẩm</h2>
+          <button class="product-modal__close" type="button" aria-label="Đóng biểu mẫu đặt hàng" data-order-modal-close><span aria-hidden="true">×</span></button>
+        </header>
+        <form class="order-modal__form" data-order-form novalidate>
+          <div class="product-modal__content order-modal__content">
+            ${renderOrderProductSummary(product)}
+            <div class="order-modal__fields">
+              <div class="order-modal__field">
+                <label for="order-customer-name">Họ và tên <span aria-hidden="true">*</span></label>
+                <input id="order-customer-name" name="customerName" autocomplete="name" required />
+              </div>
+              <div class="order-modal__field">
+                <label for="order-customer-phone">Số điện thoại <span aria-hidden="true">*</span></label>
+                <input id="order-customer-phone" name="customerPhone" type="tel" autocomplete="tel" required />
+              </div>
+              <div class="order-modal__field">
+                <label for="order-customer-address">Địa chỉ nhận hàng</label>
+                <input id="order-customer-address" name="customerAddress" autocomplete="street-address" />
+              </div>
+              <div class="order-modal__field">
+                <label for="order-customer-note">Ghi chú thêm</label>
+                <textarea id="order-customer-note" name="customerNote" rows="3"></textarea>
+              </div>
+            </div>
+            <p class="order-modal__message" data-order-message aria-live="polite"></p>
+          </div>
+          <div class="order-modal__actions">
+            <button class="btn btn--secondary" type="button" data-order-modal-close>Huỷ</button>
+            <button class="btn btn--primary" type="submit" data-order-submit>Gửi đơn đặt hàng</button>
+          </div>
+        </form>
+      </section>`;
+
+    const closeModal = () => {
+      modal.remove();
+      document.body.classList.remove('product-modal-open');
+      document.removeEventListener('keydown', handleEscape);
+      activeModal = null;
+    };
+
+    const showOrderMessage = (text, type = '') => {
+      const message = modal.querySelector('[data-order-message]');
+      if (!message) return;
+      message.textContent = text;
+      message.className = `order-modal__message${type ? ` order-modal__message--${type}` : ''}`;
+    };
+
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') closeModal();
+    };
+
+    modal.addEventListener('click', (event) => {
+      if (event.target.closest('[data-order-modal-close]')) closeModal();
+    });
+
+    modal.querySelector('[data-order-form]')?.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const form = event.currentTarget;
+      const customerName = form.customerName.value.trim();
+      const customerPhone = form.customerPhone.value.trim();
+      if (!customerName || !customerPhone) {
+        showOrderMessage('Vui lòng nhập họ tên và số điện thoại.', 'error');
+        (customerName ? form.customerPhone : form.customerName).focus();
+        return;
+      }
+
+      const storeSupabase = window.AnhMinhSupabase || window.anhMinhSupabase;
+      const submitButton = form.querySelector('[data-order-submit]');
+      submitButton.disabled = true;
+      try {
+        if (!storeSupabase?.isConfigured || !storeSupabase.client) throw new Error('Supabase chưa sẵn sàng.');
+        const order = {
+          customer_name: customerName,
+          customer_phone: customerPhone,
+          customer_address: form.customerAddress.value.trim(),
+          customer_note: form.customerNote.value.trim(),
+          product_id: product.id,
+          product_name: product.fullName,
+          product_model: product.model,
+          product_price: product.price,
+          product_image: product.image,
+          status: 'new',
+          created_at: new Date().toISOString(),
+        };
+        const { error } = await storeSupabase.client.from('orders').insert(order);
+        if (error) throw error;
+        showOrderMessage('Đã gửi đơn đặt hàng thành công. Anh Minh Store sẽ liên hệ bạn sớm.', 'success');
+        form.reset();
+        window.setTimeout(closeModal, 1400);
+      } catch (error) {
+        console.warn('Không thể gửi đơn đặt hàng.', error);
+        showOrderMessage('Không thể gửi đơn đặt hàng. Vui lòng thử lại hoặc gọi trực tiếp cho cửa hàng.', 'error');
+      } finally {
+        submitButton.disabled = false;
+      }
+    });
+
+    document.body.appendChild(modal);
+    document.body.classList.add('product-modal-open');
+    document.addEventListener('keydown', handleEscape);
+    activeModal = modal;
+    modal.querySelector('[name="customerName"]')?.focus();
+  };
+
+  const bindOrderButton = (product) => {
+    productDetailRoot?.querySelector('[data-order-now]')?.addEventListener('click', () => openOrderModal(product));
+  };
+
   const bindProductGallery = () => {
     const gallery = productDetailRoot?.querySelector('[data-product-gallery]');
     if (!gallery) return;
@@ -385,7 +521,8 @@
         </div>
 
         <div class="product-detail__actions">
-          <a class="btn btn--primary" href="tel:0905111223" aria-label="Gọi tư vấn sản phẩm ${escapeDetailHtml(label)}">Gọi tư vấn</a>
+          <button class="btn btn--primary product-detail__order-button" type="button" data-order-now aria-label="Đặt hàng ngay sản phẩm ${escapeDetailHtml(label)}">Đặt hàng ngay</button>
+          <a class="btn btn--hotline" href="tel:0905111223" aria-label="Gọi tư vấn sản phẩm ${escapeDetailHtml(label)}">Gọi tư vấn</a>
           <a class="btn btn--zalo" href="#" aria-label="Nhắn Zalo hỏi sản phẩm ${escapeDetailHtml(label)}">Nhắn Zalo</a>
           <a class="btn btn--secondary" href="index.html#san-pham">Quay lại danh sách</a>
         </div>
@@ -393,6 +530,7 @@
 
     bindProductGallery();
     bindProductModalButtons(product);
+    bindOrderButton(product);
   };
 
   const findFallbackProduct = () => (Array.isArray(window.products) ? window.products.find((item) => item.id === productId) : null);

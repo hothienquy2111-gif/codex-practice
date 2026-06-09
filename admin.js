@@ -14,6 +14,7 @@
     loginMessage: document.querySelector('[data-login-message]'),
     adminMessage: document.querySelector('[data-admin-message]'),
     products: document.querySelector('[data-admin-products]'),
+    orders: document.querySelector('[data-admin-orders]'),
     logoutButton: document.querySelector('[data-logout-button]'),
     openFormButton: document.querySelector('[data-open-product-form]'),
     modal: document.querySelector('[data-product-modal]'),
@@ -45,6 +46,14 @@
   let productIdManuallyEdited = false;
   let banners = [];
   let editingBanner = null;
+  let orders = [];
+
+  const orderStatusLabels = {
+    new: 'Đơn mới',
+    contacted: 'Đã liên hệ',
+    completed: 'Hoàn tất',
+    cancelled: 'Đã huỷ',
+  };
 
   const escapeHtml = (value = '') => String(value).replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
   const showMessage = (node, text = '', type = '') => {
@@ -341,6 +350,73 @@
           <button type="button" class="btn btn--danger" data-delete-product="${escapeHtml(product.id)}">Xoá</button>
         </div>
       </article>`).join('');
+  };
+
+
+  const formatDateTime = (value = '') => {
+    if (!value) return 'Chưa có thời gian';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return normalizeText(value);
+    return date.toLocaleString('vi-VN', { dateStyle: 'short', timeStyle: 'short' });
+  };
+
+  const loadOrders = async () => {
+    if (!dom.orders) return;
+    try {
+      const { data, error } = await client.from('orders').select('*').order('created_at', { ascending: false });
+      if (error) throw error;
+      orders = Array.isArray(data) ? data : [];
+      renderOrders();
+    } catch (error) {
+      console.warn(error);
+      dom.orders.innerHTML = '<p class="admin-empty">Không thể tải đơn hàng. Vui lòng kiểm tra bảng orders.</p>';
+    }
+  };
+
+  const renderOrders = () => {
+    if (!dom.orders) return;
+    if (!orders.length) {
+      dom.orders.innerHTML = '<p class="admin-empty">Chưa có đơn hàng nào.</p>';
+      return;
+    }
+
+    dom.orders.innerHTML = orders.map((order) => {
+      const status = order.status || 'new';
+      const productText = [order.product_name, order.product_model].filter(Boolean).join(' · ') || 'Sản phẩm chưa cập nhật';
+      return `
+        <article class="admin-order-card" data-order-id="${escapeHtml(order.id)}">
+          <div class="admin-order-card__main">
+            <p class="admin-product-card__brand">${escapeHtml(order.customer_name || 'Khách hàng')}</p>
+            <h2>${escapeHtml(productText)}</h2>
+            <dl class="admin-order-meta">
+              <div><dt>Số điện thoại</dt><dd>${escapeHtml(order.customer_phone || 'Chưa có')}</dd></div>
+              <div><dt>Giá bán</dt><dd>${escapeHtml(order.product_price || 'Chưa cập nhật')}</dd></div>
+              <div><dt>Ghi chú</dt><dd>${escapeHtml(order.customer_note || 'Không có')}</dd></div>
+              <div><dt>Thời gian</dt><dd>${escapeHtml(formatDateTime(order.created_at))}</dd></div>
+            </dl>
+          </div>
+          <div class="admin-order-card__status">
+            <label for="order-status-${escapeHtml(order.id)}">Trạng thái</label>
+            <select id="order-status-${escapeHtml(order.id)}" data-order-status="${escapeHtml(order.id)}">
+              ${Object.entries(orderStatusLabels).map(([value, label]) => `<option value="${value}"${value === status ? ' selected' : ''}>${label}</option>`).join('')}
+            </select>
+          </div>
+        </article>`;
+    }).join('');
+  };
+
+  const updateOrderStatus = async (orderId, status) => {
+    try {
+      const { error } = await client.from('orders').update({ status }).eq('id', orderId);
+      if (error) throw error;
+      const order = orders.find((item) => String(item.id) === String(orderId));
+      if (order) order.status = status;
+      showMessage(dom.adminMessage, 'Đã cập nhật trạng thái đơn hàng.', 'success');
+    } catch (error) {
+      console.warn(error);
+      showMessage(dom.adminMessage, 'Không thể cập nhật trạng thái đơn hàng. Vui lòng thử lại.', 'error');
+      await loadOrders();
+    }
   };
 
 
@@ -832,6 +908,7 @@
       }
       showDashboard();
       await loadProducts();
+      await loadOrders();
       await loadBanners();
     } catch (error) {
       console.warn(error);
@@ -856,6 +933,7 @@
       }
       showDashboard();
       await loadProducts();
+      await loadOrders();
       await loadBanners();
     } catch (error) {
       console.warn(error);
@@ -906,6 +984,11 @@
     if (event.target.dataset.editProduct) openForm(product);
     if (event.target.dataset.toggleProduct) toggleProduct(product);
     if (event.target.dataset.deleteProduct) deleteProduct(product);
+  });
+  dom.orders?.addEventListener('change', (event) => {
+    const orderId = event.target?.dataset?.orderStatus;
+    if (!orderId) return;
+    updateOrderStatus(orderId, event.target.value);
   });
   dom.banners?.addEventListener('click', (event) => {
     const id = event.target.dataset.editBanner || event.target.dataset.toggleBanner || event.target.dataset.deleteBanner;
