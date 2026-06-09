@@ -613,6 +613,19 @@ const updatePressedState = (container, activeButton) => {
   });
 };
 
+const syncSectionSizeRow = (sectionKey) => {
+  const config = sectionKey === 'newTv'
+    ? { row: dom.newTvSizeRow, filterState: newTvFilters, dataKey: 'newSize' }
+    : { row: dom.usedTvSizeRow, filterState: oldTvFilters, dataKey: 'usedSize' };
+
+  config.row?.querySelectorAll('button[aria-pressed]').forEach((button) => {
+    const buttonSize = button.dataset[config.dataKey] || FILTER_ALL_LABEL;
+    const isActive = (isAllFilter(buttonSize) && isAllFilter(config.filterState.size)) || normalizeText(buttonSize) === normalizeText(config.filterState.size);
+    button.classList.toggle('is-active', isActive);
+    button.setAttribute('aria-pressed', String(isActive));
+  });
+};
+
 const productMatchesSearch = (product) => {
   if (!searchTerm) return true;
   return normalizeText(getProductSearchText(product)).includes(searchTerm);
@@ -773,6 +786,10 @@ const applySectionBrandFilter = (sectionKey, brand = '') => {
   if (!config?.filterState) return;
   config.filterState.brand = normalizeFilterValue(brand) || FILTER_ALL_LABEL;
   resetSeriesForSection(sectionKey);
+  if (isAllFilter(config.filterState.brand)) {
+    config.filterState.size = FILTER_ALL_LABEL;
+    syncSectionSizeRow(sectionKey);
+  }
   syncSectionBrandRows();
   applyFiltersForSection(sectionKey);
 };

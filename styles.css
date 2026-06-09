@@ -1548,3 +1548,41 @@ body.product-modal-open { overflow: hidden; }
     max-width: 100%;
   }
 }
+
+.tv-section-filter-group {
+  gap: 12px;
+  border: 1px solid rgba(2, 56, 113, 0.12);
+  border-radius: var(--radius-lg);
+  padding: 14px;
+  background: #f8fbff;
+  box-shadow: 0 10px 24px rgba(6, 42, 86, 0.06);
+}
+
+.tv-section-size-filter {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding-top: 12px;
+  border-top: 1px solid rgba(2, 56, 113, 0.12);
+}
+
+.tv-section-filter-group .old-tv-size-row,
+.tv-section-filter-group .tv-series-options {
+  max-width: 100%;
+}
+
+@media (max-width: 760px) {
+  .tv-section-filter-group {
+    padding: 12px;
+  }
+
+  .tv-section-filter-group .old-tv-size-row,
+  .tv-section-filter-group .tv-series-options {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-inline: contain;
+    padding: 2px 2px 9px;
+    scrollbar-width: thin;
+  }
+}
