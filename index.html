@@ -225,15 +225,6 @@
         </div>
       </section>
 
-      <section class="tv-series-filter" aria-labelledby="tv-series-title" data-tv-series-section>
-        <div class="container tv-series-filter__inner">
-          <div class="tv-series-filter__heading">
-            <h2 id="tv-series-title" data-tv-series-title>Dòng tivi</h2>
-            <p data-tv-series-status>Chọn hãng để xem các dòng tivi phù hợp.</p>
-          </div>
-          <div class="tv-series-options" role="group" aria-label="Chọn dòng tivi" data-tv-series-options></div>
-        </div>
-      </section>
 
       <section class="size-filter section-anchor" id="kich-thuoc" aria-labelledby="size-title">
         <div class="container size-filter__inner">
@@ -340,6 +331,14 @@
             </div>
           </div>
 
+          <div class="old-tv-filter-block tv-series-filter tv-series-filter--section" aria-labelledby="old-tv-series-title" data-old-tv-series-block hidden>
+            <div class="tv-series-filter__heading">
+              <p class="old-tv-filter-label" id="old-tv-series-title" data-old-tv-series-title>Chọn dòng tivi cũ</p>
+              <p data-old-tv-series-status>Chọn hãng để xem các dòng tivi phù hợp.</p>
+            </div>
+            <div class="tv-series-options" role="group" aria-label="Chọn dòng tivi cũ" data-old-tv-series-options></div>
+          </div>
+
           <p class="section-product-count" data-used-tv-count aria-live="polite">Đang hiển thị: 0 sản phẩm</p>
           <div class="used-tv-grid" data-used-tv-grid aria-live="polite">
             <p class="empty-state used-tv-empty" data-used-tv-empty hidden>Chưa có sản phẩm phù hợp. Vui lòng chọn bộ lọc khác hoặc liên hệ Anh Minh Store.</p>
@@ -375,6 +374,14 @@
             <p class="old-tv-filter-label" id="new-tv-brand-label">Chọn hãng tivi mới</p>
             <div class="old-tv-brand-row new-tv-brand-row" role="group" aria-label="Chọn hãng tivi mới" data-new-tv-brand-row>
             </div>
+          </div>
+
+          <div class="old-tv-filter-block new-tv-filter-block tv-series-filter tv-series-filter--section" aria-labelledby="new-tv-series-title" data-new-tv-series-block hidden>
+            <div class="tv-series-filter__heading">
+              <p class="old-tv-filter-label" id="new-tv-series-title" data-new-tv-series-title>Chọn dòng tivi mới</p>
+              <p data-new-tv-series-status>Chọn hãng để xem các dòng tivi phù hợp.</p>
+            </div>
+            <div class="tv-series-options" role="group" aria-label="Chọn dòng tivi mới" data-new-tv-series-options></div>
           </div>
 
           <p class="section-product-count" data-new-tv-count aria-live="polite">Đang hiển thị: 0 sản phẩm</p>

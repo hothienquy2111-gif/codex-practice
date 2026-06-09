@@ -15,9 +15,14 @@ const dom = {
   backToTop: document.querySelector('.back-to-top'),
   mobileCall: document.querySelector('[data-call-button]'),
   brandList: document.querySelector('[data-brand-list]'),
-  tvSeriesOptions: document.querySelector('[data-tv-series-options]'),
-  tvSeriesTitle: document.querySelector('[data-tv-series-title]'),
-  tvSeriesStatus: document.querySelector('[data-tv-series-status]'),
+  oldTvSeriesBlock: document.querySelector('[data-old-tv-series-block]'),
+  oldTvSeriesOptions: document.querySelector('[data-old-tv-series-options]'),
+  oldTvSeriesTitle: document.querySelector('[data-old-tv-series-title]'),
+  oldTvSeriesStatus: document.querySelector('[data-old-tv-series-status]'),
+  newTvSeriesBlock: document.querySelector('[data-new-tv-series-block]'),
+  newTvSeriesOptions: document.querySelector('[data-new-tv-series-options]'),
+  newTvSeriesTitle: document.querySelector('[data-new-tv-series-title]'),
+  newTvSeriesStatus: document.querySelector('[data-new-tv-series-status]'),
   otherProductsMenus: document.querySelectorAll('[data-other-products-menu]'),
   otherProductsToggles: document.querySelectorAll('[data-other-products-toggle]'),
   brandLogoImages: document.querySelectorAll('.brand-logo-box img'),
@@ -44,7 +49,6 @@ let activeSize = dom.selectedSize?.textContent?.trim() === 'Tất cả' ? '' : d
 let activeBrand = '';
 let activeType = '';
 let selectedBrand = '';
-let selectedSeries = '';
 let selectedSize = activeSize;
 let searchTerm = '';
 
@@ -362,50 +366,88 @@ const detectProductSeries = (product = {}, brand = selectedBrand) => {
 
 const productMatchesBrand = (product = {}, brand = selectedBrand) => (isAllFilter(brand) ? true : normalizeBrand(product.brand) === normalizeBrand(brand));
 const productMatchesSize = (product = {}, size = selectedSize) => (isAllFilter(size) ? true : normalizeText(product.size).includes(normalizeText(size)));
-const productMatchesSeries = (product = {}, series = selectedSeries, brand = selectedBrand) => (
+const productMatchesSeries = (product = {}, series = FILTER_ALL_LABEL, brand = '') => (
   isAllFilter(series) ? true : normalizeText(detectProductSeries(product, brand)) === normalizeText(series)
 );
 
 const productMatchesGlobalFilters = (product = {}) => (
   productMatchesBrand(product, selectedBrand)
   && productMatchesSize(product, selectedSize)
-  && productMatchesSeries(product, selectedSeries, selectedBrand)
 );
 
-const getSeriesCount = (seriesLabel = '', brand = selectedBrand) => products.filter((product) => (
-  productMatchesBrand(product, brand)
-  && productMatchesSize(product, selectedSize)
-  && (seriesLabel ? productMatchesSeries(product, seriesLabel, brand) : true)
-)).length;
+const getSectionDomConfig = (sectionKey) => {
+  if (sectionKey === 'newTv') {
+    return {
+      block: dom.newTvSeriesBlock,
+      options: dom.newTvSeriesOptions,
+      title: dom.newTvSeriesTitle,
+      status: dom.newTvSeriesStatus,
+      filterState: newTvFilters,
+      titlePrefix: 'Chọn dòng tivi mới',
+    };
+  }
+  if (sectionKey === 'oldTv') {
+    return {
+      block: dom.oldTvSeriesBlock,
+      options: dom.oldTvSeriesOptions,
+      title: dom.oldTvSeriesTitle,
+      status: dom.oldTvSeriesStatus,
+      filterState: oldTvFilters,
+      titlePrefix: 'Chọn dòng tivi cũ',
+    };
+  }
+  return null;
+};
 
-const renderTvSeriesSelector = (brand = selectedBrand) => {
-  if (!dom.tvSeriesOptions) return;
+const getSeriesCountForSection = (sectionKey, filterState, seriesLabel = '') => {
+  const sectionProducts = sectionKey === 'newTv' ? getNewTvProducts(products) : getOldTvProducts(products);
+  return sectionProducts.filter((product) => (
+    productMatchesBrand(product, filterState.brand)
+    && productMatchesSize(product, filterState.size)
+    && (seriesLabel ? productMatchesSeries(product, seriesLabel, filterState.brand) : true)
+    && productMatchesSearch(product)
+  )).length;
+};
+
+const resetSeriesForSection = (sectionKey) => {
+  const config = getSectionDomConfig(sectionKey);
+  if (config?.filterState) config.filterState.series = FILTER_ALL_LABEL;
+};
+
+const renderSeriesSelectorForSection = (sectionKey, brand) => {
+  const config = getSectionDomConfig(sectionKey);
+  if (!config?.block || !config.options) return;
+
+  const filterState = config.filterState;
   const hasBrand = !isAllFilter(brand);
-  const title = hasBrand ? `Dòng tivi ${brand}` : 'Dòng tivi';
-  const allLabel = hasBrand ? `Tất cả dòng ${brand}` : 'Tất cả dòng';
+  config.block.hidden = !hasBrand;
+  if (!hasBrand) {
+    config.options.innerHTML = '';
+    if (config.title) config.title.textContent = config.titlePrefix;
+    if (config.status) config.status.textContent = 'Chọn hãng để xem các dòng tivi phù hợp.';
+    return;
+  }
+
   const options = getSeriesOptionsForBrand(brand);
   const optionLabels = options.map((option) => option.label);
-
-  if (selectedSeries && !optionLabels.some((label) => normalizeText(label) === normalizeText(selectedSeries))) {
-    selectedSeries = '';
+  if (!isAllFilter(filterState.series) && !optionLabels.some((label) => normalizeText(label) === normalizeText(filterState.series))) {
+    filterState.series = FILTER_ALL_LABEL;
   }
 
-  if (dom.tvSeriesTitle) dom.tvSeriesTitle.textContent = title;
-  if (dom.tvSeriesStatus) {
-    dom.tvSeriesStatus.textContent = hasBrand
-      ? `Đang chọn: ${selectedSeries || allLabel}`
-      : 'Chọn dòng phổ biến hoặc chọn hãng để xem dòng tivi chi tiết hơn.';
-  }
+  const allLabel = `Tất cả dòng ${brand}`;
+  if (config.title) config.title.textContent = `Dòng tivi ${brand}`;
+  if (config.status) config.status.textContent = `Đang chọn: ${isAllFilter(filterState.series) ? allLabel : filterState.series}`;
 
-  const allCount = getSeriesCount('', brand);
-  const allButton = `<button class="tv-series-pill${selectedSeries ? '' : ' is-active'}" type="button" data-series="" aria-pressed="${selectedSeries ? 'false' : 'true'}">${escapeHtml(allLabel)} <span>${allCount}</span></button>`;
+  const allCount = getSeriesCountForSection(sectionKey, filterState, '');
+  const allActive = isAllFilter(filterState.series);
+  const allButton = `<button class="tv-series-pill${allActive ? ' is-active' : ''}" type="button" data-series="" aria-pressed="${String(allActive)}">${escapeHtml(allLabel)} <span>${allCount}</span></button>`;
   const buttons = options.map((option) => {
-    const count = getSeriesCount(option.label, brand);
-    const isActive = normalizeText(selectedSeries) === normalizeText(option.label);
+    const count = getSeriesCountForSection(sectionKey, filterState, option.label);
+    const isActive = normalizeText(filterState.series) === normalizeText(option.label);
     return `<button class="tv-series-pill${isActive ? ' is-active' : ''}" type="button" data-series="${escapeHtml(option.label)}" aria-pressed="${String(isActive)}"${count ? '' : ' disabled'}>${escapeHtml(option.label)} <span>${count}</span></button>`;
   }).join('');
 
-  dom.tvSeriesOptions.innerHTML = `${allButton}${buttons}`;
+  config.options.innerHTML = `${allButton}${buttons}`;
 };
 
 const normalizeProductType = (product = {}) => {
@@ -551,14 +593,16 @@ dom.serviceIconImages.forEach((image) => {
 
 
 
-const usedTvFilter = {
-  selectedSize: 'Tất cả',
-  selectedBrand: 'Tất cả',
+const oldTvFilters = {
+  size: FILTER_ALL_LABEL,
+  brand: FILTER_ALL_LABEL,
+  series: FILTER_ALL_LABEL,
 };
 
-const newTvFilter = {
-  selectedSize: 'Tất cả',
-  selectedBrand: 'Tất cả',
+const newTvFilters = {
+  size: FILTER_ALL_LABEL,
+  brand: FILTER_ALL_LABEL,
+  series: FILTER_ALL_LABEL,
 };
 
 const updatePressedState = (container, activeButton) => {
@@ -575,9 +619,10 @@ const productMatchesSearch = (product) => {
 };
 
 const productMatchesSectionFilter = (product, filterState) => {
-  const matchesSectionSize = isAllFilter(filterState.selectedSize) ? true : normalizeText(product.size).includes(normalizeText(filterState.selectedSize));
-  const matchesSectionBrand = isAllFilter(filterState.selectedBrand) ? true : normalizeBrand(product.brand) === normalizeBrand(filterState.selectedBrand);
-  return matchesSectionSize && matchesSectionBrand && productMatchesGlobalFilters(product) && productMatchesSearch(product);
+  const matchesSectionSize = productMatchesSize(product, filterState.size);
+  const matchesSectionBrand = productMatchesBrand(product, filterState.brand);
+  const matchesSectionSeries = productMatchesSeries(product, filterState.series, filterState.brand);
+  return matchesSectionSize && matchesSectionBrand && matchesSectionSeries && productMatchesSearch(product);
 };
 
 const getSectionProducts = (sectionKey, filterState = {}) => {
@@ -684,17 +729,21 @@ const renderTvSection = ({ grid, empty, count, sectionKey, filterState, sectionT
   bindProductImageFallbacks(grid);
 };
 
-const renderUsedTvSection = () => renderTvSection({ grid: dom.usedTvGrid, empty: dom.usedTvEmpty, count: dom.usedTvCount, sectionKey: 'oldTv', filterState: usedTvFilter, sectionType: 'used', loadMoreButton: dom.usedTvLoadMoreButton });
-const renderNewTvSection = () => renderTvSection({ grid: dom.newTvGrid, empty: dom.newTvEmpty, count: dom.newTvCount, sectionKey: 'newTv', filterState: newTvFilter, sectionType: 'new', loadMoreButton: dom.newTvLoadMoreButton });
+const renderUsedTvSection = () => renderTvSection({ grid: dom.usedTvGrid, empty: dom.usedTvEmpty, count: dom.usedTvCount, sectionKey: 'oldTv', filterState: oldTvFilters, sectionType: 'used', loadMoreButton: dom.usedTvLoadMoreButton });
+const renderNewTvSection = () => renderTvSection({ grid: dom.newTvGrid, empty: dom.newTvEmpty, count: dom.newTvCount, sectionKey: 'newTv', filterState: newTvFilters, sectionType: 'new', loadMoreButton: dom.newTvLoadMoreButton });
 
 const syncSectionBrandRows = () => {
   dom.usedTvBrandRow?.querySelectorAll('.old-tv-brand-card').forEach((button) => {
-    const isActive = normalizeBrand(button.dataset.usedBrand || '') === normalizeBrand(usedTvFilter.selectedBrand || '');
+    const buttonBrand = button.dataset.usedBrand || '';
+    const currentBrand = oldTvFilters.brand || '';
+    const isActive = (isAllFilter(buttonBrand) && isAllFilter(currentBrand)) || normalizeBrand(buttonBrand) === normalizeBrand(currentBrand);
     button.classList.toggle('is-active', isActive);
     button.setAttribute('aria-pressed', String(isActive));
   });
   dom.newTvBrandRow?.querySelectorAll('.new-tv-brand-card').forEach((button) => {
-    const isActive = normalizeBrand(button.dataset.newBrand || '') === normalizeBrand(newTvFilter.selectedBrand || '');
+    const buttonBrand = button.dataset.newBrand || '';
+    const currentBrand = newTvFilters.brand || '';
+    const isActive = (isAllFilter(buttonBrand) && isAllFilter(currentBrand)) || normalizeBrand(buttonBrand) === normalizeBrand(currentBrand);
     button.classList.toggle('is-active', isActive);
     button.setAttribute('aria-pressed', String(isActive));
   });
@@ -706,11 +755,8 @@ const applyBrandFilter = (brand = '') => {
   selectedBrand = nextBrand;
   activeSize = '';
   selectedSize = '';
-  selectedSeries = '';
   activeType = '';
   searchTerm = '';
-  usedTvFilter.selectedBrand = nextBrand || FILTER_ALL_LABEL;
-  newTvFilter.selectedBrand = nextBrand || FILTER_ALL_LABEL;
   if (dom.searchInput) dom.searchInput.value = '';
   if (dom.selectedSize) dom.selectedSize.textContent = nextBrand || FILTER_ALL_LABEL;
   dom.sizeOptions?.querySelectorAll('.size-pill').forEach((button) => {
@@ -719,8 +765,23 @@ const applyBrandFilter = (brand = '') => {
     button.setAttribute('aria-pressed', String(isActive));
   });
   syncBrandPanelActive();
+  applyProductFilters({ resetSections: ['featured'] });
+};
+
+const applySectionBrandFilter = (sectionKey, brand = '') => {
+  const config = getSectionDomConfig(sectionKey);
+  if (!config?.filterState) return;
+  config.filterState.brand = normalizeFilterValue(brand) || FILTER_ALL_LABEL;
+  resetSeriesForSection(sectionKey);
   syncSectionBrandRows();
-  applyProductFilters();
+  applyFiltersForSection(sectionKey);
+};
+
+const applySectionSeriesFilter = (sectionKey, series = '') => {
+  const config = getSectionDomConfig(sectionKey);
+  if (!config?.filterState) return;
+  config.filterState.series = normalizeFilterValue(series) || FILTER_ALL_LABEL;
+  applyFiltersForSection(sectionKey);
 };
 
 dom.brandList?.addEventListener('click', (event) => {
@@ -733,31 +794,41 @@ dom.brandList?.addEventListener('click', (event) => {
 dom.usedTvSizeRow?.addEventListener('click', (event) => {
   const button = event.target.closest('.old-tv-size-pill');
   if (!button) return;
-  usedTvFilter.selectedSize = button.dataset.usedSize || FILTER_ALL_LABEL;
+  oldTvFilters.size = button.dataset.usedSize || FILTER_ALL_LABEL;
   updatePressedState(dom.usedTvSizeRow, button);
-  resetVisibleCount('oldTv');
-  renderUsedTvSection();
+  applyFiltersForSection('oldTv');
 });
 
 dom.usedTvBrandRow?.addEventListener('click', (event) => {
   const button = event.target.closest('.old-tv-brand-card');
   if (!button) return;
-  applyBrandFilter(button.dataset.usedBrand || '');
+  applySectionBrandFilter('oldTv', button.dataset.usedBrand || '');
 });
 
 dom.newTvSizeRow?.addEventListener('click', (event) => {
   const button = event.target.closest('.new-tv-size-pill');
   if (!button) return;
-  newTvFilter.selectedSize = button.dataset.newSize || FILTER_ALL_LABEL;
+  newTvFilters.size = button.dataset.newSize || FILTER_ALL_LABEL;
   updatePressedState(dom.newTvSizeRow, button);
-  resetVisibleCount('newTv');
-  renderNewTvSection();
+  applyFiltersForSection('newTv');
 });
 
 dom.newTvBrandRow?.addEventListener('click', (event) => {
   const button = event.target.closest('.new-tv-brand-card');
   if (!button) return;
-  applyBrandFilter(button.dataset.newBrand || '');
+  applySectionBrandFilter('newTv', button.dataset.newBrand || '');
+});
+
+dom.oldTvSeriesOptions?.addEventListener('click', (event) => {
+  const pill = event.target.closest('.tv-series-pill');
+  if (!pill || pill.disabled) return;
+  applySectionSeriesFilter('oldTv', pill.dataset.series || '');
+});
+
+dom.newTvSeriesOptions?.addEventListener('click', (event) => {
+  const pill = event.target.closest('.tv-series-pill');
+  if (!pill || pill.disabled) return;
+  applySectionSeriesFilter('newTv', pill.dataset.series || '');
 });
 
 
@@ -926,7 +997,8 @@ const showMoreProducts = (sectionKey) => {
 
 const applyFiltersAndRender = ({ resetSections = ['featured', 'newTv', 'oldTv'] } = {}) => {
   resetSections.forEach(resetVisibleCount);
-  renderTvSeriesSelector(selectedBrand);
+  renderSeriesSelectorForSection('oldTv', oldTvFilters.brand);
+  renderSeriesSelectorForSection('newTv', newTvFilters.brand);
   renderProductCards();
   renderUsedTvSection();
   renderNewTvSection();
@@ -934,18 +1006,22 @@ const applyFiltersAndRender = ({ resetSections = ['featured', 'newTv', 'oldTv'] 
 
 const applyProductFilters = (options = {}) => applyFiltersAndRender(options);
 
+const applyFiltersForSection = (sectionKey) => {
+  resetVisibleCount(sectionKey);
+  if (sectionKey === 'oldTv') {
+    renderSeriesSelectorForSection('oldTv', oldTvFilters.brand);
+    renderUsedTvSection();
+  }
+  if (sectionKey === 'newTv') {
+    renderSeriesSelectorForSection('newTv', newTvFilters.brand);
+    renderNewTvSection();
+  }
+};
+
 renderBrandPanel();
 renderBrandFilterRow({ container: dom.usedTvBrandRow, sectionType: 'used' });
 renderBrandFilterRow({ container: dom.newTvBrandRow, sectionType: 'new' });
 applyFiltersAndRender();
-
-dom.tvSeriesOptions?.addEventListener('click', (event) => {
-  const pill = event.target.closest('.tv-series-pill');
-  if (!pill || pill.disabled) return;
-  selectedSeries = pill.dataset.series || '';
-  applyProductFilters();
-  dom.productGrid?.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'nearest' });
-});
 
 dom.sizeOptions?.addEventListener('click', (event) => {
   const pill = event.target.closest('.size-pill');
@@ -980,8 +1056,7 @@ dom.productFilterLinks.forEach((link) => {
     selectedSize = activeSize;
     activeBrand = filterType === 'brand' ? filterValue : '';
     selectedBrand = activeBrand;
-    selectedSeries = '';
-    activeType = filterType === 'type' ? filterValue : '';
+        activeType = filterType === 'type' ? filterValue : '';
     searchTerm = '';
     if (dom.searchInput) dom.searchInput.value = '';
 
@@ -991,10 +1066,7 @@ dom.productFilterLinks.forEach((link) => {
       button.setAttribute('aria-pressed', String(isActive));
     });
 
-    usedTvFilter.selectedBrand = filterType === 'brand' ? filterValue || FILTER_ALL_LABEL : FILTER_ALL_LABEL;
-    newTvFilter.selectedBrand = filterType === 'brand' ? filterValue || FILTER_ALL_LABEL : FILTER_ALL_LABEL;
     syncBrandPanelActive();
-    syncSectionBrandRows();
     applyProductFilters();
 
     const label = filterValue || 'Tất cả';
