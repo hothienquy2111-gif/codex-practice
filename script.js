@@ -213,12 +213,18 @@ const TV_SERIES_BY_BRAND = {
 };
 
 const GENERAL_TV_SERIES_OPTIONS = [
+  { label: 'Crystal UHD', aliases: ['crystal uhd', 'crystal', 'crystal 4k'] },
   { label: 'QLED', aliases: ['qled', 'quantum dot'] },
+  { label: 'Neo QLED', aliases: ['neo qled', 'neo quantum'] },
   { label: 'OLED', aliases: ['oled'] },
-  { label: 'Mini LED', aliases: ['mini led', 'neo qled', 'uled mini led'] },
+  { label: 'Mini LED', aliases: ['mini led', 'uled mini led'] },
+  { label: 'QNED', aliases: ['qned'] },
+  { label: 'NanoCell', aliases: ['nanocell', 'nano cell', 'nano'] },
+  { label: 'LED', aliases: ['led'] },
   { label: 'UHD / 4K UHD', aliases: ['uhd', '4k uhd', 'ultra hd'] },
   { label: 'Google TV', aliases: ['google tv'] },
   { label: 'Android TV', aliases: ['android tv'] },
+  { label: 'Smart TV', aliases: ['smart tv', 'smart tivi'] },
 ];
 const FILTER_ALL_LABEL = 'Tất cả';
 const BRAND_ALL_LABEL = 'Tất cả hãng';
@@ -419,14 +425,8 @@ const renderSeriesSelectorForSection = (sectionKey, brand) => {
   if (!config?.block || !config.options) return;
 
   const filterState = config.filterState;
-  const hasBrand = !isAllFilter(brand);
-  config.block.hidden = !hasBrand;
-  if (!hasBrand) {
-    config.options.innerHTML = '';
-    if (config.title) config.title.textContent = config.titlePrefix;
-    if (config.status) config.status.textContent = 'Chọn hãng để xem các dòng tivi phù hợp.';
-    return;
-  }
+  const isAllBrand = isAllFilter(brand);
+  config.block.hidden = false;
 
   const options = getSeriesOptionsForBrand(brand);
   const optionLabels = options.map((option) => option.label);
@@ -434,8 +434,9 @@ const renderSeriesSelectorForSection = (sectionKey, brand) => {
     filterState.series = FILTER_ALL_LABEL;
   }
 
-  const allLabel = `Tất cả dòng ${brand}`;
-  if (config.title) config.title.textContent = `Dòng tivi ${brand}`;
+  const normalizedBrandLabel = normalizeFilterValue(brand);
+  const allLabel = isAllBrand ? 'Tất cả dòng' : `Tất cả dòng ${normalizedBrandLabel}`;
+  if (config.title) config.title.textContent = isAllBrand ? 'Dòng tivi' : `Dòng tivi ${normalizedBrandLabel}`;
   if (config.status) config.status.textContent = `Đang chọn: ${isAllFilter(filterState.series) ? allLabel : filterState.series}`;
 
   const allCount = getSeriesCountForSection(sectionKey, filterState, '');
@@ -786,10 +787,7 @@ const applySectionBrandFilter = (sectionKey, brand = '') => {
   if (!config?.filterState) return;
   config.filterState.brand = normalizeFilterValue(brand) || FILTER_ALL_LABEL;
   resetSeriesForSection(sectionKey);
-  if (isAllFilter(config.filterState.brand)) {
-    config.filterState.size = FILTER_ALL_LABEL;
-    syncSectionSizeRow(sectionKey);
-  }
+  syncSectionSizeRow(sectionKey);
   syncSectionBrandRows();
   applyFiltersForSection(sectionKey);
 };
