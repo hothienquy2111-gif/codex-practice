@@ -15,6 +15,8 @@ const dom = {
   backToTop: document.querySelector('.back-to-top'),
   mobileCall: document.querySelector('[data-call-button]'),
   brandList: document.querySelector('[data-brand-list]'),
+  otherCategoryList: document.querySelector('[data-other-category-list]'),
+  otherCategoryMessage: document.querySelector('[data-other-category-message]'),
   brandLogoImages: document.querySelectorAll('.brand-logo-box img'),
   serviceIconImages: document.querySelectorAll('[data-service-icon]'),
   productFilterLinks: document.querySelectorAll('[data-product-filter]'),
@@ -272,6 +274,19 @@ dom.serviceIconImages.forEach((image) => {
   }
 });
 
+
+
+const showOtherCategoryPlaceholder = (categoryName = '') => {
+  if (!dom.otherCategoryMessage) return;
+  const safeName = categoryName || 'Danh mục';
+  dom.otherCategoryMessage.textContent = `${safeName} đang được chuẩn bị, Anh Minh Store sẽ cập nhật sau.`;
+};
+
+dom.otherCategoryList?.addEventListener('click', (event) => {
+  const button = event.target.closest('.other-category-item');
+  if (!button) return;
+  showOtherCategoryPlaceholder(button.dataset.otherCategory || button.textContent.trim());
+});
 
 const usedTvFilter = {
   selectedSize: 'Tất cả',

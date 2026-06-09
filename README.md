@@ -320,3 +320,43 @@ Website có chatbot AM AI dạng preset/rule-based sử dụng mascot `linh vậ
 - Avatar hiện đang trỏ tới file `linh vật AM.jpeg`. Nếu muốn đổi hình, có thể thay file cùng tên hoặc cập nhật hằng `AVATAR_SRC` trong `chatbot.js`.
 - Logic gợi ý sản phẩm hiện đọc an toàn từ `window.products`/dữ liệu global nếu có và từ các thẻ sản phẩm đang render trên trang; phần này có thể cải tiến thêm sau.
 - Future AI API integration can be added inside `getBotReply()` later, nhưng phiên bản hiện tại không có bất kỳ đoạn gọi API AI nào.
+
+## 17. Bố cục hero 3 cột trên trang chủ
+Trang chủ đang dùng bố cục hero an toàn cho hình ảnh, dễ rollback và responsive:
+
+- **Cột trái**: panel “DANH MỤC HÃNG TIVI” để lọc nhanh theo hãng tivi.
+- **Cột giữa**: banner/carousel chính của trang chủ, được giữ trong khung ổn định tỷ lệ **16:9** để tránh nhảy layout trước khi ảnh tải xong.
+- **Cột phải**: panel “DANH MỤC KHÁC” cho các nhóm danh mục dự kiến trong tương lai.
+
+Trên desktop, layout dùng grid 3 cột để panel hãng tivi nằm gần mép trái hơn, carousel ở giữa rộng và nổi bật hơn, còn panel danh mục khác nằm bên phải. Trên tablet/mobile, các cột tự xếp lại để không ép banner quá hẹp và không tạo tràn ngang.
+
+## 18. DANH MỤC KHÁC là placeholder
+“DANH MỤC KHÁC” hiện chỉ là danh sách placeholder ở frontend, chưa kết nối database và chưa cần SQL. Danh sách ban đầu gồm:
+
+- Loa
+- Điều khiển tivi
+- Giá treo tivi
+- Phụ kiện tivi
+- Dây HDMI
+- Dịch vụ sửa chữa
+- Thu hư đổi mới
+
+Khi bấm vào các mục này, website chỉ hiển thị thông báo thân thiện rằng danh mục đang được chuẩn bị; không điều hướng sang trang chưa tồn tại và không làm lỗi trang.
+
+Để cập nhật danh sách này sau, chỉnh trực tiếp các nút trong panel `other-category-panel` của `index.html`. Nếu sau này cần tải từ Supabase, có thể thay phần HTML tĩnh bằng JavaScript hoặc dữ liệu database, nhưng phiên bản hiện tại **không yêu cầu SQL, không yêu cầu bảng mới và không thay đổi cấu hình Supabase**.
+
+## 19. An toàn hình ảnh trong hero và logo hãng
+Logo hãng tivi được đặt trong khung cố định để luôn giữ tỷ lệ gốc:
+
+- Khung logo có kích thước cố định, căn giữa bằng flex.
+- Ảnh logo dùng `object-fit: contain`, không stretch, không crop và không squeeze.
+- Badge fallback cho “Tất cả hãng” và logo lỗi dùng cùng kích thước khung với các logo thật.
+- Tên hãng dài được ellipsis hoặc xuống dòng theo breakpoint để không ép méo logo.
+
+Banner/carousel được bảo vệ bằng khung 16:9 ổn định:
+
+- Carousel giữ tỷ lệ 16:9 trên desktop, tablet và mobile.
+- Ảnh banner được căn giữa trong khung và không bị bóp méo.
+- Logic autoplay, drag/swipe, dots, Supabase banner và banner fallback mặc định vẫn nằm trong JavaScript hiện có.
+
+Không có file ảnh, SVG hoặc binary nào cần chỉnh sửa cho bố cục này. Không đổi tên file ảnh, không đổi đường dẫn ảnh, không crop/nén/tối ưu ảnh và không thay đổi `linh vật AM.jpeg` của chatbot.
