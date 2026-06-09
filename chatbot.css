@@ -350,6 +350,13 @@
   font-weight: 900;
 }
 
+.am-chatbot-product-card .am-chatbot-product-old-price {
+  color: #7b8794;
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-decoration: line-through;
+}
+
 .am-chatbot-product-card p {
   margin: 5px 0 0;
   color: #40536a;

@@ -3,6 +3,8 @@
 
   const CHATBOT_ID = 'anh-minh-chatbot';
   const HISTORY_KEY = 'anhMinhChatHistory';
+  const HISTORY_VERSION_KEY = 'anhMinhChatHistoryVersion';
+  const HISTORY_VERSION = '2';
   const MAX_HISTORY = 20;
   const AVATAR_SRC = 'linh%20v%E1%BA%ADt%20AM.jpeg';
   const HOTLINE = '0905111223';
@@ -121,23 +123,31 @@
     return String(value).trim() || 'Giá đang cập nhật';
   };
 
+  const formatPriceNumberForChatbot = (value) => {
+    const priceNumber = parseVietnamesePriceToNumber(value);
+    return priceNumber ? `${priceNumber.toLocaleString('vi-VN')}đ` : formatPriceText(value);
+  };
+
   const parseVietnamesePriceToNumber = (value) => {
-    if (typeof value === 'number' && Number.isFinite(value)) return value;
+    if (typeof value === 'number' && Number.isFinite(value) && value > 0) return value;
     const raw = String(value ?? '').trim();
     if (!raw) return null;
     const normalized = normalizeVietnameseText(raw)
-      .replace(/vnd|vnđ|dong|dồng|đồng|₫|đ/g, ' ')
-      .replace(/,/g, '.');
-    const rangeMillionMatch = normalized.match(/(\d+(?:[.]\d+)?)\s*(?:-|den|toi|–)\s*(\d+(?:[.]\d+)?)\s*(trieu|tr\b|m\b)/);
-    if (rangeMillionMatch) return Math.round(Number(rangeMillionMatch[2]) * 1000000);
-    const millionMatch = normalized.match(/(\d+(?:[.]\d+)?)\s*(trieu|tr\b|m\b)/);
-    if (millionMatch) return Math.round(Number(millionMatch[1]) * 1000000);
+      .replace(/vnđ|vnd|dong|dồng|đồng|₫|đ/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    const rangeMillionMatch = normalized.match(/(\d+(?:[.,]\d+)?)\s*(?:-|den|toi|–)\s*(\d+(?:[.,]\d+)?)\s*(trieu|tr\b|m\b)/);
+    if (rangeMillionMatch) return Math.round(Number(rangeMillionMatch[2].replace(',', '.')) * 1000000);
+
+    const millionMatch = normalized.match(/(\d+(?:[.,]\d+)?)\s*(trieu|tr\b|m\b)/);
+    if (millionMatch) return Math.round(Number(millionMatch[1].replace(',', '.')) * 1000000);
 
     const compact = normalized.replace(/\s+/g, '');
-    const groupedMatch = compact.match(/\d{1,3}(?:[.]\d{3}){1,3}/);
-    if (groupedMatch) {
-      const groupedNumber = Number(groupedMatch[0].replace(/\./g, ''));
-      if (Number.isFinite(groupedNumber) && groupedNumber > 0) return groupedNumber;
+    const groupedMatches = compact.match(/\d{1,3}(?:[.,]\d{3}){1,3}/g);
+    if (groupedMatches?.length) {
+      const number = Number(groupedMatches[groupedMatches.length - 1].replace(/[.,]/g, ''));
+      if (Number.isFinite(number) && number > 0) return number;
     }
 
     const digits = normalized.replace(/[^\d]/g, '');
@@ -188,13 +198,15 @@
       condition,
       warranty,
       priceNumber: parseVietnamesePriceToNumber(price),
-      priceText: formatPriceText(price),
-      oldPriceText: oldPrice ? formatPriceText(oldPrice) : '',
+      priceText: formatPriceNumberForChatbot(price),
+      oldPriceText: oldPrice ? formatPriceNumberForChatbot(oldPrice) : '',
       image,
       detailUrl: '',
       featuresText,
       isFeatured: Boolean(product.is_featured ?? product.isFeatured ?? product.featured ?? false),
       href: product.href || product.detailUrl || product.detail_url || product.url || '',
+      source: product.__chatbotSource || 'unknown',
+      sourcePriority: Number(product.__chatbotPriority || 0),
       sourceIndex: index,
     };
     normalizedProduct.detailUrl = normalizedProduct.href || createProductDetailUrl(normalizedProduct);
@@ -231,6 +243,54 @@
       if (value) return value;
     }
     return '';
+  };
+
+  const isOldPriceElement = (element) => {
+    if (!element) return false;
+    const oldPricePattern = /old|original|compare|strike|was|line-through/i;
+    const descriptor = [element.className, element.id, element.getAttribute?.('data-price-type'), element.getAttribute?.('aria-label')].join(' ');
+    const style = window.getComputedStyle ? window.getComputedStyle(element) : null;
+    return oldPricePattern.test(descriptor)
+      || ['DEL', 'S', 'STRIKE'].includes(element.tagName)
+      || Boolean(element.closest?.('del, s, strike, .product-price__old, .old-price, .compare-price, .original-price, .strike, [data-old-price]'))
+      || style?.textDecorationLine?.includes('line-through');
+  };
+
+  const pickDomSalePrice = (root) => {
+    const directSelectors = [
+      '.product-price__sale',
+      '.sale-price',
+      '.current-price',
+      '.price-current',
+      '.price-sale',
+      '[data-product-price]',
+      '[data-price]',
+    ];
+    for (const selector of directSelectors) {
+      const element = root.querySelector(selector);
+      const text = element?.textContent?.trim() || element?.getAttribute?.('data-product-price') || element?.getAttribute?.('data-price') || '';
+      if (text && !isOldPriceElement(element) && parseVietnamesePriceToNumber(text)) return text.trim();
+    }
+
+    const priceContainer = root.querySelector('.product-price, .price, .product-card-price') || root;
+    const candidates = Array.from(priceContainer.querySelectorAll('*'))
+      .filter((element) => !isOldPriceElement(element))
+      .map((element) => ({ text: element.textContent?.trim() || '', price: parseVietnamesePriceToNumber(element.textContent || '') }))
+      .filter((item) => item.text && item.price);
+
+    if (candidates.length) return candidates[candidates.length - 1].text;
+
+    const textWithoutOldPrices = Array.from(priceContainer.childNodes).map((node) => {
+      if (node.nodeType === Node.ELEMENT_NODE && isOldPriceElement(node)) return '';
+      return node.textContent || '';
+    }).join(' ');
+    const match = textWithoutOldPrices.match(/(?:gia\s*:?\s*)?\d{1,3}(?:[.,]\d{3}){1,3}\s*(?:đ|₫|vnd|vnđ)?|\d+\s*(?:trieu|triệu|tr\b)/i);
+    return match ? match[0].trim() : '';
+  };
+
+  const pickDomOldPrice = (root) => {
+    const oldElement = root.querySelector('.product-price__old, .old-price, .compare-price, .original-price, del, s, strike, [data-old-price]');
+    return oldElement?.textContent?.trim() || oldElement?.getAttribute?.('data-old-price') || '';
   };
 
   const findProductIdFromHref = (href = '') => {
@@ -274,16 +334,15 @@
         || productRoot.getAttribute('data-new-size')
         || '';
       const type = pickText(productRoot, ['.product-type', '.product-card__type', '.category', '[data-product-type]', '[data-type]']);
-      const salePrice = pickText(productRoot, ['.product-price__sale', '.sale-price', '.price-sale', '[data-product-price]', '[data-price]']);
-      const price = salePrice || pickText(productRoot, ['.product-price', '.price', '.product-card-price']);
-      const oldPrice = pickText(productRoot, ['.product-price__old', '.old-price', '.compare-price', '[data-old-price]']);
+      const price = pickDomSalePrice(productRoot);
+      const oldPrice = pickDomOldPrice(productRoot);
       const image = pickAttribute(productRoot, ['img.product-card__image', 'img'], 'src') || pickAttribute(productRoot, ['img'], 'data-src');
       const badge = pickText(productRoot, ['.product-card__badge', '.badge']);
       const allText = productRoot.textContent?.trim() || '';
 
       if (name || model || brand || price || allText) {
         productsFromDom.push({
-          id: productRoot.getAttribute('data-product-id') || findProductIdFromHref(href) || `dom-product-${index}`,
+          id: productRoot.getAttribute('data-product-id') || findProductIdFromHref(href) || '',
           fullName: name || allText.slice(0, 90),
           model,
           brand,
@@ -295,13 +354,21 @@
           href,
           badge,
           features: allText,
+          __chatbotSource: 'dom',
+          __chatbotPriority: 3,
         });
       }
     });
     return productsFromDom;
   };
 
-  const collectProductArraysFromObject = (source, rawProducts) => {
+  const cloneProductsWithSource = (items = [], source = 'unknown', priority = 0) => items.map((item) => ({
+    ...(item || {}),
+    __chatbotSource: item?.__chatbotSource || source,
+    __chatbotPriority: item?.__chatbotPriority ?? priority,
+  }));
+
+  const collectProductArraysFromObject = (source, rawProducts, sourceName = 'state', priority = 2) => {
     if (!source || typeof source !== 'object') return;
     [
       'products',
@@ -316,28 +383,71 @@
       'cachedProducts',
       'items',
     ].forEach((key) => {
-      if (Array.isArray(source[key])) rawProducts.push(...source[key]);
+      if (Array.isArray(source[key])) rawProducts.push(...cloneProductsWithSource(source[key], `${sourceName}.${key}`, priority));
     });
   };
+
+  const getProductDedupKeys = (product) => {
+    const keys = [];
+    const id = normalizeVietnameseText(product.id || '');
+    const model = normalizeVietnameseText(product.model || '').replace(/\s+/g, '');
+    if (id) keys.push(`id:${id}`);
+    if (model) keys.push(`model:${model}`);
+    return keys.length ? keys : [`name:${normalizeVietnameseText(product.name || product.fullName || '')}`];
+  };
+
+  const mergeChatbotProducts = (existing, incoming) => {
+    const primary = incoming.sourcePriority >= existing.sourcePriority ? incoming : existing;
+    const secondary = primary === incoming ? existing : incoming;
+    return {
+      ...secondary,
+      ...primary,
+      id: primary.id || secondary.id,
+      brand: primary.brand || secondary.brand,
+      model: primary.model || secondary.model,
+      name: primary.name || secondary.name,
+      fullName: primary.fullName || secondary.fullName,
+      size: primary.size || secondary.size,
+      sizeNumber: primary.sizeNumber || secondary.sizeNumber,
+      type: primary.type || secondary.type,
+      condition: primary.condition || secondary.condition,
+      warranty: primary.warranty || secondary.warranty,
+      priceNumber: primary.priceNumber || secondary.priceNumber,
+      priceText: primary.priceNumber ? primary.priceText : secondary.priceText,
+      oldPriceText: primary.oldPriceText || secondary.oldPriceText,
+      image: primary.image || secondary.image,
+      href: primary.href || secondary.href,
+      detailUrl: primary.detailUrl || secondary.detailUrl,
+      featuresText: primary.featuresText || secondary.featuresText || '',
+      searchableText: primary.searchableText || secondary.searchableText || '',
+      source: primary.source,
+      sourcePriority: primary.sourcePriority,
+    };
+  };
+
+  const summarizeProductSources = (products = []) => products.reduce((summary, product) => {
+    const source = product.source || 'unknown';
+    summary[source] = (summary[source] || 0) + 1;
+    return summary;
+  }, {});
 
   const getAvailableProductsForChatbot = () => {
     const rawProducts = [];
     try {
-      [
-        'products',
-        'PRODUCTS',
-        'allProducts',
-        'loadedProducts',
-        'siteProducts',
+      const currentKeys = [
         'currentProducts',
+        'anhMinhProducts',
+        'siteProducts',
+        'loadedProducts',
+        'allProducts',
         'filteredProducts',
         'visibleProducts',
-        'anhMinhProducts',
         'supabaseProducts',
         'productCache',
         'cachedProducts',
-      ].forEach((key) => {
-        if (Array.isArray(window[key])) rawProducts.push(...window[key]);
+      ];
+      currentKeys.forEach((key) => {
+        if (Array.isArray(window[key])) rawProducts.push(...cloneProductsWithSource(window[key], `window.${key}`, 2));
       });
 
       [
@@ -348,37 +458,30 @@
         window.anhMinhProductStore,
         window.AnhMinhSupabase,
         window.anhMinhSupabase,
-      ].forEach((state) => collectProductArraysFromObject(state, rawProducts));
+      ].forEach((state, index) => collectProductArraysFromObject(state, rawProducts, `state${index + 1}`, 2));
 
-      // Always include rendered cards as a safe fallback/current-page source. This lets AM AI
-      // recommend visible products even when Supabase data is loaded into a local-only variable.
       rawProducts.push(...readDomProductsForChatbot());
+
+      if (Array.isArray(window.products)) rawProducts.push(...cloneProductsWithSource(window.products, 'fallback.products.js', 1));
+      if (Array.isArray(window.PRODUCTS)) rawProducts.push(...cloneProductsWithSource(window.PRODUCTS, 'fallback.PRODUCTS', 1));
     } catch (error) {
-      console.warn('[AM AI] Could not collect product data for chatbot.', error);
+      console.warn('[AM AI] Không thể lấy dữ liệu sản phẩm cho chatbot.', error);
       return [];
     }
 
     const unique = new Map();
+    const aliasToPrimaryKey = new Map();
     rawProducts.forEach((item, index) => {
       const product = normalizeProductForChatbot(item, index);
-      if (!product.name && !product.model && !product.brand && !product.priceText) return;
-      const key = normalizeVietnameseText(product.id || `${product.brand}-${product.model}-${product.name}-${product.priceText}` || `product-${index}`);
-      const existing = unique.get(key);
-      if (!existing) {
-        unique.set(key, product);
-        return;
-      }
-      unique.set(key, {
-        ...existing,
-        ...product,
-        priceNumber: product.priceNumber || existing.priceNumber,
-        priceText: product.priceNumber ? product.priceText : existing.priceText,
-        oldPriceText: product.oldPriceText || existing.oldPriceText,
-        image: product.image || existing.image,
-        detailUrl: product.detailUrl || existing.detailUrl,
-        searchableText: `${existing.searchableText} ${product.searchableText}`.trim(),
-      });
+      if (!product.name && !product.model && !product.brand && !product.priceNumber) return;
+      const keys = getProductDedupKeys(product).filter(Boolean);
+      const existingKey = keys.map((key) => aliasToPrimaryKey.get(key) || (unique.has(key) ? key : '')).find(Boolean);
+      const primaryKey = existingKey || keys[0] || `product-${index}`;
+      const mergedProduct = existingKey ? mergeChatbotProducts(unique.get(existingKey), product) : product;
+      unique.set(primaryKey, mergedProduct);
+      keys.forEach((key) => aliasToPrimaryKey.set(key, primaryKey));
     });
+
     return Array.from(unique.values()).filter((product) => product.name || product.model || product.priceNumber);
   };
 
@@ -408,6 +511,7 @@
       const valueText = belowMatch[1] || belowMatch[3];
       const value = Number(valueText.replace(',', '.'));
       need.maxBudget = toMillion(valueText);
+      need.isMaxBudgetStrict = true;
       need.budgetLabel = `dưới ${value} triệu`;
       return need;
     }
@@ -434,6 +538,7 @@
       need.budgetPreference = 'cheap';
       need.budgetLabel = need.budgetLabel || 'ưu tiên giá rẻ';
       need.maxBudget = need.maxBudget || 10000000;
+      need.isMaxBudgetStrict = need.isMaxBudgetStrict || !need.targetBudget;
     }
     if (hasAny(normalizedMessage, ['cao cap', 'xịn', 'xin', 'premium'])) {
       need.budgetPreference = 'premium';
@@ -558,9 +663,13 @@
       const max = need.maxBudget || need.targetBudget || Infinity;
       if (price >= min && price <= max) {
         score += 50;
-        reasons.push(`giá phù hợp ${need.budgetLabel || 'ngân sách'}`);
-      } else if (Number.isFinite(max) && price > max && price <= max * 1.1) {
-        score += 35;
+        if (need.maxBudget) {
+          reasons.push(`Phù hợp vì giá hiện tại dưới ${Math.round(need.maxBudget / 1000000)} triệu.`);
+        } else {
+          reasons.push(`giá phù hợp ${need.budgetLabel || 'ngân sách'}`);
+        }
+      } else if (!need.isMaxBudgetStrict && Number.isFinite(max) && price > max && price <= max * 1.1) {
+        score += 15;
         reasons.push('giá chỉ nhỉnh hơn ngân sách khoảng 10%');
       } else if (price < min) {
         score += 15;
@@ -664,10 +773,12 @@
     }
 
     const products = getAvailableProductsForChatbot();
+    const sourceSummary = summarizeProductSources(products);
     if (!products.length) {
-      console.debug('[AM AI] Available products for chatbot:', products);
-      console.debug('[AM AI] Parsed need:', need);
-      console.debug('[AM AI] Recommendations:', []);
+      console.debug('[AM AI] chatbot product sources:', sourceSummary);
+      console.debug('[AM AI] normalized products:', products);
+      console.debug('[AM AI] parsed need:', need);
+      console.debug('[AM AI] recommendations:', []);
       return {
         text: 'Hiện mình chưa tải được dữ liệu sản phẩm trên web. Bạn có thể thử lại sau vài giây hoặc bấm Gọi ngay/Nhắn Zalo để Anh Minh Store tư vấn nhanh hơn.',
         actions: [callAction(), zaloAction()],
@@ -675,7 +786,24 @@
       };
     }
 
-    const scored = products
+    const eligibleProducts = need.isMaxBudgetStrict && need.maxBudget
+      ? products.filter((product) => product.priceNumber && product.priceNumber <= need.maxBudget)
+      : products;
+
+    if (need.isMaxBudgetStrict && need.maxBudget && !eligibleProducts.length) {
+      const emptyRecommendations = [];
+      console.debug('[AM AI] chatbot product sources:', sourceSummary);
+      console.debug('[AM AI] normalized products:', products);
+      console.debug('[AM AI] parsed need:', need);
+      console.debug('[AM AI] recommendations:', emptyRecommendations);
+      return {
+        text: `Hiện mình chưa thấy mẫu nào dưới ${Math.round(need.maxBudget / 1000000)} triệu trong dữ liệu đang hiển thị. Bạn có thể tăng ngân sách một chút hoặc nhắn Zalo để Anh Minh Store tư vấn mẫu phù hợp hơn.`,
+        actions: [zaloAction(), callAction()],
+        products: [],
+      };
+    }
+
+    const scored = eligibleProducts
       .map((product) => scoreProductForNeed(product, need))
       .sort((a, b) => b.score - a.score);
     const strongMatches = scored.filter((item) => item.score >= 25);
@@ -683,9 +811,10 @@
 
     if (!selected.length) {
       const nearbyProducts = scored.filter((item) => item.product.priceNumber || item.product.model || item.product.name).slice(0, 3);
-      console.debug('[AM AI] Available products for chatbot:', products);
-      console.debug('[AM AI] Parsed need:', need);
-      console.debug('[AM AI] Recommendations:', nearbyProducts);
+      console.debug('[AM AI] chatbot product sources:', sourceSummary);
+      console.debug('[AM AI] normalized products:', products);
+      console.debug('[AM AI] parsed need:', need);
+      console.debug('[AM AI] recommendations:', nearbyProducts);
       return {
         text: nearbyProducts.length
           ? 'Mình chưa thấy mẫu nào khớp thật mạnh, nhưng website đang có các mẫu gần nhất dưới đây để bạn tham khảo trước.'
@@ -700,6 +829,10 @@
       reason: item.reasons.length ? item.reasons.join(', ') : 'phù hợp nhất theo dữ liệu hiện có',
       score: item.score,
     }));
+    console.debug('[AM AI] chatbot product sources:', sourceSummary);
+    console.debug('[AM AI] normalized products:', products);
+    console.debug('[AM AI] parsed need:', need);
+    console.debug('[AM AI] recommendations:', recommendedProducts);
     const intro = buildUnderstandingText(need);
     const summary = buildRecommendationSummary(need, strongMatches.length > 0);
     const detailHint = strongMatches.length
@@ -815,10 +948,22 @@
   };
 
   const saveChatHistory = () => {
-    safeLocalStorage.set(HISTORY_KEY, JSON.stringify(chatHistory.slice(-MAX_HISTORY)));
+    const safeHistory = chatHistory.slice(-MAX_HISTORY).map((item) => ({
+      role: item.role,
+      content: item.content,
+      actions: item.actions || [],
+      quickReplies: item.quickReplies || [],
+    }));
+    safeLocalStorage.set(HISTORY_VERSION_KEY, HISTORY_VERSION);
+    safeLocalStorage.set(HISTORY_KEY, JSON.stringify(safeHistory));
   };
 
   const loadChatHistory = () => {
+    if (safeLocalStorage.get(HISTORY_VERSION_KEY) !== HISTORY_VERSION) {
+      safeLocalStorage.remove(HISTORY_KEY);
+      safeLocalStorage.set(HISTORY_VERSION_KEY, HISTORY_VERSION);
+      return [];
+    }
     const raw = safeLocalStorage.get(HISTORY_KEY);
     if (!raw) return [];
     try {
@@ -856,7 +1001,9 @@
         ? `<img src="${escapeHtml(image)}" alt="${escapeHtml(name)}" loading="lazy" decoding="async">`
         : '<span class="am-chatbot-product-placeholder" aria-hidden="true">TV</span>';
       const detailButton = href ? `<a class="am-chatbot-product-detail" href="${escapeHtml(href)}">Xem chi tiết</a>` : '';
-      return `<article class="am-chatbot-product-card"><div class="am-chatbot-product-thumb">${imageHtml}</div><div class="am-chatbot-product-info"><strong>${escapeHtml(name)}</strong><span class="am-chatbot-product-meta">${escapeHtml(meta || 'Sản phẩm tivi')}</span><span class="am-chatbot-product-price">${escapeHtml(product.priceText || product.price || 'Giá đang cập nhật')}</span><p>${escapeHtml(reason)}</p>${detailButton}</div></article>`;
+      const oldPrice = product.oldPriceText || product.oldPrice || product.old_price || '';
+      const oldPriceHtml = oldPrice ? `<span class="am-chatbot-product-old-price">Giá cũ: ${escapeHtml(oldPrice)}</span>` : '';
+      return `<article class="am-chatbot-product-card"><div class="am-chatbot-product-thumb">${imageHtml}</div><div class="am-chatbot-product-info"><strong>${escapeHtml(name)}</strong><span class="am-chatbot-product-meta">${escapeHtml(meta || 'Sản phẩm tivi')}</span><span class="am-chatbot-product-price">${escapeHtml(product.priceText || product.price || 'Giá đang cập nhật')}</span>${oldPriceHtml}<p>${escapeHtml(reason)}</p>${detailButton}</div></article>`;
     }).join('')}</div>`;
   };
 
@@ -870,7 +1017,7 @@
     elements.body.appendChild(messageEl);
 
     if (shouldSave) {
-      chatHistory.push({ role, content, actions, products, quickReplies });
+      chatHistory.push({ role, content, actions, quickReplies });
       chatHistory = chatHistory.slice(-MAX_HISTORY);
       saveChatHistory();
     }
@@ -930,6 +1077,7 @@
     chatHistory = [];
     hasRenderedQuickReplies = false;
     safeLocalStorage.remove(HISTORY_KEY);
+    safeLocalStorage.set(HISTORY_VERSION_KEY, HISTORY_VERSION);
     elements.body.innerHTML = '';
     appendMessage('bot', WELCOME_MESSAGE);
     renderQuickReplies();
