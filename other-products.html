@@ -5,13 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="Chi tiết sản phẩm tivi tại Anh Minh Store, tư vấn tivi cũ, tivi mới và hỗ trợ chọn tivi theo nhu cầu."
+      content="Danh mục sản phẩm khác của Anh Minh Store đang được cập nhật. Liên hệ cửa hàng để được tư vấn nhanh."
     />
-    <title>Chi tiết sản phẩm - Anh Minh Store</title>
-    <link rel="canonical" href="product-detail.html" />
-    <meta property="og:title" content="Chi tiết sản phẩm - Anh Minh Store" />
-    <meta property="og:description" content="Công ty kỹ thuật điện tử Anh Minh chuyên tivi cũ, tivi mới, thu hư đổi mới và sửa tivi tại Đà Nẵng. Hotline 0905111223." />
-    <meta property="og:type" content="product" />
+    <title>Sản phẩm khác - Anh Minh Store</title>
+    <link rel="canonical" href="other-products.html" />
+    <meta property="og:title" content="Sản phẩm khác - Anh Minh Store" />
+    <meta property="og:description" content="Danh mục sản phẩm khác của Anh Minh Store đang được cập nhật. Hotline 0905111223." />
+    <meta property="og:type" content="website" />
     <meta property="og:image" content="Create_an_ultra-realistic_premium_World_202606042116.jpeg" />
     <link rel="stylesheet" href="styles.css" />
     <link rel="stylesheet" href="chatbot.css" />
@@ -109,7 +109,7 @@
             <li><a class="nav-link" href="index.html#tivi-moi">Tivi mới</a></li>
             <li class="nav-other-products" data-other-products-menu>
               <button
-                class="nav-link nav-link--dropdown"
+                class="nav-link nav-link--dropdown is-active"
                 type="button"
                 aria-expanded="false"
                 aria-haspopup="true"
@@ -137,12 +137,35 @@
       </nav>
     </header>
 
-    <main id="noi-dung-chinh" class="product-detail-page">
-      <section class="detail-hero" aria-labelledby="product-detail-title">
+    <main id="noi-dung-chinh" class="other-products-page">
+      <section class="other-products-hero" aria-labelledby="other-products-title">
+        <div class="container other-products-card">
+          <p class="other-products-kicker">Danh mục đang cập nhật</p>
+          <h1 id="other-products-title" data-category-title>Sản phẩm khác</h1>
+          <p class="other-products-subtitle" data-category-subtitle>
+            Danh mục này đang được Anh Minh Store cập nhật. Vui lòng quay lại sau hoặc liên hệ cửa hàng để được tư vấn nhanh.
+          </p>
+          <div class="other-products-actions">
+            <a class="btn btn--hotline" href="tel:0905111223">Gọi ngay</a>
+            <a class="btn btn--zalo" href="#">Nhắn Zalo</a>
+            <a class="btn btn--secondary" href="index.html#trang-chu">Quay lại trang chủ</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="family-placeholder" data-family-placeholder hidden aria-labelledby="family-placeholder-title">
         <div class="container">
-          <a class="back-link" href="index.html">← Quay lại trang chủ</a>
-          <div id="product-detail-root" class="product-detail-card" aria-live="polite">
-            <p>Đang tải thông tin sản phẩm...</p>
+          <div class="section-heading">
+            <span>Danh mục tương lai</span>
+            <h2 id="family-placeholder-title">Sản phẩm gia đình</h2>
+            <p>Danh mục sản phẩm gia đình sẽ được Anh Minh Store cập nhật trong thời gian tới.</p>
+          </div>
+          <div class="family-placeholder-grid" aria-label="Danh mục sản phẩm gia đình dự kiến">
+            <article>Tivi</article>
+            <article>Điều hoà</article>
+            <article>Tủ lạnh</article>
+            <article>Máy giặt</article>
+            <article>Gia dụng khác</article>
           </div>
         </div>
       </section>
@@ -182,12 +205,8 @@
 
     <button class="back-to-top" type="button" aria-label="Lên đầu trang">↑</button>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="supabase-config.js"></script>
-    <script src="supabase-client.js"></script>
-    <script src="products.js"></script>
     <script src="script.js"></script>
-    <script src="product-detail.js"></script>
+    <script src="other-products.js"></script>
     <script src="chatbot.js"></script>
   </body>
 </html>
