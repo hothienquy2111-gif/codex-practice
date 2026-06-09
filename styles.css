@@ -160,15 +160,69 @@ p { line-height: 1.65; }
 .hero-intro { margin-bottom: 10px; }
 .hero-intro h1,
 .home-hero-title { margin: 0; max-width: 100%; color: var(--color-primary-deep); font-size: clamp(28px, 2.2vw, 38px); font-weight: 750; line-height: 1.15; letter-spacing: -0.035em; white-space: normal; overflow-wrap: anywhere; }
-.hero-carousel { position: relative; width: 100%; max-width: 100%; aspect-ratio: 16 / 9; max-height: 520px; overflow: hidden; border-radius: 24px; background: transparent; box-shadow: 0 18px 45px rgba(2, 56, 113, 0.12); }
+/* Homepage banner no-crop mode: the frame follows the real image ratio instead of cropping a 16:9 box. */
+.home-hero-layout .hero-carousel {
+  position: relative;
+  width: min(78vw, 1120px);
+  max-width: 100%;
+  height: auto;
+  max-height: none;
+  aspect-ratio: auto;
+  margin-inline: auto;
+  overflow: hidden;
+  border-radius: 24px;
+  background: transparent;
+  box-shadow: 0 14px 32px rgba(2, 56, 113, 0.12);
+}
 .carousel-frame,
 .carousel-shell,
 .hero-banner-carousel { position: relative; }
-.carousel-viewport { width: 100%; height: 100%; aspect-ratio: 16 / 9; overflow: hidden; touch-action: pan-y; cursor: grab; }
+.home-hero-layout .carousel-viewport {
+  width: 100%;
+  height: auto;
+  max-height: none;
+  aspect-ratio: auto;
+  overflow: hidden;
+  touch-action: pan-y;
+  cursor: grab;
+}
+.home-hero-layout .hero-carousel.is-height-synced .carousel-viewport { height: 100%; }
 .hero-carousel.is-dragging .carousel-viewport { cursor: grabbing; }
-.carousel-track { display: flex; width: 100%; height: 100%; will-change: transform; }
-.carousel-slide { position: relative; flex: 0 0 100%; min-width: 100%; height: 100%; overflow: hidden; background: transparent; box-sizing: border-box; }
-.carousel-slide img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center center; transform: scale(1.06); transform-origin: center center; user-select: none; pointer-events: none; background: transparent; }
+.home-hero-layout .carousel-track {
+  display: flex;
+  width: 100%;
+  height: auto;
+  max-height: none;
+  align-items: flex-start;
+  will-change: transform;
+}
+.home-hero-layout .hero-carousel.is-height-synced .carousel-track { height: 100%; }
+.home-hero-layout .carousel-slide {
+  position: relative;
+  display: block;
+  flex: 0 0 100%;
+  min-width: 100%;
+  width: 100%;
+  height: auto;
+  min-height: 0;
+  overflow: hidden;
+  background: transparent;
+  box-sizing: border-box;
+}
+.home-hero-layout .hero-carousel.is-height-synced .carousel-slide { height: 100%; }
+.home-hero-layout .carousel-slide img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+  object-fit: contain;
+  object-position: center center;
+  transform: none;
+  transform-origin: center center;
+  user-select: none;
+  pointer-events: none;
+  background: transparent;
+}
 .hero-carousel-arrow { position: absolute; top: 50%; z-index: 30; display: grid; place-items: center; width: 52px; height: 52px; margin: 0; padding: 0; border: none; border-radius: 999px; background: rgba(255, 255, 255, 0.94); color: #07346b; line-height: 1; box-shadow: 0 10px 26px rgba(8, 43, 95, 0.16); cursor: pointer; transform: translateY(-50%); }
 .hero-carousel-arrow-prev { left: 24px; right: auto; }
 .hero-carousel-arrow-next { right: 24px; left: auto; }
@@ -463,7 +517,7 @@ p { line-height: 1.65; }
   .home-hero-layout { grid-template-columns: 1fr; width: min(100%, 1180px); padding-inline: 16px; }
   .hero__main { display: contents; }
   .hero-intro { order: 1; }
-  .hero-carousel { order: 2; max-height: none; }
+  .home-hero-layout .hero-carousel { order: 2; width: min(94vw, 960px); max-height: none; }
   .brand-panel { order: 3; width: 100%; max-height: 360px; }
   .hero-benefits { order: 4; }
   .brand-list { flex: initial; grid-template-columns: repeat(2, minmax(0, 1fr)); max-height: 312px; }
@@ -490,7 +544,7 @@ p { line-height: 1.65; }
   .home-hero-layout { grid-template-columns: 1fr; width: min(100%, 1180px); padding-inline: 16px; }
   .hero__main { display: contents; }
   .hero-intro { order: 1; }
-  .hero-carousel { order: 2; }
+  .home-hero-layout .hero-carousel { order: 2; width: min(94vw, 960px); }
   .brand-panel { order: 3; width: 100%; max-height: 360px; }
   .hero-benefits { order: 4; }
   .brand-list { flex: initial; grid-template-columns: repeat(2, minmax(0, 1fr)); max-height: 312px; }
@@ -926,9 +980,10 @@ body.product-modal-open { overflow: hidden; }
   .hero-intro { margin-bottom: 10px; }
   .hero-intro h1,
   .home-hero-title { font-size: clamp(26px, 8vw, 36px); line-height: 1.12; white-space: normal; }
-  .hero-carousel { max-height: none; border-radius: 18px; }
-  .carousel-viewport { aspect-ratio: 16 / 9; }
-  .carousel-slide { padding: 0; }
+  .home-hero-layout .hero-carousel { width: 100%; max-height: none; border-radius: 18px; }
+  .home-hero-layout .carousel-viewport { height: auto; aspect-ratio: auto; }
+  .home-hero-layout .hero-carousel.is-height-synced .carousel-viewport { height: 100%; }
+  .home-hero-layout .carousel-slide { padding: 0; }
   .hero-carousel-arrow { width: 40px; height: 40px; }
   .hero-carousel-arrow svg { width: 20px; height: 20px; }
   .hero-carousel-arrow-prev { left: 12px; right: auto; }
