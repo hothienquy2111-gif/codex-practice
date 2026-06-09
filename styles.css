@@ -1490,3 +1490,58 @@ body.product-modal-open { overflow: hidden; }
     white-space: nowrap;
   }
 }
+
+.tv-series-filter[hidden] {
+  display: none !important;
+}
+
+.tv-series-filter--section {
+  padding: 0;
+  background: transparent;
+  border: 0;
+  gap: 8px;
+}
+
+.tv-series-filter--section .tv-series-filter__heading {
+  display: grid;
+  gap: 3px;
+}
+
+.tv-series-filter--section .old-tv-filter-label {
+  margin: 0;
+  color: var(--color-primary-deep);
+  font-size: 1rem;
+  font-weight: 750;
+}
+
+.tv-series-filter--section .tv-series-filter__heading p:not(.old-tv-filter-label) {
+  margin: 0;
+  color: var(--color-gray-700);
+  font-size: 0.9rem;
+  font-weight: 650;
+  line-height: 1.35;
+}
+
+.tv-series-filter--section .tv-series-options {
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-inline: contain;
+  padding: 2px 2px 9px;
+  scrollbar-width: thin;
+}
+
+.tv-series-filter--section .tv-series-pill {
+  flex: 0 0 auto;
+  min-height: 38px;
+  white-space: nowrap;
+}
+
+@media (max-width: 760px) {
+  .tv-series-filter--section {
+    padding: 0;
+  }
+
+  .tv-series-filter--section .tv-series-options {
+    max-width: 100%;
+  }
+}
