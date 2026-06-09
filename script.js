@@ -1202,9 +1202,36 @@ const initCarousel = async () => {
     return dot;
   });
 
+  const getActiveSlideImage = () => slides[currentIndex]?.querySelector('img') || carousel.querySelector('.carousel-slide img');
+
+  const syncHeroCarouselHeightToActiveImage = () => {
+    const activeImg = getActiveSlideImage();
+    if (!activeImg) return;
+
+    const applySize = () => {
+      if (!activeImg.naturalWidth || !activeImg.naturalHeight) return;
+      const width = carousel.clientWidth;
+      if (!width) return;
+      const height = width * activeImg.naturalHeight / activeImg.naturalWidth;
+      carousel.style.height = `${height}px`;
+      carousel.classList.add('is-height-synced');
+      console.log('[Hero Banner] image natural size', activeImg.naturalWidth, activeImg.naturalHeight);
+      console.log('[Hero Banner] calculated carousel size', width, height);
+    };
+
+    if (activeImg.complete) applySize();
+    else activeImg.addEventListener('load', applySize, { once: true });
+  };
+
+  console.log('[Hero Banner] no-crop mode applied');
+
   const applyTransform = (animate = true) => {
     track.style.transition = animate && !reduceMotion ? 'transform 420ms ease' : 'none';
     track.style.transform = `translate3d(${currentIndex * -slideWidth + dragOffset}px, 0, 0)`;
+    slides.forEach((slide, index) => {
+      slide.classList.toggle('is-active', index === currentIndex);
+      slide.classList.toggle('active', index === currentIndex);
+    });
     dots.forEach((dot, index) => {
       dot.classList.toggle('is-active', index === currentIndex);
       dot.setAttribute('aria-current', index === currentIndex ? 'true' : 'false');
@@ -1219,6 +1246,7 @@ const initCarousel = async () => {
   const goToSlide = (index, animate = true) => {
     currentIndex = (index + slides.length) % slides.length;
     dragOffset = 0;
+    syncHeroCarouselHeightToActiveImage();
     requestUpdate(animate);
   };
 
@@ -1295,6 +1323,7 @@ const initCarousel = async () => {
     () => {
       window.clearTimeout(resizeId);
       resizeId = window.setTimeout(() => {
+        syncHeroCarouselHeightToActiveImage();
         slideWidth = viewport.clientWidth;
         goToSlide(currentIndex, false);
       }, 120);
@@ -1302,7 +1331,13 @@ const initCarousel = async () => {
     { passive: true },
   );
 
+  slides.forEach((slide) => {
+    const image = slide.querySelector('img');
+    image?.addEventListener('load', syncHeroCarouselHeightToActiveImage);
+  });
+
   applyTransform(false);
+  syncHeroCarouselHeightToActiveImage();
   startAutoplay();
 };
 
