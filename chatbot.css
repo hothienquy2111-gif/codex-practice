@@ -274,7 +274,9 @@
 .am-chatbot-product-list {
   display: grid;
   gap: 10px;
+  max-width: 100%;
   margin-top: 10px;
+  overflow: hidden;
 }
 
 .am-chatbot-product-card {
@@ -288,7 +290,9 @@
   border-radius: 16px;
   background: #ffffff;
   box-shadow: 0 8px 20px rgba(6, 42, 86, 0.08);
+  overflow: hidden;
 }
+
 
 .am-chatbot-product-thumb {
   display: grid;
@@ -322,10 +326,12 @@
 
 .am-chatbot-product-info {
   min-width: 0;
+  overflow: hidden;
 }
 
 .am-chatbot-product-card strong {
   display: block;
+  overflow-wrap: anywhere;
   color: var(--am-chatbot-blue);
   font-size: 0.9rem;
   line-height: 1.32;

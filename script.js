@@ -115,6 +115,8 @@ let products = [];
 
 const publishProductsForChatbot = () => {
   window.anhMinhProducts = products;
+  window.siteProducts = products;
+  window.currentProducts = products;
 };
 
 const normalizeSourceProducts = (sourceProducts = []) => {
