@@ -7,6 +7,7 @@ const dom = {
   sections: document.querySelectorAll('.section-anchor[id]'),
   carousel: document.querySelector('[data-carousel]'),
   productGrid: document.querySelector('[data-product-grid]'),
+  featuredLoadMoreButton: document.querySelector('[data-load-more="featured"]'),
   sizeOptions: document.querySelector('.size-options'),
   selectedSize: document.querySelector('.selected-size span'),
   searchForm: document.querySelector('.search-box'),
@@ -22,11 +23,13 @@ const dom = {
   usedTvGrid: document.querySelector('[data-used-tv-grid]'),
   usedTvCount: document.querySelector('[data-used-tv-count]'),
   usedTvEmpty: document.querySelector('[data-used-tv-empty]'),
+  usedTvLoadMoreButton: document.querySelector('[data-load-more="oldTv"]'),
   newTvSizeRow: document.querySelector('[data-new-tv-size-row]'),
   newTvBrandRow: document.querySelector('[data-new-tv-brand-row]'),
   newTvGrid: document.querySelector('[data-new-tv-grid]'),
   newTvCount: document.querySelector('[data-new-tv-count]'),
   newTvEmpty: document.querySelector('[data-new-tv-empty]'),
+  newTvLoadMoreButton: document.querySelector('[data-load-more="newTv"]'),
 };
 
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -58,6 +61,13 @@ const BRAND_DATA = [
 ];
 const FILTER_ALL_LABEL = 'Tất cả';
 const BRAND_ALL_LABEL = 'Tất cả hãng';
+const PRODUCTS_BATCH_SIZE = 12;
+const visibleCounts = {
+  featured: PRODUCTS_BATCH_SIZE,
+  newTv: PRODUCTS_BATCH_SIZE,
+  oldTv: PRODUCTS_BATCH_SIZE,
+};
+
 const FILTER_EMPTY_MESSAGE = 'Chưa có sản phẩm thuộc hãng này. Vui lòng chọn hãng khác hoặc liên hệ Anh Minh Store.';
 
 const escapeHtml = (value = '') =>
@@ -95,6 +105,7 @@ const normalizeProduct = (product = {}, index = 0) => {
     badge: product.badge || 'Tư vấn',
     description: product.description || 'Vui lòng liên hệ Anh Minh Store để được tư vấn chi tiết.',
     sortOrder: Number(product.sort_order ?? product.sortOrder ?? index),
+    isFeatured: Boolean(product.is_featured ?? product.isFeatured ?? false),
   };
 };
 
@@ -112,6 +123,27 @@ const normalizeFilterValue = (value = '') => String(value).trim();
 const isAllFilter = (value = '') => normalizeFilterValue(value) === '' || normalizeFilterValue(value) === FILTER_ALL_LABEL;
 const normalizeBrand = (value = '') => normalizeFilterValue(value).toLowerCase();
 const getBrandInitial = (brandName = '') => normalizeFilterValue(brandName).charAt(0).toUpperCase() || 'T';
+const normalizeVietnameseText = (value = '') => String(value)
+  .trim()
+  .toLowerCase()
+  .normalize('NFD')
+  .replace(/[\u0300-\u036f]/g, '')
+  .replace(/đ/g, 'd')
+  .replace(/\s+/g, ' ');
+
+const normalizeProductType = (product = {}) => {
+  const rawType = normalizeVietnameseText(product.type || product.productType || '');
+  if (['tivi moi', 'tv moi', 'moi', 'new'].includes(rawType) || rawType.includes('tivi moi') || rawType.includes('tv moi')) return 'Tivi mới';
+  if (['tivi cu', 'tv cu', 'cu', 'used', 'da qua su dung'].includes(rawType) || rawType.includes('tivi cu') || rawType.includes('tv cu') || rawType.includes('da qua su dung')) return 'Tivi cũ';
+  return normalizeFilterValue(product.type || 'Tivi');
+};
+
+const getFeaturedProducts = (sourceProducts = products) => sourceProducts.filter((product) => product.isFeatured === true);
+const getNewTvProducts = (sourceProducts = products) => sourceProducts.filter((product) => normalizeProductType(product) === 'Tivi mới');
+const getOldTvProducts = (sourceProducts = products) => sourceProducts.filter((product) => normalizeProductType(product) === 'Tivi cũ');
+const resetVisibleCount = (sectionKey) => { visibleCounts[sectionKey] = PRODUCTS_BATCH_SIZE; };
+const resetAllVisibleCounts = () => Object.keys(visibleCounts).forEach(resetVisibleCount);
+
 
 const createBrandLogoElement = (brand, extraClass = '') => {
   const brandName = brand?.name || BRAND_ALL_LABEL;
@@ -259,13 +291,82 @@ const updatePressedState = (container, activeButton) => {
   });
 };
 
-const getSectionProducts = (type, filterState) =>
-  products.filter((product) => {
-    if (product.type !== type) return false;
-    const matchesSize = isAllFilter(filterState.selectedSize) ? true : product.size === filterState.selectedSize;
-    const matchesBrand = isAllFilter(filterState.selectedBrand) ? true : normalizeBrand(product.brand) === normalizeBrand(filterState.selectedBrand);
-    return matchesSize && matchesBrand;
+const productMatchesSearch = (product) => {
+  if (!searchTerm) return true;
+  return [product.brand, product.model, product.fullName, product.size, product.type, product.condition, product.warranty, product.features.join(' ')]
+    .join(' ')
+    .toLowerCase()
+    .includes(searchTerm);
+};
+
+const productMatchesSectionFilter = (product, filterState) => {
+  const matchesSize = isAllFilter(filterState.selectedSize) ? true : product.size === filterState.selectedSize;
+  const matchesBrand = isAllFilter(filterState.selectedBrand) ? true : normalizeBrand(product.brand) === normalizeBrand(filterState.selectedBrand);
+  return matchesSize && matchesBrand && productMatchesSearch(product);
+};
+
+const getSectionProducts = (sectionKey, filterState = {}) => {
+  const sectionProducts = sectionKey === 'featured'
+    ? getFeaturedProducts(products)
+    : sectionKey === 'newTv'
+      ? getNewTvProducts(products)
+      : getOldTvProducts(products);
+
+  if (sectionKey === 'featured') {
+    return sectionProducts.filter((product) => {
+      const matchesSize = activeSize ? product.size.toLowerCase().includes(activeSize.toLowerCase()) : true;
+      const matchesBrand = activeBrand ? product.brand.toLowerCase() === activeBrand.toLowerCase() : true;
+      const matchesType = activeType ? normalizeProductType(product) === normalizeProductType({ type: activeType }) : true;
+      return matchesSize && matchesBrand && matchesType && productMatchesSearch(product);
+    });
+  }
+
+  return sectionProducts.filter((product) => productMatchesSectionFilter(product, filterState));
+};
+
+const updateLoadMoreButton = (button, sectionKey, totalProducts) => {
+  if (!button) return;
+  const shouldShow = totalProducts > visibleCounts[sectionKey];
+  button.hidden = !shouldShow;
+  button.disabled = !shouldShow;
+};
+
+const bindProductImageFallbacks = (root) => {
+  root?.querySelectorAll('.product-card__image').forEach((image) => {
+    image.addEventListener('error', () => {
+      image.closest('.product-card__media')?.classList.add('is-image-error');
+    }, { once: true });
   });
+};
+
+const renderFeaturedProductCard = (product) => {
+  const brand = product.brand || '';
+  const model = product.model || '';
+  const fullName = product.fullName || product.full_name || '';
+  const oldPrice = product.oldPrice || product.old_price || '';
+  const price = product.price || '';
+  const label = `${fullName} ${model}`.trim();
+  const media = renderProductMedia(product, label);
+  const renderedOldPrice = oldPrice ? `<span class="product-price__old">${escapeHtml(oldPrice)}</span>` : '';
+
+  return `
+    <article class="product-card-wrap">
+      <a class="product-card" href="${createProductDetailUrl(product)}" aria-label="Xem chi tiết ${escapeHtml(label)}">
+        <span class="product-card__badge">${escapeHtml(product.badge)}</span>
+        ${media}
+        <div class="product-card-meta">
+          <span class="product-card-brand">${escapeHtml(brand)}</span>
+          <span class="product-card-model">${escapeHtml(model)}</span>
+        </div>
+        <h3 class="product-card-name">${escapeHtml(fullName || model)}</h3>
+        <p class="product-size">${escapeHtml(formatProductCardSize(product.size))}</p>
+        <p class="product-type">${escapeHtml(product.type)}</p>
+        <strong class="product-price"><span>Giá:</span> ${renderedOldPrice}<span class="product-price__sale">${escapeHtml(price)}</span></strong>
+        <span class="btn btn--primary product-card__cta" aria-hidden="true">Xem chi tiết</span>
+      </a>
+    </article>`;
+};
+
 
 const renderSectionProductCard = (product, sectionType) => {
   const brand = product.brand || '';
@@ -297,23 +398,21 @@ const renderSectionProductCard = (product, sectionType) => {
     </article>`;
 };
 
-const renderTvSection = ({ grid, empty, count, type, filterState, sectionType }) => {
+const renderTvSection = ({ grid, empty, count, sectionKey, filterState, sectionType, loadMoreButton }) => {
   if (!grid) return;
-  const filteredProducts = getSectionProducts(type, filterState);
-  const cards = filteredProducts.map((product) => renderSectionProductCard(product, sectionType)).join('');
+  const filteredProducts = getSectionProducts(sectionKey, filterState);
+  const visibleProducts = filteredProducts.slice(0, visibleCounts[sectionKey]);
+  const cards = visibleProducts.map((product) => renderSectionProductCard(product, sectionType)).join('');
   const emptyMarkup = `<p class="empty-state used-tv-empty${sectionType === 'new' ? ' new-tv-empty' : ''}" ${sectionType === 'new' ? 'data-new-tv-empty' : 'data-used-tv-empty'}${filteredProducts.length ? ' hidden' : ''}>${FILTER_EMPTY_MESSAGE}</p>`;
   grid.innerHTML = `${cards}${emptyMarkup}`;
-  if (count) count.textContent = `Đang hiển thị: ${filteredProducts.length} sản phẩm`;
+  if (count) count.textContent = `Đang hiển thị: ${visibleProducts.length} sản phẩm`;
   if (empty) empty.hidden = filteredProducts.length > 0;
-  grid.querySelectorAll('.product-card__image').forEach((image) => {
-    image.addEventListener('error', () => {
-      image.closest('.product-card__media')?.classList.add('is-image-error');
-    }, { once: true });
-  });
+  updateLoadMoreButton(loadMoreButton, sectionKey, filteredProducts.length);
+  bindProductImageFallbacks(grid);
 };
 
-const renderUsedTvSection = () => renderTvSection({ grid: dom.usedTvGrid, empty: dom.usedTvEmpty, count: dom.usedTvCount, type: 'Tivi cũ', filterState: usedTvFilter, sectionType: 'used' });
-const renderNewTvSection = () => renderTvSection({ grid: dom.newTvGrid, empty: dom.newTvEmpty, count: dom.newTvCount, type: 'Tivi mới', filterState: newTvFilter, sectionType: 'new' });
+const renderUsedTvSection = () => renderTvSection({ grid: dom.usedTvGrid, empty: dom.usedTvEmpty, count: dom.usedTvCount, sectionKey: 'oldTv', filterState: usedTvFilter, sectionType: 'used', loadMoreButton: dom.usedTvLoadMoreButton });
+const renderNewTvSection = () => renderTvSection({ grid: dom.newTvGrid, empty: dom.newTvEmpty, count: dom.newTvCount, sectionKey: 'newTv', filterState: newTvFilter, sectionType: 'new', loadMoreButton: dom.newTvLoadMoreButton });
 
 const syncSectionBrandRows = () => {
   dom.usedTvBrandRow?.querySelectorAll('.old-tv-brand-card').forEach((button) => {
@@ -340,9 +439,7 @@ const applyBrandFilter = (brand = '') => {
   if (dom.selectedSize) dom.selectedSize.textContent = selectedBrand || FILTER_ALL_LABEL;
   syncBrandPanelActive();
   syncSectionBrandRows();
-  renderProductCards();
-  renderUsedTvSection();
-  renderNewTvSection();
+  applyFiltersAndRender();
 };
 
 dom.brandList?.addEventListener('click', (event) => {
@@ -357,6 +454,7 @@ dom.usedTvSizeRow?.addEventListener('click', (event) => {
   if (!button) return;
   usedTvFilter.selectedSize = button.dataset.usedSize || FILTER_ALL_LABEL;
   updatePressedState(dom.usedTvSizeRow, button);
+  resetVisibleCount('oldTv');
   renderUsedTvSection();
 });
 
@@ -371,6 +469,7 @@ dom.newTvSizeRow?.addEventListener('click', (event) => {
   if (!button) return;
   newTvFilter.selectedSize = button.dataset.newSize || FILTER_ALL_LABEL;
   updatePressedState(dom.newTvSizeRow, button);
+  resetVisibleCount('newTv');
   renderNewTvSection();
 });
 
@@ -489,58 +588,46 @@ const renderProductCards = () => {
   if (!dom.productGrid) return;
   if (!products.length) {
     dom.productGrid.innerHTML = '<p class="empty-state">Sản phẩm đang được cập nhật.</p>';
+    updateLoadMoreButton(dom.featuredLoadMoreButton, 'featured', 0);
     return;
   }
 
-  const visibleProducts = getFilteredProducts();
-  if (!visibleProducts.length) {
-    dom.productGrid.innerHTML = '<p class="empty-state">Chưa có sản phẩm phù hợp. Vui lòng chọn kích thước khác hoặc gọi 0905111223 để được tư vấn.</p>';
+  const filteredProducts = getSectionProducts('featured');
+  if (!filteredProducts.length) {
+    dom.productGrid.innerHTML = '<p class="empty-state">Chưa có sản phẩm nổi bật phù hợp. Vui lòng chọn bộ lọc khác hoặc gọi 0905111223 để được tư vấn.</p>';
+    updateLoadMoreButton(dom.featuredLoadMoreButton, 'featured', 0);
     return;
   }
 
-  dom.productGrid.innerHTML = visibleProducts
-    .map((product) => {
-      const brand = product.brand || '';
-      const model = product.model || '';
-      const fullName = product.fullName || product.full_name || '';
-      const oldPrice = product.oldPrice || product.old_price || '';
-      const price = product.price || '';
-      const label = `${fullName} ${model}`.trim();
-      const media = renderProductMedia(product, label);
-      const renderedOldPrice = oldPrice ? `<span class="product-price__old">${escapeHtml(oldPrice)}</span>` : '';
+  const visibleProducts = filteredProducts.slice(0, visibleCounts.featured);
+  dom.productGrid.innerHTML = visibleProducts.map(renderFeaturedProductCard).join('');
+  updateLoadMoreButton(dom.featuredLoadMoreButton, 'featured', filteredProducts.length);
+  bindProductImageFallbacks(dom.productGrid);
+};
 
-      return `
-        <article class="product-card-wrap">
-          <a class="product-card" href="${createProductDetailUrl(product)}" aria-label="Xem chi tiết ${escapeHtml(label)}">
-            <span class="product-card__badge">${escapeHtml(product.badge)}</span>
-            ${media}
-            <div class="product-card-meta">
-              <span class="product-card-brand">${escapeHtml(brand)}</span>
-              <span class="product-card-model">${escapeHtml(model)}</span>
-            </div>
-            <h3 class="product-card-name">${escapeHtml(fullName || model)}</h3>
-            <p class="product-size">${escapeHtml(formatProductCardSize(product.size))}</p>
-            <p class="product-type">${escapeHtml(product.type)}</p>
-            <strong class="product-price"><span>Giá:</span> ${renderedOldPrice}<span class="product-price__sale">${escapeHtml(price)}</span></strong>
-            <span class="btn btn--primary product-card__cta" aria-hidden="true">Xem chi tiết</span>
-          </a>
-        </article>`;
-    })
-    .join('');
+const renderProductSection = (sectionKey) => {
+  if (sectionKey === 'featured') renderProductCards();
+  if (sectionKey === 'newTv') renderNewTvSection();
+  if (sectionKey === 'oldTv') renderUsedTvSection();
+};
 
-  dom.productGrid.querySelectorAll('.product-card__image').forEach((image) => {
-    image.addEventListener('error', () => {
-      image.closest('.product-card__media')?.classList.add('is-image-error');
-    }, { once: true });
-  });
+const showMoreProducts = (sectionKey) => {
+  if (!Object.prototype.hasOwnProperty.call(visibleCounts, sectionKey)) return;
+  visibleCounts[sectionKey] += PRODUCTS_BATCH_SIZE;
+  renderProductSection(sectionKey);
+};
+
+const applyFiltersAndRender = ({ resetSections = ['featured', 'newTv', 'oldTv'] } = {}) => {
+  resetSections.forEach(resetVisibleCount);
+  renderProductCards();
+  renderUsedTvSection();
+  renderNewTvSection();
 };
 
 renderBrandPanel();
 renderBrandFilterRow({ container: dom.usedTvBrandRow, sectionType: 'used' });
 renderBrandFilterRow({ container: dom.newTvBrandRow, sectionType: 'new' });
-renderProductCards();
-renderUsedTvSection();
-renderNewTvSection();
+applyFiltersAndRender();
 
 dom.sizeOptions?.addEventListener('click', (event) => {
   const pill = event.target.closest('.size-pill');
@@ -560,7 +647,7 @@ dom.sizeOptions?.addEventListener('click', (event) => {
     button.setAttribute('aria-pressed', String(isActive));
   });
   if (dom.selectedSize) dom.selectedSize.textContent = activeSize || 'Tất cả';
-  renderProductCards();
+  applyFiltersAndRender();
   dom.productGrid?.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'nearest' });
 });
 
@@ -579,7 +666,7 @@ dom.searchForm?.addEventListener('submit', (event) => {
     button.classList.remove('is-active');
     button.setAttribute('aria-pressed', 'false');
   });
-  renderProductCards();
+  applyFiltersAndRender();
   scrollToHash('#san-pham');
 });
 
@@ -604,17 +691,19 @@ dom.productFilterLinks.forEach((link) => {
     newTvFilter.selectedBrand = filterType === 'brand' ? filterValue || FILTER_ALL_LABEL : FILTER_ALL_LABEL;
     syncBrandPanelActive();
     syncSectionBrandRows();
-    renderUsedTvSection();
-    renderNewTvSection();
+    applyFiltersAndRender();
 
     const label = filterValue || 'Tất cả';
     if (dom.selectedSize) dom.selectedSize.textContent = label;
-    renderProductCards();
     setMenuState(false);
     scrollToHash('#san-pham');
   });
 });
 
+
+dom.featuredLoadMoreButton?.addEventListener('click', () => showMoreProducts('featured'));
+dom.usedTvLoadMoreButton?.addEventListener('click', () => showMoreProducts('oldTv'));
+dom.newTvLoadMoreButton?.addEventListener('click', () => showMoreProducts('newTv'));
 
 const refreshPublicProductsFromSupabase = async () => {
   const storeSupabase = window.AnhMinhSupabase;
@@ -636,9 +725,7 @@ const refreshPublicProductsFromSupabase = async () => {
     renderBrandFilterRow({ container: dom.newTvBrandRow, sectionType: 'new' });
     syncBrandPanelActive();
     syncSectionBrandRows();
-    renderProductCards();
-    renderUsedTvSection();
-    renderNewTvSection();
+    applyFiltersAndRender();
   } catch (error) {
     console.warn('Không thể tải sản phẩm từ Supabase, dùng dữ liệu products.js dự phòng.', error);
   }
