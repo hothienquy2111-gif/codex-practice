@@ -343,6 +343,7 @@
           <h2>${escapeHtml(product.full_name || product.fullName || product.model)}</h2>
           <p>${escapeHtml(product.size)} · ${escapeHtml(product.type)} · ${escapeHtml(product.price)}</p>
           <span class="admin-status ${product.is_active ? 'is-active' : 'is-hidden'}">${product.is_active ? 'Hiển thị' : 'Ẩn'}</span>
+          <span class="admin-status ${product.is_featured ? 'is-active' : 'is-hidden'}">${product.is_featured ? 'Nổi bật' : 'Không nổi bật'}</span>
         </div>
         <div class="admin-product-card__actions">
           <button type="button" class="btn btn--secondary" data-edit-product="${escapeHtml(product.id)}">Sửa</button>
@@ -707,6 +708,11 @@
     if (dom.modal) dom.modal.hidden = false;
     document.body.classList.add('admin-modal-open');
     const form = dom.form;
+    if (form && !product) {
+      form.isFeatured.value = 'false';
+      form.isActive.value = 'true';
+      form.sortOrder.value = 0;
+    }
     if (form && product) {
       form.editingOriginalId.value = product.id || '';
       form.brand.value = product.brand || '';
@@ -721,13 +727,14 @@
       form.price.value = product.price || '';
       form.badge.value = product.badge || '';
       form.sortOrder.value = product.sort_order ?? 0;
+      form.isFeatured.value = product.is_featured === true ? 'true' : 'false';
       form.description.value = product.description || '';
       form.features.value = Array.isArray(product.features) ? product.features.join('\n') : '';
       form.overview.value = stringifyOverviewForAdmin(product.overview || []);
       renderOverviewPreview(parseOverview(form.overview.value), { showEmpty: false });
       form.specifications.value = stringifySpecificationsForAdmin(product.specifications ?? product.specificationsText ?? []);
       updateSpecificationPreview(parseSpecifications(form.specifications.value), { showEmpty: false });
-      form.isActive.value = String(Boolean(product.is_active));
+      form.isActive.value = String(product.is_active !== false);
     }
     renderExistingImages(product);
     setTimeout(() => form?.brand?.focus(), 0);
@@ -834,6 +841,7 @@
     specifications: getParsedSpecificationsForSave(form),
     image: imageData.image || '',
     images: imageData.images || [],
+    is_featured: form.isFeatured.value === 'true',
     is_active: form.isActive.value === 'true',
     sort_order: Number(form.sortOrder.value || 0),
     updated_at: new Date().toISOString(),

@@ -41,7 +41,7 @@ Các file được cập nhật:
 3. Mở file `supabase-schema.sql` trong repo.
 4. Copy toàn bộ SQL và chạy.
 
-Bảng `products` chứa các trường: `id`, `brand`, `model`, `full_name`, `size`, `type`, `condition`, `warranty`, `old_price`, `price`, `badge`, `description`, `features`, `image`, `images`, `overview`, `specifications`, `is_active`, `sort_order`, `created_at`, `updated_at`.
+Bảng `products` chứa các trường: `id`, `brand`, `model`, `full_name`, `size`, `type`, `condition`, `warranty`, `old_price`, `price`, `badge`, `description`, `features`, `image`, `images`, `overview`, `specifications`, `is_active`, `is_featured`, `sort_order`, `created_at`, `updated_at`. Trường `is_featured` là boolean, mặc định `false`, dùng để chọn sản phẩm hiện ở mục “Sản phẩm nổi bật”.
 
 ## 6. Cách tạo bảng profiles
 File `supabase-schema.sql` cũng tạo bảng `profiles` với các trường:
@@ -134,7 +134,8 @@ Nếu trang admin báo “Chưa cấu hình Supabase”, hãy kiểm tra:
 3. Nhập thông tin tivi: hãng, model, tên đầy đủ, kích thước, loại sản phẩm, giá bán...
 4. Mã sản phẩm được tự tạo từ hãng + model + kích thước, ví dụ `Samsung + QA55Q7FA + 55 inch` thành `samsung-qa55q7fa-55-inch`.
 5. Có thể sửa mã sản phẩm thủ công nếu cần.
-6. Bấm **Lưu sản phẩm**.
+6. Chọn **Hiện lên sản phẩm nổi bật: Có / Không**. Chọn **Có** sẽ lưu `is_featured = true`, chọn **Không** sẽ lưu `is_featured = false`; sản phẩm cũ chưa có trường này được hiểu là **Không**.
+7. Bấm **Lưu sản phẩm**.
 
 Nếu mã sản phẩm đã tồn tại, trang admin sẽ báo: “Mã sản phẩm đã tồn tại. Vui lòng đổi model hoặc mã sản phẩm.”
 
@@ -215,7 +216,9 @@ Trang chủ tải dữ liệu theo thứ tự:
 1. Supabase `products` với `is_active = true`.
 2. Nếu Supabase thiếu cấu hình, lỗi mạng hoặc query lỗi, website fallback về `products.js`.
 
-Sản phẩm loại **Tivi mới** hiện ở phần “Tivi mới chính hãng”. Sản phẩm loại **Tivi cũ** hiện ở phần “Tivi cũ đã kiểm tra”. Link chi tiết vẫn là `product-detail.html?id=MA_SAN_PHAM` và mở trong cùng tab.
+Mục **Sản phẩm nổi bật** chỉ lấy sản phẩm có `is_featured = true` và có thể bao gồm cả **Tivi mới** lẫn **Tivi cũ**. Hai danh mục **Tivi mới chính hãng** và **Tivi cũ đã kiểm tra** vẫn tách riêng: sản phẩm được chuẩn hoá là Tivi mới chỉ hiện trong mục Tivi mới, sản phẩm được chuẩn hoá là Tivi cũ chỉ hiện trong mục Tivi cũ. Link chi tiết vẫn là `product-detail.html?id=MA_SAN_PHAM` và mở trong cùng tab.
+
+Danh sách sản phẩm không dùng phân trang đánh số nữa. Mỗi mục sản phẩm dùng nút **Xem thêm sản phẩm** nằm bên dưới lưới; ban đầu hiển thị 12 sản phẩm, mỗi lần bấm nút sẽ hiện thêm 12 sản phẩm và nút tự ẩn khi đã hiện hết. Mỗi mục có trạng thái riêng, nên bấm **Xem thêm sản phẩm** ở “Sản phẩm nổi bật” không làm thay đổi số lượng đang hiện ở “Tivi mới” hoặc “Tivi cũ”. Muốn đổi số lượng mỗi lần tải thêm, sửa hằng số `PRODUCTS_BATCH_SIZE` trong `script.js`.
 
 Trên trang chi tiết sản phẩm, khu vực dưới đặc điểm nổi bật và phía trên hộp giá có thể hiển thị các nút **Tổng quan sản phẩm** và **Thông số chi tiết**. Nút **Thông số chi tiết** chỉ hiện khi sản phẩm có dữ liệu `specifications`; nếu `specifications` rỗng, là chuỗi rỗng, mảng rỗng hoặc `null`, nút này sẽ được ẩn.
 
@@ -234,7 +237,7 @@ Trong dashboard admin:
 1. Thêm sản phẩm trong `admin.html`.
 2. Mở `index.html` hoặc website GitHub Pages.
 3. Kiểm tra sản phẩm xuất hiện đúng mục Tivi mới/Tivi cũ.
-4. Dùng bộ lọc hãng, kích thước, loại sản phẩm.
+4. Dùng bộ lọc hãng, kích thước và tìm kiếm; bộ lọc chỉ lọc trong từng mục hiện tại, không trộn Tivi mới với Tivi cũ.
 5. Bấm “Xem chi tiết” để mở `product-detail.html?id=...` trong cùng tab.
 6. Kiểm tra gallery, giá gạch, giá bán, đặc điểm nổi bật, modal tổng quan và modal thông số.
 7. Kiểm tra trên màn hình điện thoại, không bị tràn ngang.
@@ -264,7 +267,10 @@ Nếu chưa có `supabase-config.js`, config sai, mất mạng hoặc Supabase q
 - [ ] Admin can add product.
 - [ ] Admin can upload images.
 - [ ] Product detail page opens correctly.
-- [ ] Mobile layout checked.
+- [ ] Sản phẩm nổi bật có thể gồm cả Tivi mới và Tivi cũ.
+- [ ] Mục Tivi mới và Tivi cũ vẫn tách riêng.
+- [ ] Nút “Xem thêm sản phẩm” hiện thêm 12 sản phẩm mỗi lần bấm và tự ẩn khi đã hết.
+- [ ] Giao diện di động đã kiểm tra.
 - [ ] No private keys in repository.
 
 ## 15. Quản lý ảnh banner trang chủ bằng Supabase

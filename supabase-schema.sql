@@ -27,6 +27,7 @@ create table if not exists public.products (
   overview jsonb default '[]'::jsonb,
   specifications jsonb default '[]'::jsonb,
   is_active boolean default true,
+  is_featured boolean default false,
   sort_order integer default 0,
   created_at timestamptz default now(),
   updated_at timestamptz default now()
@@ -65,6 +66,9 @@ for each row execute function public.set_updated_at();
 alter table public.profiles enable row level security;
 alter table public.products enable row level security;
 alter table public.orders enable row level security;
+
+alter table public.products
+add column if not exists is_featured boolean default false;
 
 -- Dọn policy cũ nếu chạy lại script.
 drop policy if exists "Public can read active products" on public.products;
