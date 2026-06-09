@@ -32,6 +32,21 @@ create table if not exists public.products (
   updated_at timestamptz default now()
 );
 
+create table if not exists public.orders (
+  id uuid primary key default gen_random_uuid(),
+  customer_name text not null,
+  customer_phone text not null,
+  customer_address text,
+  customer_note text,
+  product_id text,
+  product_name text not null,
+  product_model text,
+  product_price text,
+  product_image text,
+  status text not null default 'new' check (status in ('new', 'contacted', 'completed', 'cancelled')),
+  created_at timestamptz default now()
+);
+
 create or replace function public.set_updated_at()
 returns trigger
 language plpgsql
@@ -49,6 +64,7 @@ for each row execute function public.set_updated_at();
 
 alter table public.profiles enable row level security;
 alter table public.products enable row level security;
+alter table public.orders enable row level security;
 
 -- Dọn policy cũ nếu chạy lại script.
 drop policy if exists "Public can read active products" on public.products;
@@ -56,6 +72,9 @@ drop policy if exists "Admins can read all products" on public.products;
 drop policy if exists "Admins can insert products" on public.products;
 drop policy if exists "Admins can update products" on public.products;
 drop policy if exists "Admins can delete products" on public.products;
+drop policy if exists "Anyone can create orders" on public.orders;
+drop policy if exists "Admins can read orders" on public.orders;
+drop policy if exists "Admins can update orders" on public.orders;
 drop policy if exists "Users can read own profile" on public.profiles;
 drop policy if exists "Admins can read profiles" on public.profiles;
 drop policy if exists "Admins can manage profiles" on public.profiles;
@@ -114,6 +133,40 @@ create policy "Admins can delete products"
 on public.products for delete
 to authenticated
 using (
+  exists (
+    select 1 from public.profiles
+    where profiles.id = auth.uid()
+    and profiles.role = 'admin'
+  )
+);
+
+create policy "Anyone can create orders"
+on public.orders for insert
+to anon, authenticated
+with check (status = 'new');
+
+create policy "Admins can read orders"
+on public.orders for select
+to authenticated
+using (
+  exists (
+    select 1 from public.profiles
+    where profiles.id = auth.uid()
+    and profiles.role = 'admin'
+  )
+);
+
+create policy "Admins can update orders"
+on public.orders for update
+to authenticated
+using (
+  exists (
+    select 1 from public.profiles
+    where profiles.id = auth.uid()
+    and profiles.role = 'admin'
+  )
+)
+with check (
   exists (
     select 1 from public.profiles
     where profiles.id = auth.uid()
