@@ -1404,3 +1404,89 @@ body.product-modal-open { overflow: hidden; }
   .admin-order-meta div { grid-template-columns: 1fr; gap: 2px; }
   .admin-order-card__status select { width: 100%; }
 }
+
+.tv-series-filter {
+  padding: 14px 0;
+  background: var(--color-white);
+  border-top: 1px solid var(--color-gray-200);
+  border-bottom: 1px solid var(--color-gray-200);
+}
+.tv-series-filter__inner {
+  display: grid;
+  grid-template-columns: minmax(180px, 260px) minmax(0, 1fr);
+  gap: var(--space-4);
+  align-items: center;
+}
+.tv-series-filter__heading h2 {
+  margin: 0;
+  color: var(--color-primary-deep);
+  font-size: 1.12rem;
+}
+.tv-series-filter__heading p {
+  margin: 3px 0 0;
+  color: var(--color-gray-700);
+  font-size: 0.92rem;
+  font-weight: 650;
+  line-height: 1.35;
+}
+.tv-series-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+  max-width: 100%;
+}
+.tv-series-pill {
+  min-height: 40px;
+  border: 1px solid var(--color-primary-deep);
+  border-radius: 999px;
+  padding: 8px 13px;
+  background: var(--color-white);
+  color: var(--color-primary-deep);
+  font-weight: 750;
+  line-height: 1.2;
+  transition: background var(--transition), color var(--transition), border-color var(--transition), opacity var(--transition), transform var(--transition);
+}
+.tv-series-pill span {
+  margin-left: 3px;
+  color: var(--color-gray-500);
+  font-size: 0.82em;
+  font-weight: 800;
+}
+.tv-series-pill:hover:not(:disabled),
+.tv-series-pill.is-active {
+  background: var(--color-primary-deep);
+  color: var(--color-white);
+  transform: translateY(-1px);
+}
+.tv-series-pill:hover:not(:disabled) span,
+.tv-series-pill.is-active span { color: rgba(255,255,255,0.86); }
+.tv-series-pill:disabled {
+  border-color: var(--color-gray-200);
+  color: var(--color-gray-500);
+  opacity: 0.58;
+  cursor: not-allowed;
+}
+
+@media (max-width: 760px) {
+  .tv-series-filter { padding: 12px 0; }
+  .tv-series-filter__inner {
+    grid-template-columns: 1fr;
+    gap: 9px;
+  }
+  .tv-series-filter__heading h2 { font-size: 1rem; }
+  .tv-series-filter__heading p { font-size: 0.86rem; }
+  .tv-series-options {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-inline: contain;
+    padding: 2px 2px 9px;
+    scrollbar-width: thin;
+  }
+  .tv-series-pill {
+    flex: 0 0 auto;
+    min-height: 42px;
+    white-space: nowrap;
+  }
+}
