@@ -15,6 +15,9 @@ const dom = {
   backToTop: document.querySelector('.back-to-top'),
   mobileCall: document.querySelector('[data-call-button]'),
   brandList: document.querySelector('[data-brand-list]'),
+  tvSeriesOptions: document.querySelector('[data-tv-series-options]'),
+  tvSeriesTitle: document.querySelector('[data-tv-series-title]'),
+  tvSeriesStatus: document.querySelector('[data-tv-series-status]'),
   otherProductsMenus: document.querySelectorAll('[data-other-products-menu]'),
   otherProductsToggles: document.querySelectorAll('[data-other-products-toggle]'),
   brandLogoImages: document.querySelectorAll('.brand-logo-box img'),
@@ -40,6 +43,9 @@ let productIds = new Set();
 let activeSize = dom.selectedSize?.textContent?.trim() === 'Tất cả' ? '' : dom.selectedSize?.textContent?.trim() || '';
 let activeBrand = '';
 let activeType = '';
+let selectedBrand = '';
+let selectedSeries = '';
+let selectedSize = activeSize;
 let searchTerm = '';
 
 
@@ -60,6 +66,155 @@ const BRAND_DATA = [
   { name: 'Skyworth', logo: 'skyworth.png', wide: true },
   { name: 'Philips', logo: 'philips.jpeg', wide: true },
   { name: 'Hitachi', logo: 'hitachi.jpeg', wide: true },
+];
+const TV_SERIES_BY_BRAND = {
+  Samsung: [
+    { label: 'Crystal UHD', aliases: ['crystal uhd', 'crystal', 'crystal 4k'] },
+    { label: 'QLED', aliases: ['qled', 'quantum dot'] },
+    { label: 'Neo QLED', aliases: ['neo qled', 'neo quantum', 'mini led', 'neo led'] },
+    { label: 'OLED', aliases: ['oled'] },
+    { label: 'Lifestyle TV', aliases: ['lifestyle', 'the frame', 'the serif', 'the sero', 'the terrace'] },
+    { label: 'The Frame', aliases: ['the frame'] },
+    { label: 'The Serif', aliases: ['the serif'] },
+    { label: 'The Sero', aliases: ['the sero'] },
+    { label: 'UHD / 4K UHD', aliases: ['uhd', '4k uhd', 'ultra hd'] },
+    { label: 'LED', aliases: ['led'] },
+  ],
+  LG: [
+    { label: 'OLED', aliases: ['oled'] },
+    { label: 'QNED', aliases: ['qned'] },
+    { label: 'NanoCell', aliases: ['nanocell', 'nano cell', 'nano'] },
+    { label: 'UHD / 4K UHD', aliases: ['uhd', '4k uhd', 'ultra hd'] },
+    { label: 'LED', aliases: ['led'] },
+    { label: 'webOS', aliases: ['webos', 'web os'] },
+    { label: 'StanbyME', aliases: ['stanbyme', 'stanby me'] },
+  ],
+  Sony: [
+    { label: 'BRAVIA', aliases: ['bravia'] },
+    { label: 'BRAVIA XR', aliases: ['bravia xr', 'xr'] },
+    { label: 'OLED', aliases: ['oled'] },
+    { label: 'Mini LED', aliases: ['mini led'] },
+    { label: 'Full Array LED', aliases: ['full array', 'full array led'] },
+    { label: 'Google TV', aliases: ['google tv'] },
+    { label: 'UHD / 4K UHD', aliases: ['uhd', '4k uhd', 'ultra hd'] },
+    { label: 'LED', aliases: ['led'] },
+  ],
+  Toshiba: [
+    { label: 'REGZA', aliases: ['regza'] },
+    { label: 'C Series', aliases: ['c series', 'c350', 'c450'] },
+    { label: 'M Series', aliases: ['m series', 'm550', 'm650'] },
+    { label: 'Z Series', aliases: ['z series', 'z670', 'z770'] },
+    { label: 'QLED', aliases: ['qled'] },
+    { label: 'UHD / 4K UHD', aliases: ['uhd', '4k uhd', 'ultra hd'] },
+    { label: 'Android TV', aliases: ['android tv'] },
+    { label: 'Google TV', aliases: ['google tv'] },
+    { label: 'LED', aliases: ['led'] },
+  ],
+  Hisense: [
+    { label: 'ULED', aliases: ['uled'] },
+    { label: 'ULED Mini LED', aliases: ['uled mini led', 'mini led'] },
+    { label: 'QLED', aliases: ['qled', 'quantum dot'] },
+    { label: 'Laser TV', aliases: ['laser tv', 'laser'] },
+    { label: 'U Series', aliases: ['u series', 'u6', 'u7', 'u8'] },
+    { label: 'A Series', aliases: ['a series', 'a4', 'a6'] },
+    { label: 'UHD / 4K UHD', aliases: ['uhd', '4k uhd', 'ultra hd'] },
+    { label: 'Google TV', aliases: ['google tv'] },
+    { label: 'VIDAA', aliases: ['vidaa'] },
+  ],
+  TCL: [
+    { label: 'QLED', aliases: ['qled', 'quantum dot'] },
+    { label: 'Mini LED', aliases: ['mini led'] },
+    { label: 'C Series', aliases: ['c series', 'c645', 'c745', 'c755', 'c845'] },
+    { label: 'P Series', aliases: ['p series', 'p635', 'p735', 'p745'] },
+    { label: 'S Series', aliases: ['s series', 's5400', 's5500'] },
+    { label: 'Google TV', aliases: ['google tv'] },
+    { label: 'Android TV', aliases: ['android tv'] },
+    { label: 'UHD / 4K UHD', aliases: ['uhd', '4k uhd', 'ultra hd'] },
+    { label: 'LED', aliases: ['led'] },
+  ],
+  Panasonic: [
+    { label: 'OLED', aliases: ['oled'] },
+    { label: 'LED', aliases: ['led'] },
+    { label: 'UHD / 4K UHD', aliases: ['uhd', '4k uhd', 'ultra hd'] },
+    { label: 'Android TV', aliases: ['android tv'] },
+    { label: 'Google TV', aliases: ['google tv'] },
+    { label: 'MX Series', aliases: ['mx series', 'mx'] },
+    { label: 'LX Series', aliases: ['lx series', 'lx'] },
+    { label: 'JX Series', aliases: ['jx series', 'jx'] },
+  ],
+  Sharp: [
+    { label: 'AQUOS', aliases: ['aquos'] },
+    { label: 'QLED', aliases: ['qled'] },
+    { label: 'Android TV', aliases: ['android tv'] },
+    { label: 'Google TV', aliases: ['google tv'] },
+    { label: 'UHD / 4K UHD', aliases: ['uhd', '4k uhd', 'ultra hd'] },
+    { label: 'LED', aliases: ['led'] },
+  ],
+  Xiaomi: [
+    { label: 'Xiaomi TV A', aliases: ['tv a', 'xiaomi tv a', 'a series'] },
+    { label: 'Xiaomi TV A Pro', aliases: ['a pro', 'tv a pro'] },
+    { label: 'Xiaomi TV P1', aliases: ['p1', 'tv p1'] },
+    { label: 'QLED', aliases: ['qled'] },
+    { label: 'UHD / 4K UHD', aliases: ['uhd', '4k uhd', 'ultra hd'] },
+    { label: 'Google TV', aliases: ['google tv'] },
+    { label: 'Android TV', aliases: ['android tv'] },
+  ],
+  Casper: [
+    { label: 'Casper Smart TV', aliases: ['smart tv', 'casper smart'] },
+    { label: 'Android TV', aliases: ['android tv'] },
+    { label: 'Google TV', aliases: ['google tv'] },
+    { label: 'QLED', aliases: ['qled'] },
+    { label: 'UHD / 4K UHD', aliases: ['uhd', '4k uhd', 'ultra hd'] },
+    { label: 'HD / Full HD', aliases: ['hd', 'full hd', 'fhd'] },
+    { label: 'LED', aliases: ['led'] },
+  ],
+  Coocaa: [
+    { label: 'Coocaa Smart TV', aliases: ['smart tv', 'coocaa smart'] },
+    { label: 'S Series', aliases: ['s series', 's3', 's6', 's7'] },
+    { label: 'Y Series', aliases: ['y series', 'y72'] },
+    { label: 'QLED', aliases: ['qled'] },
+    { label: 'UHD / 4K UHD', aliases: ['uhd', '4k uhd', 'ultra hd'] },
+    { label: 'Google TV', aliases: ['google tv'] },
+    { label: 'Android TV', aliases: ['android tv'] },
+    { label: 'LED', aliases: ['led'] },
+  ],
+  Skyworth: [
+    { label: 'Skyworth Smart TV', aliases: ['smart tv', 'skyworth smart'] },
+    { label: 'QLED', aliases: ['qled'] },
+    { label: 'OLED', aliases: ['oled'] },
+    { label: 'UHD / 4K UHD', aliases: ['uhd', '4k uhd', 'ultra hd'] },
+    { label: 'Google TV', aliases: ['google tv'] },
+    { label: 'Android TV', aliases: ['android tv'] },
+    { label: 'SUE Series', aliases: ['sue', 'sue series'] },
+    { label: 'G Series', aliases: ['g series', 'g3a'] },
+  ],
+  Philips: [
+    { label: 'Ambilight', aliases: ['ambilight'] },
+    { label: 'OLED', aliases: ['oled'] },
+    { label: 'The One', aliases: ['the one'] },
+    { label: 'Performance Series', aliases: ['performance series'] },
+    { label: 'UHD / 4K UHD', aliases: ['uhd', '4k uhd', 'ultra hd'] },
+    { label: 'Google TV', aliases: ['google tv'] },
+    { label: 'Android TV', aliases: ['android tv'] },
+    { label: 'LED', aliases: ['led'] },
+  ],
+  Hitachi: [
+    { label: 'Hitachi Smart TV', aliases: ['smart tv', 'hitachi smart'] },
+    { label: 'Android TV', aliases: ['android tv'] },
+    { label: 'Google TV', aliases: ['google tv'] },
+    { label: 'QLED', aliases: ['qled'] },
+    { label: 'UHD / 4K UHD', aliases: ['uhd', '4k uhd', 'ultra hd'] },
+    { label: 'LED', aliases: ['led'] },
+  ],
+};
+
+const GENERAL_TV_SERIES_OPTIONS = [
+  { label: 'QLED', aliases: ['qled', 'quantum dot'] },
+  { label: 'OLED', aliases: ['oled'] },
+  { label: 'Mini LED', aliases: ['mini led', 'neo qled', 'uled mini led'] },
+  { label: 'UHD / 4K UHD', aliases: ['uhd', '4k uhd', 'ultra hd'] },
+  { label: 'Google TV', aliases: ['google tv'] },
+  { label: 'Android TV', aliases: ['android tv'] },
 ];
 const FILTER_ALL_LABEL = 'Tất cả';
 const BRAND_ALL_LABEL = 'Tất cả hãng';
@@ -94,9 +249,15 @@ const normalizeProduct = (product = {}, index = 0) => {
     id,
     brand: product.brand || 'Anh Minh Store',
     model: product.model || 'Tivi đang cập nhật',
-    fullName: product.fullName || product.full_name || product.model || 'Tivi đang cập nhật',
+    name: product.name || '',
+    fullName: product.fullName || product.full_name || product.name || product.model || 'Tivi đang cập nhật',
+    full_name: product.full_name || product.fullName || product.name || product.model || 'Tivi đang cập nhật',
     size: product.size || 'Liên hệ tư vấn',
     type: product.type || 'Tivi',
+    series: product.series || '',
+    line: product.line || '',
+    tv_line: product.tv_line || '',
+    product_line: product.product_line || '',
     condition: product.condition || 'Liên hệ kiểm tra tình trạng',
     warranty: product.warranty || '',
     features: Array.isArray(product.features) && product.features.length ? product.features : [],
@@ -106,6 +267,9 @@ const normalizeProduct = (product = {}, index = 0) => {
     images: Array.isArray(product.images) ? product.images : [],
     badge: product.badge || 'Tư vấn',
     description: product.description || 'Vui lòng liên hệ Anh Minh Store để được tư vấn chi tiết.',
+    overview: product.overview || '',
+    specifications: product.specifications || product.specs || '',
+    searchableText: product.searchableText || product.searchable_text || '',
     sortOrder: Number(product.sort_order ?? product.sortOrder ?? index),
     isFeatured: Boolean(product.is_featured ?? product.isFeatured ?? false),
   };
@@ -139,6 +303,110 @@ const normalizeVietnameseText = (value = '') => String(value)
   .replace(/[\u0300-\u036f]/g, '')
   .replace(/đ/g, 'd')
   .replace(/\s+/g, ' ');
+
+const normalizeText = normalizeVietnameseText;
+
+const stringifySearchPart = (value) => {
+  if (value === null || value === undefined) return '';
+  if (Array.isArray(value)) return value.map(stringifySearchPart).join(' ');
+  if (typeof value === 'object') return Object.values(value).map(stringifySearchPart).join(' ');
+  return String(value);
+};
+
+const getProductSearchText = (product = {}) => [
+  product.brand,
+  product.model,
+  product.fullName,
+  product.full_name,
+  product.name,
+  product.type,
+  product.features,
+  product.description,
+  product.overview,
+  product.specifications,
+  product.searchableText,
+]
+  .map(stringifySearchPart)
+  .join(' ');
+
+const getBrandSeriesConfig = (brand = '') => {
+  const normalizedBrand = normalizeBrand(brand);
+  return Object.entries(TV_SERIES_BY_BRAND).find(([brandName]) => normalizeBrand(brandName) === normalizedBrand)?.[1] || [];
+};
+
+const getSeriesOptionsForBrand = (brand = '') => (isAllFilter(brand) ? GENERAL_TV_SERIES_OPTIONS : getBrandSeriesConfig(brand));
+
+const findSeriesMatch = (text = '', options = []) => {
+  const normalized = normalizeText(text);
+  if (!normalized) return '';
+  const matches = [];
+  options.forEach((option, optionIndex) => {
+    const values = [option.label, ...(option.aliases || [])];
+    values.forEach((value) => {
+      const alias = normalizeText(value);
+      if (alias && normalized.includes(alias)) {
+        matches.push({ label: option.label, optionIndex, aliasLength: alias.length });
+      }
+    });
+  });
+  matches.sort((a, b) => b.aliasLength - a.aliasLength || a.optionIndex - b.optionIndex);
+  return matches[0]?.label || '';
+};
+
+const detectProductSeries = (product = {}, brand = selectedBrand) => {
+  const options = isAllFilter(brand) ? GENERAL_TV_SERIES_OPTIONS : getSeriesOptionsForBrand(brand);
+  const explicitSeries = [product.series, product.line, product.tv_line, product.product_line].map(stringifySearchPart).find((value) => value.trim());
+  if (explicitSeries) return findSeriesMatch(explicitSeries, options) || explicitSeries.trim();
+  return findSeriesMatch(getProductSearchText(product), options) || 'Dòng phổ thông';
+};
+
+const productMatchesBrand = (product = {}, brand = selectedBrand) => (isAllFilter(brand) ? true : normalizeBrand(product.brand) === normalizeBrand(brand));
+const productMatchesSize = (product = {}, size = selectedSize) => (isAllFilter(size) ? true : normalizeText(product.size).includes(normalizeText(size)));
+const productMatchesSeries = (product = {}, series = selectedSeries, brand = selectedBrand) => (
+  isAllFilter(series) ? true : normalizeText(detectProductSeries(product, brand)) === normalizeText(series)
+);
+
+const productMatchesGlobalFilters = (product = {}) => (
+  productMatchesBrand(product, selectedBrand)
+  && productMatchesSize(product, selectedSize)
+  && productMatchesSeries(product, selectedSeries, selectedBrand)
+);
+
+const getSeriesCount = (seriesLabel = '', brand = selectedBrand) => products.filter((product) => (
+  productMatchesBrand(product, brand)
+  && productMatchesSize(product, selectedSize)
+  && (seriesLabel ? productMatchesSeries(product, seriesLabel, brand) : true)
+)).length;
+
+const renderTvSeriesSelector = (brand = selectedBrand) => {
+  if (!dom.tvSeriesOptions) return;
+  const hasBrand = !isAllFilter(brand);
+  const title = hasBrand ? `Dòng tivi ${brand}` : 'Dòng tivi';
+  const allLabel = hasBrand ? `Tất cả dòng ${brand}` : 'Tất cả dòng';
+  const options = getSeriesOptionsForBrand(brand);
+  const optionLabels = options.map((option) => option.label);
+
+  if (selectedSeries && !optionLabels.some((label) => normalizeText(label) === normalizeText(selectedSeries))) {
+    selectedSeries = '';
+  }
+
+  if (dom.tvSeriesTitle) dom.tvSeriesTitle.textContent = title;
+  if (dom.tvSeriesStatus) {
+    dom.tvSeriesStatus.textContent = hasBrand
+      ? `Đang chọn: ${selectedSeries || allLabel}`
+      : 'Chọn dòng phổ biến hoặc chọn hãng để xem dòng tivi chi tiết hơn.';
+  }
+
+  const allCount = getSeriesCount('', brand);
+  const allButton = `<button class="tv-series-pill${selectedSeries ? '' : ' is-active'}" type="button" data-series="" aria-pressed="${selectedSeries ? 'false' : 'true'}">${escapeHtml(allLabel)} <span>${allCount}</span></button>`;
+  const buttons = options.map((option) => {
+    const count = getSeriesCount(option.label, brand);
+    const isActive = normalizeText(selectedSeries) === normalizeText(option.label);
+    return `<button class="tv-series-pill${isActive ? ' is-active' : ''}" type="button" data-series="${escapeHtml(option.label)}" aria-pressed="${String(isActive)}"${count ? '' : ' disabled'}>${escapeHtml(option.label)} <span>${count}</span></button>`;
+  }).join('');
+
+  dom.tvSeriesOptions.innerHTML = `${allButton}${buttons}`;
+};
 
 const normalizeProductType = (product = {}) => {
   const rawType = normalizeVietnameseText(product.type || product.productType || '');
@@ -303,16 +571,13 @@ const updatePressedState = (container, activeButton) => {
 
 const productMatchesSearch = (product) => {
   if (!searchTerm) return true;
-  return [product.brand, product.model, product.fullName, product.size, product.type, product.condition, product.warranty, product.features.join(' ')]
-    .join(' ')
-    .toLowerCase()
-    .includes(searchTerm);
+  return normalizeText(getProductSearchText(product)).includes(searchTerm);
 };
 
 const productMatchesSectionFilter = (product, filterState) => {
-  const matchesSize = isAllFilter(filterState.selectedSize) ? true : product.size === filterState.selectedSize;
-  const matchesBrand = isAllFilter(filterState.selectedBrand) ? true : normalizeBrand(product.brand) === normalizeBrand(filterState.selectedBrand);
-  return matchesSize && matchesBrand && productMatchesSearch(product);
+  const matchesSectionSize = isAllFilter(filterState.selectedSize) ? true : normalizeText(product.size).includes(normalizeText(filterState.selectedSize));
+  const matchesSectionBrand = isAllFilter(filterState.selectedBrand) ? true : normalizeBrand(product.brand) === normalizeBrand(filterState.selectedBrand);
+  return matchesSectionSize && matchesSectionBrand && productMatchesGlobalFilters(product) && productMatchesSearch(product);
 };
 
 const getSectionProducts = (sectionKey, filterState = {}) => {
@@ -324,10 +589,8 @@ const getSectionProducts = (sectionKey, filterState = {}) => {
 
   if (sectionKey === 'featured') {
     return sectionProducts.filter((product) => {
-      const matchesSize = activeSize ? product.size.toLowerCase().includes(activeSize.toLowerCase()) : true;
-      const matchesBrand = activeBrand ? product.brand.toLowerCase() === activeBrand.toLowerCase() : true;
       const matchesType = activeType ? normalizeProductType(product) === normalizeProductType({ type: activeType }) : true;
-      return matchesSize && matchesBrand && matchesType && productMatchesSearch(product);
+      return productMatchesGlobalFilters(product) && matchesType && productMatchesSearch(product);
     });
   }
 
@@ -413,7 +676,7 @@ const renderTvSection = ({ grid, empty, count, sectionKey, filterState, sectionT
   const filteredProducts = getSectionProducts(sectionKey, filterState);
   const visibleProducts = filteredProducts.slice(0, visibleCounts[sectionKey]);
   const cards = visibleProducts.map((product) => renderSectionProductCard(product, sectionType)).join('');
-  const emptyMarkup = `<p class="empty-state used-tv-empty${sectionType === 'new' ? ' new-tv-empty' : ''}" ${sectionType === 'new' ? 'data-new-tv-empty' : 'data-used-tv-empty'}${filteredProducts.length ? ' hidden' : ''}>${FILTER_EMPTY_MESSAGE}</p>`;
+  const emptyMarkup = `<p class="empty-state used-tv-empty${sectionType === 'new' ? ' new-tv-empty' : ''}" ${sectionType === 'new' ? 'data-new-tv-empty' : 'data-used-tv-empty'}${filteredProducts.length ? ' hidden' : ''}>Chưa có sản phẩm phù hợp với bộ lọc này.</p>`;
   grid.innerHTML = `${cards}${emptyMarkup}`;
   if (count) count.textContent = `Đang hiển thị: ${visibleProducts.length} sản phẩm`;
   if (empty) empty.hidden = filteredProducts.length > 0;
@@ -438,18 +701,26 @@ const syncSectionBrandRows = () => {
 };
 
 const applyBrandFilter = (brand = '') => {
-  const selectedBrand = normalizeFilterValue(brand);
-  activeBrand = selectedBrand;
+  const nextBrand = normalizeFilterValue(brand);
+  activeBrand = nextBrand;
+  selectedBrand = nextBrand;
   activeSize = '';
+  selectedSize = '';
+  selectedSeries = '';
   activeType = '';
   searchTerm = '';
-  usedTvFilter.selectedBrand = selectedBrand || FILTER_ALL_LABEL;
-  newTvFilter.selectedBrand = selectedBrand || FILTER_ALL_LABEL;
+  usedTvFilter.selectedBrand = nextBrand || FILTER_ALL_LABEL;
+  newTvFilter.selectedBrand = nextBrand || FILTER_ALL_LABEL;
   if (dom.searchInput) dom.searchInput.value = '';
-  if (dom.selectedSize) dom.selectedSize.textContent = selectedBrand || FILTER_ALL_LABEL;
+  if (dom.selectedSize) dom.selectedSize.textContent = nextBrand || FILTER_ALL_LABEL;
+  dom.sizeOptions?.querySelectorAll('.size-pill').forEach((button) => {
+    const isActive = !(button.dataset.size || '');
+    button.classList.toggle('is-active', isActive);
+    button.setAttribute('aria-pressed', String(isActive));
+  });
   syncBrandPanelActive();
   syncSectionBrandRows();
-  applyFiltersAndRender();
+  applyProductFilters();
 };
 
 dom.brandList?.addEventListener('click', (event) => {
@@ -615,23 +886,10 @@ const renderProductMedia = (product, label) => {
     </div>`;
 };
 
-const getFilteredProducts = () => {
-  if (searchTerm) {
-    return products.filter((product) =>
-      [product.brand, product.model, product.fullName, product.size, product.type, product.condition, product.warranty, product.features.join(' ')]
-        .join(' ')
-        .toLowerCase()
-        .includes(searchTerm),
-    );
-  }
-
-  return products.filter((product) => {
-    const matchesSize = activeSize ? product.size.toLowerCase().includes(activeSize.toLowerCase()) : true;
-    const matchesBrand = activeBrand ? product.brand.toLowerCase() === activeBrand.toLowerCase() : true;
-    const matchesType = activeType ? product.type.toLowerCase().includes(activeType.toLowerCase()) : true;
-    return matchesSize && matchesBrand && matchesType;
-  });
-};
+const getFilteredProducts = () => products.filter((product) => {
+  const matchesType = activeType ? normalizeProductType(product) === normalizeProductType({ type: activeType }) : true;
+  return productMatchesGlobalFilters(product) && matchesType && productMatchesSearch(product);
+});
 
 const renderProductCards = () => {
   if (!dom.productGrid) return;
@@ -643,7 +901,7 @@ const renderProductCards = () => {
 
   const filteredProducts = getSectionProducts('featured');
   if (!filteredProducts.length) {
-    dom.productGrid.innerHTML = '<p class="empty-state">Chưa có sản phẩm nổi bật phù hợp. Vui lòng chọn bộ lọc khác hoặc gọi 0905111223 để được tư vấn.</p>';
+    dom.productGrid.innerHTML = '<p class="empty-state">Chưa có sản phẩm phù hợp với bộ lọc này.</p>';
     updateLoadMoreButton(dom.featuredLoadMoreButton, 'featured', 0);
     return;
   }
@@ -668,54 +926,48 @@ const showMoreProducts = (sectionKey) => {
 
 const applyFiltersAndRender = ({ resetSections = ['featured', 'newTv', 'oldTv'] } = {}) => {
   resetSections.forEach(resetVisibleCount);
+  renderTvSeriesSelector(selectedBrand);
   renderProductCards();
   renderUsedTvSection();
   renderNewTvSection();
 };
+
+const applyProductFilters = (options = {}) => applyFiltersAndRender(options);
 
 renderBrandPanel();
 renderBrandFilterRow({ container: dom.usedTvBrandRow, sectionType: 'used' });
 renderBrandFilterRow({ container: dom.newTvBrandRow, sectionType: 'new' });
 applyFiltersAndRender();
 
+dom.tvSeriesOptions?.addEventListener('click', (event) => {
+  const pill = event.target.closest('.tv-series-pill');
+  if (!pill || pill.disabled) return;
+  selectedSeries = pill.dataset.series || '';
+  applyProductFilters();
+  dom.productGrid?.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'nearest' });
+});
+
 dom.sizeOptions?.addEventListener('click', (event) => {
   const pill = event.target.closest('.size-pill');
   if (!pill) return;
   activeSize = pill.dataset.size || '';
-  activeBrand = '';
-  usedTvFilter.selectedBrand = FILTER_ALL_LABEL;
-  newTvFilter.selectedBrand = FILTER_ALL_LABEL;
-  syncBrandPanelActive();
-  syncSectionBrandRows();
+  selectedSize = activeSize;
   activeType = '';
-  searchTerm = '';
-  if (dom.searchInput) dom.searchInput.value = '';
   dom.sizeOptions.querySelectorAll('.size-pill').forEach((button) => {
     const isActive = button === pill;
     button.classList.toggle('is-active', isActive);
     button.setAttribute('aria-pressed', String(isActive));
   });
   if (dom.selectedSize) dom.selectedSize.textContent = activeSize || 'Tất cả';
-  applyFiltersAndRender();
+  applyProductFilters();
   dom.productGrid?.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'nearest' });
 });
 
 dom.searchForm?.addEventListener('submit', (event) => {
   event.preventDefault();
-  searchTerm = dom.searchInput?.value.trim().toLowerCase() || '';
-  activeSize = '';
-  activeBrand = '';
-  activeType = '';
-  usedTvFilter.selectedBrand = FILTER_ALL_LABEL;
-  newTvFilter.selectedBrand = FILTER_ALL_LABEL;
-  syncBrandPanelActive();
-  syncSectionBrandRows();
-  if (dom.selectedSize) dom.selectedSize.textContent = searchTerm ? `Tìm: ${dom.searchInput.value.trim()}` : 'Tất cả';
-  dom.sizeOptions?.querySelectorAll('.size-pill').forEach((button) => {
-    button.classList.remove('is-active');
-    button.setAttribute('aria-pressed', 'false');
-  });
-  applyFiltersAndRender();
+  searchTerm = normalizeText(dom.searchInput?.value.trim() || '');
+  if (dom.selectedSize) dom.selectedSize.textContent = searchTerm ? `Tìm: ${dom.searchInput.value.trim()}` : (selectedSize || selectedBrand || 'Tất cả');
+  applyProductFilters();
   scrollToHash('#san-pham');
 });
 
@@ -725,7 +977,10 @@ dom.productFilterLinks.forEach((link) => {
     const filterType = link.dataset.productFilter;
     const filterValue = link.dataset.filterValue || '';
     activeSize = filterType === 'size' ? filterValue : '';
+    selectedSize = activeSize;
     activeBrand = filterType === 'brand' ? filterValue : '';
+    selectedBrand = activeBrand;
+    selectedSeries = '';
     activeType = filterType === 'type' ? filterValue : '';
     searchTerm = '';
     if (dom.searchInput) dom.searchInput.value = '';
@@ -740,7 +995,7 @@ dom.productFilterLinks.forEach((link) => {
     newTvFilter.selectedBrand = filterType === 'brand' ? filterValue || FILTER_ALL_LABEL : FILTER_ALL_LABEL;
     syncBrandPanelActive();
     syncSectionBrandRows();
-    applyFiltersAndRender();
+    applyProductFilters();
 
     const label = filterValue || 'Tất cả';
     if (dom.selectedSize) dom.selectedSize.textContent = label;
@@ -775,7 +1030,7 @@ const refreshPublicProductsFromSupabase = async () => {
     renderBrandFilterRow({ container: dom.newTvBrandRow, sectionType: 'new' });
     syncBrandPanelActive();
     syncSectionBrandRows();
-    applyFiltersAndRender();
+    applyProductFilters();
   } catch (error) {
     console.warn('Không thể tải sản phẩm từ Supabase, dùng dữ liệu products.js dự phòng.', error);
   }
