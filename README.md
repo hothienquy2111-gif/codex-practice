@@ -311,3 +311,12 @@ Trong danh sách banner, bấm **Xoá** và xác nhận. Hệ thống xoá dòng
 
 ### 15.7. Lưu ý bảo mật frontend
 Không dùng **service role key** trong `supabase-config.js` hoặc bất kỳ file frontend nào. Frontend chỉ dùng `anon public` key; quyền thêm/sửa/xoá được kiểm soát bằng RLS và policy kiểm tra `public.profiles.role = 'admin'`.
+
+## Chatbot AM AI
+Website có chatbot AM AI dạng preset/rule-based sử dụng mascot `linh vật AM.jpeg` làm avatar. Chatbot chạy hoàn toàn ở frontend bằng HTML, CSS và JavaScript thuần, không dùng OpenAI, không dùng AI API, không dùng API key, không tiêu thụ token, không cần Supabase Edge Functions và không cần tạo thêm bảng Supabase.
+
+- Giao diện và vị trí nút nổi được chỉnh trong `chatbot.css`.
+- Câu trả lời FAQ, từ khoá nhận diện và logic gợi ý sản phẩm có thể chỉnh trong `chatbot.js`, đặc biệt tại hàm `getBotReply(message)`.
+- Avatar hiện đang trỏ tới file `linh vật AM.jpeg`. Nếu muốn đổi hình, có thể thay file cùng tên hoặc cập nhật hằng `AVATAR_SRC` trong `chatbot.js`.
+- Logic gợi ý sản phẩm hiện đọc an toàn từ `window.products`/dữ liệu global nếu có và từ các thẻ sản phẩm đang render trên trang; phần này có thể cải tiến thêm sau.
+- Future AI API integration can be added inside `getBotReply()` later, nhưng phiên bản hiện tại không có bất kỳ đoạn gọi API AI nào.
