@@ -1660,3 +1660,55 @@ body.product-modal-open { overflow: hidden; }
     scrollbar-width: thin;
   }
 }
+
+/* Final homepage banner size override - safe desktop smaller banner */
+.home-hero-layout .hero-carousel,
+.home-hero-layout .banner-carousel,
+.home-hero-layout .hero-slider,
+.home-hero-layout .carousel,
+.hero-carousel,
+.banner-carousel,
+.hero-slider {
+  width: min(76vw, 1100px) !important;
+  max-width: calc(100% - 32px) !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  height: auto !important;
+  max-height: none !important;
+  aspect-ratio: auto !important;
+  background: transparent !important;
+  overflow: hidden !important;
+}
+
+.home-hero-layout .hero-carousel img,
+.home-hero-layout .banner-carousel img,
+.home-hero-layout .hero-slider img,
+.home-hero-layout .carousel img,
+.home-hero-layout .hero-slide img,
+.home-hero-layout .carousel-slide img,
+.hero-carousel img,
+.banner-carousel img,
+.hero-slider img,
+.hero-slide img,
+.carousel-slide img {
+  width: 100% !important;
+  height: auto !important;
+  max-width: 100% !important;
+  display: block !important;
+  object-fit: contain !important;
+  object-position: center center !important;
+  transform: none !important;
+}
+
+@media (max-width: 768px) {
+  .home-hero-layout .hero-carousel,
+  .home-hero-layout .banner-carousel,
+  .home-hero-layout .hero-slider,
+  .home-hero-layout .carousel,
+  .hero-carousel,
+  .banner-carousel,
+  .hero-slider {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}
