@@ -350,7 +350,7 @@ const getBrandSeriesConfig = (brand = '') => {
   return Object.entries(TV_SERIES_BY_BRAND).find(([brandName]) => normalizeBrand(brandName) === normalizedBrand)?.[1] || [];
 };
 
-const getSeriesOptionsForBrand = (brand = '') => (isAllFilter(brand) ? GENERAL_TV_SERIES_OPTIONS : getBrandSeriesConfig(brand));
+const getSeriesOptionsForBrand = (brand = '') => (isAllFilter(brand) ? [] : getBrandSeriesConfig(brand));
 
 const findSeriesMatch = (text = '', options = []) => {
   const normalized = normalizeText(text);
@@ -433,6 +433,15 @@ const renderSeriesSelectorForSection = (sectionKey, brand) => {
   const filterState = config.filterState;
   const isAllBrand = isAllFilter(brand);
   config.block.hidden = false;
+  config.block.classList.toggle('is-series-hidden', isAllBrand);
+
+  if (isAllBrand) {
+    filterState.series = FILTER_ALL_VALUE;
+    if (config.title) config.title.textContent = 'Dòng tivi';
+    if (config.status) config.status.textContent = `Đang chọn: ${TV_SERIES_ALL_LABEL}`;
+    config.options.innerHTML = '';
+    return;
+  }
 
   const options = getSeriesOptionsForBrand(brand);
   const optionLabels = options.map((option) => option.label);
@@ -641,7 +650,7 @@ const productMatchesSearch = (product) => {
 const productMatchesSectionFilter = (product, filterState) => {
   const matchesSectionSize = productMatchesSize(product, filterState.size);
   const matchesSectionBrand = productMatchesBrand(product, filterState.brand);
-  const matchesSectionSeries = productMatchesSeries(product, filterState.series, filterState.brand);
+  const matchesSectionSeries = isAllFilter(filterState.brand) ? true : productMatchesSeries(product, filterState.series, filterState.brand);
   return matchesSectionSize && matchesSectionBrand && matchesSectionSeries && productMatchesSearch(product);
 };
 
