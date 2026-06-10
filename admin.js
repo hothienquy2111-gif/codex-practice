@@ -1040,41 +1040,98 @@
   };
 
   const commonTvSizes = ['32', '40', '43', '49', '50', '55', '58', '65', '70', '75', '85', '86', '98', '100'];
-  const getSizeNumber = (value = '') => {
+  const escapeRegExp = (value = '') => String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const parseSizeNumber = (sizeText = '') => {
+    const text = normalizeText(sizeText);
+    if (!text) return '';
+    const sizeMatch = text.match(/(?:^|\b)(\d{2,3})(?:\s*(?:-|–|—)?\s*(?:inch|in)\b|\s*["”″]|\b)/i);
+    return sizeMatch?.[1] || '';
+  };
+  const buildSizeReplacementPatterns = (oldSizeNumber = '') => {
+    const oldSize = escapeRegExp(oldSizeNumber);
+    if (!oldSize) return [];
+    return [
+      new RegExp(`\\b${oldSize}\\s*(?:-|–|—)?\\s*inch\\b`, 'gi'),
+      new RegExp(`\\b${oldSize}\\s*in\\b`, 'gi'),
+      new RegExp(`\\b${oldSize}\\s*["”″]`, 'gi'),
+    ];
+  };
+  const replaceSizeText = (value = '', oldSizeNumber = '', newSizeNumber = '') => {
+    if (value === null || value === undefined) return value;
+    const text = String(value);
+    if (!oldSizeNumber || !newSizeNumber) return text;
+    return buildSizeReplacementPatterns(oldSizeNumber).reduce(
+      (updated, pattern) => updated.replace(pattern, `${newSizeNumber} inch`),
+      text,
+    );
+  };
+  const replaceModelSizeNumber = (value = '', oldSizeNumber = '', newSizeNumber = '') => {
+    if (value === null || value === undefined) return value;
+    const text = String(value);
+    if (!oldSizeNumber || !newSizeNumber) return text;
+    const oldSize = escapeRegExp(oldSizeNumber);
+    const modelTokenPattern = /\b(?=[A-Z0-9]*[A-Z])[A-Z0-9]+\b/g;
+    const oldSizeInModelPattern = new RegExp(`(?<!\\d)${oldSize}(?!\\d)`, 'g');
+
+    return text.replace(modelTokenPattern, (token) => {
+      if (!oldSizeInModelPattern.test(token)) {
+        oldSizeInModelPattern.lastIndex = 0;
+        return token;
+      }
+      oldSizeInModelPattern.lastIndex = 0;
+      return token.replace(oldSizeInModelPattern, (match, offset) => {
+        const previousChar = token[offset - 1] || '';
+        const nextChar = token[offset + match.length] || '';
+        const hasSafePrefix = !previousChar || /[A-Z]/.test(previousChar);
+        const hasSafeSuffix = /[A-Z]/.test(nextChar);
+        return hasSafePrefix && hasSafeSuffix ? newSizeNumber : match;
+      });
+    });
+  };
+  const replaceSizeAndModelEverywhere = (value, oldSizeNumber = '', newSizeNumber = '') => {
+    if (Array.isArray(value)) return value.map((item) => replaceSizeAndModelEverywhere(item, oldSizeNumber, newSizeNumber));
+    if (value && typeof value === 'object') {
+      return Object.fromEntries(Object.entries(value).map(([key, item]) => {
+        if (['price', 'old_price', 'oldPrice', 'image', 'images'].includes(key)) return [key, item];
+        return [key, replaceSizeAndModelEverywhere(item, oldSizeNumber, newSizeNumber)];
+      }));
+    }
+    if (typeof value === 'string') {
+      return replaceModelSizeNumber(replaceSizeText(value, oldSizeNumber, newSizeNumber), oldSizeNumber, newSizeNumber);
+    }
+    return value;
+  };
+  const deepCloneProduct = (value) => {
+    if (typeof structuredClone === 'function') return structuredClone(value);
+    return JSON.parse(JSON.stringify(value));
+  };
+  const getModelSizeNumber = (value = '') => {
     const text = normalizeText(value);
-    const sizeTextMatch = text.match(/\b(\d{2,3})(?:\s*(?:inch|in)\b|["”])?/i);
-    if (sizeTextMatch?.[1]) return sizeTextMatch[1];
-    const modelSizeMatch = text.match(new RegExp(`(?:^|[A-Z])(${commonTvSizes.join('|')})(?=[A-Z0-9])`, 'i'));
-    return modelSizeMatch?.[1] || '';
+    const tokens = text.match(/\b(?=[A-Z0-9]*[A-Z])[A-Z0-9]+\b/g) || [];
+    for (const token of tokens) {
+      for (const size of commonTvSizes) {
+        const matches = Array.from(token.matchAll(new RegExp(`(?<!\\d)${escapeRegExp(size)}(?!\\d)`, 'g')));
+        const hasSafeMatch = matches.some((match) => {
+          const previousChar = token[match.index - 1] || '';
+          const nextChar = token[match.index + size.length] || '';
+          return (!previousChar || /[A-Z]/.test(previousChar)) && /[A-Z]/.test(nextChar);
+        });
+        if (hasSafeMatch) return size;
+      }
+    }
+    return '';
   };
   const detectProductSizeNumber = (product = {}) => {
     const fields = [product.size, product.full_name || product.fullName, product.model, product.id, product.description, serializeSearchValue(product.specifications)];
     for (const field of fields) {
-      const number = getSizeNumber(field);
+      const number = parseSizeNumber(field) || getModelSizeNumber(field);
       if (number && commonTvSizes.includes(number)) return number;
     }
     return '';
   };
-  const escapeRegExp = (value = '') => String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const replaceSizeInText = (value = '', oldSizeNumber = '', newSize = '') => {
-    if (value === null || value === undefined) return value;
-    const text = String(value);
-    const newSizeNumber = getSizeNumber(newSize);
-    if (!oldSizeNumber || !newSizeNumber) return text;
-    let updated = text
-      .replace(new RegExp(`\\b${escapeRegExp(oldSizeNumber)}\\s*[-]?\\s*inch\\b`, 'gi'), newSize)
-      .replace(new RegExp(`\\b${escapeRegExp(oldSizeNumber)}\\s*in\\b`, 'gi'), `${newSizeNumber}in`)
-      .replace(new RegExp(`\\b${escapeRegExp(oldSizeNumber)}\\s*["”]`, 'gi'), `${newSizeNumber}"`);
-    updated = updated.replace(new RegExp(`\\b([A-Z]{1,6})${escapeRegExp(oldSizeNumber)}(?=[A-Z0-9])`, 'gi'), `$1${newSizeNumber}`);
-    return updated;
-  };
-  const deepReplaceSize = (value, oldSizeNumber = '', newSize = '') => {
-    if (Array.isArray(value)) return value.map((item) => deepReplaceSize(item, oldSizeNumber, newSize));
-    if (value && typeof value === 'object') {
-      return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, deepReplaceSize(item, oldSizeNumber, newSize)]));
-    }
-    if (typeof value === 'string' || typeof value === 'number') return replaceSizeInText(value, oldSizeNumber, newSize);
-    return value;
+  const normalizeDuplicateSizeText = (sizeText = '') => {
+    const sizeNumber = parseSizeNumber(sizeText);
+    return sizeNumber ? `${sizeNumber} inch` : normalizeText(sizeText);
   };
   const generateUniqueProductId = (brand = '', model = '', size = '') => {
     const baseId = generateProductId(brand, model, size) || `san-pham-${Date.now()}`;
@@ -1107,9 +1164,12 @@
   };
   const buildDuplicatedProduct = (source, newSize, newPrice, newOldPrice) => {
     const oldSizeNumber = detectProductSizeNumber(source);
-    const duplicate = deepReplaceSize({ ...source }, oldSizeNumber, newSize);
-    duplicate.size = newSize;
-    duplicate.id = generateUniqueProductId(duplicate.brand, duplicate.model, newSize);
+    const newSizeNumber = parseSizeNumber(newSize);
+    const normalizedNewSize = normalizeDuplicateSizeText(newSize);
+    const duplicate = replaceSizeAndModelEverywhere(deepCloneProduct(source), oldSizeNumber, newSizeNumber);
+    duplicate.size = normalizedNewSize;
+    duplicate.model = replaceModelSizeNumber(duplicate.model || source.model || '', oldSizeNumber, newSizeNumber);
+    duplicate.id = generateUniqueProductId(duplicate.brand, duplicate.model, normalizedNewSize);
     duplicate.price = newPrice;
     duplicate.old_price = newOldPrice || '';
     duplicate.image = source.image || '';
@@ -1125,11 +1185,12 @@
     event.preventDefault();
     if (!duplicatingProduct || !dom.duplicateForm) return;
     const form = dom.duplicateForm;
-    const newSize = getDuplicateSize(form);
+    const newSize = normalizeDuplicateSizeText(getDuplicateSize(form));
+    const newSizeNumber = parseSizeNumber(newSize);
     const newPrice = normalizeText(form.duplicatePrice.value);
     const newOldPrice = normalizeText(form.duplicateOldPrice.value);
-    if (!newSize) {
-      showMessage(dom.duplicateMessage, 'Vui lòng chọn hoặc nhập kích thước mới.', 'error');
+    if (!newSize || !newSizeNumber) {
+      showMessage(dom.duplicateMessage, 'Vui lòng chọn hoặc nhập kích thước mới hợp lệ.', 'error');
       (form.duplicateSize.value === 'custom' ? form.duplicateCustomSize : form.duplicateSize).focus();
       return;
     }
@@ -1144,11 +1205,11 @@
       const { error } = await client.from('products').insert(duplicate);
       if (error) throw error;
       closeDuplicateModal();
-      showMessage(dom.adminMessage, 'Đã nhân bản sản phẩm. Vui lòng kiểm tra lại thông tin và ảnh trước khi bật hiển thị.', 'success');
+      showMessage(dom.adminMessage, 'Đã nhân bản sản phẩm. Vui lòng kiểm tra lại thông tin, kích thước, khối lượng và giá trước khi bật hiển thị.', 'success');
       await loadProducts();
       const createdProduct = products.find((product) => product.id === duplicate.id) || duplicate;
       openForm(createdProduct);
-      showMessage(dom.formMessage, 'Đã tạo bản nháp nhân bản. Vui lòng kiểm tra lại thông tin rồi bật hiển thị.', 'info');
+      showMessage(dom.formMessage, 'Đã nhân bản sản phẩm. Vui lòng kiểm tra lại kích thước, khối lượng và thông số lắp đặt cho size mới.', 'info');
     } catch (error) {
       console.warn(error);
       showMessage(dom.duplicateMessage, error.message || 'Không thể nhân bản sản phẩm. Vui lòng thử lại.', 'error');
