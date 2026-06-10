@@ -534,8 +534,6 @@
     bindOrderButton(product);
   };
 
-  const findFallbackProduct = () => (Array.isArray(window.products) ? window.products.find((item) => item.id === productId) : null);
-
   const loadProductDetail = async () => {
     if (!productId) {
       renderMissingProduct();
@@ -558,17 +556,11 @@
           return;
         }
       } catch (error) {
-        console.warn('Không thể tải chi tiết sản phẩm từ Supabase, dùng dữ liệu products.js dự phòng.', error);
+        console.warn('Không thể tải chi tiết sản phẩm từ Supabase. Website công khai sẽ không dùng dữ liệu demo products.js.', error);
       }
     }
 
-    const product = findFallbackProduct();
-    if (!product) {
-      renderMissingProduct();
-      return;
-    }
-
-    renderProductDetail(product);
+    renderMissingProduct();
   };
 
   loadProductDetail();
