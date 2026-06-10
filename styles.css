@@ -158,7 +158,7 @@ p { line-height: 1.65; }
 .hero__main,
 .hero-carousel-area,
 .hero-banner-area { min-width: 0; box-sizing: border-box; }
-.hero__main { display: grid; grid-template-columns: minmax(0, 1fr) clamp(190px, 16vw, 230px); column-gap: 14px; row-gap: 10px; justify-items: stretch; align-content: start; width: 100%; }
+.hero__main { display: grid; grid-template-columns: minmax(0, 1fr) clamp(220px, 19vw, 275px); column-gap: 14px; row-gap: 10px; justify-items: stretch; align-content: start; width: 100%; }
 .hero-intro { grid-column: 1 / -1; margin-bottom: 0; }
 .hero-intro h1,
 .home-hero-title { margin: 0; max-width: 100%; color: var(--color-primary-deep); font-size: clamp(28px, 2.2vw, 38px); font-weight: 750; line-height: 1.15; letter-spacing: -0.035em; white-space: normal; overflow-wrap: anywhere; }
@@ -178,7 +178,7 @@ p { line-height: 1.65; }
   background: transparent;
   box-shadow: 0 14px 32px rgba(2, 56, 113, 0.12);
 }
-.home-hero-right-banner { grid-column: 2; grid-row: 2; align-self: start; width: 100%; max-width: 240px; min-width: 0; justify-self: end; }
+.home-hero-right-banner { grid-column: 2; grid-row: 2; align-self: start; width: 100%; max-width: 280px; min-width: 0; justify-self: end; }
 .home-hero-right-banner-card {
   position: relative;
   display: block;
@@ -197,10 +197,9 @@ p { line-height: 1.65; }
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   object-position: center center;
-  transform: scale(1.2);
-  transform-origin: center center;
+  transform: none;
 }
 .home-hero-right-banner-placeholder { position: absolute; inset: 0; display: grid; align-content: center; justify-items: center; gap: 8px; padding: 18px; text-align: center; background: radial-gradient(circle at 50% 12%, rgba(255,255,255,0.95), rgba(255,255,255,0) 34%), linear-gradient(160deg, #ffffff 0%, #eef8ff 52%, #cfe8ff 100%); }
 .home-hero-right-banner-placeholder::before { content: ""; width: 62px; height: 62px; border-radius: 20px; background: linear-gradient(135deg, var(--color-primary-highlight), var(--color-primary-deep)); box-shadow: 0 16px 34px rgba(11, 79, 156, 0.22); }
@@ -529,7 +528,7 @@ p { line-height: 1.65; }
 @media (max-width: 1199px) {
   .hero__grid,
   .home-hero-layout { grid-template-columns: 220px minmax(0, 1fr); max-width: 1420px; }
-  .hero__main { grid-template-columns: minmax(0, 1fr) 200px; }
+  .hero__main { grid-template-columns: minmax(0, 1fr) 235px; }
   .product-grid, .used-tv-grid, .new-tv-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 
@@ -539,7 +538,7 @@ p { line-height: 1.65; }
   .header-actions { grid-column: 2 / 4; justify-self: end; }
   .hero__grid,
   .home-hero-layout { grid-template-columns: 210px minmax(0, 1fr); column-gap: 10px; row-gap: 12px; }
-  .hero__main { grid-template-columns: minmax(0, 1fr) 180px; column-gap: 12px; }
+  .hero__main { grid-template-columns: minmax(0, 1fr) 210px; column-gap: 12px; }
   .brand-panel { width: 100%; }
   .product-grid, .used-tv-grid, .new-tv-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .trust-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -552,7 +551,7 @@ p { line-height: 1.65; }
   .hero__main { display: contents; }
   .hero-intro { order: 1; }
   .home-hero-layout .home-hero-banner-wide-left { order: 2; width: 100%; max-width: 100%; max-height: none; }
-  .home-hero-right-banner { order: 3; grid-column: auto; grid-row: auto; width: min(220px, 44vw); max-width: 100%; justify-self: center; }
+  .home-hero-right-banner { order: 3; grid-column: auto; grid-row: auto; width: min(260px, 52vw); max-width: 100%; justify-self: center; }
   .brand-panel { order: 4; width: 100%; height: auto; max-height: 340px; }
   .hero-benefits { order: 5; }
   .brand-list { flex: initial; grid-template-columns: repeat(2, minmax(0, 1fr)); max-height: 300px; }
@@ -580,7 +579,7 @@ p { line-height: 1.65; }
   .hero__main { display: contents; }
   .hero-intro { order: 1; }
   .home-hero-layout .home-hero-banner-wide-left { order: 2; width: 100%; max-width: 100%; }
-  .home-hero-right-banner { order: 3; grid-column: auto; grid-row: auto; width: min(210px, 48vw); max-width: 100%; justify-self: center; }
+  .home-hero-right-banner { order: 3; grid-column: auto; grid-row: auto; width: min(250px, 56vw); max-width: 100%; justify-self: center; }
   .brand-panel { order: 4; width: 100%; height: auto; max-height: 340px; }
   .hero-benefits { order: 5; }
   .brand-list { flex: initial; grid-template-columns: repeat(2, minmax(0, 1fr)); max-height: 300px; }
