@@ -4,7 +4,7 @@
   const CHATBOT_ID = 'anh-minh-chatbot';
   const HISTORY_KEY = 'anhMinhChatHistory';
   const HISTORY_VERSION_KEY = 'anhMinhChatHistoryVersion';
-  const AM_CHATBOT_HISTORY_VERSION = 'extra-support-intents-v8';
+  const AM_CHATBOT_HISTORY_VERSION = 'brand-series-comparison-v9';
   const MAX_HISTORY = 20;
   const AVATAR_SRC = 'linh%20v%E1%BA%ADt%20AM.jpeg';
   const HOTLINE = '0905111223';
@@ -179,6 +179,374 @@
       { label: 'UHD / 4K UHD', aliases: ['uhd', '4k uhd', 'ultra hd'] },
       { label: 'LED', aliases: ['led'] },
     ],
+  };
+
+  const TV_SERIES_COMPARISON_PROFILES = {
+    led: {
+      label: 'LED',
+      aliases: ['led', 'led 4k'],
+      level: 1,
+      strengths: 'giá dễ tiếp cận, đủ dùng, tiết kiệm chi phí',
+      tradeoffs: 'hình ảnh/độ tương phản thường không nổi bật bằng QLED/OLED/Mini LED',
+      bestFor: 'phòng ngủ, nhu cầu cơ bản, ngân sách thấp',
+      budgetPosition: 'thấp/phổ thông',
+      shortSummary: 'dòng dễ mua, đủ dùng cho nhu cầu cơ bản',
+    },
+    uhd: {
+      label: 'UHD / 4K UHD',
+      aliases: ['uhd', '4k uhd', '4k', 'ultra hd', 'led 4k'],
+      level: 2,
+      strengths: 'độ phân giải 4K rõ nét, phổ biến, dễ chọn',
+      tradeoffs: 'chất lượng màu/độ tương phản còn tuỳ tấm nền và dòng máy',
+      bestFor: 'gia đình cần tivi 4K cơ bản',
+      budgetPosition: 'phổ thông đến trung cấp',
+      shortSummary: 'lựa chọn 4K cơ bản, dễ dùng cho gia đình',
+    },
+    crystal_uhd: {
+      label: 'Crystal UHD',
+      aliases: ['crystal uhd', 'crystal', 'crystal 4k', 'samsung crystal'],
+      level: 3,
+      strengths: 'dòng 4K phổ thông của Samsung, màu sắc sáng, dễ dùng, giá mềm hơn QLED',
+      tradeoffs: 'màu và độ tương phản thường không nổi bật bằng QLED/OLED/Neo QLED',
+      bestFor: 'khách thích Samsung, cần tivi mới dễ dùng, ngân sách vừa phải',
+      budgetPosition: 'phổ thông đến trung cấp',
+      shortSummary: 'Samsung 4K phổ thông, dễ dùng và hợp ngân sách vừa',
+    },
+    nanocell: {
+      label: 'NanoCell',
+      aliases: ['nanocell', 'nano cell', 'nano', 'lg nanocell'],
+      level: 4,
+      strengths: 'màu sắc tự nhiên, góc nhìn ổn, hợp xem gia đình',
+      tradeoffs: 'độ đen/độ tương phản thường không bằng OLED/QLED cao cấp',
+      bestFor: 'khách thích LG, xem phim/YouTube gia đình, muốn màu tự nhiên',
+      budgetPosition: 'trung cấp',
+      shortSummary: 'LG trung cấp, màu tự nhiên và dễ xem trong gia đình',
+    },
+    qled: {
+      label: 'QLED',
+      aliases: ['qled', 'quantum dot', 'samsung qled'],
+      level: 5,
+      strengths: 'màu rực rỡ, độ sáng tốt, hợp phòng sáng, xem thể thao/phim ổn',
+      tradeoffs: 'độ đen thường không sâu bằng OLED',
+      bestFor: 'phòng khách, xem bóng đá, nội dung màu sắc sống động',
+      budgetPosition: 'trung cấp đến cao hơn',
+      shortSummary: 'màu rực và sáng tốt, hợp phòng khách hoặc xem thể thao',
+    },
+    qned: {
+      label: 'QNED',
+      aliases: ['qned', 'lg qned'],
+      level: 5,
+      strengths: 'dòng LCD cao hơn của LG, màu sắc tốt, độ sáng/độ chi tiết tốt hơn dòng phổ thông',
+      tradeoffs: 'vẫn phụ thuộc từng model; OLED vẫn mạnh hơn về độ đen',
+      bestFor: 'khách thích LG, muốn nâng cấp hơn NanoCell/UHD',
+      budgetPosition: 'trung cấp đến cao hơn',
+      shortSummary: 'LG LCD nâng cấp, cân bằng màu sắc và độ sáng',
+    },
+    oled: {
+      label: 'OLED',
+      aliases: ['oled', 'lg oled'],
+      level: 8,
+      strengths: 'màu đen sâu, tương phản rất tốt, xem phim đẹp, hình ảnh cao cấp',
+      tradeoffs: 'giá thường cao hơn; nên cân nhắc thói quen dùng nếu để hình tĩnh quá lâu',
+      bestFor: 'xem phim, phòng tối, khách ưu tiên chất lượng hình ảnh',
+      budgetPosition: 'cao cấp',
+      shortSummary: 'cao cấp cho phim ảnh, phòng tối và độ tương phản đẹp',
+    },
+    neo_qled: {
+      label: 'Neo QLED',
+      aliases: ['neo qled', 'neo quantum', 'samsung neo qled'],
+      level: 7,
+      strengths: 'độ sáng cao, tương phản tốt, công nghệ Mini LED, hợp phòng sáng và nội dung HDR',
+      tradeoffs: 'giá cao hơn QLED/Crystal; độ đen vẫn khác OLED theo công nghệ nền',
+      bestFor: 'khách thích Samsung cao cấp, xem thể thao/phim phòng sáng',
+      budgetPosition: 'cao cấp',
+      shortSummary: 'Samsung cao cấp, sáng mạnh cho phòng sáng và HDR',
+    },
+    mini_led: {
+      label: 'Mini LED',
+      aliases: ['mini led', 'miniled'],
+      level: 6,
+      strengths: 'sáng mạnh, kiểm soát vùng sáng tốt, HDR tốt hơn LED thường',
+      tradeoffs: 'giá cao hơn dòng phổ thông; chất lượng phụ thuộc số vùng đèn và xử lý hình ảnh',
+      bestFor: 'phòng khách sáng, xem thể thao, phim HDR',
+      budgetPosition: 'trung cao đến cao cấp',
+      shortSummary: 'sáng cao, HDR tốt, hợp không gian nhiều ánh sáng',
+    },
+    bravia_xr: {
+      label: 'BRAVIA XR',
+      aliases: ['bravia xr', 'sony bravia xr'],
+      level: 7,
+      strengths: 'xử lý hình ảnh tự nhiên, chuyển động tốt, hợp phim/thể thao',
+      tradeoffs: 'giá Sony thường cao hơn so với cấu hình cùng cỡ',
+      bestFor: 'khách ưu tiên hình ảnh tự nhiên, xem phim/thể thao',
+      budgetPosition: 'trung cao đến cao cấp',
+      shortSummary: 'Sony cao cấp, mạnh về xử lý hình ảnh và chuyển động',
+    },
+    bravia: {
+      label: 'BRAVIA',
+      aliases: ['bravia', 'sony bravia'],
+      level: 6,
+      strengths: 'xử lý hình ảnh tự nhiên, chuyển động tốt, hợp phim/thể thao',
+      tradeoffs: 'giá Sony thường cao hơn so với cấu hình cùng cỡ',
+      bestFor: 'khách ưu tiên hình ảnh tự nhiên, xem phim/thể thao',
+      budgetPosition: 'trung cao đến cao cấp',
+      shortSummary: 'Sony nổi bật về màu tự nhiên và chuyển động',
+    },
+    full_array_led: {
+      label: 'Full Array LED',
+      aliases: ['full array led', 'full array'],
+      level: 5,
+      strengths: 'kiểm soát đèn nền tốt hơn LED thường, tương phản ổn',
+      tradeoffs: 'chưa đạt độ đen sâu như OLED và còn tuỳ model',
+      bestFor: 'xem phim/thể thao với ngân sách trung cao',
+      budgetPosition: 'trung cấp đến trung cao',
+      shortSummary: 'LED nâng cấp về kiểm soát sáng và tương phản',
+    },
+    regza: {
+      label: 'REGZA',
+      aliases: ['regza', 'toshiba regza'],
+      level: 4,
+      strengths: 'dễ dùng, hợp nhu cầu gia đình và xử lý hình ảnh cân bằng',
+      tradeoffs: 'ít nổi bật hơn ở phân khúc cao cấp so với QLED/OLED mạnh',
+      bestFor: 'khách thích Toshiba, cần tivi gia đình ổn định',
+      budgetPosition: 'phổ thông đến trung cấp',
+      shortSummary: 'dòng Toshiba dễ dùng cho gia đình',
+    },
+    uled_mini_led: {
+      label: 'ULED Mini LED',
+      aliases: ['uled mini led', 'hisense uled mini led'],
+      level: 6,
+      strengths: 'sáng tốt, Mini LED và thông số cạnh tranh trong tầm giá',
+      tradeoffs: 'trải nghiệm còn tuỳ model/hệ điều hành',
+      bestFor: 'khách muốn cấu hình cao, giá cạnh tranh',
+      budgetPosition: 'trung cao đến cao cấp',
+      shortSummary: 'Hisense nâng cấp, cấu hình tốt trong tầm tiền',
+    },
+    uled: {
+      label: 'ULED',
+      aliases: ['uled', 'hisense uled'],
+      level: 5,
+      strengths: 'dòng nâng cấp của Hisense, sáng tốt, màu sắc và tương phản khá trong tầm giá',
+      tradeoffs: 'độ ổn định trải nghiệm còn tuỳ model/hệ điều hành',
+      bestFor: 'khách muốn cấu hình tốt trong tầm giá',
+      budgetPosition: 'trung cấp',
+      shortSummary: 'Hisense tầm trung, thông số tốt so với giá',
+    },
+    laser_tv: {
+      label: 'Laser TV',
+      aliases: ['laser tv', 'laser'],
+      level: 8,
+      strengths: 'màn hình rất lớn, trải nghiệm gần máy chiếu/tivi cao cấp',
+      tradeoffs: 'giá cao, kén không gian, không phải nhu cầu phổ thông',
+      bestFor: 'phòng giải trí lớn',
+      budgetPosition: 'cao cấp',
+      shortSummary: 'màn hình rất lớn cho phòng giải trí chuyên biệt',
+    },
+    google_tv: {
+      label: 'Google TV',
+      aliases: ['google tv'],
+      level: 3,
+      strengths: 'kho ứng dụng phong phú, tìm kiếm giọng nói tiện, dễ dùng với tài khoản Google',
+      tradeoffs: 'trải nghiệm mượt hay không còn tuỳ cấu hình từng model',
+      bestFor: 'khách cần smart TV nhiều ứng dụng',
+      budgetPosition: 'tuỳ model',
+      shortSummary: 'hệ điều hành thông minh nhiều ứng dụng',
+    },
+    android_tv: {
+      label: 'Android TV',
+      aliases: ['android tv'],
+      level: 3,
+      strengths: 'nhiều ứng dụng, quen thuộc, dễ dùng',
+      tradeoffs: 'độ mượt phụ thuộc chip/bộ nhớ từng model',
+      bestFor: 'khách cần smart TV cơ bản, nhiều app',
+      budgetPosition: 'tuỳ model',
+      shortSummary: 'smart TV phổ biến, nhiều ứng dụng',
+    },
+    tizen: {
+      label: 'Tizen',
+      aliases: ['tizen'],
+      level: 3,
+      strengths: 'giao diện Samsung dễ dùng, nhiều tính năng thông minh và kết nối hệ sinh thái',
+      tradeoffs: 'ứng dụng và cách dùng khác Google TV/webOS',
+      bestFor: 'khách thích tivi Samsung và hệ sinh thái Samsung',
+      budgetPosition: 'tuỳ model',
+      shortSummary: 'hệ điều hành Samsung gọn và dễ dùng',
+    },
+    webos: {
+      label: 'webOS',
+      aliases: ['webos', 'web os'],
+      level: 3,
+      strengths: 'giao diện LG dễ dùng, điều khiển thuận tiện, hợp gia đình',
+      tradeoffs: 'trải nghiệm app tuỳ đời máy và cấu hình',
+      bestFor: 'khách thích LG, cần giao diện đơn giản',
+      budgetPosition: 'tuỳ model',
+      shortSummary: 'hệ điều hành LG thân thiện với gia đình',
+    },
+    ambilight: {
+      label: 'Ambilight',
+      aliases: ['ambilight', 'philips ambilight'],
+      level: 5,
+      strengths: 'hiệu ứng đèn nền sau tivi tạo cảm giác xem phim/giải trí nổi bật',
+      tradeoffs: 'là điểm cộng trải nghiệm, không thay thế cho chất lượng tấm nền',
+      bestFor: 'khách thích trải nghiệm phòng phim, hiệu ứng ánh sáng',
+      budgetPosition: 'tuỳ model',
+      shortSummary: 'điểm nhấn ánh sáng độc đáo của Philips',
+    },
+    the_frame: {
+      label: 'The Frame',
+      aliases: ['the frame', 'samsung the frame'],
+      level: 5,
+      strengths: 'thiết kế như tranh treo tường, hợp trang trí nội thất',
+      tradeoffs: 'mua vì thiết kế/lifestyle nhiều hơn là tối ưu giá',
+      bestFor: 'khách cần tivi đẹp như decor',
+      budgetPosition: 'trung cao đến cao cấp',
+      shortSummary: 'Samsung lifestyle TV cho không gian decor',
+    },
+    the_serif: {
+      label: 'The Serif',
+      aliases: ['the serif'],
+      level: 5,
+      strengths: 'thiết kế lifestyle nổi bật, hợp không gian decor',
+      tradeoffs: 'không phải lựa chọn tối ưu nếu chỉ xét giá/cấu hình',
+      bestFor: 'khách ưu tiên thiết kế khác biệt',
+      budgetPosition: 'trung cao đến cao cấp',
+      shortSummary: 'Samsung lifestyle TV thiên về thiết kế',
+    },
+    the_sero: {
+      label: 'The Sero',
+      aliases: ['the sero'],
+      level: 5,
+      strengths: 'thiết kế xoay độc đáo, hợp nội dung di động',
+      tradeoffs: 'kén nhu cầu và không tối ưu cho số đông',
+      bestFor: 'khách thích lifestyle TV lạ, dùng nhiều nội dung dọc',
+      budgetPosition: 'trung cao đến cao cấp',
+      shortSummary: 'Samsung lifestyle TV có thiết kế xoay',
+    },
+    lifestyle_tv: {
+      label: 'Lifestyle TV',
+      aliases: ['lifestyle tv', 'lifestyle'],
+      level: 5,
+      strengths: 'thiết kế đẹp, tạo điểm nhấn nội thất',
+      tradeoffs: 'thường mua theo phong cách nhiều hơn tối ưu giá',
+      bestFor: 'khách cần tivi vừa xem vừa trang trí',
+      budgetPosition: 'trung cao đến cao cấp',
+      shortSummary: 'nhóm tivi thiên về thiết kế và trải nghiệm sống',
+    },
+  };
+
+  const TV_BRAND_COMPARISON_PROFILES = {
+    samsung: {
+      label: 'Samsung',
+      strengths: 'màu sắc rực, hệ sinh thái tốt, nhiều dòng Crystal/QLED/Neo QLED/OLED, giao diện Tizen dễ dùng',
+      tradeoffs: 'dòng cao cấp giá cao; dòng phổ thông nên xem kỹ công nghệ từng model',
+      bestFor: 'khách thích màu sáng, nhiều tính năng thông minh, đa dạng lựa chọn',
+      budgetPosition: 'phổ thông đến cao cấp',
+      shortSummary: 'mạnh về màu rực, Tizen và nhiều lựa chọn từ phổ thông đến cao cấp',
+    },
+    lg: {
+      label: 'LG',
+      strengths: 'webOS dễ dùng, OLED mạnh, QNED/NanoCell nhiều lựa chọn, màu tự nhiên',
+      tradeoffs: 'một số dòng phổ thông cần xem kỹ độ sáng/tấm nền',
+      bestFor: 'xem phim, gia đình, khách thích giao diện dễ dùng',
+      budgetPosition: 'phổ thông đến cao cấp',
+      shortSummary: 'mạnh về webOS, OLED và màu sắc tự nhiên',
+    },
+    sony: {
+      label: 'Sony',
+      strengths: 'xử lý hình ảnh tự nhiên, chuyển động tốt, âm thanh/hình ảnh cân bằng, BRAVIA/BRAVIA XR mạnh',
+      tradeoffs: 'giá thường cao hơn',
+      bestFor: 'khách ưu tiên chất lượng hình ảnh tự nhiên, phim/thể thao',
+      budgetPosition: 'trung cao đến cao cấp',
+      shortSummary: 'mạnh về xử lý hình ảnh tự nhiên và chuyển động',
+    },
+    tcl: {
+      label: 'TCL',
+      strengths: 'cấu hình tốt trong tầm giá, nhiều dòng QLED/Mini LED/C Series, hợp khách muốn màn lớn giá hợp lý',
+      tradeoffs: 'trải nghiệm phần mềm/độ hoàn thiện tuỳ model',
+      bestFor: 'khách muốn nhiều công nghệ trong ngân sách vừa',
+      budgetPosition: 'phổ thông đến trung cao',
+      shortSummary: 'cấu hình tốt trong tầm giá, QLED/Mini LED cạnh tranh',
+    },
+    hisense: {
+      label: 'Hisense',
+      strengths: 'ULED/Mini LED giá cạnh tranh, thông số tốt trong tầm tiền',
+      tradeoffs: 'cần kiểm tra từng model/hệ điều hành',
+      bestFor: 'khách muốn cấu hình tốt, giá mềm hơn một số hãng lớn',
+      budgetPosition: 'phổ thông đến trung cao',
+      shortSummary: 'thông số tốt, ULED/Mini LED giá cạnh tranh',
+    },
+    toshiba: {
+      label: 'Toshiba',
+      strengths: 'dễ dùng, có REGZA/C Series, hợp nhu cầu gia đình cơ bản',
+      tradeoffs: 'ít nổi bật hơn ở phân khúc cao cấp so với Samsung/LG/Sony',
+      bestFor: 'khách cần tivi dễ dùng, ổn định, giá hợp lý',
+      budgetPosition: 'phổ thông đến trung cấp',
+      shortSummary: 'dễ dùng, hợp nhu cầu gia đình và giá hợp lý',
+    },
+    panasonic: {
+      label: 'Panasonic',
+      strengths: 'thương hiệu lâu đời, màu sắc dễ chịu, phù hợp nhu cầu gia đình',
+      tradeoffs: 'độ đa dạng model có thể ít hơn',
+      bestFor: 'khách thích thương hiệu bền, xem gia đình',
+      budgetPosition: 'phổ thông đến trung cấp',
+      shortSummary: 'thương hiệu lâu đời, màu dễ chịu cho gia đình',
+    },
+    sharp: {
+      label: 'Sharp',
+      strengths: 'AQUOS, độ bền/thương hiệu quen thuộc, nhu cầu cơ bản tốt',
+      tradeoffs: 'ít nổi bật hơn ở mảng công nghệ mới so với các hãng đẩy QLED/OLED mạnh',
+      bestFor: 'khách cần tivi gia đình cơ bản, dễ dùng',
+      budgetPosition: 'phổ thông đến trung cấp',
+      shortSummary: 'thương hiệu quen thuộc, hợp tivi gia đình cơ bản',
+    },
+    xiaomi: {
+      label: 'Xiaomi',
+      strengths: 'giá dễ tiếp cận, Google TV/Android TV phổ biến, nhiều tính năng thông minh',
+      tradeoffs: 'chất lượng hình ảnh/âm thanh cần xem kỹ từng model',
+      bestFor: 'khách cần smart TV giá mềm',
+      budgetPosition: 'phổ thông',
+      shortSummary: 'smart TV giá mềm, nhiều ứng dụng và dễ tiếp cận',
+    },
+    casper: {
+      label: 'Casper',
+      strengths: 'giá dễ chịu, dễ mua, hợp nhu cầu cơ bản',
+      tradeoffs: 'phân khúc cao cấp không mạnh bằng Samsung/LG/Sony',
+      bestFor: 'khách tiết kiệm chi phí',
+      budgetPosition: 'phổ thông',
+      shortSummary: 'giá dễ chịu cho nhu cầu cơ bản',
+    },
+    coocaa: {
+      label: 'Coocaa',
+      strengths: 'giá mềm, smart TV cơ bản, hợp phòng ngủ/phòng trọ',
+      tradeoffs: 'chất lượng hình ảnh/độ hoàn thiện tuỳ model',
+      bestFor: 'khách cần tivi rẻ, đủ dùng',
+      budgetPosition: 'phổ thông',
+      shortSummary: 'smart TV giá mềm, hợp phòng ngủ hoặc phòng trọ',
+    },
+    skyworth: {
+      label: 'Skyworth',
+      strengths: 'nhiều lựa chọn smart TV, có QLED/OLED ở một số dòng, giá cạnh tranh',
+      tradeoffs: 'nên kiểm tra model cụ thể',
+      bestFor: 'khách muốn nhiều lựa chọn trong tầm giá',
+      budgetPosition: 'phổ thông đến trung cấp',
+      shortSummary: 'nhiều smart TV giá cạnh tranh',
+    },
+    philips: {
+      label: 'Philips',
+      strengths: 'Ambilight độc đáo, trải nghiệm xem phim/giải trí có điểm nhấn',
+      tradeoffs: 'không phải mọi model đều có Ambilight; cần kiểm tra từng mẫu',
+      bestFor: 'khách thích hiệu ứng ánh sáng và trải nghiệm giải trí',
+      budgetPosition: 'trung cấp đến cao hơn',
+      shortSummary: 'nổi bật nhờ Ambilight và trải nghiệm giải trí',
+    },
+    hitachi: {
+      label: 'Hitachi',
+      strengths: 'thương hiệu quen thuộc, nhu cầu gia đình cơ bản',
+      tradeoffs: 'ít nổi bật hơn ở công nghệ hình ảnh mới',
+      bestFor: 'khách cần tivi dễ dùng, cơ bản',
+      budgetPosition: 'phổ thông đến trung cấp',
+      shortSummary: 'thương hiệu quen thuộc cho nhu cầu cơ bản',
+    },
   };
 
   const CHATBOT_PRODUCT_SOURCE_EXCLUDE_SELECTOR = [
@@ -717,6 +1085,259 @@
       seriesLabel: match.label,
       aliases: getSeriesOptionsForBrand(brand).find((series) => series.label === match.label)?.aliases || [match.alias],
     };
+  };
+
+  const normalizeComparisonKey = (label = '') => normalizeVietnameseText(label).replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+
+  const getSeriesComparisonProfileByLabel = (label = '') => {
+    const normalizedLabel = normalizeVietnameseText(label);
+    return Object.values(TV_SERIES_COMPARISON_PROFILES).find((profile) => (
+      normalizeVietnameseText(profile.label) === normalizedLabel
+      || profile.aliases.some((alias) => normalizeVietnameseText(alias) === normalizedLabel)
+    )) || null;
+  };
+
+  const getAllSeriesComparisonOptions = () => {
+    const fromProfiles = Object.values(TV_SERIES_COMPARISON_PROFILES);
+    const fromSeriesMap = Object.values(TV_SERIES_BY_BRAND_CHATBOT).flat().map((series) => ({
+      ...series,
+      ...(getSeriesComparisonProfileByLabel(series.label) || {}),
+      label: series.label,
+      aliases: [...new Set([...(getSeriesComparisonProfileByLabel(series.label)?.aliases || []), ...series.aliases])],
+    }));
+    return [...fromProfiles, ...fromSeriesMap]
+      .filter((series, index, allSeries) => allSeries.findIndex((item) => item.label === series.label) === index);
+  };
+
+  const getDefaultBrandForSeries = (seriesLabel = '') => {
+    const brandEntry = Object.entries(TV_SERIES_BY_BRAND_CHATBOT).find(([, seriesList]) => (
+      seriesList.some((series) => series.label === seriesLabel)
+    ));
+    return brandEntry ? brandEntry[0] : '';
+  };
+
+  const findAliasMatchSpan = (message = '', alias = '') => {
+    const normalizedAlias = normalizeVietnameseText(alias);
+    if (!message || !normalizedAlias) return null;
+    if (normalizedAlias.includes(' ')) {
+      const index = message.indexOf(normalizedAlias);
+      return index >= 0 ? { start: index, end: index + normalizedAlias.length } : null;
+    }
+    const match = message.match(new RegExp(`(^|[^a-z0-9])${escapeRegExp(normalizedAlias)}([^a-z0-9]|$)`));
+    if (match?.index !== undefined) {
+      const start = match.index + (match[1] ? match[1].length : 0);
+      return { start, end: start + normalizedAlias.length };
+    }
+    return null;
+  };
+
+  const findAliasIndex = (message = '', alias = '') => {
+    const span = findAliasMatchSpan(message, alias);
+    if (span) return span.start;
+    const normalizedAlias = normalizeVietnameseText(alias);
+    const compactAlias = normalizedAlias.replace(/\s+/g, '');
+    if (compactAlias.length >= 4) return message.replace(/\s+/g, '').indexOf(compactAlias);
+    return -1;
+  };
+
+  const detectComparedBrands = (normalizedMessage = '') => TV_BRANDS
+    .map((brand) => ({ type: 'brand', key: brand, label: TV_BRAND_LABELS[brand], profile: TV_BRAND_COMPARISON_PROFILES[brand], index: findAliasIndex(normalizedMessage, brand) }))
+    .filter((brand) => brand.index >= 0 && brand.profile)
+    .sort((a, b) => a.index - b.index);
+
+  const detectComparedSeries = (normalizedMessage = '') => {
+    const message = normalizeVietnameseText(normalizedMessage);
+    const options = getAllSeriesComparisonOptions()
+      .flatMap((series) => series.aliases.map((alias) => ({
+        ...series,
+        key: normalizeComparisonKey(series.label),
+        alias,
+        normalizedAlias: normalizeVietnameseText(alias),
+      })))
+      .sort((a, b) => b.normalizedAlias.length - a.normalizedAlias.length || b.label.length - a.label.length);
+    const matches = [];
+    const spansOverlap = (spanA, spanB) => spanA && spanB && spanA.start < spanB.end && spanB.start < spanA.end;
+    options.forEach((series) => {
+      if (matches.some((match) => match.label === series.label)) return;
+      const profile = getSeriesComparisonProfileByLabel(series.label);
+      if (!profile || !textHasAlias(message, series.alias)) return;
+      const span = findAliasMatchSpan(message, series.alias) || { start: findAliasIndex(message, series.alias), end: findAliasIndex(message, series.alias) + series.normalizedAlias.length };
+      if (span.start < 0 || matches.some((match) => spansOverlap(span, match.span))) return;
+      matches.push({
+        type: 'series',
+        key: normalizeComparisonKey(profile.label),
+        label: profile.label,
+        profile,
+        aliases: profile.aliases,
+        defaultBrand: getDefaultBrandForSeries(profile.label),
+        contextBrand: '',
+        index: span.start,
+        span,
+      });
+    });
+
+    const brands = detectComparedBrands(message);
+    matches.forEach((series) => {
+      const nearbyBrand = brands
+        .map((brand) => ({ ...brand, isBeforeSeries: brand.index <= series.index, distance: Math.min(Math.abs(brand.index - series.index), Math.abs(brand.index - (series.span?.end || series.index))) }))
+        .filter((brand) => (brand.isBeforeSeries && series.index - brand.index <= 35) || (!brand.isBeforeSeries && brand.distance <= 12))
+        .sort((a, b) => Number(b.isBeforeSeries) - Number(a.isBeforeSeries) || a.distance - b.distance)[0];
+      series.contextBrand = nearbyBrand?.label || series.defaultBrand || '';
+    });
+    return matches.sort((a, b) => a.index - b.index);
+  };
+
+  const detectComparisonEntities = (normalizedMessage = '') => {
+    const brands = detectComparedBrands(normalizedMessage);
+    const series = detectComparedSeries(normalizedMessage);
+    const seriesContextBrands = new Set(series.map((item) => normalizeVietnameseText(item.contextBrand)).filter(Boolean));
+    const standaloneBrands = brands.filter((brand) => !seriesContextBrands.has(normalizeVietnameseText(brand.label)));
+    return { brands, series, standaloneBrands, all: [...brands, ...series].sort((a, b) => a.index - b.index) };
+  };
+
+  const isComparisonIntent = (normalizedMessage = '') => {
+    const message = normalizeVietnameseText(normalizedMessage);
+    if (!message) return false;
+    if (hasAny(message, ['so sanh', 'khac gi', 'khac nhau', 'cai nao hon', 'con nao hon', 'nen chon cai nao', 'nen mua cai nao', 'loai nao tot hon', 'hang nao tot hon', 'dong nao tot hon', 'hon khong', 'co hon', 'bang khong', 'ngon hon'])) return true;
+    const entities = detectComparisonEntities(message);
+    const comparableCount = entities.series.length + entities.brands.length;
+    if (comparableCount < 2) return false;
+    if (/\bvs\b/.test(message)) return true;
+    if (/(^|\s)(voi|hay)(\s|$)/.test(message)) return true;
+    return false;
+  };
+
+  const getNeedConclusionPrefix = (need = {}) => {
+    if (need.usage?.includes('sports')) return 'Nếu ưu tiên xem bóng đá/phòng sáng';
+    if (need.usage?.includes('movies')) return 'Nếu ưu tiên xem phim';
+    if (need.budgetLabel) return `Với ngân sách ${need.budgetLabel}`;
+    return 'Chốt nhanh';
+  };
+
+  const SERIES_PAIR_CONCLUSIONS = {
+    crystal_uhd__qled: 'nếu ngân sách vừa thì Crystal UHD hợp hơn; muốn màu rực, sáng hơn cho phòng khách/xem thể thao thì chọn QLED.',
+    crystal_uhd__qned: 'nếu muốn tiết kiệm thì Crystal UHD hợp hơn; muốn hình ảnh nhỉnh hơn và thích LG/webOS thì QNED đáng cân nhắc.',
+    nanocell__qled: 'thích màu tự nhiên, webOS và xem gia đình thì nghiêng NanoCell; thích màu nổi, phòng sáng hoặc xem bóng đá thì nghiêng QLED.',
+    qled__qned: 'nên chọn theo model cụ thể, giá, bảo hành và hệ điều hành bạn thích dùng; QNED nghiêng hệ LG, QLED có nhiều lựa chọn Samsung/TCL/Hisense.',
+    oled__qled: 'phòng sáng/xem bóng đá chọn QLED; xem phim/phòng tối và ngân sách cao hơn thì OLED đáng chọn hơn.',
+    mini_led__oled: 'phòng sáng và HDR chọn Mini LED; phòng tối/xem phim cần độ đen sâu thì OLED hợp hơn.',
+    nanocell__qned: 'tiết kiệm và xem gia đình chọn NanoCell; muốn nâng cấp độ sáng/màu/tương phản thì QNED đáng cân nhắc.',
+    led__qled: 'ngân sách thấp chọn LED/UHD; muốn màu và độ sáng đẹp hơn thì QLED hợp hơn.',
+    qled__uhd: 'ngân sách thấp chọn UHD/4K UHD; muốn màu và độ sáng đẹp hơn thì QLED hợp hơn.',
+    bravia__qled: 'thích màu tự nhiên/phim/thể thao mượt thì nghiêng Sony BRAVIA; thích màu rực, phòng sáng và nhiều tính năng thì Samsung QLED đáng cân nhắc.',
+    bravia_xr__qled: 'thích xử lý hình ảnh tự nhiên thì nghiêng Sony BRAVIA XR; thích màu rực, sáng và tính năng thông minh thì Samsung QLED hợp hơn.',
+    neo_qled__oled: 'phòng sáng, HDR và thể thao nghiêng Neo QLED; xem phim/phòng tối, cần độ đen sâu thì OLED hợp hơn.',
+  };
+
+  const BRAND_PAIR_CONCLUSIONS = {
+    lg__samsung: 'thích màu nổi, phòng sáng, nhiều lựa chọn thì nghiêng Samsung; thích webOS, OLED hoặc màu tự nhiên thì nghiêng LG. Ngân sách thấp/vừa nên so model và giá thực tế.',
+    samsung__sony: 'muốn nhiều lựa chọn và tính năng thông minh thì Samsung dễ chọn; ưu tiên hình ảnh tự nhiên, chuyển động tốt thì Sony đáng cân nhắc hơn.',
+    lg__sony: 'xem phim/OLED và thích giao diện dễ dùng thì LG hợp; ưu tiên xử lý hình ảnh tự nhiên, chuyển động thể thao thì Sony mạnh.',
+    samsung__tcl: 'muốn tiết kiệm/cấu hình cao trong tầm giá thì TCL đáng xem; muốn thương hiệu, Tizen và hệ sinh thái thì Samsung hợp hơn.',
+    hisense__tcl: 'hai hãng đều cạnh tranh về cấu hình; nên so trực tiếp model, giá, bảo hành và kích thước đang có.',
+    tcl__xiaomi: 'ưu tiên giá mềm và app cơ bản thì Xiaomi hợp; ưu tiên hình ảnh/cấu hình như QLED/Mini LED thì TCL đáng cân nhắc.',
+    samsung__toshiba: 'tiết kiệm, dễ dùng cho gia đình thì Toshiba hợp; muốn nhiều công nghệ, màu đẹp và phân khúc rộng hơn thì Samsung đáng chọn.',
+  };
+
+  const getPairKey = (a = '', b = '') => [normalizeComparisonKey(a), normalizeComparisonKey(b)].sort().join('__');
+  const getOrderedPairKey = (a = '', b = '') => `${normalizeComparisonKey(a)}__${normalizeComparisonKey(b)}`;
+
+  const buildSeriesEntityLabel = (entity = {}) => entity.contextBrand && !entity.label.toLowerCase().includes(entity.contextBrand.toLowerCase())
+    ? `${entity.contextBrand} ${entity.label}`
+    : entity.label;
+
+  const getSeriesConclusion = (seriesA, seriesB, need = {}) => {
+    const pairConclusion = SERIES_PAIR_CONCLUSIONS[getPairKey(seriesA.key, seriesB.key)] || SERIES_PAIR_CONCLUSIONS[getOrderedPairKey(seriesA.key, seriesB.key)];
+    if (pairConclusion) return `${getNeedConclusionPrefix(need)}: ${pairConclusion}`;
+    if (seriesA.profile.level === seriesB.profile.level) return `Chốt nhanh: hai dòng khá gần phân khúc, nên chọn theo model cụ thể, giá, bảo hành và hệ điều hành bạn thích dùng.`;
+    const lower = seriesA.profile.level < seriesB.profile.level ? seriesA : seriesB;
+    const higher = lower === seriesA ? seriesB : seriesA;
+    return `Chốt nhanh: muốn tiết kiệm thì ${buildSeriesEntityLabel(lower)} dễ tiếp cận hơn; muốn nâng chất lượng hình ảnh thì ${buildSeriesEntityLabel(higher)} đáng cân nhắc hơn.`;
+  };
+
+  const shouldSuggestProductsAfterComparison = (need = {}) => Boolean(
+    need.requestedSize || need.minBudget || need.maxBudget || need.targetBudget || need.type || need.roomArea || need.roomType || need.viewingDistance
+  );
+
+
+  const getComparisonNextStepText = (need = {}) => shouldSuggestProductsAfterComparison(need)
+    ? 'AM AI sẽ lọc mẫu đang có theo ngân sách/kích thước bạn vừa đưa ạ.'
+    : 'Bạn cho mình ngân sách và kích thước, AM AI sẽ lọc mẫu đang có trên web nha.';
+
+  const appendComparisonProductSuggestions = (reply, message, need, normalizedMessage) => {
+    if (!shouldSuggestProductsAfterComparison(need, normalizedMessage)) return reply;
+    const recommendationReply = recommendProductsForMessage(message);
+    if (recommendationReply?.products?.length) {
+      return {
+        ...reply,
+        text: `${reply.text}\nAM AI lọc nhanh vài mẫu đang có phù hợp bên dưới ạ.`,
+        actions: [callAction(), zaloAction()],
+        products: recommendationReply.products,
+      };
+    }
+    return {
+      ...reply,
+      text: `${reply.text}\nHiện AM AI chưa thấy mẫu phù hợp chính xác trong dữ liệu đang có. Bạn có thể nhắn Zalo hoặc gọi Anh Minh Store để kiểm tra mẫu còn hàng chính xác nhất.`,
+      actions: [zaloAction(), callAction()],
+      products: [],
+    };
+  };
+
+  const buildSeriesComparisonReply = (seriesA, seriesB, need = {}, message = '') => {
+    const labelA = buildSeriesEntityLabel(seriesA);
+    const labelB = buildSeriesEntityLabel(seriesB);
+    const text = [
+      `Dạ, ${labelA} và ${labelB} khác nhau chủ yếu ở công nghệ hình ảnh và tầm giá ạ.`,
+      `• ${labelA}: thường mạnh về ${seriesA.profile.strengths}; phù hợp ${seriesA.profile.bestFor}.`,
+      `• ${labelB}: thường mạnh về ${seriesB.profile.strengths}; phù hợp ${seriesB.profile.bestFor}.`,
+      `${getSeriesConclusion(seriesA, seriesB, need)} ${getComparisonNextStepText(need)}`,
+    ].join('\n');
+    const normalizedMessage = normalizeVietnameseText(message || need.normalizedMessage || '');
+    return appendComparisonProductSuggestions({ text, actions: [zaloAction(), callAction()], products: [] }, message, need, normalizedMessage);
+  };
+
+  const getBrandConclusion = (brandA, brandB, need = {}) => {
+    const conclusion = BRAND_PAIR_CONCLUSIONS[getPairKey(brandA.key, brandB.key)];
+    if (conclusion) return `Chốt nhanh: ${conclusion}`;
+    if (need.budgetLabel) return `Chốt nhanh: với ngân sách ${need.budgetLabel}, nên chọn model nào giá tốt hơn, bảo hành rõ hơn và đúng kích thước cần dùng.`;
+    return `Chốt nhanh: tuỳ ngân sách và nhu cầu, mình nên so model cụ thể; hãng nào có giá tốt hơn, bảo hành rõ hơn và đúng công nghệ cần dùng thì đáng chọn hơn.`;
+  };
+
+  const buildBrandComparisonReply = (brandA, brandB, need = {}, message = '') => {
+    const text = [
+      `Dạ, ${brandA.label} và ${brandB.label} đều mạnh, nhưng hợp nhu cầu hơi khác nhau ạ.`,
+      `• ${brandA.label}: thường mạnh về ${brandA.profile.strengths}.`,
+      `• ${brandB.label}: thường mạnh về ${brandB.profile.strengths}.`,
+      `${getBrandConclusion(brandA, brandB, need)} ${getComparisonNextStepText(need)}`,
+    ].join('\n');
+    const normalizedMessage = normalizeVietnameseText(message || need.normalizedMessage || '');
+    return appendComparisonProductSuggestions({ text, actions: [zaloAction(), callAction()], products: [] }, message, need, normalizedMessage);
+  };
+
+  const buildMixedComparisonReply = (entityA, entityB, need = {}, message = '') => {
+    const brand = entityA.type === 'brand' ? entityA : entityB;
+    const series = entityA.type === 'series' ? entityA : entityB;
+    const seriesLabel = buildSeriesEntityLabel(series);
+    const text = [
+      `Dạ, ${brand.label} là hãng tivi, còn ${seriesLabel} là dòng/công nghệ nên mình nên so theo nhu cầu sử dụng ạ.`,
+      `• ${brand.label}: thường mạnh về ${brand.profile.strengths}.`,
+      `• ${seriesLabel}: thường mạnh về ${series.profile.strengths}; phù hợp ${series.profile.bestFor}.`,
+      `Chốt nhanh: nếu bạn thích hệ sinh thái/thương hiệu ${brand.label} thì chọn model ${brand.label} phù hợp ngân sách; nếu ưu tiên công nghệ ${series.label} thì so các mẫu có ${series.label} theo giá, bảo hành và kích thước.`,
+    ].join('\n');
+    const normalizedMessage = normalizeVietnameseText(message || need.normalizedMessage || '');
+    return appendComparisonProductSuggestions({ text, actions: [zaloAction(), callAction()], products: [] }, message, need, normalizedMessage);
+  };
+
+  const getComparisonReply = (message = '') => {
+    const normalizedMessage = normalizeVietnameseText(message);
+    const entities = detectComparisonEntities(normalizedMessage);
+    const need = parseTvCustomerNeed(message);
+    if (!isComparisonIntent(normalizedMessage)) return null;
+    if (entities.series.length >= 2) return buildSeriesComparisonReply(entities.series[0], entities.series[1], need, message);
+    if (entities.standaloneBrands.length >= 2) return buildBrandComparisonReply(entities.standaloneBrands[0], entities.standaloneBrands[1], need, message);
+    if (entities.brands.length >= 2 && !entities.series.length) return buildBrandComparisonReply(entities.brands[0], entities.brands[1], need, message);
+    if (entities.all.length >= 2) return buildMixedComparisonReply(entities.all[0], entities.all[1], need, message);
+    return null;
   };
 
   const productMatchesSeries = (product, need) => {
@@ -1466,11 +2087,17 @@
 
   const getBotReply = (message) => {
     const normalizedMessage = normalizeText(message);
+    const earlyConversationReply = (isMainlyGreeting(normalizedMessage) || isMainlyThanks(normalizedMessage)) ? getConversationIntent(normalizedMessage) : null;
+    if (earlyConversationReply) return earlyConversationReply;
+
     const supportIntentReply = getSupportIntentReply(normalizedMessage);
     const strongProductIntent = hasStrongProductRecommendationIntent(message);
 
     const hasExplicitBudgetSignal = /(?:duoi|khong qua|toi da|tam|khoang|ngan sach|muc gia)\s*\d+(?:[.,]\d+)?|\b\d+(?:[.,]\d+)?\s*(trieu|tr\b)\b/.test(normalizedMessage);
     if (supportIntentReply && (supportIntentReply.id === 'room-size' || (supportIntentReply.id === 'viewing-distance' && !hasExplicitBudgetSignal) || !strongProductIntent)) return supportIntentReply;
+
+    const comparisonReply = getComparisonReply(message);
+    if (comparisonReply) return comparisonReply;
 
     const recommendationReply = recommendProductsForMessage(message);
     if (recommendationReply) {
@@ -1795,6 +2422,11 @@ Dạ để chắc chắn mẫu còn hàng tại kho, bạn bấm xem chi tiết 
   window.normalizeProductForChatbot = normalizeProductForChatbot;
   window.getAvailableProductsForChatbot = getAvailableProductsForChatbot;
   window.detectTvSeriesFromMessage = detectTvSeriesFromMessage;
+  window.isComparisonIntent = isComparisonIntent;
+  window.detectComparedBrands = detectComparedBrands;
+  window.detectComparedSeries = detectComparedSeries;
+  window.detectComparisonEntities = detectComparisonEntities;
+  window.getComparisonReply = getComparisonReply;
   window.parseTvCustomerNeed = parseTvCustomerNeed;
   window.scoreProductForNeed = scoreProductForNeed;
   window.recommendProductsForMessage = recommendProductsForMessage;
