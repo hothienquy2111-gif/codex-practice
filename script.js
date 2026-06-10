@@ -42,8 +42,6 @@ const dom = {
   newTvCount: document.querySelector('[data-new-tv-count]'),
   newTvEmpty: document.querySelector('[data-new-tv-empty]'),
   newTvLoadMoreButton: document.querySelector('[data-load-more="newTv"]'),
-  warrantyForm: document.querySelector('[data-warranty-form]'),
-  warrantyMessage: document.querySelector('[data-warranty-message]'),
 };
 
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1092,12 +1090,6 @@ dom.mobileCall?.addEventListener('click', () => {
   window.location.href = 'tel:0905111223';
 });
 
-
-dom.warrantyForm?.addEventListener('submit', (event) => {
-  event.preventDefault();
-  if (!dom.warrantyMessage) return;
-  dom.warrantyMessage.textContent = 'Anh Minh Store đã nhận yêu cầu tra cứu. Bạn có thể gọi hotline hoặc nhắn Zalo để được kiểm tra nhanh hơn.';
-});
 
 if ('IntersectionObserver' in window && dom.sections.length) {
   const observer = new IntersectionObserver(
