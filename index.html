@@ -57,8 +57,8 @@
             <a class="btn btn--hotline" href="tel:0905111223" aria-label="Gọi ngay 0905111223">
               Gọi ngay 0905111223
             </a>
-            <a class="btn btn--zalo" href="#" aria-label="Nhắn Zalo cho Anh Minh Store">
-              Nhắn Zalo
+            <a class="btn btn--warranty" href="#tra-cuu-bao-hanh" aria-label="Tra cứu bảo hành sản phẩm">
+              Tra cứu bảo hành
             </a>
           </div>
 
@@ -474,6 +474,40 @@
             <article><span></span><strong>Thu hư đổi mới linh hoạt</strong><p>Quy trình gọn gàng, minh bạch, dễ theo dõi.</p></article>
             <article><span></span><strong>Hỗ trợ khách hàng sau mua</strong><p>Luôn ưu tiên sự yên tâm trong quá trình sử dụng.</p></article>
           </div>
+        </div>
+      </section>
+
+      <section class="warranty-lookup section-anchor" id="tra-cuu-bao-hanh" aria-labelledby="warranty-title">
+        <div class="container warranty-lookup__card">
+          <div class="warranty-lookup__content">
+            <span class="section-kicker warranty-lookup__eyebrow">Hỗ trợ sau bán</span>
+            <h2 id="warranty-title">Tra cứu bảo hành</h2>
+            <p>Nhập số điện thoại hoặc model sản phẩm để Anh Minh Store hỗ trợ kiểm tra thông tin bảo hành nhanh hơn.</p>
+            <div class="warranty-lookup__quick-actions" aria-label="Liên hệ nhanh để kiểm tra bảo hành">
+              <a class="btn btn--primary" href="tel:0905111223">Gọi ngay</a>
+              <a class="btn btn--secondary" href="#">Nhắn Zalo</a>
+            </div>
+          </div>
+          <form class="warranty-form" data-warranty-form aria-label="Gửi yêu cầu tra cứu bảo hành">
+            <label class="sr-only" for="warranty-query">Số điện thoại hoặc model sản phẩm</label>
+            <input
+              id="warranty-query"
+              name="warranty-query"
+              type="text"
+              placeholder="Nhập số điện thoại hoặc model sản phẩm"
+              autocomplete="off"
+              required
+            />
+            <label class="sr-only" for="warranty-note">Ghi chú thêm</label>
+            <textarea
+              id="warranty-note"
+              name="warranty-note"
+              placeholder="Ghi chú thêm nếu có"
+              rows="3"
+            ></textarea>
+            <button class="btn btn--warranty warranty-form__submit" type="submit">Gửi yêu cầu kiểm tra</button>
+            <p class="warranty-form__message" data-warranty-message aria-live="polite"></p>
+          </form>
         </div>
       </section>
 
