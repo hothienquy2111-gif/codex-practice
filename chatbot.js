@@ -4,21 +4,22 @@
   const CHATBOT_ID = 'anh-minh-chatbot';
   const HISTORY_KEY = 'anhMinhChatHistory';
   const HISTORY_VERSION_KEY = 'anhMinhChatHistoryVersion';
-  const AM_CHATBOT_HISTORY_VERSION = 'price-fix-v3';
+  const AM_CHATBOT_HISTORY_VERSION = 'intent-budget-mix-v4';
   const MAX_HISTORY = 20;
   const AVATAR_SRC = 'linh%20v%E1%BA%ADt%20AM.jpeg';
   const HOTLINE = '0905111223';
   const QUICK_REPLIES = [
     'Tư vấn chọn tivi',
+    'Mình cần mua tivi',
+    'Dưới 10 triệu',
+    'Dưới 20 triệu',
     'Tivi mới',
     'Tivi cũ',
     'Thu cũ đổi mới',
     'Sửa tivi',
-    'Bảo hành',
-    'Đặt hàng',
     'Liên hệ cửa hàng',
   ];
-  const SMART_RECOMMENDER_QUICK_REPLIES = ['Phòng ngủ', 'Phòng khách', 'Dưới 10 triệu', '10–15 triệu', 'Tivi mới', 'Tivi cũ'];
+  const SMART_RECOMMENDER_QUICK_REPLIES = ['Dưới 10 triệu', 'Dưới 20 triệu', 'Phòng ngủ', 'Phòng khách', 'Tivi mới', 'Tivi cũ'];
   const WELCOME_MESSAGE = 'Xin chào 👋 Mình là AM AI – trợ lý của Anh Minh Store. Mình có thể giúp bạn tìm tivi phù hợp, tư vấn tivi mới/tivi cũ, thu cũ đổi mới, sửa tivi, bảo hành và thông tin cửa hàng.';
   const TV_BRANDS = ['samsung', 'lg', 'sony', 'toshiba', 'tcl', 'panasonic', 'sharp', 'xiaomi', 'casper', 'coocaa', 'skyworth', 'philips', 'hitachi', 'hisense'];
   const TV_BRAND_LABELS = {
@@ -50,7 +51,7 @@
     'nên mua', 'nen mua', 'tư vấn', 'tu van', 'chọn', 'chon', 'phù hợp', 'phu hop', 'loại nào', 'loai nao',
     'con nào', 'con nao', 'mua tivi', 'mua tv', 'tivi nào', 'tivi nao', 'tv nào', 'tv nao', 'phòng', 'phong',
     'ngân sách', 'ngan sach', 'dưới', 'duoi', 'tầm', 'tam', 'khoảng', 'khoang', 'triệu', 'trieu', 'tr',
-    'inch', 'in ', 'inh', 'giá rẻ', 'gia re', 'cao cấp', 'cao cap', 'world cup', 'bóng đá', 'bong da',
+    'inch', 'inh', 'giá rẻ', 'gia re', 'cao cấp', 'cao cap', 'world cup', 'bóng đá', 'bong da',
     ...TV_BRANDS,
   ];
 
@@ -540,7 +541,7 @@
       return need;
     }
 
-    const aroundMatch = normalizedMessage.match(/(?:tam|khoang|khoan|gan|tam gia|budget)\s*(\d+(?:[.,]\d+)?)\s*(trieu|tr\b|m\b)/);
+    const aroundMatch = normalizedMessage.match(/(?:tam|khoang|khoan|gan|tam gia|ngan sach|muc gia|budget)\s*(\d+(?:[.,]\d+)?)\s*(trieu|tr\b|m\b)/);
     if (aroundMatch) {
       const value = Number(aroundMatch[1].replace(',', '.'));
       need.targetBudget = Math.round(value * 1000000);
@@ -564,7 +565,7 @@
       need.maxBudget = need.maxBudget || 10000000;
       need.isMaxBudgetStrict = need.isMaxBudgetStrict || !need.targetBudget;
     }
-    if (hasAny(normalizedMessage, ['cao cap', 'xịn', 'xin', 'premium'])) {
+    if (hasAny(normalizedMessage, ['cao cap', 'xịn', 'hang xin', 'premium'])) {
       need.budgetPreference = 'premium';
       need.budgetLabel = need.budgetLabel || 'ưu tiên cao cấp';
     }
@@ -628,7 +629,12 @@
     if (hasAny(normalizedMessage, ['cao cap'])) need.usage.push('premium');
 
     const meaningfulSignals = [need.brand, need.requestedSize, need.roomArea, need.roomType, need.minBudget, need.maxBudget, need.type, ...need.usage, ...need.preferences].filter(Boolean).length;
-    need.isVagueAdvice = need.hasBuyingIntent && meaningfulSignals <= 1 && hasAny(normalizedMessage, ['tu van tivi', 'tu van chon tivi', 'chon tivi']);
+    const broadBuyingRequest = hasAny(normalizedMessage, [
+      'tu van tivi', 'tu van chon tivi', 'chon tivi', 'tu van mua tivi', 'tu van mua tv',
+      'shop tu van tivi', 'can mua tivi', 'can mua tv', 'minh can mua tivi', 'toi muon mua tivi',
+      'muon mua tivi', 'mua tivi', 'mua tv',
+    ]);
+    need.isVagueAdvice = need.hasBuyingIntent && meaningfulSignals === 0 && broadBuyingRequest;
     return need;
   };
 
@@ -791,13 +797,62 @@
     console.debug('[AM AI] recommendations', recommendations);
   };
 
+  const getProductRecommendationKey = (product = {}) => {
+    const id = normalizeVietnameseText(product.id || '');
+    const model = normalizeVietnameseText(product.model || '').replace(/\s+/g, '');
+    const name = normalizeVietnameseText(product.name || product.fullName || '').replace(/\s+/g, '');
+    return id || model || name;
+  };
+
+  const selectBalancedBudgetRecommendations = (scoredProducts = [], need = {}) => {
+    const hasBudgetSignal = Boolean(need.maxBudget || need.targetBudget || need.budgetLabel);
+    const obeysStrictBudget = (item) => !need.isMaxBudgetStrict || !need.maxBudget || (item.product.priceNumber && item.product.priceNumber <= need.maxBudget);
+    const candidates = scoredProducts.filter(obeysStrictBudget);
+    const selected = [];
+    const selectedKeys = new Set();
+    const addItem = (item) => {
+      if (!item || selected.length >= 3) return false;
+      const key = getProductRecommendationKey(item.product);
+      if (key && selectedKeys.has(key)) return false;
+      selected.push(item);
+      if (key) selectedKeys.add(key);
+      return true;
+    };
+    const addFrom = (items, limit) => {
+      let added = 0;
+      items.some((item) => {
+        if (added >= limit || selected.length >= 3) return true;
+        if (addItem(item)) added += 1;
+        return false;
+      });
+    };
+
+    if (need.type) {
+      const preferredTypeMatches = candidates.filter((item) => productMatchesType(item.product, need.type));
+      preferredTypeMatches.forEach(addItem);
+      candidates.forEach(addItem);
+      return selected.slice(0, 3);
+    }
+
+    if (hasBudgetSignal) {
+      const newTvMatches = candidates.filter((item) => productMatchesType(item.product, 'Tivi mới'));
+      const oldTvMatches = candidates.filter((item) => productMatchesType(item.product, 'Tivi cũ'));
+      addFrom(newTvMatches, 2);
+      addFrom(oldTvMatches, 1);
+      candidates.forEach(addItem);
+      return selected.slice(0, 3);
+    }
+
+    return candidates.slice(0, 3);
+  };
+
   const recommendProductsForMessage = (message = '') => {
     const need = parseTvCustomerNeed(message);
     if (!need.hasBuyingIntent) return null;
 
     if (need.isVagueAdvice) {
       return {
-        text: 'Bạn cho mình thêm 3 thông tin để tư vấn sát hơn nha: diện tích phòng, ngân sách khoảng bao nhiêu và bạn thích tivi mới hay tivi cũ?',
+        text: 'Dạ được ạ. Bạn cho AM AI xin thêm ngân sách khoảng bao nhiêu và bạn muốn tivi mới hay tivi cũ để mình gợi ý sát hơn nha.',
         actions: [callAction(), zaloAction()],
         quickReplies: SMART_RECOMMENDER_QUICK_REPLIES,
         products: [],
@@ -833,7 +888,8 @@
       .map((product) => scoreProductForNeed(product, need))
       .sort((a, b) => b.score - a.score);
     const strongMatches = scored.filter((item) => item.score >= 25);
-    const selected = (strongMatches.length ? strongMatches : scored.filter((item) => item.score > 0)).slice(0, 3);
+    const positiveMatches = strongMatches.length ? strongMatches : scored.filter((item) => item.score > 0);
+    const selected = selectBalancedBudgetRecommendations(positiveMatches, need);
 
     if (!selected.length) {
       const nearbyProducts = scored.filter((item) => item.product.priceNumber || item.product.model || item.product.name).slice(0, 3);
@@ -855,12 +911,15 @@
     debugChatbotRecommendations(sourceSummary, products, need, recommendedProducts);
     const intro = buildUnderstandingText(need);
     const summary = buildRecommendationSummary(need, strongMatches.length > 0);
+    const budgetMixText = need.budgetLabel && !need.type
+      ? `Dạ, với ngân sách ${need.budgetLabel}, AM AI gợi ý 3 mẫu trong tầm giá: ưu tiên 2 tivi mới và 1 tivi cũ để bạn dễ so sánh.`
+      : '';
     const detailHint = strongMatches.length
       ? 'Bạn có thể bấm “Xem chi tiết” để xem hình ảnh, thông số và đặt hàng.'
       : 'Các mẫu này là lựa chọn gần nhất; nếu muốn chắc hơn, bạn có thể gọi hoặc nhắn Zalo để cửa hàng kiểm tra tồn kho và tư vấn nhanh.';
 
     return {
-      text: `${intro}\n${summary}\nTrong dữ liệu hiện có của Anh Minh Store, mình gợi ý 3 mẫu sau:\n${detailHint}`,
+      text: budgetMixText || `${intro}\n${summary}\nTrong dữ liệu hiện có của Anh Minh Store, mình gợi ý 3 mẫu sau:\n${detailHint}`,
       actions: [callAction(), zaloAction()],
       products: recommendedProducts,
     };
@@ -911,10 +970,49 @@
     return `${index + 1}. ${name}${model}${price}`;
   }).join('\n');
 
+  const getConversationIntent = (normalizedMessage = '') => {
+    if (!normalizedMessage) return null;
+    const hasPurchaseSignal = RECOMMENDATION_INTENT_KEYWORDS.some((keyword) => normalizedMessage.includes(normalizeVietnameseText(keyword)))
+      || /\b\d+(?:[.,]\d+)?\s*(trieu|tr\b|m\b)/.test(normalizedMessage);
+    if (hasPurchaseSignal) return null;
+
+    const compactMessage = normalizedMessage.replace(/[!?.。]+/g, '').trim();
+    const greetingPattern = /^(xin chao|chao|hello|hi|alo|chao shop|shop oi|em oi|anh oi)(?:\s+(shop|am ai|anh minh|ban|nha|a|ạ))*$/;
+    if (greetingPattern.test(compactMessage)) {
+      return {
+        text: 'Dạ AM AI chào bạn 👋 Bạn đang cần mua tivi mới, tivi cũ hay muốn tư vấn theo ngân sách ạ?',
+        actions: [newTvAction(), oldTvAction(), zaloAction()],
+        products: [],
+      };
+    }
+
+    const thanksPattern = /^(ok\s*)?(cam on|thank you|thanks|thank)(\s+(shop|ban|em|anh|am ai|nha|nhe|a|ạ))*$/;
+    if (thanksPattern.test(compactMessage)) {
+      return {
+        text: 'Dạ AM AI cảm ơn bạn ạ 😊 Khi cần xem giá, chọn tivi theo ngân sách hoặc hỏi về thu cũ đổi mới/sửa tivi, bạn cứ nhắn mình nha.',
+        actions: [callAction(), zaloAction()],
+        products: [],
+      };
+    }
+
+    if (/^(ok|oke|okay|tam biet|bye|goodbye)(\s+(shop|ban|em|anh|nha|nhe|a|ạ))*$/.test(compactMessage)) {
+      return {
+        text: 'Dạ vâng ạ. Khi cần tư vấn thêm về tivi, bạn cứ nhắn AM AI nha.',
+        actions: [callAction(), zaloAction()],
+        products: [],
+      };
+    }
+
+    return null;
+  };
+
   const getBotReply = (message) => {
     const normalizedMessage = normalizeText(message);
     const recommendationReply = recommendProductsForMessage(message);
     if (recommendationReply) return recommendationReply;
+
+    const conversationReply = getConversationIntent(normalizedMessage);
+    if (conversationReply) return conversationReply;
 
     const matchedProducts = findMatchingProducts(message);
     const likelyProductSearch = /\d{2}|qled|oled|mini led|4k|smart|model|gia|inch|inh|ua|qa|kd|tcl|sony|samsung|lg/i.test(message);
