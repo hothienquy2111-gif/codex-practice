@@ -4,7 +4,7 @@
   const CHATBOT_ID = 'anh-minh-chatbot';
   const HISTORY_KEY = 'anhMinhChatHistory';
   const HISTORY_VERSION_KEY = 'anhMinhChatHistoryVersion';
-  const AM_CHATBOT_HISTORY_VERSION = 'sales-replies-start-v6';
+  const AM_CHATBOT_HISTORY_VERSION = 'support-intents-v7';
   const MAX_HISTORY = 20;
   const AVATAR_SRC = 'linh%20v%E1%BA%ADt%20AM.jpeg';
   const HOTLINE = '0905111223';
@@ -1097,11 +1097,7 @@
     const sourceSummary = summarizeProductSources(products);
     if (!products.length) {
       debugChatbotRecommendations(sourceSummary, products, need, []);
-      return {
-        text: 'Hiện website chưa có dữ liệu sản phẩm đang bán. Bạn vui lòng gọi hoặc nhắn Zalo để Anh Minh Store tư vấn mẫu còn hàng chính xác nhất.',
-        actions: [callAction(), zaloAction()],
-        products: [],
-      };
+      return getNoMatchingProductsReply();
     }
 
     const eligibleProducts = products.filter((product) => {
@@ -1113,11 +1109,7 @@
     if (need.isMaxBudgetStrict && need.maxBudget && !eligibleProducts.length) {
       const emptyRecommendations = [];
       debugChatbotRecommendations(sourceSummary, products, need, emptyRecommendations);
-      return {
-        text: 'Hiện website chưa có mẫu phù hợp với yêu cầu này. Bạn có thể nhắn Zalo hoặc gọi Anh Minh Store để kiểm tra mẫu còn hàng chính xác nhất.',
-        actions: [zaloAction(), callAction()],
-        products: [],
-      };
+      return getNoMatchingProductsReply();
     }
 
     const scored = eligibleProducts
@@ -1131,11 +1123,7 @@
 
     if (!selected.length) {
       debugChatbotRecommendations(sourceSummary, products, need, []);
-      return {
-        text: 'Hiện website chưa có mẫu phù hợp với yêu cầu này. Bạn có thể nhắn Zalo hoặc gọi Anh Minh Store để kiểm tra mẫu còn hàng chính xác nhất.',
-        actions: [zaloAction(), callAction()],
-        products: [],
-      };
+      return getNoMatchingProductsReply();
     }
 
     const recommendedProducts = selected.map((item) => ({
@@ -1205,6 +1193,16 @@
     return `${index + 1}. ${name}${model}${price}`;
   }).join('\n');
 
+  const isMainlyGreeting = (normalizedMessage = '') => {
+    const compactMessage = normalizedMessage.replace(/[!?.。]+/g, '').trim();
+    return /^(xin chao|chao|hello|hi|alo|chao shop|shop oi|em oi|anh oi)(?:\s+(shop|am ai|anh minh|ban|nha|a|ạ))*$/.test(compactMessage);
+  };
+
+  const isMainlyThanks = (normalizedMessage = '') => {
+    const compactMessage = normalizedMessage.replace(/[!?.。]+/g, '').trim();
+    return /^(ok\s*)?(cam on|thank you|thanks|thank)(\s+(shop|ban|em|anh|am ai|nha|nhe|a|ạ))*$/.test(compactMessage);
+  };
+
   const getConversationIntent = (normalizedMessage = '') => {
     if (!normalizedMessage) return null;
     const hasPurchaseSignal = RECOMMENDATION_INTENT_KEYWORDS.some((keyword) => normalizedMessage.includes(normalizeVietnameseText(keyword)))
@@ -1212,8 +1210,7 @@
     if (hasPurchaseSignal) return null;
 
     const compactMessage = normalizedMessage.replace(/[!?.。]+/g, '').trim();
-    const greetingPattern = /^(xin chao|chao|hello|hi|alo|chao shop|shop oi|em oi|anh oi)(?:\s+(shop|am ai|anh minh|ban|nha|a|ạ))*$/;
-    if (greetingPattern.test(compactMessage)) {
+    if (isMainlyGreeting(normalizedMessage)) {
       return {
         text: 'Dạ AM AI chào bạn 👋 Bạn đang cần mua tivi mới, tivi cũ hay muốn tư vấn theo ngân sách ạ?',
         actions: [newTvAction(), oldTvAction(), zaloAction()],
@@ -1221,8 +1218,7 @@
       };
     }
 
-    const thanksPattern = /^(ok\s*)?(cam on|thank you|thanks|thank)(\s+(shop|ban|em|anh|am ai|nha|nhe|a|ạ))*$/;
-    if (thanksPattern.test(compactMessage)) {
+    if (isMainlyThanks(normalizedMessage)) {
       return {
         text: 'Dạ AM AI cảm ơn bạn ạ 😊 Khi cần xem giá, chọn tivi theo ngân sách hoặc hỏi về thu cũ đổi mới/sửa tivi, bạn cứ nhắn mình nha.',
         actions: [callAction(), zaloAction()],
@@ -1241,13 +1237,154 @@
     return null;
   };
 
+  const getRoomSizeProducts = (normalizedMessage = '') => {
+    const need = parseTvCustomerNeed(normalizedMessage);
+    const range = need.recommendedRange || getRecommendedRangeForArea(need.roomArea, need.roomType);
+    if (!range) return [];
+    return getAvailableProductsForChatbot()
+      .filter((product) => product.sizeNumber && product.sizeNumber >= range.min && product.sizeNumber <= range.max)
+      .slice(0, 3)
+      .map((product) => ({ ...product, reason: `phù hợp khoảng ${range.label}` }));
+  };
+
+  const getNoMatchingProductsReply = () => ({
+    text: 'Hiện AM AI chưa thấy mẫu phù hợp chính xác trong dữ liệu đang có ạ. Bạn có thể tăng/giảm ngân sách, đổi kích thước, hoặc nhắn Zalo để cửa hàng kiểm tra thêm mẫu mới về nha.',
+    actions: [zaloAction(), callAction(), featuredAction()],
+    products: [],
+  });
+
+  const getSupportIntentReply = (normalizedMessage = '') => {
+    if (!normalizedMessage) return null;
+
+    if (hasAny(normalizedMessage, [
+      'con hang khong', 'con mau nay khong', 'mau nay con khong', 'co san khong', 'con con nay khong',
+      'con 55 inch khong', 'con khong shop',
+    ]) || /\bcon\s+(32|40|42|43|49|50|55|58|60|65|70|75|77|85|86|98)\s*(inch|in|inh)?\s*khong\b/.test(normalizedMessage)) {
+      return {
+        id: 'availability',
+        text: 'Dạ sản phẩm trên web là dữ liệu đang được cập nhật ạ. Để chắc chắn mẫu còn hàng tại kho, bạn gửi model hoặc bấm xem chi tiết rồi nhắn Zalo/gọi hotline để Anh Minh Store kiểm tra nhanh và chính xác nhất nha.',
+        actions: [zaloAction(), callAction(), featuredAction()],
+        products: [],
+      };
+    }
+
+    if (hasAny(normalizedMessage, ['tra gop', 'co tra gop khong', 'mua gop', 'gop duoc khong', 'tra truoc bao nhieu'])) {
+      return {
+        id: 'installment',
+        text: 'Dạ Anh Minh Store có hỗ trợ tư vấn trả góp tuỳ sản phẩm và chương trình ạ. Bạn gửi mẫu tivi đang quan tâm hoặc ngân sách dự kiến, bên em sẽ kiểm tra phương án phù hợp cho mình nha.',
+        actions: [zaloAction(), callAction()],
+        products: [],
+      };
+    }
+
+    if (hasAny(normalizedMessage, ['giao hang', 'giao tan noi', 'ship khong', 'co ship khong', 'co lap dat khong', 'treo tuong', 'lap gia treo', 'giao trong ngay khong'])) {
+      return {
+        id: 'delivery',
+        text: 'Dạ bên em có hỗ trợ giao hàng và tư vấn lắp đặt tại Đà Nẵng ạ. Nếu cần treo tường hoặc lắp giá treo, bạn cho biết kích thước tivi và khu vực giao để cửa hàng báo hỗ trợ cụ thể nha.',
+        actions: [callAction(), zaloAction()],
+        products: [],
+      };
+    }
+
+    if (hasAny(normalizedMessage, ['phong 20m2', 'phong 25m2', 'phong 30m2', 'phong 40m2', 'phong ngu nen dung tivi gi', 'phong khach nen mua may inch', 'may inch la vua', 'bao nhieu inch'])
+      || /\bphong\s*\d{1,2}\s*(m2|m\s*2|met vuong)\b/.test(normalizedMessage)) {
+      return {
+        id: 'room-size',
+        text: 'Dạ nếu phòng ngủ/phòng nhỏ thì mình nên ưu tiên 32–43 inch. Phòng khoảng 20–25m² có thể chọn 43–50 inch. Phòng 30–40m² nên chọn 55–65 inch để xem đã hơn, còn phòng rộng có thể lên 65–75 inch. Bạn cho AM AI biết thêm ngân sách để mình gợi ý mẫu phù hợp hơn nha.',
+        actions: [newTvAction(), oldTvAction(), zaloAction()],
+        products: getRoomSizeProducts(normalizedMessage),
+      };
+    }
+
+    if (hasAny(normalizedMessage, ['tivi cu co tot khong', 'tivi cu co on khong', 'co nen mua tivi cu khong', 'tivi qua su dung co ben khong', 'mua tivi cu so hu'])) {
+      return {
+        id: 'old-tv-confidence',
+        text: 'Dạ tivi cũ phù hợp khi mình muốn tiết kiệm chi phí ạ. Bên em ưu tiên tư vấn máy đã kiểm tra tình trạng, thông tin bảo hành rõ theo từng sản phẩm. Khi xem tivi cũ, bạn nên kiểm tra kỹ ảnh thực tế, model, tình trạng màn hình và thời gian bảo hành trước khi chốt nha.',
+        actions: [oldTvAction(), zaloAction(), callAction()],
+        products: [],
+      };
+    }
+
+    if (hasAny(normalizedMessage, ['tivi khong len nguon', 'mat hinh', 'co tieng khong hinh', 'mat tieng', 'man hinh soc', 'be man', 'loi man', 'den nen', 'bo nguon', 'main', 'sua tivi'])) {
+      return {
+        id: 'repair',
+        text: 'Dạ bên em có hỗ trợ kiểm tra và sửa tivi tại Đà Nẵng ạ. Bạn gửi giúp em 3 thông tin: hãng/model tivi, kích thước màn hình và ảnh hoặc video lỗi hiện tại. Kỹ thuật bên em sẽ tư vấn hướng xử lý rõ hơn qua Zalo hoặc hotline nha.',
+        actions: [zaloAction(), callAction()],
+        products: [],
+      };
+    }
+
+    if (hasAny(normalizedMessage, ['mua sao', 'dat hang sao', 'dat tivi', 'chot don', 'giu hang', 'giu mau nay', 'minh muon mua', 'mua ngay'])) {
+      return {
+        id: 'order',
+        text: 'Dạ bạn có thể bấm ‘Đặt hàng ngay’ ở trang sản phẩm, nhập họ tên và số điện thoại. Anh Minh Store sẽ liên hệ xác nhận lại mẫu, giá, bảo hành và thời gian giao trước khi chốt đơn ạ.',
+        actions: [callAction(), zaloAction(), featuredAction()],
+        products: [],
+      };
+    }
+
+    if (hasAny(normalizedMessage, ['so dien thoai', 'hotline', 'lien he', 'goi tu van', 'tu van lai', 'cho minh so', 'dia chi', 'cua hang o dau'])) {
+      return {
+        id: 'contact',
+        text: 'Dạ bạn có thể liên hệ Anh Minh Store qua hotline 0905111223 - 0774111223 ạ. Cơ sở 1: 100 Tiểu La, Hải Châu, Đà Nẵng. Cơ sở 2: 540B Nguyễn Hữu Thọ, Cẩm Lệ, Đà Nẵng.',
+        actions: [callAction(), zaloAction()],
+        products: [],
+      };
+    }
+
+    if (hasAny(normalizedMessage, ['dat qua', 'mac qua', 'gia cao qua', 'co giam khong', 'bot duoc khong', 'giam gia khong', 'co khuyen mai khong', 'co qua tang khong', 'gia tot hon duoc khong', 'fix gia khong'])) {
+      return {
+        id: 'price-objection',
+        text: 'Dạ em hiểu ạ 😊 Giá bên em đi kèm kiểm tra máy kỹ, tư vấn lắp đặt rõ ràng và hỗ trợ sau bán. Tuỳ sản phẩm hoặc chương trình, Anh Minh Store có thể hỗ trợ thêm quà tặng như remote, giá treo hoặc ưu đãi lắp đặt. Bạn gửi model hoặc ngân sách mong muốn, AM AI sẽ gợi ý mẫu hợp hơn ạ.',
+        actions: [zaloAction(), callAction(), featuredAction()],
+        products: [],
+      };
+    }
+
+    if (hasAny(normalizedMessage, ['bao hanh', 'bao hanh bao lau', 'tivi moi bao hanh', 'san pham qua sua chua bao hanh', 'qua sua chua bao hanh may thang'])) {
+      return {
+        id: 'warranty',
+        text: 'Dạ chính sách bảo hành bên em như sau ạ: sản phẩm tivi mới bảo hành 2 năm. Sản phẩm đã qua sửa chữa bảo hành 6 tháng. Riêng tivi cũ/đã qua sử dụng có thể tuỳ tình trạng máy và thông tin từng sản phẩm, bạn gửi model hoặc bấm xem chi tiết để AM AI hỗ trợ kiểm tra rõ hơn nha.',
+        actions: [featuredAction(), zaloAction(), callAction()],
+        products: [],
+      };
+    }
+
+    return null;
+  };
+
+  const hasClearIntent = (message = '') => Boolean(getSupportIntentReply(normalizeText(message)));
+
+  const hasStrongProductRecommendationIntent = (message = '') => {
+    const need = parseTvCustomerNeed(message);
+    const hasBudget = Boolean(need.minBudget || need.maxBudget || need.targetBudget);
+    const hasSpecificProductFilter = Boolean(need.brand || need.seriesLabel || need.type || hasBudget);
+    return Boolean(hasSpecificProductFilter || (need.requestedSize && hasBudget) || need.roomArea || need.roomType);
+  };
+
   const getBotReply = (message) => {
     const normalizedMessage = normalizeText(message);
+    const supportIntentReply = getSupportIntentReply(normalizedMessage);
+    const strongProductIntent = hasStrongProductRecommendationIntent(message);
+
+    if (supportIntentReply && (supportIntentReply.id === 'room-size' || !strongProductIntent)) return supportIntentReply;
+
     const recommendationReply = recommendProductsForMessage(message);
-    if (recommendationReply) return recommendationReply;
+    if (recommendationReply) {
+      if (supportIntentReply?.id === 'availability' && recommendationReply.products?.length) {
+        return {
+          ...recommendationReply,
+          text: `${recommendationReply.text}
+Dạ để chắc chắn mẫu còn hàng tại kho, bạn bấm xem chi tiết rồi nhắn Zalo/gọi hotline để Anh Minh Store kiểm tra nhanh nha.`,
+          actions: [featuredAction(), zaloAction(), callAction()],
+        };
+      }
+      return recommendationReply;
+    }
 
     const conversationReply = getConversationIntent(normalizedMessage);
     if (conversationReply) return conversationReply;
+    if (supportIntentReply) return supportIntentReply;
 
     const isPriceObjection = hasAny(normalizedMessage, [
       'đắt quá',
@@ -1315,7 +1452,7 @@
     }
 
     if (likelyProductSearch && !matchedProducts.length) {
-      return { text: 'Hiện mình chưa tìm thấy sản phẩm phù hợp trong dữ liệu đang hiển thị. Bạn có thể thử tìm theo model khác hoặc nhắn Zalo để Anh Minh Store tư vấn nhanh hơn.', actions: [featuredAction(), zaloAction()], products: [] };
+      return getNoMatchingProductsReply();
     }
 
     return { text: 'Mình chưa hiểu rõ câu hỏi này. Bạn có thể hỏi về tivi mới, tivi cũ, thu cũ đổi mới, sửa tivi, bảo hành, giá sản phẩm hoặc địa chỉ cửa hàng nha.', actions: [newTvAction(), oldTvAction(), callAction(), zaloAction()], products: [] };
