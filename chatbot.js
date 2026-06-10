@@ -4,7 +4,7 @@
   const CHATBOT_ID = 'anh-minh-chatbot';
   const HISTORY_KEY = 'anhMinhChatHistory';
   const HISTORY_VERSION_KEY = 'anhMinhChatHistoryVersion';
-  const AM_CHATBOT_HISTORY_VERSION = 'brand-series-comparison-v9';
+  const AM_CHATBOT_HISTORY_VERSION = 'durability-comparison-v10';
   const MAX_HISTORY = 20;
   const AVATAR_SRC = 'linh%20v%E1%BA%ADt%20AM.jpeg';
   const HOTLINE = '0905111223';
@@ -546,6 +546,117 @@
       bestFor: 'khách cần tivi dễ dùng, cơ bản',
       budgetPosition: 'phổ thông đến trung cấp',
       shortSummary: 'thương hiệu quen thuộc cho nhu cầu cơ bản',
+    },
+  };
+
+  const DURABILITY_BRAND_GUIDANCE = {
+    samsung: {
+      strengths: 'nhiều mẫu, linh kiện/dịch vụ phổ biến, công nghệ đa dạng và dễ chọn theo ngân sách',
+      note: 'độ bền còn tuỳ dòng Crystal/QLED/Neo QLED/OLED và cách sử dụng',
+      quick: 'hợp nếu muốn nhiều lựa chọn, tính năng thông minh đa dạng và giá dễ chọn hơn',
+    },
+    sony: {
+      strengths: 'xử lý hình ảnh tự nhiên, chuyển động tốt và cảm giác hoàn thiện tốt',
+      note: 'giá thường cao hơn, nên so model cụ thể trước khi chốt',
+      quick: 'đáng cân nhắc nếu ưu tiên trải nghiệm lâu dài và ngân sách rộng',
+    },
+    lg: {
+      strengths: 'webOS dễ dùng, OLED mạnh, QNED/NanoCell nhiều lựa chọn và hợp gia đình',
+      note: 'độ bền phụ thuộc từng model và thói quen sử dụng; riêng OLED nên dùng hợp lý',
+      quick: 'hợp nếu thích giao diện dễ dùng, xem phim/gia đình và hệ sinh thái LG',
+    },
+    tcl: {
+      strengths: 'cấu hình tốt trong tầm giá, nhiều QLED/Mini LED giá cạnh tranh',
+      note: 'nên kiểm tra kỹ model, bảo hành và tình trạng máy',
+      quick: 'hợp nếu muốn cấu hình cao, màn lớn và giá cạnh tranh',
+    },
+    hisense: {
+      strengths: 'cấu hình tốt trong tầm giá, nhiều QLED/Mini LED giá cạnh tranh',
+      note: 'nên kiểm tra kỹ model, bảo hành và tình trạng máy',
+      quick: 'hợp nếu muốn thông số tốt trong tầm tiền và giá dễ tiếp cận',
+    },
+    xiaomi: {
+      strengths: 'giá mềm, smart TV dễ tiếp cận và nhiều ứng dụng cơ bản',
+      note: 'nên chọn theo nhu cầu cơ bản, kiểm tra bảo hành và model cụ thể',
+      quick: 'hợp nếu ưu tiên giá mềm và nhu cầu xem cơ bản',
+    },
+    casper: {
+      strengths: 'giá mềm, smart TV dễ tiếp cận và phù hợp nhu cầu cơ bản',
+      note: 'nên chọn theo nhu cầu cơ bản, kiểm tra bảo hành và model cụ thể',
+      quick: 'hợp nếu muốn tiết kiệm chi phí cho nhu cầu phổ thông',
+    },
+    coocaa: {
+      strengths: 'giá mềm, smart TV dễ tiếp cận và phù hợp phòng ngủ/phòng trọ',
+      note: 'nên chọn theo nhu cầu cơ bản, kiểm tra bảo hành và model cụ thể',
+      quick: 'hợp nếu cần smart TV giá mềm cho nhu cầu đơn giản',
+    },
+    toshiba: {
+      strengths: 'thương hiệu quen thuộc, phù hợp nhu cầu gia đình cơ bản',
+      note: 'công nghệ và mẫu mã có thể không đa dạng bằng Samsung/LG/Sony',
+      quick: 'hợp nếu cần tivi gia đình dễ dùng, không quá đòi hỏi công nghệ mới',
+    },
+    panasonic: {
+      strengths: 'thương hiệu quen thuộc, phù hợp nhu cầu gia đình cơ bản',
+      note: 'công nghệ và mẫu mã có thể không đa dạng bằng Samsung/LG/Sony',
+      quick: 'hợp nếu ưu tiên thương hiệu quen thuộc và nhu cầu xem cơ bản',
+    },
+    sharp: {
+      strengths: 'thương hiệu quen thuộc, phù hợp nhu cầu gia đình cơ bản',
+      note: 'công nghệ và mẫu mã có thể không đa dạng bằng Samsung/LG/Sony',
+      quick: 'hợp nếu cần tivi gia đình cơ bản, dễ dùng',
+    },
+    hitachi: {
+      strengths: 'thương hiệu quen thuộc, phù hợp nhu cầu gia đình cơ bản',
+      note: 'công nghệ và mẫu mã có thể không đa dạng bằng Samsung/LG/Sony',
+      quick: 'hợp nếu cần lựa chọn quen thuộc cho gia đình',
+    },
+  };
+
+  const DURABILITY_SERIES_GUIDANCE = {
+    led: {
+      strengths: 'thường là lựa chọn phổ thông, dễ dùng và chi phí hợp lý',
+      note: 'hợp nếu muốn dùng cơ bản, ít đòi hỏi công nghệ cao',
+      quick: 'hợp nhu cầu cơ bản và ngân sách tiết kiệm',
+    },
+    uhd: {
+      strengths: 'thường là lựa chọn phổ thông, dễ dùng và chi phí hợp lý',
+      note: 'hợp nếu muốn dùng cơ bản, ít đòi hỏi công nghệ cao',
+      quick: 'hợp nhu cầu 4K cơ bản và ngân sách vừa phải',
+    },
+    crystal_uhd: {
+      strengths: 'là dòng 4K phổ thông, dễ dùng và chi phí hợp lý',
+      note: 'hợp nếu muốn dùng cơ bản, ít đòi hỏi công nghệ cao',
+      quick: 'hợp nếu thích Samsung và cần lựa chọn 4K dễ tiếp cận',
+    },
+    qled: {
+      strengths: 'nâng cấp về màu sắc/độ sáng so với dòng phổ thông, sáng tốt và hợp phòng sáng',
+      note: 'độ bền phụ thuộc model, tấm nền và môi trường sử dụng',
+      quick: 'phòng sáng hoặc xem bóng đá nhiều thì QLED dễ hợp hơn',
+    },
+    qned: {
+      strengths: 'nâng cấp về màu sắc/độ sáng so với dòng phổ thông, nhiều lựa chọn trong hệ LG',
+      note: 'độ bền phụ thuộc model, tấm nền và môi trường sử dụng',
+      quick: 'hợp nếu thích LG/webOS và muốn nâng cấp hơn UHD/NanoCell',
+    },
+    nanocell: {
+      strengths: 'nâng cấp về màu sắc so với dòng phổ thông và hợp xem gia đình',
+      note: 'độ bền phụ thuộc model, tấm nền và môi trường sử dụng',
+      quick: 'hợp nếu thích màu tự nhiên, webOS và nhu cầu gia đình',
+    },
+    oled: {
+      strengths: 'hình ảnh đẹp, màu đen sâu và xem phim rất tốt',
+      note: 'nên dùng hợp lý nếu thường xuyên để hình tĩnh quá lâu',
+      quick: 'xem phim/phòng tối và ngân sách cao thì OLED đáng cân nhắc',
+    },
+    mini_led: {
+      strengths: 'sáng mạnh, HDR tốt và hợp phòng sáng',
+      note: 'giá cao hơn, nên chọn model có bảo hành rõ',
+      quick: 'hợp phòng sáng, nội dung HDR hoặc thể thao',
+    },
+    neo_qled: {
+      strengths: 'sáng mạnh, HDR tốt và hợp phòng sáng',
+      note: 'giá cao hơn, nên chọn model có bảo hành rõ',
+      quick: 'hợp nếu thích Samsung cao cấp, phòng sáng và thể thao/HDR',
     },
   };
 
@@ -1195,9 +1306,33 @@
     return { brands, series, standaloneBrands, all: [...brands, ...series].sort((a, b) => a.index - b.index) };
   };
 
+  const DURABILITY_INTENT_PHRASES = [
+    'ben hon', 'hang nao ben', 'cai nao ben', 'loai nao ben', 'mau nao ben', 'dong nao ben',
+    'it loi hon', 'it hu hon', 'de hu khong', 'tuoi tho', 'dung lau', 'dung lau hon', 'on dinh hon',
+  ];
+
+  const hasDurabilityIntent = (normalizedMessage = '') => {
+    const message = normalizeVietnameseText(normalizedMessage);
+    if (!message) return false;
+    if (hasAny(message, DURABILITY_INTENT_PHRASES)) return true;
+    if (/\bben\s+(khong|ko|k)\b/.test(message) && hasAny(message, ['tivi', 'tv', 'model', 'mau', 'hang', ...TV_BRANDS])) return true;
+    if (/\b(it\s+loi|it\s+hu|tuoi\s+tho|dung\s+lau|on\s+dinh)\b/.test(message) && hasAny(message, ['tivi', 'tv', 'hang', 'mau', 'model', 'qled', 'oled', 'led', ...TV_BRANDS])) return true;
+    return false;
+  };
+
+  const hasDurabilityComparisonIntent = (normalizedMessage = '') => {
+    const message = normalizeVietnameseText(normalizedMessage);
+    if (!hasDurabilityIntent(message)) return false;
+    const entities = detectComparisonEntities(message);
+    const comparableCount = entities.series.length + entities.brands.length;
+    if (comparableCount >= 2) return true;
+    return hasAny(message, ['hang nao ben', 'loai nao ben', 'mau nao ben', 'dong nao ben', 'tivi cu hang nao ben', 'tv cu hang nao ben']);
+  };
+
   const isComparisonIntent = (normalizedMessage = '') => {
     const message = normalizeVietnameseText(normalizedMessage);
     if (!message) return false;
+    if (hasDurabilityComparisonIntent(message)) return true;
     if (hasAny(message, ['so sanh', 'khac gi', 'khac nhau', 'cai nao hon', 'con nao hon', 'nen chon cai nao', 'nen mua cai nao', 'loai nao tot hon', 'hang nao tot hon', 'dong nao tot hon', 'hon khong', 'co hon', 'bang khong', 'ngon hon'])) return true;
     const entities = detectComparisonEntities(message);
     const comparableCount = entities.series.length + entities.brands.length;
@@ -1328,11 +1463,107 @@
     return appendComparisonProductSuggestions({ text, actions: [zaloAction(), callAction()], products: [] }, message, need, normalizedMessage);
   };
 
+  const getDurabilityBrandGuidance = (brand = {}) => {
+    const key = normalizeComparisonKey(brand.key || brand.label || '');
+    const fallback = brand.profile || TV_BRAND_COMPARISON_PROFILES[key] || {};
+    return DURABILITY_BRAND_GUIDANCE[key] || {
+      strengths: fallback.strengths || 'có các dòng tivi phù hợp từng phân khúc',
+      note: 'nên so theo model cụ thể, tình trạng máy và chính sách bảo hành',
+      quick: 'hợp nếu model đó đúng nhu cầu, giá tốt và bảo hành rõ',
+    };
+  };
+
+  const getDurabilitySeriesGuidance = (series = {}) => {
+    const key = normalizeComparisonKey(series.key || series.label || '');
+    const profile = series.profile || getSeriesComparisonProfileByLabel(series.label) || {};
+    return DURABILITY_SERIES_GUIDANCE[key] || {
+      strengths: profile.strengths || 'có ưu điểm riêng theo từng phân khúc',
+      note: 'độ bền phụ thuộc model, tấm nền, môi trường sử dụng và bảo hành',
+      quick: profile.bestFor ? `hợp ${profile.bestFor}` : 'nên chọn theo model cụ thể và bảo hành rõ',
+    };
+  };
+
+  const getDurabilityTopicText = (normalizedMessage = '') => {
+    if (hasAny(normalizedMessage, ['it loi', 'it hu', 'de hu'])) return 'ít lỗi';
+    if (hasAny(normalizedMessage, ['tuoi tho', 'dung lau', 'on dinh'])) return 'dùng lâu/ổn định';
+    return 'độ bền';
+  };
+
+  const buildDurabilityGenericReply = (need = {}, message = '') => {
+    const normalizedMessage = normalizeVietnameseText(message || need.normalizedMessage || '');
+    const oldTvNote = hasAny(normalizedMessage, ['tivi cu', 'tv cu', 'da qua su dung'])
+      ? 'Với tivi cũ, độ bền phụ thuộc rất nhiều vào tình trạng máy thực tế, số giờ sử dụng, màn hình, main/nguồn và lịch sử sửa chữa.'
+      : 'Độ bền còn phụ thuộc model, cách sử dụng, môi trường đặt tivi và chính sách bảo hành.';
+    const text = [
+      `Dạ nếu hỏi hãng/dòng nào bền hơn thì AM AI không nên khẳng định tuyệt đối ạ. ${oldTvNote}`,
+      '• Nên ưu tiên máy đã kiểm tra kỹ, màn hình ổn, không lỗi nền/sọc/ám màu và có bảo hành rõ.',
+      '• Nên so theo model cụ thể hơn là chỉ so theo hãng; cùng một hãng vẫn có dòng phổ thông và dòng cao hơn.',
+      'Bạn gửi giúp AM AI 2 hãng/model đang phân vân hoặc ngân sách + kích thước, mình sẽ so kỹ và lọc mẫu đang có phù hợp hơn ạ.',
+    ].join('\n');
+    return appendComparisonProductSuggestions({ text, actions: [zaloAction(), callAction()], products: [] }, message, need, normalizedMessage);
+  };
+
+  const buildSingleDurabilityReply = (entity, need = {}, message = '') => {
+    const normalizedMessage = normalizeVietnameseText(message || need.normalizedMessage || '');
+    const isSeries = entity.type === 'series';
+    const label = entity.label;
+    const guide = isSeries ? getDurabilitySeriesGuidance(entity) : getDurabilityBrandGuidance(entity);
+    const oldTvLine = hasAny(normalizedMessage, ['tivi cu', 'tv cu', 'da qua su dung'])
+      ? '\nNếu mua tivi cũ, nên ưu tiên tình trạng máy thực tế, màn hình ổn và bảo hành rõ hơn là chỉ nhìn hãng/dòng ạ.'
+      : '';
+    const text = [
+      `Dạ ${label} có nhiều model/dòng khác nhau nên AM AI không nên khẳng định bền tuyệt đối ạ.`,
+      `• Điểm mạnh: ${guide.strengths}.`,
+      `• Lưu ý: ${guide.note}.`,
+      `Nên so theo model cụ thể, nơi bán hỗ trợ và chính sách bảo hành. Bạn gửi model hoặc ngân sách + kích thước, AM AI sẽ lọc mẫu phù hợp hơn ạ.${oldTvLine}`,
+    ].join('\n');
+    return appendComparisonProductSuggestions({ text, actions: [zaloAction(), callAction()], products: [] }, message, need, normalizedMessage);
+  };
+
+  const buildDurabilityComparisonReply = (entityA, entityB, need = {}, message = '') => {
+    const normalizedMessage = normalizeVietnameseText(message || need.normalizedMessage || '');
+    const topic = getDurabilityTopicText(normalizedMessage);
+    const isSeriesComparison = entityA.type === 'series' && entityB.type === 'series';
+    const labelA = entityA.label;
+    const labelB = entityB.label;
+    const guideA = isSeriesComparison ? getDurabilitySeriesGuidance(entityA) : getDurabilityBrandGuidance(entityA);
+    const guideB = isSeriesComparison ? getDurabilitySeriesGuidance(entityB) : getDurabilityBrandGuidance(entityB);
+    const intro = isSeriesComparison
+      ? `Dạ ${labelA} và ${labelB} khác nhau về công nghệ nên không nên chốt đơn giản là cái nào bền hơn ạ.`
+      : topic === 'ít lỗi'
+        ? `Dạ AM AI không nên khẳng định hãng nào ít lỗi hơn tuyệt đối ạ, vì còn tuỳ model và cách sử dụng.`
+        : `Dạ nếu nói về ${topic} thì mình nên so theo model cụ thể hơn là chỉ so theo hãng ạ.`;
+    const oldTvLine = hasAny(normalizedMessage, ['tivi cu', 'tv cu', 'da qua su dung'])
+      ? '\nNếu mua tivi cũ, nên ưu tiên máy đã kiểm tra kỹ, màn hình ổn và có bảo hành rõ.'
+      : '';
+    const closing = isSeriesComparison
+      ? `Chốt nhanh: ${guideA.quick}; ${guideB.quick}. Quan trọng nhất vẫn là chọn model phù hợp nhu cầu, môi trường dùng và có bảo hành rõ ạ.${oldTvLine}`
+      : `Chốt nhanh: ${guideA.quick}; còn ${guideB.quick}. Quan trọng nhất vẫn là chọn model có bảo hành rõ, nơi bán hỗ trợ tốt và phù hợp ngân sách hơn là chỉ chọn theo hãng ạ.${oldTvLine}`;
+    const text = [
+      intro,
+      `• ${labelA}: ${guideA.strengths}. Lưu ý: ${guideA.note}.`,
+      `• ${labelB}: ${guideB.strengths}. Lưu ý: ${guideB.note}.`,
+      closing,
+    ].join('\n');
+    return appendComparisonProductSuggestions({ text, actions: [zaloAction(), callAction()], products: [] }, message, need, normalizedMessage);
+  };
+
   const getComparisonReply = (message = '') => {
     const normalizedMessage = normalizeVietnameseText(message);
     const entities = detectComparisonEntities(normalizedMessage);
     const need = parseTvCustomerNeed(message);
     if (!isComparisonIntent(normalizedMessage)) return null;
+    if (hasDurabilityComparisonIntent(normalizedMessage)) {
+      if (entities.series.length >= 2) return buildDurabilityComparisonReply(entities.series[0], entities.series[1], need, message);
+      if (entities.standaloneBrands.length >= 2) return buildDurabilityComparisonReply(entities.standaloneBrands[0], entities.standaloneBrands[1], need, message);
+      if (entities.brands.length >= 2 && !entities.series.length) return buildDurabilityComparisonReply(entities.brands[0], entities.brands[1], need, message);
+      if (entities.all.length >= 2) return buildDurabilityComparisonReply(entities.all[0], entities.all[1], need, message);
+      if (need.requestedSize || need.minBudget || need.maxBudget || need.targetBudget || need.roomArea || need.roomType || need.viewingDistance) return null;
+      if (entities.series.length === 1) return buildSingleDurabilityReply(entities.series[0], need, message);
+      if (entities.standaloneBrands.length === 1) return buildSingleDurabilityReply(entities.standaloneBrands[0], need, message);
+      if (entities.brands.length === 1) return buildSingleDurabilityReply(entities.brands[0], need, message);
+      return buildDurabilityGenericReply(need, message);
+    }
     if (entities.series.length >= 2) return buildSeriesComparisonReply(entities.series[0], entities.series[1], need, message);
     if (entities.standaloneBrands.length >= 2) return buildBrandComparisonReply(entities.standaloneBrands[0], entities.standaloneBrands[1], need, message);
     if (entities.brands.length >= 2 && !entities.series.length) return buildBrandComparisonReply(entities.brands[0], entities.brands[1], need, message);
@@ -2109,6 +2340,14 @@ Dạ để chắc chắn mẫu còn hàng tại kho, bạn bấm xem chi tiết 
           actions: [featuredAction(), zaloAction(), callAction()],
         };
       }
+      if (hasDurabilityIntent(normalizedMessage)) {
+        return {
+          ...recommendationReply,
+          text: `${recommendationReply.text}
+
+Lưu ý thêm về độ bền: nên chọn model có bảo hành rõ, kiểm tra tình trạng máy kỹ (đặc biệt với tivi cũ) và dùng đúng môi trường; AM AI không khẳng định hãng/dòng nào bền tuyệt đối ạ.`,
+        };
+      }
       return recommendationReply;
     }
 
@@ -2423,6 +2662,9 @@ Dạ để chắc chắn mẫu còn hàng tại kho, bạn bấm xem chi tiết 
   window.getAvailableProductsForChatbot = getAvailableProductsForChatbot;
   window.detectTvSeriesFromMessage = detectTvSeriesFromMessage;
   window.isComparisonIntent = isComparisonIntent;
+  window.hasDurabilityIntent = hasDurabilityIntent;
+  window.hasDurabilityComparisonIntent = hasDurabilityComparisonIntent;
+  window.buildDurabilityComparisonReply = buildDurabilityComparisonReply;
   window.detectComparedBrands = detectComparedBrands;
   window.detectComparedSeries = detectComparedSeries;
   window.detectComparisonEntities = detectComparisonEntities;
