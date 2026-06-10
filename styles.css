@@ -162,11 +162,11 @@ p { line-height: 1.65; }
 .hero-intro { margin-bottom: 10px; }
 .hero-intro h1,
 .home-hero-title { margin: 0; max-width: 100%; color: var(--color-primary-deep); font-size: clamp(28px, 2.2vw, 38px); font-weight: 750; line-height: 1.15; letter-spacing: -0.035em; white-space: normal; overflow-wrap: anywhere; }
-/* Homepage hero banner no-crop mode: compact frame scoped to the real homepage carousel only. */
-.home-hero-layout .home-hero-banner-compact {
+/* Homepage hero banner no-crop mode: left-anchored wide frame scoped to the real homepage carousel only. */
+.home-hero-layout .home-hero-banner-wide-left {
   position: relative;
-  width: min(76%, 1100px);
-  max-width: calc(100% - 32px);
+  width: min(100%, 1400px);
+  max-width: 100%;
   height: auto;
   max-height: none;
   aspect-ratio: auto;
@@ -181,7 +181,7 @@ p { line-height: 1.65; }
 .carousel-frame,
 .carousel-shell,
 .hero-banner-carousel { position: relative; }
-.home-hero-layout .home-hero-banner-compact .carousel-viewport {
+.home-hero-layout .home-hero-banner-wide-left .carousel-viewport {
   width: 100%;
   height: auto;
   max-height: none;
@@ -190,9 +190,9 @@ p { line-height: 1.65; }
   touch-action: pan-y;
   cursor: grab;
 }
-.home-hero-layout .home-hero-banner-compact.is-height-synced .carousel-viewport { height: 100%; }
-.home-hero-banner-compact.is-dragging .carousel-viewport { cursor: grabbing; }
-.home-hero-layout .home-hero-banner-compact .carousel-track {
+.home-hero-layout .home-hero-banner-wide-left.is-height-synced .carousel-viewport { height: 100%; }
+.home-hero-banner-wide-left.is-dragging .carousel-viewport { cursor: grabbing; }
+.home-hero-layout .home-hero-banner-wide-left .carousel-track {
   display: flex;
   width: 100%;
   height: auto;
@@ -200,8 +200,8 @@ p { line-height: 1.65; }
   align-items: flex-start;
   will-change: transform;
 }
-.home-hero-layout .home-hero-banner-compact.is-height-synced .carousel-track { height: 100%; }
-.home-hero-layout .home-hero-banner-compact .carousel-slide {
+.home-hero-layout .home-hero-banner-wide-left.is-height-synced .carousel-track { height: 100%; }
+.home-hero-layout .home-hero-banner-wide-left .carousel-slide {
   position: relative;
   display: block;
   flex: 0 0 100%;
@@ -213,8 +213,8 @@ p { line-height: 1.65; }
   background: transparent;
   box-sizing: border-box;
 }
-.home-hero-layout .home-hero-banner-compact.is-height-synced .carousel-slide { height: 100%; }
-.home-hero-layout .home-hero-banner-compact .carousel-slide img {
+.home-hero-layout .home-hero-banner-wide-left.is-height-synced .carousel-slide { height: 100%; }
+.home-hero-layout .home-hero-banner-wide-left .carousel-slide img {
   display: block;
   width: 100%;
   height: auto;
@@ -521,7 +521,7 @@ p { line-height: 1.65; }
   .home-hero-layout { grid-template-columns: 1fr; width: min(100%, 1180px); padding-inline: 16px; }
   .hero__main { display: contents; }
   .hero-intro { order: 1; }
-  .home-hero-layout .home-hero-banner-compact { order: 2; width: min(94vw, 960px); max-width: calc(100% - 32px); max-height: none; }
+  .home-hero-layout .home-hero-banner-wide-left { order: 2; width: 100%; max-width: 100%; max-height: none; }
   .brand-panel { order: 3; width: 100%; height: auto; max-height: 340px; }
   .hero-benefits { order: 4; }
   .brand-list { flex: initial; grid-template-columns: repeat(2, minmax(0, 1fr)); max-height: 300px; }
@@ -548,7 +548,7 @@ p { line-height: 1.65; }
   .home-hero-layout { grid-template-columns: 1fr; width: min(100%, 1180px); padding-inline: 16px; }
   .hero__main { display: contents; }
   .hero-intro { order: 1; }
-  .home-hero-layout .home-hero-banner-compact { order: 2; width: min(94vw, 960px); max-width: calc(100% - 32px); }
+  .home-hero-layout .home-hero-banner-wide-left { order: 2; width: 100%; max-width: 100%; }
   .brand-panel { order: 3; width: 100%; height: auto; max-height: 340px; }
   .hero-benefits { order: 4; }
   .brand-list { flex: initial; grid-template-columns: repeat(2, minmax(0, 1fr)); max-height: 300px; }
@@ -984,10 +984,10 @@ body.product-modal-open { overflow: hidden; }
   .hero-intro { margin-bottom: 10px; }
   .hero-intro h1,
   .home-hero-title { font-size: clamp(26px, 8vw, 36px); line-height: 1.12; white-space: normal; }
-  .home-hero-layout .home-hero-banner-compact { width: 100%; max-width: 100%; max-height: none; border-radius: 18px; }
-  .home-hero-layout .home-hero-banner-compact .carousel-viewport { height: auto; aspect-ratio: auto; }
-  .home-hero-layout .home-hero-banner-compact.is-height-synced .carousel-viewport { height: 100%; }
-  .home-hero-layout .home-hero-banner-compact .carousel-slide { padding: 0; }
+  .home-hero-layout .home-hero-banner-wide-left { width: 100%; max-width: 100%; max-height: none; border-radius: 18px; }
+  .home-hero-layout .home-hero-banner-wide-left .carousel-viewport { height: auto; aspect-ratio: auto; }
+  .home-hero-layout .home-hero-banner-wide-left.is-height-synced .carousel-viewport { height: 100%; }
+  .home-hero-layout .home-hero-banner-wide-left .carousel-slide { padding: 0; }
   .hero-carousel-arrow { width: 40px; height: 40px; }
   .hero-carousel-arrow svg { width: 20px; height: 20px; }
   .hero-carousel-arrow-prev { left: 12px; right: auto; }
