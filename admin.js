@@ -14,10 +14,18 @@
     loginMessage: document.querySelector('[data-login-message]'),
     adminMessage: document.querySelector('[data-admin-message]'),
     products: document.querySelector('[data-admin-products]'),
+    productSearchInput: document.querySelector('[data-product-search]'),
+    productSearchClear: document.querySelector('[data-product-search-clear]'),
+    productSearchCount: document.querySelector('[data-product-search-count]'),
     orders: document.querySelector('[data-admin-orders]'),
     logoutButton: document.querySelector('[data-logout-button]'),
     openFormButton: document.querySelector('[data-open-product-form]'),
     modal: document.querySelector('[data-product-modal]'),
+    duplicateModal: document.querySelector('[data-duplicate-modal]'),
+    duplicateForm: document.querySelector('[data-duplicate-form]'),
+    duplicateMessage: document.querySelector('[data-duplicate-message]'),
+    duplicateSource: document.querySelector('[data-duplicate-source]'),
+    createDuplicateButton: document.querySelector('[data-create-duplicate]'),
     form: document.querySelector('[data-product-form]'),
     formTitle: document.querySelector('[data-form-title]'),
     formMessage: document.querySelector('[data-form-message]'),
@@ -49,7 +57,12 @@
 
   let products = [];
   let editingProduct = null;
+  let duplicatingProduct = null;
   let productIdManuallyEdited = false;
+  let productSearchTerm = '';
+  let productSearchTimer = null;
+  let removedProductImages = new Set();
+  let currentProductImages = [];
   let banners = [];
   let editingBanner = null;
   let rightBanner = null;
@@ -69,6 +82,13 @@
     node.className = `admin-message${type ? ` admin-message--${type}` : ''}`;
   };
   const normalizeText = (value = '') => String(value).trim();
+  const normalizeSearchText = (value = '') => String(value || '')
+    .toLocaleLowerCase('vi-VN')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/\s+/g, ' ')
+    .trim();
   const slugify = (value = '') => normalizeText(value).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
   const generateProductId = (brand, model, size) => slugify(`${brand} ${model} ${size}`);
   const sanitizeFileName = (name = '') => {
@@ -337,13 +357,54 @@
     }
   };
 
+  const serializeSearchValue = (value) => {
+    if (Array.isArray(value)) return value.map(serializeSearchValue).join(' ');
+    if (value && typeof value === 'object') return Object.values(value).map(serializeSearchValue).join(' ');
+    return normalizeText(value);
+  };
+
+  const getProductSearchText = (product = {}) => normalizeSearchText([
+    product.id,
+    product.brand,
+    product.model,
+    product.full_name || product.fullName,
+    product.size,
+    product.type,
+    product.condition,
+    product.warranty,
+    product.price,
+    product.old_price || product.oldPrice,
+    product.badge,
+    product.description,
+    serializeSearchValue(product.features),
+    serializeSearchValue(product.overview),
+    serializeSearchValue(product.specifications),
+  ].filter(Boolean).join(' '));
+
+  const getFilteredProducts = () => {
+    const term = normalizeSearchText(productSearchTerm);
+    if (!term) return products;
+    return products.filter((product) => getProductSearchText(product).includes(term));
+  };
+
+  const updateProductSearchCount = (count) => {
+    if (dom.productSearchCount) dom.productSearchCount.textContent = `Đang hiển thị ${count}/${products.length} sản phẩm`;
+    if (dom.productSearchClear) dom.productSearchClear.disabled = !normalizeText(productSearchTerm);
+  };
+
   const renderProducts = () => {
     if (!dom.products) return;
+    const filteredProducts = getFilteredProducts();
+    updateProductSearchCount(filteredProducts.length);
     if (!products.length) {
       dom.products.innerHTML = '<p class="admin-empty">Chưa có sản phẩm nào.</p>';
       return;
     }
-    dom.products.innerHTML = products.map((product) => `
+    if (!filteredProducts.length) {
+      dom.products.innerHTML = '<p class="admin-empty">Không tìm thấy sản phẩm phù hợp.</p>';
+      return;
+    }
+    dom.products.innerHTML = filteredProducts.map((product) => `
       <article class="admin-product-card" data-product-id="${escapeHtml(product.id)}">
         <div>
           <p class="admin-product-card__brand">${escapeHtml(product.brand)} · ${escapeHtml(product.model)}</p>
@@ -354,6 +415,7 @@
         </div>
         <div class="admin-product-card__actions">
           <button type="button" class="btn btn--secondary" data-edit-product="${escapeHtml(product.id)}">Sửa</button>
+          <button type="button" class="btn btn--secondary admin-duplicate-button" data-duplicate-product="${escapeHtml(product.id)}">Nhân bản</button>
           <button type="button" class="btn btn--ghost" data-toggle-product="${escapeHtml(product.id)}">${product.is_active ? 'Ẩn' : 'Hiện'}</button>
           <button type="button" class="btn btn--danger" data-delete-product="${escapeHtml(product.id)}">Xoá</button>
         </div>
@@ -853,9 +915,13 @@
     }
   };
 
+  const getUniqueProductImages = (product = {}) => Array.from(new Set([product?.image, ...(Array.isArray(product?.images) ? product.images : [])].filter(Boolean)));
+
   const openForm = (product = null) => {
     editingProduct = product;
     productIdManuallyEdited = Boolean(product);
+    removedProductImages = new Set();
+    currentProductImages = product ? getUniqueProductImages(product) : [];
     dom.form?.reset();
     showMessage(dom.formMessage, '');
     clearOverviewPreview();
@@ -892,7 +958,7 @@
       updateSpecificationPreview(parseSpecifications(form.specifications.value), { showEmpty: false });
       form.isActive.value = String(product.is_active !== false);
     }
-    renderExistingImages(product);
+    renderExistingImages();
     setTimeout(() => form?.brand?.focus(), 0);
   };
 
@@ -900,12 +966,27 @@
     if (dom.modal) dom.modal.hidden = true;
     document.body.classList.remove('admin-modal-open');
     editingProduct = null;
+    removedProductImages = new Set();
+    currentProductImages = [];
   };
 
-  const renderExistingImages = (product) => {
-    const images = [product?.image, ...(Array.isArray(product?.images) ? product.images : [])].filter(Boolean);
-    const unique = Array.from(new Set(images));
-    dom.existingImages.innerHTML = unique.length ? unique.map((src) => `<img src="${escapeHtml(src)}" alt="Ảnh sản phẩm hiện có" loading="lazy" />`).join('') : 'Chưa có ảnh.';
+  const renderExistingImages = () => {
+    if (!dom.existingImages) return;
+    const unique = Array.from(new Set(currentProductImages.filter(Boolean)));
+    dom.existingImages.innerHTML = unique.length ? unique.map((src) => `
+      <div class="admin-existing-image-item">
+        <img src="${escapeHtml(src)}" alt="Ảnh sản phẩm hiện có" loading="lazy" />
+        <button class="admin-existing-image-remove" type="button" data-remove-existing-image="${escapeHtml(src)}" aria-label="Xoá ảnh sản phẩm hiện có">Xoá</button>
+      </div>`).join('') : 'Chưa có ảnh.';
+  };
+
+  const removeExistingImage = (imageUrl = '') => {
+    const url = normalizeText(imageUrl);
+    if (!url) return;
+    currentProductImages = currentProductImages.filter((image) => image !== url);
+    removedProductImages.add(url);
+    renderExistingImages();
+    showMessage(dom.formMessage, 'Đã bỏ ảnh khỏi sản phẩm. Bấm Lưu sản phẩm để lưu thay đổi.', 'info');
   };
 
   const validateForm = (form) => {
@@ -938,22 +1019,141 @@
   const uploadImages = async (form, productId) => {
     const mainFile = form.mainImage.files?.[0];
     const galleryFiles = Array.from(form.galleryImages.files || []);
-    let image = editingProduct?.image || '';
-    let images = Array.isArray(editingProduct?.images) ? [...editingProduct.images] : [];
+    const removedImages = removedProductImages;
+    let images = Array.from(new Set(currentProductImages.filter((url) => url && !removedImages.has(url))));
     if (mainFile || galleryFiles.length) showMessage(dom.formMessage, 'Đang tải ảnh lên...', 'info');
     try {
       if (mainFile) {
-        image = await uploadFile(mainFile, productId);
-        if (!images.includes(image)) images.unshift(image);
+        const image = await uploadFile(mainFile, productId);
+        images = [image, ...images.filter((url) => url !== image)];
       }
       for (const file of galleryFiles) {
         const url = await uploadFile(file, productId);
         if (url && !images.includes(url)) images.push(url);
       }
-      return { image, images };
+      images = Array.from(new Set(images.filter((url) => url && !removedImages.has(url))));
+      return { image: images[0] || '', images };
     } catch (error) {
       console.warn(error);
       throw new Error('Không thể tải ảnh lên. Vui lòng thử lại.');
+    }
+  };
+
+  const commonTvSizes = ['32', '40', '43', '49', '50', '55', '58', '65', '70', '75', '85', '86', '98', '100'];
+  const getSizeNumber = (value = '') => {
+    const text = normalizeText(value);
+    const sizeTextMatch = text.match(/\b(\d{2,3})(?:\s*(?:inch|in)\b|["”])?/i);
+    if (sizeTextMatch?.[1]) return sizeTextMatch[1];
+    const modelSizeMatch = text.match(new RegExp(`(?:^|[A-Z])(${commonTvSizes.join('|')})(?=[A-Z0-9])`, 'i'));
+    return modelSizeMatch?.[1] || '';
+  };
+  const detectProductSizeNumber = (product = {}) => {
+    const fields = [product.size, product.full_name || product.fullName, product.model, product.id, product.description, serializeSearchValue(product.specifications)];
+    for (const field of fields) {
+      const number = getSizeNumber(field);
+      if (number && commonTvSizes.includes(number)) return number;
+    }
+    return '';
+  };
+  const escapeRegExp = (value = '') => String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const replaceSizeInText = (value = '', oldSizeNumber = '', newSize = '') => {
+    if (value === null || value === undefined) return value;
+    const text = String(value);
+    const newSizeNumber = getSizeNumber(newSize);
+    if (!oldSizeNumber || !newSizeNumber) return text;
+    let updated = text
+      .replace(new RegExp(`\\b${escapeRegExp(oldSizeNumber)}\\s*[-]?\\s*inch\\b`, 'gi'), newSize)
+      .replace(new RegExp(`\\b${escapeRegExp(oldSizeNumber)}\\s*in\\b`, 'gi'), `${newSizeNumber}in`)
+      .replace(new RegExp(`\\b${escapeRegExp(oldSizeNumber)}\\s*["”]`, 'gi'), `${newSizeNumber}"`);
+    updated = updated.replace(new RegExp(`\\b([A-Z]{1,6})${escapeRegExp(oldSizeNumber)}(?=[A-Z0-9])`, 'gi'), `$1${newSizeNumber}`);
+    return updated;
+  };
+  const deepReplaceSize = (value, oldSizeNumber = '', newSize = '') => {
+    if (Array.isArray(value)) return value.map((item) => deepReplaceSize(item, oldSizeNumber, newSize));
+    if (value && typeof value === 'object') {
+      return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, deepReplaceSize(item, oldSizeNumber, newSize)]));
+    }
+    if (typeof value === 'string' || typeof value === 'number') return replaceSizeInText(value, oldSizeNumber, newSize);
+    return value;
+  };
+  const generateUniqueProductId = (brand = '', model = '', size = '') => {
+    const baseId = generateProductId(brand, model, size) || `san-pham-${Date.now()}`;
+    const existingIds = new Set(products.map((product) => product.id));
+    if (!existingIds.has(baseId)) return baseId;
+    const copyId = `${baseId}-copy`;
+    if (!existingIds.has(copyId)) return copyId;
+    let suffix = 2;
+    while (existingIds.has(`${baseId}-${suffix}`)) suffix += 1;
+    return `${baseId}-${suffix}`;
+  };
+  const getDuplicateSize = (form) => {
+    const selectedSize = normalizeText(form.duplicateSize.value);
+    return selectedSize === 'custom' ? normalizeText(form.duplicateCustomSize.value) : selectedSize;
+  };
+  const openDuplicateModal = (product) => {
+    duplicatingProduct = product;
+    dom.duplicateForm?.reset();
+    showMessage(dom.duplicateMessage, '');
+    if (dom.duplicateSource) dom.duplicateSource.textContent = `Sản phẩm gốc: ${[product.brand, product.model, product.size].filter(Boolean).join(' · ')}`;
+    if (dom.duplicateForm?.duplicateCustomSize) dom.duplicateForm.duplicateCustomSize.disabled = true;
+    if (dom.duplicateModal) dom.duplicateModal.hidden = false;
+    document.body.classList.add('admin-modal-open');
+    setTimeout(() => dom.duplicateForm?.duplicateSize?.focus(), 0);
+  };
+  const closeDuplicateModal = () => {
+    if (dom.duplicateModal) dom.duplicateModal.hidden = true;
+    document.body.classList.remove('admin-modal-open');
+    duplicatingProduct = null;
+  };
+  const buildDuplicatedProduct = (source, newSize, newPrice, newOldPrice) => {
+    const oldSizeNumber = detectProductSizeNumber(source);
+    const duplicate = deepReplaceSize({ ...source }, oldSizeNumber, newSize);
+    duplicate.size = newSize;
+    duplicate.id = generateUniqueProductId(duplicate.brand, duplicate.model, newSize);
+    duplicate.price = newPrice;
+    duplicate.old_price = newOldPrice || '';
+    duplicate.image = source.image || '';
+    duplicate.images = Array.isArray(source.images) ? [...source.images] : [];
+    duplicate.is_active = false;
+    duplicate.is_featured = false;
+    duplicate.sort_order = Number(source.sort_order || 0) + 1;
+    duplicate.created_at = undefined;
+    duplicate.updated_at = new Date().toISOString();
+    return Object.fromEntries(Object.entries(duplicate).filter(([, value]) => value !== undefined));
+  };
+  const handleDuplicateSave = async (event) => {
+    event.preventDefault();
+    if (!duplicatingProduct || !dom.duplicateForm) return;
+    const form = dom.duplicateForm;
+    const newSize = getDuplicateSize(form);
+    const newPrice = normalizeText(form.duplicatePrice.value);
+    const newOldPrice = normalizeText(form.duplicateOldPrice.value);
+    if (!newSize) {
+      showMessage(dom.duplicateMessage, 'Vui lòng chọn hoặc nhập kích thước mới.', 'error');
+      (form.duplicateSize.value === 'custom' ? form.duplicateCustomSize : form.duplicateSize).focus();
+      return;
+    }
+    if (!newPrice) {
+      showMessage(dom.duplicateMessage, 'Vui lòng nhập giá bán mới thủ công.', 'error');
+      form.duplicatePrice.focus();
+      return;
+    }
+    dom.createDuplicateButton.disabled = true;
+    try {
+      const duplicate = buildDuplicatedProduct(duplicatingProduct, newSize, newPrice, newOldPrice);
+      const { error } = await client.from('products').insert(duplicate);
+      if (error) throw error;
+      closeDuplicateModal();
+      showMessage(dom.adminMessage, 'Đã nhân bản sản phẩm. Vui lòng kiểm tra lại thông tin và ảnh trước khi bật hiển thị.', 'success');
+      await loadProducts();
+      const createdProduct = products.find((product) => product.id === duplicate.id) || duplicate;
+      openForm(createdProduct);
+      showMessage(dom.formMessage, 'Đã tạo bản nháp nhân bản. Vui lòng kiểm tra lại thông tin rồi bật hiển thị.', 'info');
+    } catch (error) {
+      console.warn(error);
+      showMessage(dom.duplicateMessage, error.message || 'Không thể nhân bản sản phẩm. Vui lòng thử lại.', 'error');
+    } finally {
+      dom.createDuplicateButton.disabled = false;
     }
   };
 
@@ -1138,9 +1338,40 @@
     showMessage(dom.formMessage, 'Đã xoá thông số chi tiết.', 'success');
   });
   dom.form?.addEventListener('submit', handleSave);
+  dom.duplicateForm?.addEventListener('submit', handleDuplicateSave);
+  dom.duplicateForm?.duplicateSize?.addEventListener('change', () => {
+    const isCustom = dom.duplicateForm.duplicateSize.value === 'custom';
+    dom.duplicateForm.duplicateCustomSize.disabled = !isCustom;
+    if (isCustom) dom.duplicateForm.duplicateCustomSize.focus();
+    if (!isCustom) dom.duplicateForm.duplicateCustomSize.value = '';
+  });
+  dom.productSearchInput?.addEventListener('input', (event) => {
+    window.clearTimeout(productSearchTimer);
+    productSearchTimer = window.setTimeout(() => {
+      productSearchTerm = event.target.value;
+      renderProducts();
+    }, 150);
+  });
+  dom.productSearchClear?.addEventListener('click', () => {
+    productSearchTerm = '';
+    if (dom.productSearchInput) dom.productSearchInput.value = '';
+    renderProducts();
+    dom.productSearchInput?.focus();
+  });
   document.querySelectorAll('[data-close-product-form]').forEach((button) => button.addEventListener('click', closeForm));
-  document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && !dom.modal?.hidden) closeForm(); });
+  document.querySelectorAll('[data-close-duplicate-modal]').forEach((button) => button.addEventListener('click', closeDuplicateModal));
+  document.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape') return;
+    if (!dom.duplicateModal?.hidden) closeDuplicateModal();
+    else if (!dom.modal?.hidden) closeForm();
+  });
   dom.modal?.addEventListener('click', (event) => { if (event.target.matches('.admin-modal__backdrop')) closeForm(); });
+  dom.duplicateModal?.addEventListener('click', (event) => { if (event.target.matches('.admin-modal__backdrop')) closeDuplicateModal(); });
+  dom.existingImages?.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-remove-existing-image]');
+    if (!button) return;
+    removeExistingImage(button.dataset.removeExistingImage);
+  });
   dom.form?.addEventListener('input', (event) => {
     if (event.target?.name === 'id') {
       productIdManuallyEdited = true;
@@ -1151,13 +1382,16 @@
     form.id.value = generateProductId(form.brand.value, form.model.value, form.size.value);
   });
   dom.products?.addEventListener('click', (event) => {
-    const id = event.target.dataset.editProduct || event.target.dataset.toggleProduct || event.target.dataset.deleteProduct;
+    const actionButton = event.target.closest('[data-edit-product], [data-duplicate-product], [data-toggle-product], [data-delete-product]');
+    if (!actionButton) return;
+    const id = actionButton.dataset.editProduct || actionButton.dataset.duplicateProduct || actionButton.dataset.toggleProduct || actionButton.dataset.deleteProduct;
     if (!id) return;
     const product = products.find((item) => item.id === id);
     if (!product) return;
-    if (event.target.dataset.editProduct) openForm(product);
-    if (event.target.dataset.toggleProduct) toggleProduct(product);
-    if (event.target.dataset.deleteProduct) deleteProduct(product);
+    if (actionButton.dataset.editProduct) openForm(product);
+    if (actionButton.dataset.duplicateProduct) openDuplicateModal(product);
+    if (actionButton.dataset.toggleProduct) toggleProduct(product);
+    if (actionButton.dataset.deleteProduct) deleteProduct(product);
   });
   dom.orders?.addEventListener('change', (event) => {
     const orderId = event.target?.dataset?.orderStatus;
