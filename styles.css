@@ -178,7 +178,7 @@ p { line-height: 1.65; }
   background: transparent;
   box-shadow: 0 14px 32px rgba(2, 56, 113, 0.12);
 }
-.home-hero-right-banner { grid-column: 2; grid-row: 2; align-self: start; width: 100%; max-width: 280px; min-width: 0; justify-self: end; }
+.home-hero-right-banner { grid-column: 2; grid-row: 2; align-self: start; width: 100%; max-width: 336px; min-width: 0; justify-self: end; }
 .home-hero-right-banner-card {
   position: relative;
   display: block;
@@ -551,7 +551,7 @@ p { line-height: 1.65; }
   .hero__main { display: contents; }
   .hero-intro { order: 1; }
   .home-hero-layout .home-hero-banner-wide-left { order: 2; width: 100%; max-width: 100%; max-height: none; }
-  .home-hero-right-banner { order: 3; grid-column: auto; grid-row: auto; width: min(260px, 52vw); max-width: 100%; justify-self: center; }
+  .home-hero-right-banner { order: 3; grid-column: auto; grid-row: auto; width: min(312px, 64vw); max-width: 100%; justify-self: center; }
   .brand-panel { order: 4; width: 100%; height: auto; max-height: 340px; }
   .hero-benefits { order: 5; }
   .brand-list { flex: initial; grid-template-columns: repeat(2, minmax(0, 1fr)); max-height: 300px; }
@@ -579,7 +579,7 @@ p { line-height: 1.65; }
   .hero__main { display: contents; }
   .hero-intro { order: 1; }
   .home-hero-layout .home-hero-banner-wide-left { order: 2; width: 100%; max-width: 100%; }
-  .home-hero-right-banner { order: 3; grid-column: auto; grid-row: auto; width: min(250px, 56vw); max-width: 100%; justify-self: center; }
+  .home-hero-right-banner { order: 3; grid-column: auto; grid-row: auto; width: min(300px, 68vw); max-width: 100%; justify-self: center; }
   .brand-panel { order: 4; width: 100%; height: auto; max-height: 340px; }
   .hero-benefits { order: 5; }
   .brand-list { flex: initial; grid-template-columns: repeat(2, minmax(0, 1fr)); max-height: 300px; }
