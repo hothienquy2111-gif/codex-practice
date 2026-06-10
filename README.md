@@ -26,6 +26,11 @@ Các file được cập nhật:
 - `product-detail.html`, `product-detail.js`: tải chi tiết sản phẩm từ Supabase/admin; nếu ID không tồn tại thì hiển thị thông báo không tìm thấy, không dùng dữ liệu demo, vẫn hỗ trợ nút và modal “Thông số chi tiết”.
 - `styles.css`: thêm giao diện admin responsive, giữ phong cách trắng + xanh đậm và font Aptos.
 
+## 3.1. Trang tra cứu bảo hành
+Header trên trang chủ giữ nút “Tra cứu bảo hành”, nhưng nút này mở trang riêng `tra-cuu-bao-hanh.html` thay vì cuộn tới form trên trang chủ. Trang chủ không còn hiển thị form tra cứu bảo hành lớn để tránh tạo cảm giác website có hệ thống tra cứu tự động khi chưa có dữ liệu bảo hành riêng.
+
+Trang `tra-cuu-bao-hanh.html` cung cấp hướng dẫn kiểm tra bảo hành thủ công bằng số điện thoại mua hàng, model tivi, ảnh tem/model hoặc thông tin đơn hàng. Trang có nút gọi hotline `0905111223`, `0774111223` và nút nhắn Zalo `https://zalo.me/0905111223`. Hiện chưa có cơ sở dữ liệu bảo hành tự động, chưa có bảng bảo hành riêng và chưa có kết quả tra cứu giả lập.
+
 ## 4. Cách tạo Supabase project
 1. Vào Supabase Dashboard.
 2. Tạo project mới.
