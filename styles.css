@@ -994,12 +994,11 @@ body.product-modal-open { overflow: hidden; }
   .hero { padding: 14px 0 18px; }
   .hero__grid,
   .home-hero-layout { column-gap: 12px; row-gap: 12px; padding-inline: 12px; }
-  .hero-intro { margin-bottom: 10px; }
+  .hero-intro { margin-bottom: 14px; }
   .hero-intro h1,
-  .home-hero-title { font-size: clamp(26px, 8vw, 36px); line-height: 1.12; white-space: normal; }
+  .home-hero-title { font-size: clamp(26px, 7vw, 34px); line-height: 1.12; white-space: normal; }
   .home-hero-layout .home-hero-banner-wide-left { width: 100%; max-width: 100%; max-height: none; border-radius: 18px; }
-  .home-hero-right-banner { width: min(190px, 52vw); justify-self: center; }
-  .home-hero-right-banner-card { border-radius: 20px; }
+  .home-hero-right-banner { display: none !important; }
   .home-hero-layout .home-hero-banner-wide-left .carousel-viewport { height: auto; aspect-ratio: auto; }
   .home-hero-layout .home-hero-banner-wide-left.is-height-synced .carousel-viewport { height: 100%; }
   .home-hero-layout .home-hero-banner-wide-left .carousel-slide { padding: 0; }
