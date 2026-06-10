@@ -38,7 +38,7 @@
     hitachi: 'Hitachi',
     hisense: 'Hisense',
   };
-  const PRODUCT_SOURCE_PRIORITY = { dom: 3, live: 2, supabase: 2, fallback: 1, unknown: 0 };
+  const PRODUCT_SOURCE_PRIORITY = { dom: 3, live: 2, supabase: 2, unknown: 0 };
   const CHATBOT_PRODUCT_SOURCE_EXCLUDE_SELECTOR = [
     `#${CHATBOT_ID}`,
     '.am-chatbot-window',
@@ -487,8 +487,6 @@
         window.anhMinhSupabase,
       ].forEach((state, index) => collectProductArraysFromObject(state, rawProducts, `state${index + 1}`, PRODUCT_SOURCE_PRIORITY.supabase));
 
-      if (Array.isArray(window.products)) rawProducts.push(...cloneProductsWithSource(window.products, 'fallback.products.js', PRODUCT_SOURCE_PRIORITY.fallback));
-      if (Array.isArray(window.PRODUCTS)) rawProducts.push(...cloneProductsWithSource(window.PRODUCTS, 'fallback.PRODUCTS', PRODUCT_SOURCE_PRIORITY.fallback));
     } catch (error) {
       console.warn('[AM AI] Không thể lấy dữ liệu sản phẩm cho chatbot.', error);
       return [];
@@ -507,7 +505,11 @@
       keys.forEach((key) => aliasToPrimaryKey.set(key, primaryKey));
     });
 
-    return Array.from(unique.values()).filter((product) => product.name || product.model || product.priceNumber);
+    return Array.from(unique.values()).filter((product) => {
+      const source = String(product.source || '').toLowerCase();
+      if (source.includes('fallback') || source.includes('products.js')) return false;
+      return product.name || product.model || product.priceNumber;
+    });
   };
 
   const getRecommendedRangeForArea = (area, roomType) => {
@@ -864,7 +866,7 @@
     if (!products.length) {
       debugChatbotRecommendations(sourceSummary, products, need, []);
       return {
-        text: 'Hiện mình chưa tải được dữ liệu sản phẩm trên web. Bạn có thể thử lại sau vài giây hoặc bấm Gọi ngay/Nhắn Zalo để Anh Minh Store tư vấn nhanh hơn.',
+        text: 'Hiện website chưa có dữ liệu sản phẩm đang bán. Bạn vui lòng gọi hoặc nhắn Zalo để Anh Minh Store tư vấn mẫu còn hàng chính xác nhất.',
         actions: [callAction(), zaloAction()],
         products: [],
       };

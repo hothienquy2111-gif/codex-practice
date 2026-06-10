@@ -1,4 +1,7 @@
-window.products = [
+// Dữ liệu demo chỉ dùng để tham khảo khi phát triển cục bộ.
+// Website công khai không tự nạp hoặc hiển thị danh sách này.
+window.ENABLE_DEMO_PRODUCTS = window.ENABLE_DEMO_PRODUCTS === true;
+const demoProducts = [
   {
     id: "samsung-qa55q7fa",
     brand: "Samsung",
@@ -432,3 +435,8 @@ window.products = [
     images: []
   }
  ];
+
+window.demoProducts = demoProducts;
+if (window.ENABLE_DEMO_PRODUCTS) {
+  window.products = demoProducts;
+}

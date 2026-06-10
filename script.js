@@ -45,7 +45,7 @@ const dom = {
 };
 
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-const FALLBACK_PRODUCTS = Array.isArray(window.products) ? window.products : [];
+const PUBLIC_PRODUCTS_EMPTY_MESSAGE = 'Chưa có sản phẩm phù hợp. Vui lòng liên hệ Anh Minh Store để được tư vấn.';
 let productIds = new Set();
 let activeSize = dom.featuredSelectedSize?.textContent?.trim() === 'Tất cả' ? '' : dom.featuredSelectedSize?.textContent?.trim() || '';
 let activeBrand = '';
@@ -302,7 +302,6 @@ const normalizeSourceProducts = (sourceProducts = []) => {
   return sourceProducts.map(normalizeProduct).sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
 };
 
-products = normalizeSourceProducts(FALLBACK_PRODUCTS);
 publishProductsForChatbot();
 
 const getBrandNameFromLogo = (image) => image.alt.replace(/^Logo\s+/i, '').trim();
@@ -753,7 +752,7 @@ const renderTvSection = ({ grid, empty, count, sectionKey, filterState, sectionT
   const filteredProducts = getSectionProducts(sectionKey, filterState);
   const visibleProducts = filteredProducts.slice(0, visibleCounts[sectionKey]);
   const cards = visibleProducts.map((product) => renderSectionProductCard(product, sectionType)).join('');
-  const emptyMarkup = `<p class="empty-state used-tv-empty${sectionType === 'new' ? ' new-tv-empty' : ''}" ${sectionType === 'new' ? 'data-new-tv-empty' : 'data-used-tv-empty'}${filteredProducts.length ? ' hidden' : ''}>Chưa có sản phẩm phù hợp với bộ lọc này.</p>`;
+  const emptyMarkup = `<p class="empty-state used-tv-empty${sectionType === 'new' ? ' new-tv-empty' : ''}" ${sectionType === 'new' ? 'data-new-tv-empty' : 'data-used-tv-empty'}${filteredProducts.length ? ' hidden' : ''}>${PUBLIC_PRODUCTS_EMPTY_MESSAGE}</p>`;
   grid.innerHTML = `${cards}${emptyMarkup}`;
   if (count) count.textContent = `Đang hiển thị: ${visibleProducts.length} sản phẩm`;
   if (empty) empty.hidden = filteredProducts.length > 0;
@@ -998,14 +997,14 @@ const getFilteredProducts = () => products.filter((product) => {
 const renderProductCards = () => {
   if (!dom.productGrid) return;
   if (!products.length) {
-    dom.productGrid.innerHTML = '<p class="empty-state">Sản phẩm đang được cập nhật.</p>';
+    dom.productGrid.innerHTML = `<p class="empty-state">${PUBLIC_PRODUCTS_EMPTY_MESSAGE}</p>`;
     updateLoadMoreButton(dom.featuredLoadMoreButton, 'featured', 0);
     return;
   }
 
   const filteredProducts = getSectionProducts('featured');
   if (!filteredProducts.length) {
-    dom.productGrid.innerHTML = '<p class="empty-state">Chưa có sản phẩm phù hợp với bộ lọc này.</p>';
+    dom.productGrid.innerHTML = `<p class="empty-state">${PUBLIC_PRODUCTS_EMPTY_MESSAGE}</p>`;
     updateLoadMoreButton(dom.featuredLoadMoreButton, 'featured', 0);
     return;
   }
@@ -1116,7 +1115,10 @@ dom.newTvLoadMoreButton?.addEventListener('click', () => showMoreProducts('newTv
 
 const refreshPublicProductsFromSupabase = async () => {
   const storeSupabase = window.AnhMinhSupabase;
-  if (!storeSupabase?.isConfigured || !storeSupabase.client) return;
+  if (!storeSupabase?.isConfigured || !storeSupabase.client) {
+    publishProductsForChatbot();
+    return;
+  }
 
   try {
     const { data, error } = await storeSupabase.client
@@ -1137,7 +1139,7 @@ const refreshPublicProductsFromSupabase = async () => {
     syncSectionBrandRows();
     applyProductFilters();
   } catch (error) {
-    console.warn('Không thể tải sản phẩm từ Supabase, dùng dữ liệu products.js dự phòng.', error);
+    console.warn('Không thể tải sản phẩm từ Supabase. Website công khai sẽ không dùng dữ liệu demo products.js.', error);
   }
 };
 
