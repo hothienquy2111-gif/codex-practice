@@ -56,6 +56,15 @@
   };
 
   let products = [];
+
+  const getNextProductSortOrder = () => {
+    const maxOrder = products.reduce((max, product) => {
+      const value = Number(product.sort_order);
+      return Number.isFinite(value) ? Math.max(max, value) : max;
+    }, 0);
+    return maxOrder + 1;
+  };
+
   let editingProduct = null;
   let duplicatingProduct = null;
   let productIdManuallyEdited = false;
@@ -933,7 +942,7 @@
     if (form && !product) {
       form.isFeatured.value = 'false';
       form.isActive.value = 'true';
-      form.sortOrder.value = 0;
+      form.sortOrder.value = getNextProductSortOrder();
     }
     if (form && product) {
       form.editingOriginalId.value = product.id || '';
@@ -948,7 +957,7 @@
       form.oldPrice.value = product.old_price || product.oldPrice || '';
       form.price.value = product.price || '';
       form.badge.value = product.badge || '';
-      form.sortOrder.value = product.sort_order ?? 0;
+      form.sortOrder.value = product.sort_order ?? getNextProductSortOrder();
       form.isFeatured.value = product.is_featured === true ? 'true' : 'false';
       form.description.value = product.description || '';
       form.features.value = Array.isArray(product.features) ? product.features.join('\n') : '';
@@ -1176,7 +1185,7 @@
     duplicate.images = Array.isArray(source.images) ? [...source.images] : [];
     duplicate.is_active = false;
     duplicate.is_featured = false;
-    duplicate.sort_order = Number(source.sort_order || 0) + 1;
+    duplicate.sort_order = getNextProductSortOrder();
     duplicate.created_at = undefined;
     duplicate.updated_at = new Date().toISOString();
     return Object.fromEntries(Object.entries(duplicate).filter(([, value]) => value !== undefined));
