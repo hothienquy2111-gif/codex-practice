@@ -6,6 +6,7 @@
     <meta name="description" content="Trang quản trị sản phẩm ANH MINH STORE." />
     <title>Quản trị sản phẩm - ANH MINH STORE</title>
     <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="admin.css" />
   </head>
   <body class="admin-page">
     <main class="admin-shell" id="noi-dung-chinh">
@@ -48,6 +49,14 @@
               <h2 id="admin-products-title">Danh sách sản phẩm</h2>
               <p class="admin-muted">Quản lý sản phẩm đang bán trên website.</p>
             </div>
+          </div>
+          <div class="admin-product-search" role="search" aria-label="Tìm kiếm sản phẩm trong admin">
+            <label class="admin-product-search__label" for="admin-product-search-input">Tìm kiếm sản phẩm</label>
+            <div class="admin-product-search__controls">
+              <input class="admin-product-search__input" id="admin-product-search-input" type="search" placeholder="Tìm theo model, tên tivi, hãng, kích thước, giá..." data-product-search />
+              <button class="btn btn--ghost admin-product-search__clear" type="button" data-product-search-clear>Xoá tìm kiếm</button>
+            </div>
+            <p class="admin-product-count" data-product-search-count aria-live="polite">Đang hiển thị 0/0 sản phẩm</p>
           </div>
           <div class="admin-products" data-admin-products aria-live="polite"></div>
         </section>
@@ -192,6 +201,58 @@
         </form>
       </section>
     </div>
+
+    <div class="admin-modal admin-duplicate-modal" data-duplicate-modal hidden>
+      <div class="admin-modal__backdrop" data-close-duplicate-modal></div>
+      <section class="admin-modal__card admin-duplicate-modal__card" role="dialog" aria-modal="true" aria-labelledby="duplicate-form-title">
+        <header class="admin-modal__header">
+          <div>
+            <p class="admin-eyebrow">Nhân bản nhanh</p>
+            <h2 id="duplicate-form-title">Nhân bản sản phẩm</h2>
+          </div>
+          <button class="admin-modal__close" type="button" aria-label="Đóng biểu mẫu nhân bản" data-close-duplicate-modal>×</button>
+        </header>
+        <form class="admin-duplicate-form" data-duplicate-form novalidate>
+          <p class="admin-muted" data-duplicate-source>Sản phẩm gốc: Chưa chọn</p>
+          <div class="admin-form-grid">
+            <div class="admin-field">
+              <label for="duplicate-size">Kích thước mới</label>
+              <select id="duplicate-size" name="duplicateSize" required>
+                <option value="">Chọn kích thước mới</option>
+                <option>32 inch</option>
+                <option>43 inch</option>
+                <option>49 inch</option>
+                <option>50 inch</option>
+                <option>55 inch</option>
+                <option>65 inch</option>
+                <option>75 inch</option>
+                <option>85 inch</option>
+                <option value="custom">Tuỳ chỉnh</option>
+              </select>
+            </div>
+            <div class="admin-field">
+              <label for="duplicate-custom-size">Kích thước tuỳ chỉnh</label>
+              <input id="duplicate-custom-size" name="duplicateCustomSize" placeholder="Ví dụ: 98 inch" disabled />
+            </div>
+            <div class="admin-field">
+              <label for="duplicate-price">Giá bán mới</label>
+              <input id="duplicate-price" name="duplicatePrice" placeholder="Ví dụ: 15.990.000" required />
+            </div>
+            <div class="admin-field">
+              <label for="duplicate-old-price">Giá gạch mới (tuỳ chọn)</label>
+              <input id="duplicate-old-price" name="duplicateOldPrice" placeholder="Để trống nếu không dùng" />
+            </div>
+          </div>
+          <p class="admin-help-text">Bản nhân bản sẽ dùng lại ảnh của sản phẩm gốc, đặt trạng thái Ẩn để bạn kiểm tra trước khi bật hiển thị. Giá bán bắt buộc nhập thủ công.</p>
+          <p class="admin-message" data-duplicate-message aria-live="polite"></p>
+          <div class="admin-form-actions">
+            <button class="btn btn--secondary" type="button" data-close-duplicate-modal>Huỷ</button>
+            <button class="btn btn--primary" type="submit" data-create-duplicate>Tạo bản nhân bản</button>
+          </div>
+        </form>
+      </section>
+    </div>
+
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase-config.js"></script>

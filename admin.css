@@ -1,0 +1,122 @@
+.admin-product-search {
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-lg);
+  background: #f8fbff;
+}
+
+.admin-product-search__label {
+  font-weight: 800;
+  color: var(--color-primary-deep);
+}
+
+.admin-product-search__controls {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.admin-product-search__input {
+  flex: 1 1 260px;
+  min-height: 44px;
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-md);
+  padding: 0 14px;
+  font: inherit;
+  color: var(--color-primary-deep);
+  background: #fff;
+}
+
+.admin-product-search__input:focus {
+  outline: 3px solid rgba(19, 111, 206, 0.24);
+  outline-offset: 2px;
+  border-color: var(--color-primary);
+}
+
+.admin-product-search__clear:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.admin-product-count {
+  margin: 0;
+  color: var(--color-gray-600);
+  font-size: 0.95rem;
+}
+
+.admin-duplicate-button {
+  border-color: rgba(19, 111, 206, 0.35);
+  color: var(--color-primary-deep);
+  background: #eef5ff;
+}
+
+.admin-existing-image-item {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: stretch;
+  padding: 6px;
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-md);
+  background: #fff;
+}
+
+.admin-image-preview .admin-existing-image-item img {
+  width: 92px;
+  height: 64px;
+  border: 0;
+}
+
+.admin-existing-image-remove {
+  border: 1px solid #f3b4ad;
+  border-radius: 999px;
+  padding: 5px 10px;
+  background: #fff5f4;
+  color: #b42318;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.admin-existing-image-remove:hover,
+.admin-existing-image-remove:focus-visible {
+  background: #ffe6e3;
+  outline: 2px solid rgba(180, 35, 24, 0.2);
+  outline-offset: 2px;
+}
+
+.admin-duplicate-modal__card {
+  width: min(620px, 100%);
+}
+
+.admin-duplicate-form {
+  display: grid;
+  gap: 16px;
+  padding: 20px;
+  overflow: auto;
+}
+
+.admin-duplicate-size-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 8px;
+}
+
+@media (max-width: 640px) {
+  .admin-product-search__controls,
+  .admin-product-search__controls .btn,
+  .admin-product-search__input {
+    width: 100%;
+  }
+
+  .admin-existing-image-item {
+    flex: 1 1 120px;
+  }
+
+  .admin-image-preview .admin-existing-image-item img {
+    width: 100%;
+  }
+}
