@@ -4,7 +4,7 @@
   const CHATBOT_ID = 'anh-minh-chatbot';
   const HISTORY_KEY = 'anhMinhChatHistory';
   const HISTORY_VERSION_KEY = 'anhMinhChatHistoryVersion';
-  const AM_CHATBOT_HISTORY_VERSION = 'intent-budget-mix-v4';
+  const AM_CHATBOT_HISTORY_VERSION = 'series-size-budget-v5';
   const MAX_HISTORY = 20;
   const AVATAR_SRC = 'linh%20v%E1%BA%ADt%20AM.jpeg';
   const HOTLINE = '0905111223';
@@ -39,6 +39,147 @@
     hisense: 'Hisense',
   };
   const PRODUCT_SOURCE_PRIORITY = { dom: 3, live: 2, supabase: 2, unknown: 0 };
+  const TV_SERIES_BY_BRAND_CHATBOT = {
+    Samsung: [
+      { label: 'Crystal UHD', aliases: ['crystal uhd', 'crystal', 'crystal 4k'] },
+      { label: 'Neo QLED', aliases: ['neo qled', 'neo quantum', 'mini led'] },
+      { label: 'QLED', aliases: ['qled', 'quantum dot'] },
+      { label: 'OLED', aliases: ['oled'] },
+      { label: 'The Frame', aliases: ['the frame'] },
+      { label: 'The Serif', aliases: ['the serif'] },
+      { label: 'The Sero', aliases: ['the sero'] },
+      { label: 'Lifestyle TV', aliases: ['lifestyle'] },
+      { label: 'UHD / 4K UHD', aliases: ['uhd', '4k uhd', 'ultra hd'] },
+      { label: 'LED', aliases: ['led'] },
+    ],
+    LG: [
+      { label: 'OLED', aliases: ['oled'] },
+      { label: 'QNED', aliases: ['qned'] },
+      { label: 'NanoCell', aliases: ['nanocell', 'nano cell', 'nano'] },
+      { label: 'UHD / 4K UHD', aliases: ['uhd', '4k uhd', 'ultra hd'] },
+      { label: 'LED', aliases: ['led'] },
+      { label: 'webOS', aliases: ['webos', 'web os'] },
+      { label: 'StanbyME', aliases: ['stanbyme', 'stanby me'] },
+    ],
+    Sony: [
+      { label: 'BRAVIA XR', aliases: ['bravia xr', 'xr'] },
+      { label: 'BRAVIA', aliases: ['bravia'] },
+      { label: 'OLED', aliases: ['oled'] },
+      { label: 'Mini LED', aliases: ['mini led'] },
+      { label: 'Full Array LED', aliases: ['full array', 'full array led'] },
+      { label: 'Google TV', aliases: ['google tv'] },
+      { label: 'UHD / 4K UHD', aliases: ['uhd', '4k uhd', 'ultra hd'] },
+      { label: 'LED', aliases: ['led'] },
+    ],
+    Toshiba: [
+      { label: 'REGZA', aliases: ['regza'] },
+      { label: 'C Series', aliases: ['c series', 'c350', 'c450'] },
+      { label: 'M Series', aliases: ['m series', 'm550', 'm650'] },
+      { label: 'Z Series', aliases: ['z series', 'z670', 'z770'] },
+      { label: 'QLED', aliases: ['qled'] },
+      { label: 'UHD / 4K UHD', aliases: ['uhd', '4k uhd', 'ultra hd'] },
+      { label: 'Android TV', aliases: ['android tv'] },
+      { label: 'Google TV', aliases: ['google tv'] },
+      { label: 'LED', aliases: ['led'] },
+    ],
+    Hisense: [
+      { label: 'ULED Mini LED', aliases: ['uled mini led', 'mini led'] },
+      { label: 'ULED', aliases: ['uled'] },
+      { label: 'QLED', aliases: ['qled', 'quantum dot'] },
+      { label: 'Laser TV', aliases: ['laser tv', 'laser'] },
+      { label: 'U Series', aliases: ['u series', 'u6', 'u7', 'u8'] },
+      { label: 'A Series', aliases: ['a series', 'a4', 'a6'] },
+      { label: 'UHD / 4K UHD', aliases: ['uhd', '4k uhd', 'ultra hd'] },
+      { label: 'Google TV', aliases: ['google tv'] },
+      { label: 'VIDAA', aliases: ['vidaa'] },
+    ],
+    TCL: [
+      { label: 'QLED', aliases: ['qled', 'quantum dot'] },
+      { label: 'Mini LED', aliases: ['mini led'] },
+      { label: 'C Series', aliases: ['c series', 'c645', 'c745', 'c755', 'c845'] },
+      { label: 'P Series', aliases: ['p series', 'p635', 'p735', 'p745'] },
+      { label: 'S Series', aliases: ['s series', 's5400', 's5500'] },
+      { label: 'Google TV', aliases: ['google tv'] },
+      { label: 'Android TV', aliases: ['android tv'] },
+      { label: 'UHD / 4K UHD', aliases: ['uhd', '4k uhd', 'ultra hd'] },
+      { label: 'LED', aliases: ['led'] },
+    ],
+    Panasonic: [
+      { label: 'OLED', aliases: ['oled'] },
+      { label: 'LED', aliases: ['led'] },
+      { label: 'UHD / 4K UHD', aliases: ['uhd', '4k uhd', 'ultra hd'] },
+      { label: 'Android TV', aliases: ['android tv'] },
+      { label: 'Google TV', aliases: ['google tv'] },
+      { label: 'MX Series', aliases: ['mx series', 'mx'] },
+      { label: 'LX Series', aliases: ['lx series', 'lx'] },
+      { label: 'JX Series', aliases: ['jx series', 'jx'] },
+    ],
+    Sharp: [
+      { label: 'AQUOS', aliases: ['aquos'] },
+      { label: 'QLED', aliases: ['qled'] },
+      { label: 'Android TV', aliases: ['android tv'] },
+      { label: 'Google TV', aliases: ['google tv'] },
+      { label: 'UHD / 4K UHD', aliases: ['uhd', '4k uhd', 'ultra hd'] },
+      { label: 'LED', aliases: ['led'] },
+    ],
+    Xiaomi: [
+      { label: 'Xiaomi TV A Pro', aliases: ['a pro', 'tv a pro'] },
+      { label: 'Xiaomi TV A', aliases: ['tv a', 'xiaomi tv a', 'a series'] },
+      { label: 'Xiaomi TV P1', aliases: ['p1', 'tv p1'] },
+      { label: 'QLED', aliases: ['qled'] },
+      { label: 'UHD / 4K UHD', aliases: ['uhd', '4k uhd', 'ultra hd'] },
+      { label: 'Google TV', aliases: ['google tv'] },
+      { label: 'Android TV', aliases: ['android tv'] },
+    ],
+    Casper: [
+      { label: 'Casper Smart TV', aliases: ['smart tv', 'casper smart'] },
+      { label: 'Android TV', aliases: ['android tv'] },
+      { label: 'Google TV', aliases: ['google tv'] },
+      { label: 'QLED', aliases: ['qled'] },
+      { label: 'UHD / 4K UHD', aliases: ['uhd', '4k uhd', 'ultra hd'] },
+      { label: 'HD / Full HD', aliases: ['hd', 'full hd', 'fhd'] },
+      { label: 'LED', aliases: ['led'] },
+    ],
+    Coocaa: [
+      { label: 'Coocaa Smart TV', aliases: ['smart tv', 'coocaa smart'] },
+      { label: 'S Series', aliases: ['s series', 's3', 's6', 's7'] },
+      { label: 'Y Series', aliases: ['y series', 'y72'] },
+      { label: 'QLED', aliases: ['qled'] },
+      { label: 'UHD / 4K UHD', aliases: ['uhd', '4k uhd', 'ultra hd'] },
+      { label: 'Google TV', aliases: ['google tv'] },
+      { label: 'Android TV', aliases: ['android tv'] },
+      { label: 'LED', aliases: ['led'] },
+    ],
+    Skyworth: [
+      { label: 'Skyworth Smart TV', aliases: ['smart tv', 'skyworth smart'] },
+      { label: 'QLED', aliases: ['qled'] },
+      { label: 'OLED', aliases: ['oled'] },
+      { label: 'UHD / 4K UHD', aliases: ['uhd', '4k uhd', 'ultra hd'] },
+      { label: 'Google TV', aliases: ['google tv'] },
+      { label: 'Android TV', aliases: ['android tv'] },
+      { label: 'SUE Series', aliases: ['sue', 'sue series'] },
+      { label: 'G Series', aliases: ['g series', 'g3a'] },
+    ],
+    Philips: [
+      { label: 'Ambilight', aliases: ['ambilight'] },
+      { label: 'OLED', aliases: ['oled'] },
+      { label: 'The One', aliases: ['the one'] },
+      { label: 'Performance Series', aliases: ['performance series'] },
+      { label: 'UHD / 4K UHD', aliases: ['uhd', '4k uhd', 'ultra hd'] },
+      { label: 'Google TV', aliases: ['google tv'] },
+      { label: 'Android TV', aliases: ['android tv'] },
+      { label: 'LED', aliases: ['led'] },
+    ],
+    Hitachi: [
+      { label: 'Hitachi Smart TV', aliases: ['smart tv', 'hitachi smart'] },
+      { label: 'Android TV', aliases: ['android tv'] },
+      { label: 'Google TV', aliases: ['google tv'] },
+      { label: 'QLED', aliases: ['qled'] },
+      { label: 'UHD / 4K UHD', aliases: ['uhd', '4k uhd', 'ultra hd'] },
+      { label: 'LED', aliases: ['led'] },
+    ],
+  };
+
   const CHATBOT_PRODUCT_SOURCE_EXCLUDE_SELECTOR = [
     `#${CHATBOT_ID}`,
     '.am-chatbot-window',
@@ -52,6 +193,8 @@
     'con nào', 'con nao', 'mua tivi', 'mua tv', 'tivi nào', 'tivi nao', 'tv nào', 'tv nao', 'phòng', 'phong',
     'ngân sách', 'ngan sach', 'dưới', 'duoi', 'tầm', 'tam', 'khoảng', 'khoang', 'triệu', 'trieu', 'tr',
     'inch', 'inh', 'giá rẻ', 'gia re', 'cao cấp', 'cao cap', 'world cup', 'bóng đá', 'bong da',
+    'có mẫu', 'co mau', 'còn mẫu', 'con mau', 'mẫu nào', 'mau nao', 'còn hàng', 'con hang',
+    'qled', 'oled', 'mini led', 'crystal', 'crystal uhd', 'nanocell', 'qned', 'bravia', 'google tv', 'android tv',
     ...TV_BRANDS,
   ];
 
@@ -215,6 +358,7 @@
       detailUrl: '',
       featuresText,
       isFeatured: Boolean(product.is_featured ?? product.isFeatured ?? product.featured ?? false),
+      isActive: product.is_active ?? product.isActive ?? product.active ?? true,
       href: product.href || product.detailUrl || product.detail_url || product.url || '',
       source: product.__chatbotSource || 'unknown',
       sourcePriority: Number(product.__chatbotPriority || 0),
@@ -447,6 +591,7 @@
       searchableText: primary.searchableText || secondary.searchableText || '',
       source: primary.source,
       sourcePriority: primary.sourcePriority,
+      isActive: primary.isActive,
     };
   };
 
@@ -508,6 +653,7 @@
     return Array.from(unique.values()).filter((product) => {
       const source = String(product.source || '').toLowerCase();
       if (source.includes('fallback') || source.includes('products.js')) return false;
+      if (product.isActive === false || product.isActive === 'false') return false;
       return product.name || product.model || product.priceNumber;
     });
   };
@@ -520,6 +666,57 @@
     if (area < 30) return { min: 50, max: 55, label: '50–55 inch' };
     if (area <= 40) return { min: 55, max: 65, label: '55–65 inch' };
     return { min: 65, max: 75, label: '65–75 inch' };
+  };
+
+  const escapeRegExp = (value = '') => String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+  const textHasAlias = (text = '', alias = '') => {
+    const normalizedAlias = normalizeVietnameseText(alias);
+    if (!text || !normalizedAlias) return false;
+    const compactText = text.replace(/\s+/g, '');
+    const compactAlias = normalizedAlias.replace(/\s+/g, '');
+    if ((normalizedAlias.includes(' ') || compactAlias.length >= 4 || /\d/.test(compactAlias)) && compactText.includes(compactAlias)) return true;
+    return new RegExp(`(^|[^a-z0-9])${escapeRegExp(normalizedAlias)}([^a-z0-9]|$)`).test(text);
+  };
+
+  const getSeriesOptionsForBrand = (brand) => {
+    if (brand && TV_SERIES_BY_BRAND_CHATBOT[brand]) return TV_SERIES_BY_BRAND_CHATBOT[brand];
+    return Object.values(TV_SERIES_BY_BRAND_CHATBOT)
+      .flat()
+      .filter((series, index, allSeries) => allSeries.findIndex((item) => item.label === series.label) === index);
+  };
+
+  const detectTvSeriesFromMessage = (normalizedMessage = '', brand = '') => {
+    const message = normalizeVietnameseText(normalizedMessage);
+    const options = getSeriesOptionsForBrand(brand)
+      .flatMap((series) => series.aliases.map((alias) => ({ ...series, alias: normalizeVietnameseText(alias) })))
+      .sort((a, b) => b.alias.length - a.alias.length || b.label.length - a.label.length);
+    const match = options.find((series) => textHasAlias(message, series.alias));
+    if (!match) return null;
+    return {
+      series: normalizeVietnameseText(match.label),
+      seriesLabel: match.label,
+      aliases: getSeriesOptionsForBrand(brand).find((series) => series.label === match.label)?.aliases || [match.alias],
+    };
+  };
+
+  const productMatchesSeries = (product, need) => {
+    if (!need?.seriesLabel) return false;
+    const haystack = normalizeVietnameseText([
+      product.name,
+      product.fullName,
+      product.model,
+      product.type,
+      product.condition,
+      product.featuresText,
+      product.description,
+      product.specifications,
+      product.searchableText,
+    ].join(' '));
+    const aliases = need.seriesAliases?.length
+      ? need.seriesAliases
+      : getSeriesOptionsForBrand(need.brand).find((series) => series.label === need.seriesLabel)?.aliases || [need.seriesLabel];
+    return aliases.some((alias) => textHasAlias(haystack, alias));
   };
 
   const parseBudgetFromMessage = (message, normalizedMessage) => {
@@ -567,7 +764,7 @@
       need.maxBudget = need.maxBudget || 10000000;
       need.isMaxBudgetStrict = need.isMaxBudgetStrict || !need.targetBudget;
     }
-    if (hasAny(normalizedMessage, ['cao cap', 'xịn', 'hang xin', 'premium'])) {
+    if (hasAny(normalizedMessage, ['cao cap', 'hang xin', 'premium'])) {
       need.budgetPreference = 'premium';
       need.budgetLabel = need.budgetLabel || 'ưu tiên cao cấp';
     }
@@ -592,6 +789,13 @@
     const brand = TV_BRANDS.find((item) => normalizedMessage.includes(item));
     if (brand) need.brand = TV_BRAND_LABELS[brand];
 
+    const detectedSeries = detectTvSeriesFromMessage(normalizedMessage, need.brand);
+    if (detectedSeries) {
+      need.series = detectedSeries.series;
+      need.seriesLabel = detectedSeries.seriesLabel;
+      need.seriesAliases = detectedSeries.aliases;
+    }
+
     const areaMatch = normalizedMessage.match(/\b(\d{1,2})\s*(m2|m\s*2|met vuong|mét vuông)\b/);
     if (areaMatch) need.roomArea = Number(areaMatch[1]);
     if (hasAny(normalizedMessage, ['phong ngu'])) {
@@ -608,13 +812,13 @@
     if (!need.recommendedRange && need.roomType === 'livingroom') need.recommendedRange = { min: 55, max: 65, label: '55–65 inch' };
     if (need.roomType === 'large' && !need.roomArea) need.recommendedRange = { min: 65, max: 75, label: '65–75 inch' };
 
-    const sizeMatch = normalizedMessage.match(/\b(32|43|49|50|55|65|75|85)\s*(inch|in|inh|\")?\b/);
+    const sizeMatch = normalizedMessage.match(/\b(32|40|42|43|49|50|55|58|60|65|70|75|77|85|86|98)\s*(inch|in|inh|\")?\b/);
     if (sizeMatch) need.requestedSize = Number(sizeMatch[1]);
 
     Object.assign(need, parseBudgetFromMessage(originalMessage, normalizedMessage));
 
     if (hasAny(normalizedMessage, ['tivi moi', 'tv moi', 'hang moi', 'moi 100%', 'chinh hang'])) need.type = 'Tivi mới';
-    if (hasAny(normalizedMessage, ['tivi cu', 'tv cu', 'da qua su dung', 'second hand', 'gia re'])) need.type = 'Tivi cũ';
+    if (hasAny(normalizedMessage, ['tivi cu', 'tv cu', 'da qua su dung', 'second hand'])) need.type = 'Tivi cũ';
 
     if (hasAny(normalizedMessage, ['xem phim', 'netflix'])) need.usage.push('movies');
     if (hasAny(normalizedMessage, ['bong da', 'world cup', 'the thao'])) need.usage.push('sports');
@@ -624,13 +828,13 @@
     if (hasAny(normalizedMessage, ['hoc online'])) need.usage.push('learning');
     if (hasAny(normalizedMessage, ['karaoke'])) need.usage.push('karaoke');
 
-    ['qled', 'oled', 'mini led', '4k', 'google tv', 'tizen', 'webos', 'am thanh tot', 'hinh anh dep', 'tiet kiem dien', 'bao hanh lau'].forEach((preference) => {
+    ['qled', 'oled', 'mini led', '4k', 'google tv', 'android tv', 'tizen', 'webos', 'am thanh tot', 'hinh anh dep', 'tiet kiem dien', 'bao hanh lau'].forEach((preference) => {
       if (normalizedMessage.includes(preference)) need.preferences.push(preference);
     });
     if (hasAny(normalizedMessage, ['gia re', 're'])) need.usage.push('cheap');
     if (hasAny(normalizedMessage, ['cao cap'])) need.usage.push('premium');
 
-    const meaningfulSignals = [need.brand, need.requestedSize, need.roomArea, need.roomType, need.minBudget, need.maxBudget, need.type, ...need.usage, ...need.preferences].filter(Boolean).length;
+    const meaningfulSignals = [need.brand, need.seriesLabel, need.requestedSize, need.roomArea, need.roomType, need.minBudget, need.maxBudget, need.targetBudget, need.type, ...need.usage, ...need.preferences].filter(Boolean).length;
     const broadBuyingRequest = hasAny(normalizedMessage, [
       'tu van tivi', 'tu van chon tivi', 'chon tivi', 'tu van mua tivi', 'tu van mua tv',
       'shop tu van tivi', 'can mua tivi', 'can mua tv', 'minh can mua tivi', 'toi muon mua tivi',
@@ -658,13 +862,22 @@
     const price = product.priceNumber;
 
     if (need.brand && haystack.includes(normalizeVietnameseText(need.brand))) {
-      score += 25;
+      score += 35;
       reasons.push(`đúng hãng ${need.brand}`);
+    }
+
+    if (need.seriesLabel) {
+      if (productMatchesSeries(product, need)) {
+        score += 35;
+        reasons.push(`đúng dòng ${need.seriesLabel}`);
+      } else {
+        score -= 20;
+      }
     }
 
     if (need.type) {
       if (productMatchesType(product, need.type)) {
-        score += 25;
+        score += 35;
         reasons.push(`phù hợp nhu cầu ${need.type.toLowerCase()}`);
       } else if (product.type || product.condition) {
         score -= 40;
@@ -768,21 +981,28 @@
   };
 
   const buildUnderstandingText = (need) => {
+    const filterParts = [];
+    if (need.brand) filterParts.push(need.brand);
+    if (need.seriesLabel) filterParts.push(`dòng ${need.seriesLabel}`);
+    if (need.requestedSize) filterParts.push(`khoảng ${need.requestedSize} inch`);
+    if (need.budgetLabel) filterParts.push(`ngân sách ${need.budgetLabel}`);
+    if (need.type) filterParts.push(need.type.toLowerCase());
+    if (filterParts.length) return `Dạ, mình sẽ lọc theo ${filterParts.join(', ')}.`;
+
     const parts = [];
     if (need.roomType === 'bedroom') parts.push('phòng ngủ');
     if (need.roomType === 'livingroom') parts.push('phòng khách');
     if (need.roomArea) parts.push(`khoảng ${need.roomArea}m²`);
-    if (need.requestedSize) parts.push(`${need.requestedSize} inch`);
-    if (need.brand) parts.push(`hãng ${need.brand}`);
-    if (need.budgetLabel) parts.push(need.budgetLabel);
-    if (need.type) parts.push(need.type.toLowerCase());
-    if (!parts.length) return 'Mình đã hiểu bạn đang cần tư vấn chọn tivi phù hợp.';
-    return `Mình hiểu bạn đang tìm tivi cho ${parts.join(', ')}.`;
+    if (need.recommendedRange) parts.push(`kích thước gợi ý ${need.recommendedRange.label}`);
+    if (!parts.length) return 'Dạ, mình đã hiểu bạn đang cần tư vấn chọn tivi phù hợp.';
+    return `Dạ, mình hiểu bạn đang tìm tivi cho ${parts.join(', ')}.`;
   };
 
   const buildRecommendationSummary = (need, hasStrongMatch) => {
-    if (need.budgetLabel && !need.brand && !need.requestedSize && !need.recommendedRange && !need.type) return `${need.budgetLabel.charAt(0).toUpperCase()}${need.budgetLabel.slice(1)} thì hiện trên web mình có vài mẫu phù hợp. Mình gợi ý bạn xem trước các mẫu này:`;
+    if (need.brand && need.seriesLabel && !need.requestedSize && !need.budgetLabel) return `Dạ, mình sẽ ưu tiên ${need.brand} ${need.seriesLabel} trong dữ liệu sản phẩm đang có.`;
+    if (need.budgetLabel && !need.brand && !need.seriesLabel && !need.requestedSize && !need.recommendedRange && !need.type) return `${need.budgetLabel.charAt(0).toUpperCase()}${need.budgetLabel.slice(1)} thì hiện trên web mình có vài mẫu phù hợp. Mình gợi ý bạn xem trước các mẫu này:`;
     if (need.recommendedRange) return `Dựa trên nhu cầu này, mình gợi ý ưu tiên tivi ${need.recommendedRange.label} để xem cân đối với không gian.`;
+    if (need.seriesLabel && !need.brand) return `Mình sẽ ưu tiên dòng ${need.seriesLabel} trong dữ liệu sản phẩm đang có.`;
     if (need.requestedSize) return `Mình sẽ ưu tiên các mẫu ${need.requestedSize} inch đang có trong dữ liệu sản phẩm của Anh Minh Store.`;
     if (need.usage.includes('sports')) return 'Với nhu cầu xem bóng đá/World Cup, mình ưu tiên tivi màn hình lớn, 4K và có công nghệ chuyển động tốt.';
     if (need.usage.includes('movies')) return 'Với nhu cầu xem phim, mình ưu tiên tivi 4K, QLED/OLED/Mini LED hoặc mẫu có HDR khi dữ liệu sản phẩm có thông tin này.';
@@ -804,6 +1024,17 @@
     const model = normalizeVietnameseText(product.model || '').replace(/\s+/g, '');
     const name = normalizeVietnameseText(product.name || product.fullName || '').replace(/\s+/g, '');
     return id || model || name;
+  };
+
+  const productMatchesExplicitNeed = (product, need = {}) => {
+    const haystack = product.searchableText || normalizeVietnameseText(JSON.stringify(product));
+    if (need.brand && !haystack.includes(normalizeVietnameseText(need.brand))) return false;
+    if (need.seriesLabel && !productMatchesSeries(product, need)) return false;
+    if (need.requestedSize) {
+      const size = product.sizeNumber || parseSizeToNumber([product.size, product.name, product.model].join(' '));
+      if (size !== need.requestedSize) return false;
+    }
+    return true;
   };
 
   const selectBalancedBudgetRecommendations = (scoredProducts = [], need = {}) => {
@@ -854,7 +1085,7 @@
 
     if (need.isVagueAdvice) {
       return {
-        text: 'Dạ được ạ. Bạn cho AM AI xin thêm ngân sách khoảng bao nhiêu và bạn muốn tivi mới hay tivi cũ để mình gợi ý sát hơn nha.',
+        text: 'Dạ được ạ. Bạn cho AM AI xin ngân sách khoảng bao nhiêu, kích thước mong muốn và bạn muốn tivi mới hay tivi cũ để mình gợi ý sát hơn nha.',
         actions: [callAction(), zaloAction()],
         quickReplies: SMART_RECOMMENDER_QUICK_REPLIES,
         products: [],
@@ -872,15 +1103,17 @@
       };
     }
 
-    const eligibleProducts = need.isMaxBudgetStrict && need.maxBudget
-      ? products.filter((product) => product.priceNumber && product.priceNumber <= need.maxBudget)
-      : products;
+    const eligibleProducts = products.filter((product) => {
+      if (need.isMaxBudgetStrict && need.maxBudget && (!product.priceNumber || product.priceNumber > need.maxBudget)) return false;
+      if (need.type && !productMatchesType(product, need.type)) return false;
+      return true;
+    });
 
     if (need.isMaxBudgetStrict && need.maxBudget && !eligibleProducts.length) {
       const emptyRecommendations = [];
       debugChatbotRecommendations(sourceSummary, products, need, emptyRecommendations);
       return {
-        text: `Hiện mình chưa thấy mẫu nào dưới ${Math.round(need.maxBudget / 1000000)} triệu trong dữ liệu đang hiển thị. Bạn có thể tăng ngân sách một chút hoặc nhắn Zalo để Anh Minh Store tư vấn mẫu phù hợp hơn.`,
+        text: 'Hiện website chưa có mẫu phù hợp với yêu cầu này. Bạn có thể nhắn Zalo hoặc gọi Anh Minh Store để kiểm tra mẫu còn hàng chính xác nhất.',
         actions: [zaloAction(), callAction()],
         products: [],
       };
@@ -889,19 +1122,18 @@
     const scored = eligibleProducts
       .map((product) => scoreProductForNeed(product, need))
       .sort((a, b) => b.score - a.score);
-    const strongMatches = scored.filter((item) => item.score >= 25);
-    const positiveMatches = strongMatches.length ? strongMatches : scored.filter((item) => item.score > 0);
+    const explicitMatches = scored.filter((item) => productMatchesExplicitNeed(item.product, need));
+    const scoredMatches = (need.brand || need.seriesLabel || need.requestedSize) ? explicitMatches : scored;
+    const strongMatches = scoredMatches.filter((item) => item.score >= 25);
+    const positiveMatches = strongMatches.length ? strongMatches : scoredMatches.filter((item) => item.score > 0);
     const selected = selectBalancedBudgetRecommendations(positiveMatches, need);
 
     if (!selected.length) {
-      const nearbyProducts = scored.filter((item) => item.product.priceNumber || item.product.model || item.product.name).slice(0, 3);
-      debugChatbotRecommendations(sourceSummary, products, need, nearbyProducts);
+      debugChatbotRecommendations(sourceSummary, products, need, []);
       return {
-        text: nearbyProducts.length
-          ? 'Mình chưa thấy mẫu nào khớp thật mạnh, nhưng website đang có các mẫu gần nhất dưới đây để bạn tham khảo trước.'
-          : 'Hiện mình chưa tìm thấy sản phẩm phù hợp trong dữ liệu đang hiển thị. Bạn có thể cho mình thêm diện tích phòng, ngân sách và thích tivi mới hay cũ; hoặc bấm Gọi ngay/Nhắn Zalo để Anh Minh Store tư vấn chính xác hơn.',
-        actions: [featuredAction(), callAction(), zaloAction()],
-        products: nearbyProducts.map((item) => ({ ...item.product, reason: 'Mẫu gần nhất trong dữ liệu hiện có.' })),
+        text: 'Hiện website chưa có mẫu phù hợp với yêu cầu này. Bạn có thể nhắn Zalo hoặc gọi Anh Minh Store để kiểm tra mẫu còn hàng chính xác nhất.',
+        actions: [zaloAction(), callAction()],
+        products: [],
       };
     }
 
@@ -913,7 +1145,7 @@
     debugChatbotRecommendations(sourceSummary, products, need, recommendedProducts);
     const intro = buildUnderstandingText(need);
     const summary = buildRecommendationSummary(need, strongMatches.length > 0);
-    const budgetMixText = need.budgetLabel && !need.type
+    const budgetMixText = need.budgetLabel && !need.type && !need.brand && !need.seriesLabel && !need.requestedSize
       ? `Dạ, với ngân sách ${need.budgetLabel}, AM AI gợi ý 3 mẫu trong tầm giá: ưu tiên 2 tivi mới và 1 tivi cũ để bạn dễ so sánh.`
       : '';
     const detailHint = strongMatches.length
@@ -1289,6 +1521,7 @@
   window.parseSizeToNumber = parseSizeToNumber;
   window.normalizeProductForChatbot = normalizeProductForChatbot;
   window.getAvailableProductsForChatbot = getAvailableProductsForChatbot;
+  window.detectTvSeriesFromMessage = detectTvSeriesFromMessage;
   window.parseTvCustomerNeed = parseTvCustomerNeed;
   window.scoreProductForNeed = scoreProductForNeed;
   window.recommendProductsForMessage = recommendProductsForMessage;
