@@ -63,12 +63,12 @@
       { label: 'StanbyME', aliases: ['stanbyme', 'stanby me'] },
     ],
     Sony: [
-      { label: 'BRAVIA XR', aliases: ['bravia xr', 'xr'] },
-      { label: 'BRAVIA', aliases: ['bravia'] },
       { label: 'OLED', aliases: ['oled'] },
       { label: 'Mini LED', aliases: ['mini led'] },
-      { label: 'Full Array LED', aliases: ['full array', 'full array led'] },
-      { label: 'Google TV', aliases: ['google tv'] },
+      { label: 'Full Array LED', aliases: ['full array led', 'full array'] },
+      { label: 'BRAVIA XR', aliases: ['bravia xr', 'cognitive processor xr', 'xr cognitive', 'processor xr'] },
+      { label: 'BRAVIA', aliases: ['bravia'] },
+      { label: 'Google TV', aliases: ['google tv', 'google tivi'] },
       { label: 'UHD / 4K UHD', aliases: ['uhd', '4k uhd', 'ultra hd'] },
       { label: 'LED', aliases: ['led'] },
     ],
@@ -274,7 +274,7 @@
     },
     bravia_xr: {
       label: 'BRAVIA XR',
-      aliases: ['bravia xr', 'sony bravia xr'],
+      aliases: ['bravia xr', 'sony bravia xr', 'cognitive processor xr', 'xr cognitive', 'processor xr'],
       level: 7,
       strengths: 'xử lý hình ảnh tự nhiên, chuyển động tốt, hợp phim/thể thao',
       tradeoffs: 'giá Sony thường cao hơn so với cấu hình cùng cỡ',
@@ -1168,13 +1168,20 @@
 
   const escapeRegExp = (value = '') => String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
+  const isWeakSeriesAlias = (alias = '') => {
+    const compactAlias = normalizeVietnameseText(alias).replace(/\s+/g, '');
+    return compactAlias.length <= 2 && !/\d/.test(compactAlias);
+  };
+
   const textHasAlias = (text = '', alias = '') => {
+    const normalizedText = normalizeVietnameseText(text);
     const normalizedAlias = normalizeVietnameseText(alias);
-    if (!text || !normalizedAlias) return false;
-    const compactText = text.replace(/\s+/g, '');
-    const compactAlias = normalizedAlias.replace(/\s+/g, '');
-    if ((normalizedAlias.includes(' ') || compactAlias.length >= 4 || /\d/.test(compactAlias)) && compactText.includes(compactAlias)) return true;
-    return new RegExp(`(^|[^a-z0-9])${escapeRegExp(normalizedAlias)}([^a-z0-9]|$)`).test(text);
+    if (!normalizedText || !normalizedAlias || isWeakSeriesAlias(normalizedAlias)) return false;
+    if (normalizedAlias.includes(' ')) {
+      const phrasePattern = new RegExp(`(^|[^a-z0-9])${escapeRegExp(normalizedAlias).replace(/\s+/g, '\\s+')}([^a-z0-9]|$)`);
+      return phrasePattern.test(normalizedText);
+    }
+    return new RegExp(`(^|[^a-z0-9])${escapeRegExp(normalizedAlias)}([^a-z0-9]|$)`).test(normalizedText);
   };
 
   const getSeriesOptionsForBrand = (brand) => {
@@ -1571,23 +1578,49 @@
     return null;
   };
 
+  const getProductSeriesHaystack = (product = {}) => [
+    product.name,
+    product.fullName,
+    product.full_name,
+    product.model,
+    product.type,
+    product.condition,
+    product.features,
+    product.featuresText,
+    product.description,
+    product.overview,
+    product.specifications,
+    product.searchableText,
+  ].map((value) => {
+    if (Array.isArray(value)) return value.join(' ');
+    if (value && typeof value === 'object') return Object.values(value).join(' ');
+    return value || '';
+  }).join(' ');
+
+  const productMatchesSeriesAliases = (product = {}, series = {}, haystack = '') => {
+    const values = [series.label, ...(series.aliases || [])];
+    return values.some((alias) => textHasAlias(haystack, alias));
+  };
+
+  const isSonyLedFallbackMatch = (product = {}, need = {}, haystack = '') => {
+    if (normalizeVietnameseText(need.brand) !== 'sony' || normalizeVietnameseText(need.seriesLabel) !== 'led') return false;
+    const sonyOptions = getSeriesOptionsForBrand('Sony');
+    const hasHigherDisplayTechnology = ['OLED', 'Mini LED', 'Full Array LED'].some((label) => {
+      const series = sonyOptions.find((option) => normalizeVietnameseText(option.label) === normalizeVietnameseText(label));
+      return series && productMatchesSeriesAliases(product, series, haystack);
+    });
+    return !hasHigherDisplayTechnology;
+  };
+
   const productMatchesSeries = (product, need) => {
     if (!need?.seriesLabel) return false;
-    const haystack = normalizeVietnameseText([
-      product.name,
-      product.fullName,
-      product.model,
-      product.type,
-      product.condition,
-      product.featuresText,
-      product.description,
-      product.specifications,
-      product.searchableText,
-    ].join(' '));
-    const aliases = need.seriesAliases?.length
-      ? need.seriesAliases
-      : getSeriesOptionsForBrand(need.brand).find((series) => series.label === need.seriesLabel)?.aliases || [need.seriesLabel];
-    return aliases.some((alias) => textHasAlias(haystack, alias));
+    const haystack = getProductSeriesHaystack(product);
+    const series = getSeriesOptionsForBrand(need.brand).find((option) => normalizeVietnameseText(option.label) === normalizeVietnameseText(need.seriesLabel));
+    const aliases = need.seriesAliases?.length ? need.seriesAliases : series?.aliases || [need.seriesLabel];
+    if (normalizeVietnameseText(need.brand) === 'sony' && normalizeVietnameseText(need.seriesLabel) === 'led') {
+      return isSonyLedFallbackMatch(product, need, haystack);
+    }
+    return [need.seriesLabel, ...aliases].some((alias) => textHasAlias(haystack, alias));
   };
 
   const parseBudgetFromMessage = (message, normalizedMessage) => {
