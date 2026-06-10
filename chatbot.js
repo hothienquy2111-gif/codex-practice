@@ -4,7 +4,7 @@
   const CHATBOT_ID = 'anh-minh-chatbot';
   const HISTORY_KEY = 'anhMinhChatHistory';
   const HISTORY_VERSION_KEY = 'anhMinhChatHistoryVersion';
-  const AM_CHATBOT_HISTORY_VERSION = 'support-intents-v7';
+  const AM_CHATBOT_HISTORY_VERSION = 'extra-support-intents-v8';
   const MAX_HISTORY = 20;
   const AVATAR_SRC = 'linh%20v%E1%BA%ADt%20AM.jpeg';
   const HOTLINE = '0905111223';
@@ -669,6 +669,24 @@
     return { min: 65, max: 75, label: '65–75 inch' };
   };
 
+  const getRecommendedRangeForDistance = (distance) => {
+    if (!distance) return null;
+    if (distance < 2) return { min: 43, max: 50, label: '43–50 inch' };
+    if (distance < 2.5) return { min: 50, max: 55, label: '50–55 inch' };
+    if (distance <= 3) return { min: 55, max: 65, label: '55–65 inch' };
+    return { min: 65, max: 98, label: '65 inch trở lên' };
+  };
+
+  const parseViewingDistanceFromMessage = (normalizedMessage = '') => {
+    const directMatch = normalizedMessage.match(/(?:cach(?:\s+tivi)?|ngoi(?:\s+cach(?:\s+tivi)?)?|khoang cach xem)\s*(?:khoang|tam)?\s*(\d+(?:[.,]\d+)?)\s*(m|met|meter|mét)\b/);
+    if (directMatch) return Number(directMatch[1].replace(',', '.'));
+    const reverseMatch = normalizedMessage.match(/\b(\d+(?:[.,]\d+)?)\s*(m|met|meter|mét)\s*(?:thi|nen)?\s*(?:mua|chon|xem|ngoi|cach)/);
+    if (reverseMatch && hasAny(normalizedMessage, ['khoang cach', 'ngoi cach', 'cach tivi', 'mua may inch', 'bao nhieu inch'])) {
+      return Number(reverseMatch[1].replace(',', '.'));
+    }
+    return null;
+  };
+
   const escapeRegExp = (value = '') => String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
   const textHasAlias = (text = '', alias = '') => {
@@ -813,19 +831,24 @@
     if (!need.recommendedRange && need.roomType === 'livingroom') need.recommendedRange = { min: 55, max: 65, label: '55–65 inch' };
     if (need.roomType === 'large' && !need.roomArea) need.recommendedRange = { min: 65, max: 75, label: '65–75 inch' };
 
+    need.viewingDistance = parseViewingDistanceFromMessage(normalizedMessage);
+    const distanceRange = getRecommendedRangeForDistance(need.viewingDistance);
+    if (distanceRange) need.recommendedRange = distanceRange;
+
     const sizeMatch = normalizedMessage.match(/\b(32|40|42|43|49|50|55|58|60|65|70|75|77|85|86|98)\s*(inch|in|inh|\")?\b/);
     if (sizeMatch) need.requestedSize = Number(sizeMatch[1]);
 
     Object.assign(need, parseBudgetFromMessage(originalMessage, normalizedMessage));
 
-    if (hasAny(normalizedMessage, ['tivi moi', 'tv moi', 'hang moi', 'moi 100%', 'chinh hang'])) need.type = 'Tivi mới';
-    if (hasAny(normalizedMessage, ['tivi cu', 'tv cu', 'da qua su dung', 'second hand'])) need.type = 'Tivi cũ';
+    const isNewOldChoiceQuestion = hasAny(normalizedMessage, ['tivi moi hay cu', 'tivi cu hay moi', 'mua cu hay mua moi', 'tivi cu voi tivi moi']);
+    if (!isNewOldChoiceQuestion && hasAny(normalizedMessage, ['tivi moi', 'tv moi', 'hang moi', 'moi 100%', 'chinh hang'])) need.type = 'Tivi mới';
+    if (!isNewOldChoiceQuestion && hasAny(normalizedMessage, ['tivi cu', 'tv cu', 'da qua su dung', 'second hand'])) need.type = 'Tivi cũ';
 
-    if (hasAny(normalizedMessage, ['xem phim', 'netflix'])) need.usage.push('movies');
-    if (hasAny(normalizedMessage, ['bong da', 'world cup', 'the thao'])) need.usage.push('sports');
+    if (hasAny(normalizedMessage, ['xem phim', 'xem netflix', 'netflix', 'xem phim nhieu', 'mua tivi xem phim', 'giai tri gia dinh'])) need.usage.push('movies');
+    if (hasAny(normalizedMessage, ['bong da', 'world cup', 'the thao', 'xem da banh', 'chuyen dong muot', 'mua tivi xem bong da'])) need.usage.push('sports');
     if (hasAny(normalizedMessage, ['choi game', 'gaming', 'game'])) need.usage.push('gaming');
-    if (hasAny(normalizedMessage, ['nguoi lon tuoi'])) need.usage.push('elderly');
-    if (hasAny(normalizedMessage, ['youtube'])) need.usage.push('youtube');
+    if (hasAny(normalizedMessage, ['nguoi lon tuoi', 'nguoi gia dung', 'mua cho ba me', 'mua cho bo me', 'mua cho ong ba', 'de dung', 'remote de bam'])) need.usage.push('elderly');
+    if (hasAny(normalizedMessage, ['youtube', 'xem youtube', 'xem youtube thoi', 'mua cho ba me xem youtube'])) need.usage.push('youtube');
     if (hasAny(normalizedMessage, ['hoc online'])) need.usage.push('learning');
     if (hasAny(normalizedMessage, ['karaoke'])) need.usage.push('karaoke');
 
@@ -835,7 +858,7 @@
     if (hasAny(normalizedMessage, ['gia re', 're'])) need.usage.push('cheap');
     if (hasAny(normalizedMessage, ['cao cap'])) need.usage.push('premium');
 
-    const meaningfulSignals = [need.brand, need.seriesLabel, need.requestedSize, need.roomArea, need.roomType, need.minBudget, need.maxBudget, need.targetBudget, need.type, ...need.usage, ...need.preferences].filter(Boolean).length;
+    const meaningfulSignals = [need.brand, need.seriesLabel, need.requestedSize, need.roomArea, need.roomType, need.viewingDistance, need.minBudget, need.maxBudget, need.targetBudget, need.type, ...need.usage, ...need.preferences].filter(Boolean).length;
     const broadBuyingRequest = hasAny(normalizedMessage, [
       'tu van tivi', 'tu van chon tivi', 'chon tivi', 'tu van mua tivi', 'tu van mua tv',
       'shop tu van tivi', 'can mua tivi', 'can mua tv', 'minh can mua tivi', 'toi muon mua tivi',
@@ -944,6 +967,14 @@
       score += 10;
       reasons.push('màn hình lớn cho phòng khách');
     }
+    if (need.usage.includes('elderly') && ((size >= 43 && size <= 55) || /youtube|google tv|android tv|smart|webos|tizen/.test(haystack))) {
+      score += 10;
+      reasons.push('dễ dùng cho người lớn tuổi');
+    }
+    if (need.usage.includes('youtube') && /youtube|google tv|android tv|smart|webos|tizen/.test(haystack)) {
+      score += 8;
+      reasons.push('phù hợp xem YouTube');
+    }
     if (need.usage.includes('cheap') && (productMatchesType(product, 'Tivi cũ') || (price && price <= 10000000))) {
       score += 10;
       reasons.push('ưu tiên tiết kiệm chi phí');
@@ -1003,6 +1034,7 @@
     if (need.brand && need.seriesLabel && !need.requestedSize && !need.budgetLabel) return `Dạ, mình sẽ ưu tiên ${need.brand} ${need.seriesLabel} trong dữ liệu sản phẩm đang có.`;
     if (need.budgetLabel && !need.brand && !need.seriesLabel && !need.requestedSize && !need.recommendedRange && !need.type) return `${need.budgetLabel.charAt(0).toUpperCase()}${need.budgetLabel.slice(1)} thì hiện trên web mình có vài mẫu phù hợp. Mình gợi ý bạn xem trước các mẫu này:`;
     if (need.recommendedRange) return `Dựa trên nhu cầu này, mình gợi ý ưu tiên tivi ${need.recommendedRange.label} để xem cân đối với không gian.`;
+    if (need.usage.includes('elderly')) return 'Với nhu cầu mua cho người lớn tuổi, mình ưu tiên tivi dễ dùng, chữ rõ, âm thanh nghe rõ và có YouTube/ứng dụng cơ bản.';
     if (need.seriesLabel && !need.brand) return `Mình sẽ ưu tiên dòng ${need.seriesLabel} trong dữ liệu sản phẩm đang có.`;
     if (need.requestedSize) return `Mình sẽ ưu tiên các mẫu ${need.requestedSize} inch đang có trong dữ liệu sản phẩm của Anh Minh Store.`;
     if (need.usage.includes('sports')) return 'Với nhu cầu xem bóng đá/World Cup, mình ưu tiên tivi màn hình lớn, 4K và có công nghệ chuyển động tốt.';
@@ -1135,7 +1167,7 @@
     const intro = buildUnderstandingText(need);
     const summary = buildRecommendationSummary(need, strongMatches.length > 0);
     const budgetMixText = need.budgetLabel && !need.type && !need.brand && !need.seriesLabel && !need.requestedSize
-      ? `Dạ, với ngân sách ${need.budgetLabel}, AM AI gợi ý 3 mẫu trong tầm giá: ưu tiên 2 tivi mới và 1 tivi cũ để bạn dễ so sánh.`
+      ? `Dạ, với ngân sách ${need.budgetLabel}, AM AI gợi ý ${recommendedProducts.length} mẫu trong tầm giá${recommendedProducts.length >= 3 ? ': ưu tiên 2 tivi mới và 1 tivi cũ để bạn dễ so sánh' : ' phù hợp nhất theo dữ liệu hiện có'}.`
       : '';
     const detailHint = strongMatches.length
       ? 'Bạn có thể bấm “Xem chi tiết” để xem hình ảnh, thông số và đặt hàng.'
@@ -1286,6 +1318,76 @@
       };
     }
 
+    const viewingDistance = parseViewingDistanceFromMessage(normalizedMessage);
+    if (viewingDistance || hasAny(normalizedMessage, ['khoang cach xem', 'ngoi xa bao nhieu', 'cach 2 met mua may inch', 'cach 3m nen mua bao nhieu inch', 'ngoi cach tivi 2.5m'])) {
+      const range = getRecommendedRangeForDistance(viewingDistance);
+      const text = range
+        ? `Dạ nếu mình ngồi cách tivi khoảng ${viewingDistance}m thì nên chọn ${range.label}. Nếu có thêm ngân sách mong muốn, AM AI sẽ lọc mẫu phù hợp hơn nha.`
+        : 'Dạ nếu ngồi cách tivi khoảng 1.5–2m thì nên chọn 43–50 inch. Khoảng 2–2.5m có thể chọn 50–55 inch. Khoảng 2.5–3m nên chọn 55–65 inch, còn trên 3m thì 65 inch trở lên sẽ xem đã hơn ạ.';
+      return {
+        id: 'viewing-distance',
+        text,
+        actions: [newTvAction(), oldTvAction(), zaloAction()],
+        products: [],
+      };
+    }
+
+    if (hasAny(normalizedMessage, ['nen mua tivi moi hay cu', 'mua tivi moi hay cu tot hon', 'nen mua tivi cu hay moi', 'mua cu hay mua moi', 'tivi cu voi tivi moi'])
+      || (hasAny(normalizedMessage, ['ngan sach it']) && hasAny(normalizedMessage, ['nen mua loai nao', 'mua loai nao', 'loai nao']))) {
+      return {
+        id: 'new-old-choice',
+        text: 'Dạ nếu mình ưu tiên yên tâm, bảo hành dài và công nghệ mới thì nên chọn tivi mới. Nếu mình muốn tiết kiệm chi phí và chấp nhận chọn kỹ tình trạng máy thì tivi cũ sẽ hợp hơn ạ. Bạn cho AM AI biết ngân sách và kích thước mong muốn, mình sẽ gợi ý sát hơn nha.',
+        actions: [newTvAction(), oldTvAction(), zaloAction()],
+        products: [],
+      };
+    }
+
+    if (hasAny(normalizedMessage, ['mua cho ba me', 'mua cho bo me', 'mua cho ong ba', 'nguoi lon tuoi dung', 'nguoi gia dung', 'remote de bam', 'xem youtube thoi', 'mua cho ba me xem youtube'])
+      || (hasAny(normalizedMessage, ['de dung']) && hasAny(normalizedMessage, ['tivi', 'tv', 'remote', 'youtube', 'nguoi lon tuoi', 'nguoi gia', 'ba me', 'bo me', 'ong ba']))) {
+      return {
+        id: 'elderly-users',
+        text: 'Dạ nếu mua cho người lớn tuổi, mình nên ưu tiên tivi dễ dùng, chữ rõ, âm thanh nghe rõ, remote dễ bấm và có YouTube/ứng dụng cơ bản. Kích thước thường nên chọn 43–55 inch tuỳ phòng để xem thoải mái mà không quá rối ạ.',
+        actions: [newTvAction(), oldTvAction(), zaloAction()],
+        products: [],
+      };
+    }
+
+    if (hasAny(normalizedMessage, ['xem bong da', 'xem world cup', 'world cup', 'xem the thao', 'chuyen dong muot', 'xem da banh', 'mua tivi xem bong da'])) {
+      return {
+        id: 'sports-viewing',
+        text: 'Dạ nếu xem bóng đá/World Cup, mình nên ưu tiên màn hình từ 55 inch trở lên nếu phòng khách đủ rộng, độ phân giải 4K và công nghệ chuyển động tốt. Nếu ngân sách cho phép, QLED/OLED/Mini LED sẽ cho trải nghiệm hình ảnh đã hơn ạ.',
+        actions: [newTvAction(), featuredAction(), zaloAction()],
+        products: [],
+      };
+    }
+
+    if (hasAny(normalizedMessage, ['xem phim', 'xem netflix', 'netflix', 'xem youtube', 'xem phim nhieu', 'mua tivi xem phim', 'giai tri gia dinh'])) {
+      return {
+        id: 'movies-entertainment',
+        text: 'Dạ nếu xem phim/Netflix nhiều, mình nên ưu tiên tivi 4K, màu sắc đẹp, độ tương phản tốt và kích thước phù hợp khoảng cách xem. Nếu ngân sách tốt hơn, QLED/OLED/Mini LED sẽ cho trải nghiệm phim ảnh nổi bật hơn ạ.',
+        actions: [newTvAction(), featuredAction(), zaloAction()],
+        products: [],
+      };
+    }
+
+    if (hasAny(normalizedMessage, ['doi tra', 'loi doi khong', 'mua ve loi thi sao', 'khong thich co doi duoc khong', 'doi duoc khong', 'tra hang duoc khong'])) {
+      return {
+        id: 'return-exchange',
+        text: 'Dạ chính sách đổi trả/hỗ trợ sẽ tuỳ tình trạng sản phẩm và lỗi thực tế ạ. Nếu sản phẩm phát sinh vấn đề, bạn liên hệ Anh Minh Store sớm kèm hình ảnh/video để cửa hàng kiểm tra và hỗ trợ theo từng trường hợp cụ thể nha.',
+        actions: [zaloAction(), callAction()],
+        products: [],
+      };
+    }
+
+    if (hasAny(normalizedMessage, ['thanh toan sao', 'chuyen khoan duoc khong', 'tra tien mat duoc khong', 'coc truoc khong', 'dat coc', 'thanh toan khi nhan hang', 'cod khong'])) {
+      return {
+        id: 'payment',
+        text: 'Dạ về thanh toán, mình có thể liên hệ Anh Minh Store để xác nhận hình thức phù hợp như tiền mặt, chuyển khoản hoặc đặt cọc theo từng đơn hàng ạ. Cửa hàng sẽ xác nhận lại mẫu, giá, bảo hành và thời gian giao trước khi chốt đơn.',
+        actions: [callAction(), zaloAction()],
+        products: [],
+      };
+    }
+
     if (hasAny(normalizedMessage, ['phong 20m2', 'phong 25m2', 'phong 30m2', 'phong 40m2', 'phong ngu nen dung tivi gi', 'phong khach nen mua may inch', 'may inch la vua', 'bao nhieu inch'])
       || /\bphong\s*\d{1,2}\s*(m2|m\s*2|met vuong)\b/.test(normalizedMessage)) {
       return {
@@ -1357,9 +1459,9 @@
 
   const hasStrongProductRecommendationIntent = (message = '') => {
     const need = parseTvCustomerNeed(message);
-    const hasBudget = Boolean(need.minBudget || need.maxBudget || need.targetBudget);
-    const hasSpecificProductFilter = Boolean(need.brand || need.seriesLabel || need.type || hasBudget);
-    return Boolean(hasSpecificProductFilter || (need.requestedSize && hasBudget) || need.roomArea || need.roomType);
+    const hasNumericBudget = Boolean(need.minBudget || need.targetBudget || (need.maxBudget && need.budgetPreference !== 'cheap'));
+    const hasSpecificProductFilter = Boolean(need.brand || need.seriesLabel || need.type || hasNumericBudget);
+    return Boolean(hasSpecificProductFilter || (need.requestedSize && hasNumericBudget) || need.roomArea || need.roomType || (need.viewingDistance && hasNumericBudget));
   };
 
   const getBotReply = (message) => {
@@ -1367,7 +1469,8 @@
     const supportIntentReply = getSupportIntentReply(normalizedMessage);
     const strongProductIntent = hasStrongProductRecommendationIntent(message);
 
-    if (supportIntentReply && (supportIntentReply.id === 'room-size' || !strongProductIntent)) return supportIntentReply;
+    const hasExplicitBudgetSignal = /(?:duoi|khong qua|toi da|tam|khoang|ngan sach|muc gia)\s*\d+(?:[.,]\d+)?|\b\d+(?:[.,]\d+)?\s*(trieu|tr\b)\b/.test(normalizedMessage);
+    if (supportIntentReply && (supportIntentReply.id === 'room-size' || (supportIntentReply.id === 'viewing-distance' && !hasExplicitBudgetSignal) || !strongProductIntent)) return supportIntentReply;
 
     const recommendationReply = recommendProductsForMessage(message);
     if (recommendationReply) {
