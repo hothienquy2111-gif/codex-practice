@@ -246,15 +246,26 @@ using (
 -- Homepage hero/banner management.
 create table if not exists public.hero_banners (
   id uuid primary key default gen_random_uuid(),
+  placement text not null default 'home_main_carousel',
   title text,
   image_url text not null,
   storage_path text,
   alt_text text,
+  link_url text,
   sort_order integer default 0,
   is_active boolean default true,
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
+
+alter table public.hero_banners
+add column if not exists placement text not null default 'home_main_carousel';
+
+alter table public.hero_banners
+add column if not exists link_url text;
+
+create index if not exists hero_banners_placement_active_order_idx
+on public.hero_banners (placement, is_active, sort_order, created_at);
 
 drop trigger if exists hero_banners_set_updated_at on public.hero_banners;
 create trigger hero_banners_set_updated_at

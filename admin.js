@@ -39,6 +39,12 @@
     banners: document.querySelector('[data-admin-banners]'),
     saveBannerButton: document.querySelector('[data-save-banner]'),
     cancelBannerFormButton: document.querySelector('[data-cancel-banner-form]'),
+    rightBannerForm: document.querySelector('[data-right-banner-form]'),
+    rightBannerMessage: document.querySelector('[data-right-banner-message]'),
+    rightBannerPreview: document.querySelector('[data-right-banner-preview]'),
+    rightBannerCurrent: document.querySelector('[data-admin-right-banner-current]'),
+    saveRightBannerButton: document.querySelector('[data-save-right-banner]'),
+    deleteRightBannerButton: document.querySelector('[data-delete-right-banner]'),
   };
 
   let products = [];
@@ -46,6 +52,7 @@
   let productIdManuallyEdited = false;
   let banners = [];
   let editingBanner = null;
+  let rightBanner = null;
   let orders = [];
 
   const orderStatusLabels = {
@@ -427,6 +434,7 @@
       const { data, error } = await client
         .from('hero_banners')
         .select('*')
+        .eq('placement', 'home_main_carousel')
         .order('sort_order', { ascending: true })
         .order('created_at', { ascending: true });
       if (error) throw error;
@@ -530,6 +538,7 @@
         alt_text: normalizeText(form.altText.value) || normalizeText(form.title.value) || 'Ảnh banner trang chủ Anh Minh Store',
         sort_order: Number(form.sortOrder.value || 0),
         is_active: form.isActive.value === 'true',
+        placement: 'home_main_carousel',
         updated_at: new Date().toISOString(),
       };
       const { error } = editingBanner
@@ -539,6 +548,7 @@
       showMessage(dom.adminMessage, 'Đã lưu ảnh banner.', 'success');
       closeBannerForm();
       await loadBanners();
+      await loadRightBanner();
     } catch (error) {
       console.warn(error);
       showMessage(dom.bannerMessage, 'Không thể tải ảnh banner lên. Vui lòng thử lại.', 'error');
@@ -552,6 +562,7 @@
       const { error } = await client.from('hero_banners').update({ is_active: !banner.is_active, updated_at: new Date().toISOString() }).eq('id', banner.id);
       if (error) throw error;
       await loadBanners();
+      await loadRightBanner();
     } catch (error) {
       console.warn(error);
       showMessage(dom.adminMessage, 'Không thể cập nhật trạng thái banner. Vui lòng thử lại.', 'error');
@@ -574,6 +585,151 @@
     } catch (error) {
       console.warn(error);
       showMessage(dom.adminMessage, 'Không thể xoá ảnh banner. Vui lòng thử lại.', 'error');
+    }
+  };
+
+
+  const renderRightBannerPreview = (imageUrl = '') => {
+    if (!dom.rightBannerPreview) return;
+    if (imageUrl) {
+      dom.rightBannerPreview.innerHTML = `<img src="${escapeHtml(imageUrl)}" alt="Xem trước banner dọc trang chủ" />`;
+      return;
+    }
+    dom.rightBannerPreview.innerHTML = '<div class="admin-right-banner-preview__placeholder">Chưa có banner dọc</div>';
+  };
+
+  const fillRightBannerForm = (banner = null) => {
+    const form = dom.rightBannerForm;
+    rightBanner = banner;
+    if (!form) return;
+    form.reset();
+    form.bannerId.value = banner?.id || '';
+    form.existingImageUrl.value = banner?.image_url || '';
+    form.existingStoragePath.value = banner?.storage_path || '';
+    form.title.value = banner?.title || '';
+    form.linkUrl.value = banner?.link_url || '';
+    form.sortOrder.value = banner?.sort_order ?? 0;
+    form.isActive.value = String(banner ? Boolean(banner.is_active) : true);
+    dom.deleteRightBannerButton.hidden = !banner?.id;
+    renderRightBannerPreview(banner?.image_url || '');
+  };
+
+  const renderRightBannerCurrent = () => {
+    if (!dom.rightBannerCurrent) return;
+    if (!rightBanner?.id) {
+      dom.rightBannerCurrent.innerHTML = '<p class="admin-empty">Chưa có banner dọc trang chủ. Khi chưa có banner, website sẽ hiển thị khung gợi ý mặc định.</p>';
+      return;
+    }
+    dom.rightBannerCurrent.innerHTML = `
+      <article class="admin-banner-card admin-right-banner-current-card">
+        <div class="admin-banner-card__thumb admin-banner-card__thumb--vertical">
+          <img src="${escapeHtml(rightBanner.image_url)}" alt="${escapeHtml(rightBanner.title || 'Banner dọc trang chủ')}" loading="lazy" />
+        </div>
+        <div>
+          <h3>${escapeHtml(rightBanner.title || 'Banner dọc trang chủ 9:16')}</h3>
+          <p>Vị trí: home_right_9_16 · Thứ tự: ${Number(rightBanner.sort_order || 0)}</p>
+          <p>${rightBanner.link_url ? `Link: ${escapeHtml(rightBanner.link_url)}` : 'Không có link'}</p>
+          <span class="admin-status ${rightBanner.is_active ? 'is-active' : 'is-hidden'}">${rightBanner.is_active ? 'Đang hiển thị' : 'Tạm ẩn'}</span>
+        </div>
+      </article>`;
+  };
+
+  const loadRightBanner = async () => {
+    if (!dom.rightBannerForm) return;
+    try {
+      const { data, error } = await client
+        .from('hero_banners')
+        .select('*')
+        .eq('placement', 'home_right_9_16')
+        .order('is_active', { ascending: false })
+        .order('sort_order', { ascending: true })
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      fillRightBannerForm(data || null);
+      renderRightBannerCurrent();
+    } catch (error) {
+      console.warn(error);
+      showMessage(dom.rightBannerMessage, 'Không thể tải banner dọc. Vui lòng kiểm tra cột placement/link_url trong bảng hero_banners.', 'error');
+      fillRightBannerForm(null);
+      renderRightBannerCurrent();
+    }
+  };
+
+  const validateRightBannerFile = (file) => {
+    if (!file) return true;
+    if (!allowedBannerTypes.has(file.type) || file.size > maxBannerFileSize) {
+      showMessage(dom.rightBannerMessage, 'Ảnh banner dọc phải là JPG, PNG hoặc WebP và dung lượng tối đa khoảng 10MB.', 'error');
+      return false;
+    }
+    return true;
+  };
+
+  const handleRightBannerSave = async (event) => {
+    event.preventDefault();
+    const form = dom.rightBannerForm;
+    if (!form) return;
+    const file = form.bannerImage.files?.[0];
+    if (!rightBanner && !file) {
+      showMessage(dom.rightBannerMessage, 'Vui lòng chọn ảnh banner dọc trước khi lưu.', 'error');
+      form.bannerImage.focus();
+      return;
+    }
+    if (!validateRightBannerFile(file)) return;
+    dom.saveRightBannerButton.disabled = true;
+    try {
+      let imageUrl = form.existingImageUrl.value;
+      let storagePath = form.existingStoragePath.value;
+      if (file) {
+        showMessage(dom.rightBannerMessage, 'Đang tải ảnh banner dọc lên Supabase Storage...', 'info');
+        const uploaded = await uploadBannerFile(file);
+        imageUrl = uploaded.imageUrl;
+        storagePath = uploaded.storagePath;
+      }
+      const payload = {
+        placement: 'home_right_9_16',
+        title: normalizeText(form.title.value) || 'Ưu đãi nổi bật',
+        image_url: imageUrl,
+        storage_path: storagePath || null,
+        link_url: normalizeText(form.linkUrl.value) || null,
+        sort_order: Number(form.sortOrder.value || 0),
+        is_active: form.isActive.value === 'true',
+        updated_at: new Date().toISOString(),
+      };
+      const { error } = rightBanner?.id
+        ? await client.from('hero_banners').update(payload).eq('id', rightBanner.id)
+        : await client.from('hero_banners').insert(payload);
+      if (error) throw error;
+      showMessage(dom.rightBannerMessage, 'Đã lưu banner dọc trang chủ.', 'success');
+      await loadRightBanner();
+    } catch (error) {
+      console.warn(error);
+      showMessage(dom.rightBannerMessage, 'Không thể lưu banner dọc. Vui lòng thử lại.', 'error');
+    } finally {
+      dom.saveRightBannerButton.disabled = false;
+    }
+  };
+
+  const deleteRightBanner = async () => {
+    if (!rightBanner?.id) return;
+    if (!window.confirm('Bạn có chắc muốn xoá banner dọc trang chủ này không?')) return;
+    try {
+      const deletingBanner = rightBanner;
+      const { error } = await client.from('hero_banners').delete().eq('id', deletingBanner.id);
+      if (error) throw error;
+      let storageWarning = false;
+      if (deletingBanner.storage_path) {
+        const { error: storageError } = await client.storage.from(bannerBucketName).remove([getBannerStorageObjectPath(deletingBanner.storage_path)]);
+        storageWarning = Boolean(storageError);
+        if (storageError) console.warn(storageError);
+      }
+      fillRightBannerForm(null);
+      renderRightBannerCurrent();
+      showMessage(dom.rightBannerMessage, storageWarning ? 'Đã xoá banner dọc khỏi dữ liệu, nhưng chưa xoá được file trong Storage.' : 'Đã xoá banner dọc trang chủ.', storageWarning ? 'info' : 'success');
+    } catch (error) {
+      console.warn(error);
+      showMessage(dom.rightBannerMessage, 'Không thể xoá banner dọc. Vui lòng thử lại.', 'error');
     }
   };
 
@@ -918,6 +1074,7 @@
       await loadProducts();
       await loadOrders();
       await loadBanners();
+      await loadRightBanner();
     } catch (error) {
       console.warn(error);
       showLoginOnly();
@@ -943,6 +1100,7 @@
       await loadProducts();
       await loadOrders();
       await loadBanners();
+      await loadRightBanner();
     } catch (error) {
       console.warn(error);
       showMessage(dom.loginMessage, 'Sai tài khoản hoặc mật khẩu. Vui lòng thử lại.', 'error');
@@ -956,6 +1114,14 @@
   dom.openBannerFormButton?.addEventListener('click', () => openBannerForm());
   dom.cancelBannerFormButton?.addEventListener('click', closeBannerForm);
   dom.bannerForm?.addEventListener('submit', handleBannerSave);
+  dom.rightBannerForm?.addEventListener('submit', handleRightBannerSave);
+  dom.deleteRightBannerButton?.addEventListener('click', deleteRightBanner);
+  dom.rightBannerForm?.bannerImage?.addEventListener('change', () => {
+    const file = dom.rightBannerForm.bannerImage.files?.[0];
+    if (!file) { renderRightBannerPreview(dom.rightBannerForm.existingImageUrl.value); return; }
+    if (!validateRightBannerFile(file)) { dom.rightBannerForm.bannerImage.value = ''; return; }
+    renderRightBannerPreview(URL.createObjectURL(file));
+  });
   dom.formatOverviewButton?.addEventListener('click', handleAutoFormatOverview);
   dom.previewOverviewButton?.addEventListener('click', handlePreviewOverview);
   dom.clearOverviewButton?.addEventListener('click', () => {

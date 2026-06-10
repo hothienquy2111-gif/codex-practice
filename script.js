@@ -6,6 +6,8 @@ const dom = {
   hashLinks: document.querySelectorAll('a[href^="#"]'),
   sections: document.querySelectorAll('.section-anchor[id]'),
   carousel: document.querySelector('[data-carousel]'),
+  homeRightBanner: document.querySelector('[data-home-right-banner]'),
+  homeRightBannerCard: document.querySelector('[data-home-right-banner-card]'),
   productGrid: document.querySelector('[data-product-grid]'),
   featuredLoadMoreButton: document.querySelector('[data-load-more="featured"]'),
   sizeOptions: document.querySelector('.size-options'),
@@ -1150,8 +1152,9 @@ const loadSupabaseHeroBanners = async (track) => {
   try {
     const { data, error } = await storeSupabase.client
       .from('hero_banners')
-      .select('title,image_url,alt_text,sort_order,created_at')
+      .select('title,image_url,alt_text,sort_order,created_at,placement')
       .eq('is_active', true)
+      .eq('placement', 'home_main_carousel')
       .order('sort_order', { ascending: true })
       .order('created_at', { ascending: true });
 
@@ -1170,6 +1173,84 @@ const loadSupabaseHeroBanners = async (track) => {
   } catch (error) {
     console.warn('Không thể tải banner từ Supabase, dùng ảnh banner mặc định.', error);
     return false;
+  }
+};
+
+const renderHomeRightBannerFallback = () => {
+  const card = dom.homeRightBannerCard;
+  if (!card) return;
+  card.removeAttribute('role');
+  card.removeAttribute('tabindex');
+  card.removeAttribute('aria-label');
+  card.classList.remove('is-clickable');
+  card.onclick = null;
+  card.onkeydown = null;
+  card.innerHTML = `<div class="home-hero-right-banner-placeholder" data-home-right-banner-placeholder>
+    <strong>Ưu đãi nổi bật</strong>
+    <span>Cập nhật banner trong trang quản trị</span>
+  </div>`;
+};
+
+const normalizeUrl = (value = '') => String(value).trim();
+
+const renderHomeRightBanner = (banner) => {
+  const card = dom.homeRightBannerCard;
+  if (!card) return;
+  if (!banner?.image_url) {
+    renderHomeRightBannerFallback();
+    return;
+  }
+
+  const title = banner.title || 'Ưu đãi nổi bật Anh Minh Store';
+  const linkUrl = normalizeUrl(banner.link_url);
+  card.classList.toggle('is-clickable', Boolean(linkUrl));
+  card.innerHTML = `<img class="home-hero-right-banner-image" src="${escapeAttribute(banner.image_url)}" alt="${escapeAttribute(title)}" loading="lazy" />`;
+
+  if (linkUrl) {
+    card.setAttribute('role', 'link');
+    card.setAttribute('tabindex', '0');
+    card.setAttribute('aria-label', title);
+    const openBannerLink = () => { window.location.href = linkUrl; };
+    card.onclick = openBannerLink;
+    card.onkeydown = (event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        openBannerLink();
+      }
+    };
+  } else {
+    card.removeAttribute('role');
+    card.removeAttribute('tabindex');
+    card.removeAttribute('aria-label');
+    card.onclick = null;
+    card.onkeydown = null;
+  }
+};
+
+const loadHomeRightBanner = async () => {
+  if (!dom.homeRightBannerCard) return;
+  const storeSupabase = window.AnhMinhSupabase || window.anhMinhSupabase;
+  if (!storeSupabase?.isConfigured || !storeSupabase.client) {
+    renderHomeRightBannerFallback();
+    return;
+  }
+
+  try {
+    const { data, error } = await storeSupabase.client
+      .from('hero_banners')
+      .select('title,image_url,link_url,sort_order,created_at,placement')
+      .eq('placement', 'home_right_9_16')
+      .eq('is_active', true)
+      .order('sort_order', { ascending: true })
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) throw error;
+    renderHomeRightBanner(data);
+  } catch (error) {
+    console.warn('Không thể tải banner dọc trang chủ từ Supabase, dùng khung mặc định.', error);
+    renderHomeRightBannerFallback();
   }
 };
 
@@ -1342,6 +1423,7 @@ const initCarousel = async () => {
 };
 
 initCarousel();
+loadHomeRightBanner();
 
 let ticking = false;
 window.addEventListener(
