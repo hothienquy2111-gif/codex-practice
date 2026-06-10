@@ -160,15 +160,16 @@ p { line-height: 1.65; }
 .hero-intro { margin-bottom: 10px; }
 .hero-intro h1,
 .home-hero-title { margin: 0; max-width: 100%; color: var(--color-primary-deep); font-size: clamp(28px, 2.2vw, 38px); font-weight: 750; line-height: 1.15; letter-spacing: -0.035em; white-space: normal; overflow-wrap: anywhere; }
-/* Homepage banner no-crop mode: the frame follows the real image ratio instead of cropping a 16:9 box. */
-.home-hero-layout .hero-carousel {
+/* Homepage hero banner no-crop mode: compact frame scoped to the real homepage carousel only. */
+.home-hero-layout .home-hero-banner-compact {
   position: relative;
-  width: min(78vw, 1120px);
-  max-width: 100%;
+  width: min(76%, 1100px);
+  max-width: calc(100% - 32px);
   height: auto;
   max-height: none;
   aspect-ratio: auto;
-  margin-inline: auto;
+  margin-left: auto;
+  margin-right: auto;
   overflow: hidden;
   border-radius: 24px;
   background: transparent;
@@ -177,7 +178,7 @@ p { line-height: 1.65; }
 .carousel-frame,
 .carousel-shell,
 .hero-banner-carousel { position: relative; }
-.home-hero-layout .carousel-viewport {
+.home-hero-layout .home-hero-banner-compact .carousel-viewport {
   width: 100%;
   height: auto;
   max-height: none;
@@ -186,9 +187,9 @@ p { line-height: 1.65; }
   touch-action: pan-y;
   cursor: grab;
 }
-.home-hero-layout .hero-carousel.is-height-synced .carousel-viewport { height: 100%; }
-.hero-carousel.is-dragging .carousel-viewport { cursor: grabbing; }
-.home-hero-layout .carousel-track {
+.home-hero-layout .home-hero-banner-compact.is-height-synced .carousel-viewport { height: 100%; }
+.home-hero-banner-compact.is-dragging .carousel-viewport { cursor: grabbing; }
+.home-hero-layout .home-hero-banner-compact .carousel-track {
   display: flex;
   width: 100%;
   height: auto;
@@ -196,8 +197,8 @@ p { line-height: 1.65; }
   align-items: flex-start;
   will-change: transform;
 }
-.home-hero-layout .hero-carousel.is-height-synced .carousel-track { height: 100%; }
-.home-hero-layout .carousel-slide {
+.home-hero-layout .home-hero-banner-compact.is-height-synced .carousel-track { height: 100%; }
+.home-hero-layout .home-hero-banner-compact .carousel-slide {
   position: relative;
   display: block;
   flex: 0 0 100%;
@@ -209,8 +210,8 @@ p { line-height: 1.65; }
   background: transparent;
   box-sizing: border-box;
 }
-.home-hero-layout .hero-carousel.is-height-synced .carousel-slide { height: 100%; }
-.home-hero-layout .carousel-slide img {
+.home-hero-layout .home-hero-banner-compact.is-height-synced .carousel-slide { height: 100%; }
+.home-hero-layout .home-hero-banner-compact .carousel-slide img {
   display: block;
   width: 100%;
   height: auto;
@@ -517,7 +518,7 @@ p { line-height: 1.65; }
   .home-hero-layout { grid-template-columns: 1fr; width: min(100%, 1180px); padding-inline: 16px; }
   .hero__main { display: contents; }
   .hero-intro { order: 1; }
-  .home-hero-layout .hero-carousel { order: 2; width: min(94vw, 960px); max-height: none; }
+  .home-hero-layout .home-hero-banner-compact { order: 2; width: min(94vw, 960px); max-width: calc(100% - 32px); max-height: none; }
   .brand-panel { order: 3; width: 100%; max-height: 360px; }
   .hero-benefits { order: 4; }
   .brand-list { flex: initial; grid-template-columns: repeat(2, minmax(0, 1fr)); max-height: 312px; }
@@ -544,7 +545,7 @@ p { line-height: 1.65; }
   .home-hero-layout { grid-template-columns: 1fr; width: min(100%, 1180px); padding-inline: 16px; }
   .hero__main { display: contents; }
   .hero-intro { order: 1; }
-  .home-hero-layout .hero-carousel { order: 2; width: min(94vw, 960px); }
+  .home-hero-layout .home-hero-banner-compact { order: 2; width: min(94vw, 960px); max-width: calc(100% - 32px); }
   .brand-panel { order: 3; width: 100%; max-height: 360px; }
   .hero-benefits { order: 4; }
   .brand-list { flex: initial; grid-template-columns: repeat(2, minmax(0, 1fr)); max-height: 312px; }
@@ -980,10 +981,10 @@ body.product-modal-open { overflow: hidden; }
   .hero-intro { margin-bottom: 10px; }
   .hero-intro h1,
   .home-hero-title { font-size: clamp(26px, 8vw, 36px); line-height: 1.12; white-space: normal; }
-  .home-hero-layout .hero-carousel { width: 100%; max-height: none; border-radius: 18px; }
-  .home-hero-layout .carousel-viewport { height: auto; aspect-ratio: auto; }
-  .home-hero-layout .hero-carousel.is-height-synced .carousel-viewport { height: 100%; }
-  .home-hero-layout .carousel-slide { padding: 0; }
+  .home-hero-layout .home-hero-banner-compact { width: 100%; max-width: 100%; max-height: none; border-radius: 18px; }
+  .home-hero-layout .home-hero-banner-compact .carousel-viewport { height: auto; aspect-ratio: auto; }
+  .home-hero-layout .home-hero-banner-compact.is-height-synced .carousel-viewport { height: 100%; }
+  .home-hero-layout .home-hero-banner-compact .carousel-slide { padding: 0; }
   .hero-carousel-arrow { width: 40px; height: 40px; }
   .hero-carousel-arrow svg { width: 20px; height: 20px; }
   .hero-carousel-arrow-prev { left: 12px; right: auto; }
@@ -1658,57 +1659,5 @@ body.product-modal-open { overflow: hidden; }
     overscroll-behavior-inline: contain;
     padding: 2px 2px 9px;
     scrollbar-width: thin;
-  }
-}
-
-/* Final homepage banner size override - safe desktop smaller banner */
-.home-hero-layout .hero-carousel,
-.home-hero-layout .banner-carousel,
-.home-hero-layout .hero-slider,
-.home-hero-layout .carousel,
-.hero-carousel,
-.banner-carousel,
-.hero-slider {
-  width: min(76vw, 1100px) !important;
-  max-width: calc(100% - 32px) !important;
-  margin-left: auto !important;
-  margin-right: auto !important;
-  height: auto !important;
-  max-height: none !important;
-  aspect-ratio: auto !important;
-  background: transparent !important;
-  overflow: hidden !important;
-}
-
-.home-hero-layout .hero-carousel img,
-.home-hero-layout .banner-carousel img,
-.home-hero-layout .hero-slider img,
-.home-hero-layout .carousel img,
-.home-hero-layout .hero-slide img,
-.home-hero-layout .carousel-slide img,
-.hero-carousel img,
-.banner-carousel img,
-.hero-slider img,
-.hero-slide img,
-.carousel-slide img {
-  width: 100% !important;
-  height: auto !important;
-  max-width: 100% !important;
-  display: block !important;
-  object-fit: contain !important;
-  object-position: center center !important;
-  transform: none !important;
-}
-
-@media (max-width: 768px) {
-  .home-hero-layout .hero-carousel,
-  .home-hero-layout .banner-carousel,
-  .home-hero-layout .hero-slider,
-  .home-hero-layout .carousel,
-  .hero-carousel,
-  .banner-carousel,
-  .hero-slider {
-    width: 100% !important;
-    max-width: 100% !important;
   }
 }
