@@ -89,6 +89,42 @@
           </form>
           <div class="admin-banner-list" data-admin-banners aria-live="polite"></div>
         </section>
+
+        <section class="admin-management-section admin-right-banner-section" aria-labelledby="admin-right-banner-title">
+          <div class="admin-section-header">
+            <div>
+              <h2 id="admin-right-banner-title">Banner dọc trang chủ 9:16</h2>
+              <p class="admin-muted">Dùng cho khu vực bên phải banner chính trên trang chủ.</p>
+            </div>
+          </div>
+          <form class="admin-right-banner-form" data-right-banner-form novalidate>
+            <input type="hidden" name="bannerId" />
+            <input type="hidden" name="existingImageUrl" />
+            <input type="hidden" name="existingStoragePath" />
+            <div class="admin-right-banner-editor">
+              <div class="admin-right-banner-preview" data-right-banner-preview>
+                <div class="admin-right-banner-preview__placeholder">Chưa có banner dọc</div>
+              </div>
+              <div class="admin-form-grid admin-right-banner-fields">
+                <div class="admin-field admin-field--full">
+                  <label for="right-banner-image">Upload ảnh banner dọc</label>
+                  <input id="right-banner-image" name="bannerImage" type="file" accept="image/jpeg,image/png,image/webp" />
+                  <small class="admin-help-text">Khuyến nghị ảnh dọc tỉ lệ 9:16, ví dụ 900x1600px hoặc 1080x1920px. Hỗ trợ JPG, PNG, WebP.</small>
+                </div>
+                <div class="admin-field"><label for="right-banner-title">Tiêu đề</label><input id="right-banner-title" name="title" placeholder="Ưu đãi nổi bật" /></div>
+                <div class="admin-field"><label for="right-banner-link">Link URL (không bắt buộc)</label><input id="right-banner-link" name="linkUrl" type="url" placeholder="https://..." /></div>
+                <div class="admin-field"><label for="right-banner-sort-order">Thứ tự hiển thị</label><input id="right-banner-sort-order" name="sortOrder" type="number" value="0" /></div>
+                <div class="admin-field"><label for="right-banner-active">Trạng thái</label><select id="right-banner-active" name="isActive"><option value="true">Đang hiển thị</option><option value="false">Tạm ẩn</option></select></div>
+              </div>
+            </div>
+            <p class="admin-message" data-right-banner-message aria-live="polite"></p>
+            <div class="admin-form-actions">
+              <button class="btn btn--danger" type="button" data-delete-right-banner hidden>Xoá banner dọc</button>
+              <button class="btn btn--primary" type="submit" data-save-right-banner>Lưu banner dọc</button>
+            </div>
+          </form>
+          <div class="admin-banner-list" data-admin-right-banner-current aria-live="polite"></div>
+        </section>
       </section>
     </main>
 
