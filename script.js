@@ -368,23 +368,107 @@ const textHasSeriesAlias = (text = '', alias = '') => {
   }
   return new RegExp(`(^|[^a-z0-9])${escapeRegExp(normalizedAlias)}([^a-z0-9]|$)`).test(normalizedText);
 };
-const findSeriesOption = (options = [], label = '') => options.find((option) => normalizeText(option.label) === normalizeText(label));
-const isSonyBrand = (brand = '') => normalizeBrand(brand) === 'sony';
-const isSonyLedFallbackSeries = (product = {}, brand = '', seriesLabel = '') => {
-  if (!isSonyBrand(brand) || normalizeText(seriesLabel) !== 'led') return false;
-  const text = getProductSearchText(product);
-  const hasHigherDisplayTechnology = ['OLED', 'Mini LED', 'Full Array LED'].some((label) => {
-    const option = findSeriesOption(getSeriesOptionsForBrand(brand), label);
-    return option && productMatchesSeriesOption(product, option, brand, text);
+const PRIMARY_SERIES_PRIORITY_BY_BRAND = {
+  samsung: ['OLED', 'Neo QLED', 'QLED', 'Crystal UHD', 'The Frame', 'The Serif', 'The Sero', 'Lifestyle TV', 'UHD / 4K UHD', 'LED'],
+  lg: ['OLED', 'QNED', 'NanoCell', 'StanbyME', 'UHD / 4K UHD', 'LED', 'webOS'],
+  sony: ['BRAVIA XR', 'OLED', 'Mini LED', 'Full Array LED', 'BRAVIA', 'Google TV', 'UHD / 4K UHD', 'LED'],
+  tcl: ['Mini LED', 'QLED', 'C Series', 'P Series', 'S Series', 'Google TV', 'Android TV', 'UHD / 4K UHD', 'LED'],
+  hisense: ['ULED Mini LED', 'ULED', 'QLED', 'Laser TV', 'U Series', 'A Series', 'Google TV', 'VIDAA', 'UHD / 4K UHD', 'LED'],
+};
+
+const GENERIC_PRIMARY_SERIES_PRIORITY = [
+  'OLED',
+  'Mini LED',
+  'Neo QLED',
+  'QLED',
+  'ULED Mini LED',
+  'ULED',
+  'QNED',
+  'NanoCell',
+  'Laser TV',
+  'REGZA',
+  'AQUOS',
+  'The Frame',
+  'The Serif',
+  'The Sero',
+  'Lifestyle TV',
+  'C Series',
+  'M Series',
+  'Z Series',
+  'U Series',
+  'A Series',
+  'P Series',
+  'S Series',
+  'Y Series',
+  'MX Series',
+  'LX Series',
+  'JX Series',
+  'Xiaomi TV A Pro',
+  'Xiaomi TV A',
+  'Xiaomi TV P1',
+  'Casper Smart TV',
+  'Coocaa Smart TV',
+  'Skyworth Smart TV',
+  'SUE Series',
+  'G Series',
+  'Performance Series',
+  'Google TV',
+  'Android TV',
+  'Tizen',
+  'webOS',
+  'VIDAA',
+  'Smart TV',
+  'UHD / 4K UHD',
+  'HD / Full HD',
+  'LED',
+];
+
+const sortSeriesOptionsByPriority = (options = [], priorityLabels = []) => {
+  const priorityMap = new Map(priorityLabels.map((label, index) => [normalizeText(label), index]));
+  return [...options].sort((a, b) => {
+    const priorityA = priorityMap.has(normalizeText(a.label)) ? priorityMap.get(normalizeText(a.label)) : Number.MAX_SAFE_INTEGER;
+    const priorityB = priorityMap.has(normalizeText(b.label)) ? priorityMap.get(normalizeText(b.label)) : Number.MAX_SAFE_INTEGER;
+    return priorityA - priorityB;
   });
-  return !hasHigherDisplayTechnology;
+};
+
+const getPrimarySeriesOptionsForBrand = (brand = '') => {
+  const options = isAllFilter(brand) ? GENERAL_TV_SERIES_OPTIONS : getSeriesOptionsForBrand(brand);
+  const priority = PRIMARY_SERIES_PRIORITY_BY_BRAND[normalizeBrand(brand)] || GENERIC_PRIMARY_SERIES_PRIORITY;
+  return sortSeriesOptionsByPriority(options, priority);
+};
+
+const getProductSeriesSearchText = (product = {}) => [
+  product.series,
+  product.line,
+  product.tv_line,
+  product.product_line,
+  getProductSearchText(product),
+].map(stringifySearchPart).join(' ');
+
+const seriesOptionHasAlias = (text = '', option = {}) => {
+  const values = [option.label, ...(option.aliases || [])];
+  return values.some((value) => textHasSeriesAlias(text, value));
 };
 
 const productMatchesSeriesOption = (product = {}, option = {}, brand = FILTER_ALL_VALUE, text = '') => {
-  const haystack = text || getProductSearchText(product);
-  if (isSonyBrand(brand) && normalizeText(option.label) === 'led') return isSonyLedFallbackSeries(product, brand, option.label);
-  const values = [option.label, ...(option.aliases || [])];
-  return values.some((value) => textHasSeriesAlias(haystack, value));
+  const haystack = text || getProductSeriesSearchText(product);
+  const normalizedBrand = normalizeBrand(brand);
+  const normalizedLabel = normalizeText(option.label);
+
+  if (normalizedBrand === 'sony' && normalizedLabel === 'bravia xr') {
+    return ['bravia xr', 'cognitive processor xr', 'xr processor'].some((alias) => textHasSeriesAlias(haystack, alias));
+  }
+
+  if (normalizedBrand === 'sony' && normalizedLabel === 'bravia') {
+    return textHasSeriesAlias(haystack, 'bravia');
+  }
+
+  if (normalizedBrand === 'samsung' && normalizedLabel === 'qled') {
+    return !textHasSeriesAlias(haystack, 'neo qled') && seriesOptionHasAlias(haystack, option);
+  }
+
+  return seriesOptionHasAlias(haystack, option);
 };
 
 const findSeriesMatch = (text = '', options = [], product = {}, brand = FILTER_ALL_VALUE) => {
@@ -393,19 +477,19 @@ const findSeriesMatch = (text = '', options = [], product = {}, brand = FILTER_A
   return match?.label || '';
 };
 
-const detectProductSeries = (product = {}, brand = FILTER_ALL_VALUE) => {
-  const options = isAllFilter(brand) ? GENERAL_TV_SERIES_OPTIONS : getSeriesOptionsForBrand(brand);
-  const explicitSeries = [product.series, product.line, product.tv_line, product.product_line].map(stringifySearchPart).find((value) => value.trim());
-  if (explicitSeries) return findSeriesMatch(explicitSeries, options, product, brand) || explicitSeries.trim();
-  return findSeriesMatch(getProductSearchText(product), options, product, brand) || 'Dòng phổ thông';
+const getPrimarySeriesForProduct = (product = {}, brand = FILTER_ALL_VALUE) => {
+  const productBrand = isAllFilter(brand) ? product.brand : brand;
+  const options = getPrimarySeriesOptionsForBrand(productBrand);
+  return findSeriesMatch(getProductSeriesSearchText(product), options, product, productBrand);
 };
+
+const detectProductSeries = (product = {}, brand = FILTER_ALL_VALUE) => getPrimarySeriesForProduct(product, brand) || 'Dòng phổ thông';
 
 const productMatchesBrand = (product = {}, brand = FILTER_ALL_VALUE) => (isAllFilter(brand) ? true : normalizeBrand(product.brand) === normalizeBrand(brand));
 const productMatchesSize = (product = {}, size = FILTER_ALL_VALUE) => (isAllFilter(size) ? true : normalizeText(product.size).includes(normalizeText(size)));
 const productMatchesSeries = (product = {}, series = FILTER_ALL_LABEL, brand = '') => {
   if (isAllFilter(brand) || isAllFilter(series)) return true;
-  const option = findSeriesOption(getSeriesOptionsForBrand(brand), series);
-  return option ? productMatchesSeriesOption(product, option, brand) : normalizeText(detectProductSeries(product, brand)) === normalizeText(series);
+  return normalizeText(getPrimarySeriesForProduct(product, brand)) === normalizeText(series);
 };
 
 const productMatchesGlobalFilters = (product = {}) => (
