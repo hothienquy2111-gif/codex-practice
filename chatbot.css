@@ -231,7 +231,8 @@
 
 .am-chatbot-quick-btn,
 .am-chatbot-action-btn,
-.am-chatbot-clear {
+.am-chatbot-clear,
+.am-chatbot-start {
   border: 1px solid rgba(1, 52, 108, 0.24);
   border-radius: 999px;
   background: #ffffff;
@@ -245,7 +246,8 @@
 
 .am-chatbot-quick-btn:hover,
 .am-chatbot-action-btn:hover,
-.am-chatbot-clear:hover {
+.am-chatbot-clear:hover,
+.am-chatbot-start:hover {
   border-color: var(--am-chatbot-blue);
   background: var(--am-chatbot-blue);
   color: #ffffff;
@@ -253,7 +255,8 @@
 
 .am-chatbot-quick-btn:active,
 .am-chatbot-action-btn:active,
-.am-chatbot-clear:active {
+.am-chatbot-clear:active,
+.am-chatbot-start:active {
   transform: translateY(1px) scale(0.98);
 }
 
@@ -391,10 +394,23 @@
   background: #ffffff;
 }
 
-.am-chatbot-clear {
+.am-chatbot-footer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
   margin-bottom: 9px;
+}
+
+.am-chatbot-clear,
+.am-chatbot-start {
   padding: 7px 10px;
   font-size: 0.8rem;
+}
+
+.am-chatbot-start {
+  border-color: rgba(240, 90, 40, 0.35);
+  background: #fff7f3;
+  color: #d94a1c;
 }
 
 .am-chatbot-form {

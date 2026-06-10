@@ -4,7 +4,7 @@
   const CHATBOT_ID = 'anh-minh-chatbot';
   const HISTORY_KEY = 'anhMinhChatHistory';
   const HISTORY_VERSION_KEY = 'anhMinhChatHistoryVersion';
-  const AM_CHATBOT_HISTORY_VERSION = 'series-size-budget-v5';
+  const AM_CHATBOT_HISTORY_VERSION = 'sales-replies-start-v6';
   const MAX_HISTORY = 20;
   const AVATAR_SRC = 'linh%20v%E1%BA%ADt%20AM.jpeg';
   const HOTLINE = '0905111223';
@@ -19,8 +19,9 @@
     'Sửa tivi',
     'Liên hệ cửa hàng',
   ];
-  const SMART_RECOMMENDER_QUICK_REPLIES = ['Dưới 10 triệu', 'Dưới 20 triệu', 'Phòng ngủ', 'Phòng khách', 'Tivi mới', 'Tivi cũ'];
+  const SMART_RECOMMENDER_QUICK_REPLIES = ['Dưới 10 triệu', 'Dưới 20 triệu', 'Tivi mới', 'Tivi cũ', 'Phòng ngủ', 'Phòng khách'];
   const WELCOME_MESSAGE = 'Xin chào 👋 Mình là AM AI – trợ lý của Anh Minh Store. Mình có thể giúp bạn tìm tivi phù hợp, tư vấn tivi mới/tivi cũ, thu cũ đổi mới, sửa tivi, bảo hành và thông tin cửa hàng.';
+  const START_MESSAGE = 'AM AI sẵn sàng tư vấn lại từ đầu ạ 👋 Bạn đang cần mua tivi mới, tivi cũ, hỏi bảo hành hay muốn tư vấn theo ngân sách?';
   const TV_BRANDS = ['samsung', 'lg', 'sony', 'toshiba', 'tcl', 'panasonic', 'sharp', 'xiaomi', 'casper', 'coocaa', 'skyworth', 'philips', 'hitachi', 'hisense'];
   const TV_BRAND_LABELS = {
     samsung: 'Samsung',
@@ -1085,7 +1086,7 @@
 
     if (need.isVagueAdvice) {
       return {
-        text: 'Dạ được ạ. Bạn cho AM AI xin ngân sách khoảng bao nhiêu, kích thước mong muốn và bạn muốn tivi mới hay tivi cũ để mình gợi ý sát hơn nha.',
+        text: 'Dạ được ạ 😊 Bạn cho AM AI xin thêm ngân sách khoảng bao nhiêu, kích thước mong muốn và bạn muốn tivi mới hay tivi cũ để mình gợi ý sát hơn nha.',
         actions: [callAction(), zaloAction()],
         quickReplies: SMART_RECOMMENDER_QUICK_REPLIES,
         products: [],
@@ -1248,6 +1249,25 @@
     const conversationReply = getConversationIntent(normalizedMessage);
     if (conversationReply) return conversationReply;
 
+    const isPriceObjection = hasAny(normalizedMessage, [
+      'đắt quá',
+      'mắc quá',
+      'giá cao quá',
+      'có giảm không',
+      'bớt được không',
+      'giảm giá không',
+      'có khuyến mãi không',
+      'có quà tặng không',
+      'giá tốt hơn được không',
+    ]);
+    if (isPriceObjection) {
+      return {
+        text: 'Dạ em hiểu ạ 😊 Giá bên em đi kèm kiểm tra máy kỹ, tư vấn lắp đặt rõ ràng và hỗ trợ sau bán. Tuỳ sản phẩm/chương trình, Anh Minh Store có thể hỗ trợ thêm quà tặng như remote, giá treo hoặc ưu đãi lắp đặt. Bạn gửi model hoặc ngân sách mong muốn, AM AI sẽ gợi ý mẫu hợp hơn ạ.',
+        actions: [zaloAction(), callAction(), featuredAction()],
+        products: [],
+      };
+    }
+
     const matchedProducts = findMatchingProducts(message);
     const likelyProductSearch = /\d{2}|qled|oled|mini led|4k|smart|model|gia|inch|inh|ua|qa|kd|tcl|sony|samsung|lg/i.test(message);
 
@@ -1275,8 +1295,8 @@
       return { text: 'Dạ, Anh Minh Store có hỗ trợ sửa tivi tại Đà Nẵng. Bạn có thể mô tả lỗi, gửi ảnh hoặc video tình trạng tivi qua Zalo để kỹ thuật viên tư vấn và báo hướng xử lý trước.', actions: [zaloAction(), callAction()], products: [] };
     }
 
-    if (hasAny(normalizedMessage, ['bảo hành', 'bảo hành bao lâu', 'đổi trả', 'lỗi', 'hậu mãi'])) {
-      return { text: 'Thông tin bảo hành sẽ tuỳ từng sản phẩm và được hiển thị trong phần chi tiết sản phẩm. Với tivi mới thường có bảo hành chính hãng hoặc theo chính sách bán hàng. Với tivi cũ, thời gian bảo hành sẽ tuỳ tình trạng từng máy. Bạn có thể gửi model để Anh Minh Store kiểm tra cụ thể.', actions: [zaloAction(), featuredAction()], products: [] };
+    if (hasAny(normalizedMessage, ['bảo hành', 'bảo hành bao lâu', 'sp mới bảo hành mấy năm', 'tivi mới bảo hành', 'sản phẩm qua sửa chữa bảo hành', 'qua sửa chữa bảo hành mấy tháng', 'đã sửa bảo hành bao lâu', 'đổi trả', 'lỗi', 'hậu mãi'])) {
+      return { text: 'Dạ chính sách bảo hành bên em như sau ạ: sản phẩm tivi mới bảo hành 2 năm. Sản phẩm đã qua sửa chữa bảo hành 6 tháng. Riêng tivi cũ/đã qua sử dụng có thể tuỳ tình trạng máy và thông tin từng sản phẩm, bạn gửi model hoặc bấm xem chi tiết để AM AI hỗ trợ kiểm tra rõ hơn nha.', actions: [featuredAction(), zaloAction(), callAction()], products: [] };
     }
 
     if (hasAny(normalizedMessage, ['đặt hàng', 'mua', 'mua ngay', 'còn hàng', 'chốt đơn', 'giao hàng', 'ship', 'đặt tivi'])) {
@@ -1427,14 +1447,22 @@
     else openChatbot();
   };
 
-  const clearChatHistory = () => {
+  const resetChatbotConversation = (welcomeText = WELCOME_MESSAGE) => {
     chatHistory = [];
     hasRenderedQuickReplies = false;
     safeLocalStorage.remove(HISTORY_KEY);
     safeLocalStorage.set(HISTORY_VERSION_KEY, AM_CHATBOT_HISTORY_VERSION);
     elements.body.innerHTML = '';
-    appendMessage('bot', WELCOME_MESSAGE);
+    appendMessage('bot', welcomeText);
     renderQuickReplies();
+  };
+
+  const clearChatHistory = () => {
+    resetChatbotConversation(WELCOME_MESSAGE);
+  };
+
+  const startChatbotConversation = () => {
+    resetChatbotConversation(START_MESSAGE);
   };
 
   const injectChatbot = () => {
@@ -1451,7 +1479,10 @@
         </header>
         <div class="am-chatbot-body" role="log" aria-live="polite"></div>
         <footer class="am-chatbot-footer">
-          <button class="am-chatbot-clear" type="button">Xoá hội thoại</button>
+          <div class="am-chatbot-footer-actions">
+            <button class="am-chatbot-clear" type="button">Xoá hội thoại</button>
+            <button class="am-chatbot-start" type="button">Bắt đầu</button>
+          </div>
           <form class="am-chatbot-form">
             <input class="am-chatbot-input" type="text" placeholder="Nhập câu hỏi của bạn..." aria-label="Nhập câu hỏi cho AM AI" autocomplete="off">
             <button class="am-chatbot-send" type="submit">Gửi</button>
@@ -1472,6 +1503,7 @@
     elements.button.addEventListener('click', toggleChatbot);
     elements.close.addEventListener('click', closeChatbot);
     elements.clear.addEventListener('click', clearChatHistory);
+    elements.start.addEventListener('click', startChatbotConversation);
     elements.form.addEventListener('submit', (event) => {
       event.preventDefault();
       const value = elements.input.value.trim();
@@ -1500,6 +1532,7 @@
       form: root.querySelector('.am-chatbot-form'),
       input: root.querySelector('.am-chatbot-input'),
       clear: root.querySelector('.am-chatbot-clear'),
+      start: root.querySelector('.am-chatbot-start'),
     };
 
     chatHistory = loadChatHistory();
