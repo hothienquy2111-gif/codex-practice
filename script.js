@@ -106,14 +106,15 @@ const TV_SERIES_BY_BRAND = {
     { label: 'LED', aliases: ['led'] },
   ],
   Toshiba: [
-    { label: 'REGZA', aliases: ['regza'] },
-    { label: 'C Series', aliases: ['c series', 'c350', 'c450'] },
-    { label: 'M Series', aliases: ['m series', 'm550', 'm650'] },
     { label: 'Z Series', aliases: ['z series', 'z670', 'z770'] },
+    { label: 'M Series', aliases: ['m series', 'm550', 'm650'] },
+    { label: 'C Series', aliases: ['c series', 'c350', 'c350lp', '50c350', '55c350', '65c350', '75c350', '50c350lp', '55c350lp', '65c350lp', '75c350lp', 'c450'] },
+    { label: 'V Series', aliases: ['v series', 'v35', 'v35rp', '32v35', '43v35', '32v35rp', '43v35rp'] },
     { label: 'QLED', aliases: ['qled'] },
-    { label: 'UHD / 4K UHD', aliases: ['uhd', '4k uhd', 'ultra hd'] },
-    { label: 'Android TV', aliases: ['android tv'] },
+    { label: 'REGZA', aliases: ['regza'] },
     { label: 'Google TV', aliases: ['google tv'] },
+    { label: 'Android TV', aliases: ['android tv'] },
+    { label: 'UHD / 4K UHD', aliases: ['uhd', '4k uhd', 'ultra hd'] },
     { label: 'LED', aliases: ['led'] },
   ],
   Hisense: [
@@ -374,6 +375,7 @@ const PRIMARY_SERIES_PRIORITY_BY_BRAND = {
   sony: ['BRAVIA XR', 'OLED', 'Mini LED', 'Full Array LED', 'BRAVIA', 'Google TV', 'UHD / 4K UHD', 'LED'],
   tcl: ['Mini LED', 'QLED', 'C Series', 'P Series', 'S Series', 'Google TV', 'Android TV', 'UHD / 4K UHD', 'LED'],
   hisense: ['ULED Mini LED', 'ULED', 'QLED', 'Laser TV', 'U Series', 'A Series', 'Google TV', 'VIDAA', 'UHD / 4K UHD', 'LED'],
+  toshiba: ['Z Series', 'M Series', 'C Series', 'V Series', 'QLED', 'REGZA', 'Google TV', 'Android TV', 'UHD / 4K UHD', 'LED'],
 };
 
 const GENERIC_PRIMARY_SERIES_PRIORITY = [
@@ -451,6 +453,20 @@ const seriesOptionHasAlias = (text = '', option = {}) => {
   return values.some((value) => textHasSeriesAlias(text, value));
 };
 
+const TOSHIBA_MODEL_SERIES_PATTERNS = [
+  { label: 'Z Series', patterns: [/\b(?:\d{2})?z(?:670|770)[a-z0-9]*\b/] },
+  { label: 'M Series', patterns: [/\b(?:\d{2})?m(?:550|650)[a-z0-9]*\b/] },
+  { label: 'C Series', patterns: [/\b(?:\d{2})?c350(?:lp)?\b/, /\b(?:\d{2})?c450[a-z0-9]*\b/] },
+  { label: 'V Series', patterns: [/\b(?:32|43)?v35(?:rp)?\b/] },
+];
+
+const detectToshibaModelSeries = (product = {}) => {
+  const modelText = normalizeText([product.model, product.full_name, product.fullName, product.name].map(stringifySearchPart).join(' '));
+  const detailText = normalizeText([product.description, product.features, product.specifications, product.overview].map(stringifySearchPart).join(' '));
+  const compactText = `${modelText} ${detailText}`.replace(/[^a-z0-9]+/g, ' ');
+  return TOSHIBA_MODEL_SERIES_PATTERNS.find((series) => series.patterns.some((pattern) => pattern.test(compactText)))?.label || '';
+};
+
 const productMatchesSeriesOption = (product = {}, option = {}, brand = FILTER_ALL_VALUE, text = '') => {
   const haystack = text || getProductSeriesSearchText(product);
   const normalizedBrand = normalizeBrand(brand);
@@ -479,6 +495,10 @@ const findSeriesMatch = (text = '', options = [], product = {}, brand = FILTER_A
 
 const getPrimarySeriesForProduct = (product = {}, brand = FILTER_ALL_VALUE) => {
   const productBrand = isAllFilter(brand) ? product.brand : brand;
+  if (normalizeBrand(productBrand) === 'toshiba') {
+    const modelSeries = detectToshibaModelSeries(product);
+    if (modelSeries) return modelSeries;
+  }
   const options = getPrimarySeriesOptionsForBrand(productBrand);
   return findSeriesMatch(getProductSeriesSearchText(product), options, product, productBrand);
 };
