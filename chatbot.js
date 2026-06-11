@@ -716,9 +716,10 @@
 
   const getZaloHref = () => '#';
 
-  const createAction = (label, href, primary = false, zaloChoice = false) => ({ label, type: 'link', href, primary, zaloChoice });
+  const createAction = (label, href, primary = false, zaloChoice = false, contactChoice = '') => ({ label, type: 'link', href, primary, zaloChoice, contactChoice });
   const callAction = () => createAction('Gọi ngay', `tel:${HOTLINE}`, true);
   const zaloAction = () => createAction('Nhắn Zalo', getZaloHref(), false, true);
+  const contactChoiceAction = (label, contactChoice, primary = false) => createAction(label, '#', primary, false, contactChoice);
   const newTvAction = () => createAction('Xem tivi mới', 'index.html#tivi-moi', true);
   const oldTvAction = () => createAction('Xem tivi cũ', 'index.html#tivi-cu', true);
   const featuredAction = () => createAction('Xem sản phẩm nổi bật', 'index.html#san-pham');
@@ -2319,7 +2320,7 @@
       return {
         id: 'repair',
         text: 'Dạ bên em có hỗ trợ kiểm tra và sửa tivi tại Đà Nẵng ạ. Bạn gửi giúp em 3 thông tin: hãng/model tivi, kích thước màn hình và ảnh hoặc video lỗi hiện tại. Kỹ thuật bên em sẽ tư vấn hướng xử lý rõ hơn qua Zalo hoặc hotline nha.',
-        actions: [zaloAction(), callAction()],
+        actions: [contactChoiceAction('Liên hệ kỹ thuật/sửa chữa', 'repair', true)],
         products: [],
       };
     }
@@ -2355,7 +2356,7 @@
       return {
         id: 'warranty',
         text: 'Dạ chính sách bảo hành bên em như sau ạ: sản phẩm tivi mới bảo hành 2 năm. Sản phẩm đã qua sửa chữa bảo hành 6 tháng. Riêng tivi cũ/đã qua sử dụng có thể tuỳ tình trạng máy và thông tin từng sản phẩm, bạn gửi model hoặc bấm xem chi tiết để AM AI hỗ trợ kiểm tra rõ hơn nha.',
-        actions: [featuredAction(), zaloAction(), callAction()],
+        actions: [featuredAction(), contactChoiceAction('Liên hệ bảo hành/sửa chữa', 'repair', true)],
         products: [],
       };
     }
@@ -2450,15 +2451,15 @@ Lưu ý thêm về độ bền: nên chọn model có bảo hành rõ, kiểm tr
     }
 
     if (hasAny(normalizedMessage, ['thu cũ đổi mới', 'thu cũ', 'đổi tivi', 'đổi mới', 'bán tivi cũ', 'thu mua tivi cũ'])) {
-      return { text: 'Dạ có. Anh Minh Store hỗ trợ thu cũ đổi mới. Bạn có thể gửi hình ảnh tivi, model, kích thước, tình trạng máy và lỗi nếu có qua Zalo để được báo giá nhanh hơn.', actions: [zaloAction(), callAction()], products: [] };
+      return { text: 'Dạ có. Anh Minh Store hỗ trợ thu cũ đổi mới. Bạn có thể gửi hình ảnh tivi, model, kích thước, tình trạng máy và lỗi nếu có qua Zalo để được báo giá nhanh hơn.', actions: [contactChoiceAction('Liên hệ tư vấn thu đổi', 'sales', true)], products: [] };
     }
 
     if (hasAny(normalizedMessage, ['sửa tivi', 'sửa tv', 'tivi hỏng', 'không lên nguồn', 'mất hình', 'mất tiếng', 'màn hình sọc', 'bể màn', 'lỗi màn', 'đèn nền', 'main', 'bo nguồn'])) {
-      return { text: 'Dạ, Anh Minh Store có hỗ trợ sửa tivi tại Đà Nẵng. Bạn có thể mô tả lỗi, gửi ảnh hoặc video tình trạng tivi qua Zalo để kỹ thuật viên tư vấn và báo hướng xử lý trước.', actions: [zaloAction(), callAction()], products: [] };
+      return { text: 'Dạ, Anh Minh Store có hỗ trợ sửa tivi tại Đà Nẵng. Bạn có thể mô tả lỗi, gửi ảnh hoặc video tình trạng tivi qua Zalo để kỹ thuật viên tư vấn và báo hướng xử lý trước.', actions: [contactChoiceAction('Liên hệ kỹ thuật/sửa chữa', 'repair', true)], products: [] };
     }
 
     if (hasAny(normalizedMessage, ['bảo hành', 'bảo hành bao lâu', 'sp mới bảo hành mấy năm', 'tivi mới bảo hành', 'sản phẩm qua sửa chữa bảo hành', 'qua sửa chữa bảo hành mấy tháng', 'đã sửa bảo hành bao lâu', 'đổi trả', 'lỗi', 'hậu mãi'])) {
-      return { text: 'Dạ chính sách bảo hành bên em như sau ạ: sản phẩm tivi mới bảo hành 2 năm. Sản phẩm đã qua sửa chữa bảo hành 6 tháng. Riêng tivi cũ/đã qua sử dụng có thể tuỳ tình trạng máy và thông tin từng sản phẩm, bạn gửi model hoặc bấm xem chi tiết để AM AI hỗ trợ kiểm tra rõ hơn nha.', actions: [featuredAction(), zaloAction(), callAction()], products: [] };
+      return { text: 'Dạ chính sách bảo hành bên em như sau ạ: sản phẩm tivi mới bảo hành 2 năm. Sản phẩm đã qua sửa chữa bảo hành 6 tháng. Riêng tivi cũ/đã qua sử dụng có thể tuỳ tình trạng máy và thông tin từng sản phẩm, bạn gửi model hoặc bấm xem chi tiết để AM AI hỗ trợ kiểm tra rõ hơn nha.', actions: [featuredAction(), contactChoiceAction('Liên hệ bảo hành/sửa chữa', 'repair', true)], products: [] };
     }
 
     if (hasAny(normalizedMessage, ['đặt hàng', 'mua', 'mua ngay', 'còn hàng', 'chốt đơn', 'giao hàng', 'ship', 'đặt tivi'])) {
@@ -2519,7 +2520,8 @@ Lưu ý thêm về độ bền: nên chọn model có bảo hành rõ, kiểm tr
     if (!actions.length) return '';
     return `<div class="am-chatbot-actions">${actions.map((action) => {
       const isZaloAction = action.zaloChoice || normalizeText(action.label).includes('zalo');
-      return `<a class="am-chatbot-action-btn${action.primary ? ' am-chatbot-action-btn--primary' : ''}" href="${escapeHtml(action.href)}"${isZaloAction ? ' data-zalo-choice' : ''}>${escapeHtml(action.label)}</a>`;
+      const contactChoiceAttribute = action.contactChoice ? ` data-contact-choice="${escapeHtml(action.contactChoice)}"` : '';
+      return `<a class="am-chatbot-action-btn${action.primary ? ' am-chatbot-action-btn--primary' : ''}" href="${escapeHtml(action.href)}"${contactChoiceAttribute}${isZaloAction ? ' data-zalo-choice' : ''}>${escapeHtml(action.label)}</a>`;
     }).join('')}</div>`;
   };
 
