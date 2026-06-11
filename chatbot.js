@@ -714,20 +714,11 @@
     },
   };
 
-  const getZaloHref = () => {
-    const zaloLink = Array.from(document.querySelectorAll('a[href]')).find((link) => {
-      const text = normalizeText(link.textContent || link.getAttribute('aria-label') || '');
-      const href = link.getAttribute('href') || '';
-      return text.includes('zalo') && href && href !== '#' && !href.startsWith('javascript:');
-    });
+  const getZaloHref = () => '#';
 
-    if (zaloLink) return zaloLink.getAttribute('href');
-    return window.location?.pathname?.includes('product-detail') ? 'index.html#lien-he' : '#lien-he';
-  };
-
-  const createAction = (label, href, primary = false) => ({ label, type: 'link', href, primary });
+  const createAction = (label, href, primary = false, zaloChoice = false) => ({ label, type: 'link', href, primary, zaloChoice });
   const callAction = () => createAction('Gọi ngay', `tel:${HOTLINE}`, true);
-  const zaloAction = () => createAction('Nhắn Zalo', getZaloHref());
+  const zaloAction = () => createAction('Nhắn Zalo', getZaloHref(), false, true);
   const newTvAction = () => createAction('Xem tivi mới', 'index.html#tivi-moi', true);
   const oldTvAction = () => createAction('Xem tivi cũ', 'index.html#tivi-cu', true);
   const featuredAction = () => createAction('Xem sản phẩm nổi bật', 'index.html#san-pham');
@@ -2526,7 +2517,10 @@ Lưu ý thêm về độ bền: nên chọn model có bảo hành rõ, kiểm tr
 
   const renderActions = (actions = []) => {
     if (!actions.length) return '';
-    return `<div class="am-chatbot-actions">${actions.map((action) => `<a class="am-chatbot-action-btn${action.primary ? ' am-chatbot-action-btn--primary' : ''}" href="${escapeHtml(action.href)}">${escapeHtml(action.label)}</a>`).join('')}</div>`;
+    return `<div class="am-chatbot-actions">${actions.map((action) => {
+      const isZaloAction = action.zaloChoice || normalizeText(action.label).includes('zalo');
+      return `<a class="am-chatbot-action-btn${action.primary ? ' am-chatbot-action-btn--primary' : ''}" href="${escapeHtml(action.href)}"${isZaloAction ? ' data-zalo-choice' : ''}>${escapeHtml(action.label)}</a>`;
+    }).join('')}</div>`;
   };
 
   const renderQuickReplyButtons = (quickReplies = []) => {

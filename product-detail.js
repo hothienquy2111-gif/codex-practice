@@ -832,7 +832,7 @@
         <div class="product-detail__actions">
           <button class="btn btn--primary product-detail__order-button" type="button" data-order-now aria-label="Đặt hàng ngay sản phẩm ${escapeDetailHtml(label)}">Đặt hàng ngay</button>
           <a class="btn btn--hotline" href="tel:0905111223" aria-label="Gọi tư vấn sản phẩm ${escapeDetailHtml(label)}">Gọi tư vấn</a>
-          <a class="btn btn--zalo" href="#" aria-label="Nhắn Zalo hỏi sản phẩm ${escapeDetailHtml(label)}">Nhắn Zalo</a>
+          <a class="btn btn--zalo" href="#" aria-label="Nhắn Zalo hỏi sản phẩm ${escapeDetailHtml(label)}" data-zalo-choice>Nhắn Zalo</a>
           <a class="btn btn--secondary" href="index.html#san-pham">Quay lại danh sách</a>
         </div>
       </article>

@@ -1,3 +1,115 @@
+const ZALO_CHOICES = [
+  {
+    title: 'Sửa chữa tivi',
+    description: 'Liên hệ kỹ thuật Anh Minh để kiểm tra, sửa chữa hoặc bảo hành sản phẩm.',
+    zaloNumbers: ['0905111223', '0774111223'],
+    callNumbers: ['0905111223', '0774111223'],
+  },
+  {
+    title: 'Tư vấn mua bán',
+    description: 'Liên hệ Anh Minh Store để được tư vấn mua tivi mới, tivi cũ hoặc sản phẩm phù hợp ngân sách.',
+    zaloNumbers: ['0702386544', '0389660779'],
+    callNumbers: ['0702386544', '0389660779'],
+  },
+];
+
+let lastZaloChoiceTrigger = null;
+
+const getZaloChoiceModal = () => {
+  let modal = document.querySelector('.zalo-choice-modal');
+  if (modal) return modal;
+
+  modal = document.createElement('div');
+  modal.className = 'zalo-choice-modal';
+  modal.setAttribute('role', 'dialog');
+  modal.setAttribute('aria-modal', 'true');
+  modal.setAttribute('aria-labelledby', 'zalo-choice-title');
+  modal.setAttribute('aria-describedby', 'zalo-choice-subtitle');
+  modal.innerHTML = `
+    <div class="zalo-choice-modal__backdrop" data-zalo-choice-close></div>
+    <div class="zalo-choice-modal__dialog" role="document" tabindex="-1">
+      <button class="zalo-choice-modal__close" type="button" aria-label="Đóng lựa chọn Zalo" data-zalo-choice-close>×</button>
+      <div class="zalo-choice-modal__header">
+        <h2 id="zalo-choice-title">Bạn muốn nhắn Zalo về nội dung nào?</h2>
+        <p id="zalo-choice-subtitle">Chọn đúng nhu cầu để Anh Minh Store hỗ trợ nhanh hơn.</p>
+      </div>
+      <div class="zalo-choice-grid">
+        ${ZALO_CHOICES.map((choice) => `
+          <article class="zalo-choice-card">
+            <h3>${choice.title}</h3>
+            <p>${choice.description}</p>
+            <div class="zalo-choice-actions">
+              ${choice.zaloNumbers.map((number) => `<a class="zalo-choice-button zalo-choice-button--primary" href="https://zalo.me/${number}" target="_blank" rel="noopener noreferrer">Nhắn Zalo ${number}</a>`).join('')}
+            </div>
+            <div class="zalo-choice-actions zalo-choice-actions--secondary">
+              ${choice.callNumbers.map((number) => `<a class="zalo-choice-button zalo-choice-button--secondary" href="tel:${number}">Gọi ${number}</a>`).join('')}
+            </div>
+          </article>`).join('')}
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+  return modal;
+};
+
+const closeZaloChoiceModal = () => {
+  const modal = document.querySelector('.zalo-choice-modal');
+  if (!modal) return;
+  modal.classList.remove('is-open');
+  document.body.classList.remove('zalo-choice-modal-open');
+  if (lastZaloChoiceTrigger && typeof lastZaloChoiceTrigger.focus === 'function') {
+    lastZaloChoiceTrigger.focus({ preventScroll: true });
+  }
+};
+
+const openZaloChoiceModal = (trigger) => {
+  const modal = getZaloChoiceModal();
+  lastZaloChoiceTrigger = trigger || document.activeElement;
+  modal.classList.add('is-open');
+  document.body.classList.add('zalo-choice-modal-open');
+  window.requestAnimationFrame(() => {
+    modal.querySelector('.zalo-choice-modal__dialog')?.focus({ preventScroll: true });
+  });
+};
+
+document.addEventListener('click', (event) => {
+  const zaloTrigger = event.target.closest('[data-zalo-choice]');
+  if (zaloTrigger) {
+    event.preventDefault();
+    event.stopPropagation();
+    openZaloChoiceModal(zaloTrigger);
+    return;
+  }
+
+  if (event.target.closest('[data-zalo-choice-close]')) {
+    event.preventDefault();
+    closeZaloChoiceModal();
+  }
+}, true);
+
+document.addEventListener('keydown', (event) => {
+  const modal = document.querySelector('.zalo-choice-modal.is-open');
+  if (!modal) return;
+
+  if (event.key === 'Escape') {
+    event.preventDefault();
+    closeZaloChoiceModal();
+    return;
+  }
+
+  if (event.key !== 'Tab') return;
+  const focusable = Array.from(modal.querySelectorAll('a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'));
+  if (!focusable.length) return;
+  const first = focusable[0];
+  const last = focusable[focusable.length - 1];
+  if (event.shiftKey && document.activeElement === first) {
+    event.preventDefault();
+    last.focus();
+  } else if (!event.shiftKey && document.activeElement === last) {
+    event.preventDefault();
+    first.focus();
+  }
+});
+
 const dom = {
   menuWrap: document.querySelector('.menu-wrap'),
   hamburger: document.querySelector('.hamburger'),
