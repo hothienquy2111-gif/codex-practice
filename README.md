@@ -29,7 +29,37 @@ Các file được cập nhật:
 ## 3.1. Trang tra cứu bảo hành
 Header trên trang chủ giữ nút “Tra cứu bảo hành”, nhưng nút này mở trang riêng `tra-cuu-bao-hanh.html` thay vì cuộn tới form trên trang chủ. Trang chủ không còn hiển thị form tra cứu bảo hành lớn để tránh tạo cảm giác website có hệ thống tra cứu tự động khi chưa có dữ liệu bảo hành riêng.
 
-Trang `tra-cuu-bao-hanh.html` cung cấp hướng dẫn kiểm tra bảo hành thủ công bằng số điện thoại mua hàng, model tivi, ảnh tem/model hoặc thông tin đơn hàng. Trang có nút gọi hotline `0905111223`, `0774111223` và nút nhắn Zalo `https://zalo.me/0905111223`. Hiện chưa có cơ sở dữ liệu bảo hành tự động, chưa có bảng bảo hành riêng và chưa có kết quả tra cứu giả lập.
+Trang `tra-cuu-bao-hanh.html` cung cấp hướng dẫn kiểm tra bảo hành thủ công bằng số điện thoại mua hàng, model tivi, ảnh tem/model hoặc thông tin đơn hàng. Trang có nút gọi hotline sửa chữa `0905111223`, `0774111223`; hotline tư vấn mua bán `0702386544`, `0389660779`; và nút nhắn Zalo mở popup chọn đúng nhu cầu trước khi khách chọn số liên hệ. Hiện chưa có cơ sở dữ liệu bảo hành tự động, chưa có bảng bảo hành riêng và chưa có kết quả tra cứu giả lập.
+
+## 3.2. Hotline và popup chọn Zalo
+
+Khu vực liên hệ công khai hiện tách riêng hai nhóm hotline:
+
+- **Hotline sửa chữa:** `0905111223` - `0774111223`.
+- **Hotline tư vấn mua bán:** `0702386544` - `0389660779`.
+
+Các nút **“Zalo”** hoặc **“Nhắn Zalo”** trên trang chủ, trang chi tiết sản phẩm, trang tra cứu bảo hành và nút hành động trong chatbot không mở thẳng một số Zalo duy nhất nữa. Khi bấm, website hiển thị popup **“Bạn muốn nhắn Zalo về nội dung nào?”** để khách chọn nhóm hỗ trợ phù hợp.
+
+Liên hệ Zalo sửa chữa:
+
+- `0905111223`
+- `0774111223`
+
+Liên hệ Zalo tư vấn mua bán:
+
+- `0702386544`
+- `0389660779`
+
+Kiểm thử thủ công đề xuất:
+
+1. Trang chủ, khu vực liên hệ hiển thị **“Hotline sửa chữa: 0905111223 - 0774111223”** và **“Hotline tư vấn mua bán: 0702386544 - 0389660779”**.
+2. Nút Zalo nổi mở popup lựa chọn, không mở ngay một số Zalo duy nhất.
+3. Nhóm **“Sửa chữa tivi”** có nút nhắn Zalo `0905111223` và `0774111223`.
+4. Nhóm **“Tư vấn mua bán”** có nút nhắn Zalo `0702386544` và `0389660779`.
+5. Trang chi tiết sản phẩm, nút **“Nhắn Zalo”** mở cùng popup.
+6. Trang tra cứu bảo hành, nút **“Nhắn Zalo”** mở cùng popup.
+7. Trên mobile, popup dễ đọc và các nút không tràn ngang.
+8. Nút đóng, bấm nền phủ và phím Escape đều đóng popup.
 
 ## 4. Cách tạo Supabase project
 1. Vào Supabase Dashboard.
