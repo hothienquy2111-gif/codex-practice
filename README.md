@@ -61,6 +61,12 @@ Kiểm thử thủ công đề xuất:
 7. Trên mobile, popup dễ đọc và các nút không tràn ngang.
 8. Nút đóng, bấm nền phủ và phím Escape đều đóng popup.
 
+## 3.3. Menu điều hướng chính
+
+Menu header chính được giữ gọn để tránh xuống dòng trên desktop và không làm dài menu hamburger trên mobile. Các mục chính trên header là **Trang chủ**, **Tivi cũ**, **Tivi mới**, **Sản phẩm khác**, **Thu hư đổi mới** và **Sửa tivi**.
+
+Các trang SEO địa phương `tivi-cu-da-nang.html` và `sua-tivi-da-nang.html` vẫn tồn tại, giữ canonical/meta và vẫn được khám phá qua sitemap, footer hoặc liên kết ngữ cảnh; chúng không phải mục chính trên top nav. Trang liên hệ vẫn truy cập được qua footer, hotline, Zalo và các nút liên hệ nổi thay vì chiếm chỗ trên header.
+
 ## 4. Cách tạo Supabase project
 1. Vào Supabase Dashboard.
 2. Tạo project mới.
