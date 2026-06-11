@@ -2787,16 +2787,22 @@ body.zalo-choice-modal-open {
   box-shadow: var(--shadow-sm);
 }
 .compare-table {
+  --compare-criteria-width: 240px;
   width: 100%;
-  min-width: 780px;
+  min-width: max(780px, calc(var(--compare-criteria-width) + (var(--compare-product-count, 2) * 220px)));
+  table-layout: fixed;
   border-collapse: collapse;
 }
+.compare-table__criteria-col { width: var(--compare-criteria-width); }
+.compare-table__product-col { width: auto; }
 .compare-table th,
 .compare-table td {
+  min-width: 0;
   border-bottom: 1px solid var(--color-gray-200);
   padding: 14px;
   vertical-align: top;
-  text-align: left;
+  overflow-wrap: anywhere;
+  word-break: normal;
 }
 .compare-table thead th {
   position: sticky;
@@ -2805,15 +2811,32 @@ body.zalo-choice-modal-open {
   color: var(--color-primary-deep);
   z-index: 1;
 }
+.compare-table thead th:first-child,
 .compare-table tbody th {
-  width: 190px;
   background: #f8fbff;
   color: var(--color-primary-deep);
   font-weight: 800;
+  text-align: left;
 }
-.compare-table td { min-width: 180px; color: var(--color-gray-700); line-height: 1.55; }
+.compare-table thead th:not(:first-child),
+.compare-table td {
+  color: var(--color-gray-700);
+  line-height: 1.55;
+  text-align: center;
+}
+.compare-table td > .btn { margin-inline: auto; }
 .compare-product-image,
-.compare-mobile-card__image img,
+.compare-mobile-card__image img {
+  display: block;
+  width: 100%;
+  max-width: 220px;
+  height: 160px;
+  margin-inline: auto;
+  object-fit: contain;
+  border-radius: 14px;
+  padding: 10px;
+  background: linear-gradient(145deg, #f3f8ff, #ffffff);
+}
 .recent-product-card__image {
   width: 100%;
   height: 160px;
@@ -2823,7 +2846,20 @@ body.zalo-choice-modal-open {
   background: linear-gradient(145deg, #f3f8ff, #ffffff);
 }
 .compare-image-placeholder,
-.compare-mobile-card__image span,
+.compare-mobile-card__image span {
+  display: grid;
+  width: 100%;
+  max-width: 220px;
+  min-height: 150px;
+  margin-inline: auto;
+  place-items: center;
+  border: 1px dashed var(--color-gray-300);
+  border-radius: 14px;
+  background: #f8fbff;
+  color: var(--color-gray-600);
+  font-weight: 750;
+  text-align: center;
+}
 .recent-product-card__placeholder {
   display: grid;
   min-height: 150px;
@@ -2869,6 +2905,7 @@ body.zalo-choice-modal-open {
 .recent-product-card .btn { width: 100%; }
 
 @media (max-width: 900px) {
+  .compare-table { --compare-criteria-width: 220px; }
   .compare-bar { right: 12px; bottom: 92px; }
   .recent-products-scroller {
     display: flex;
