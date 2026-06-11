@@ -519,6 +519,8 @@ p { line-height: 1.65; }
 
 .exchange { background: linear-gradient(135deg, var(--color-primary-deep), var(--color-primary)); color: var(--color-white); }
 .exchange h2, .exchange .section-kicker, .exchange p { color: var(--color-white); }
+.exchange .service-hotline { color: rgba(255, 255, 255, 0.92); }
+.exchange .service-hotline strong { color: var(--color-accent); font-weight: 800; }
 .process-list { display: grid; gap: var(--space-3); margin: 0; padding: 0; list-style: none; }
 .process-list li { display: flex; align-items: center; gap: var(--space-3); border: 1px solid rgba(255,255,255,0.22); border-radius: var(--radius-md); padding: 16px; background: rgba(255,255,255,0.1); }
 .process-list span { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; background: var(--color-white); color: var(--color-primary-deep); font-weight: 750; }
