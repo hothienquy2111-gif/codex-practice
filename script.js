@@ -1,17 +1,23 @@
-const ZALO_CHOICES = [
-  {
-    title: 'Sửa chữa tivi',
-    description: 'Liên hệ kỹ thuật Anh Minh để kiểm tra, sửa chữa hoặc bảo hành sản phẩm.',
+const CONTACT_CHOICES = {
+  repair: {
+    title: 'Liên hệ sửa chữa tivi',
+    globalTitle: 'Sửa chữa tivi',
+    description: 'Chọn số kỹ thuật/sửa chữa để Anh Minh Store kiểm tra và tư vấn nhanh hơn.',
+    globalDescription: 'Liên hệ kỹ thuật Anh Minh để kiểm tra, sửa chữa hoặc bảo hành sản phẩm.',
     zaloNumbers: ['0905111223', '0774111223'],
     callNumbers: ['0905111223', '0774111223'],
   },
-  {
-    title: 'Tư vấn mua bán',
-    description: 'Liên hệ Anh Minh Store để được tư vấn mua tivi mới, tivi cũ hoặc sản phẩm phù hợp ngân sách.',
+  sales: {
+    title: 'Tư vấn thu hư đổi mới',
+    globalTitle: 'Tư vấn mua bán',
+    description: 'Chọn số tư vấn mua bán/thu đổi để Anh Minh Store hỗ trợ nhanh hơn.',
+    globalDescription: 'Liên hệ Anh Minh Store để được tư vấn mua tivi mới, tivi cũ hoặc sản phẩm phù hợp ngân sách.',
     zaloNumbers: ['0702386544', '0389660779'],
     callNumbers: ['0702386544', '0389660779'],
   },
-];
+};
+
+const ZALO_CHOICES = [CONTACT_CHOICES.repair, CONTACT_CHOICES.sales];
 
 let lastZaloChoiceTrigger = null;
 
@@ -33,21 +39,43 @@ const getZaloChoiceModal = () => {
         <h2 id="zalo-choice-title">Bạn muốn nhắn Zalo về nội dung nào?</h2>
         <p id="zalo-choice-subtitle">Chọn đúng nhu cầu để Anh Minh Store hỗ trợ nhanh hơn.</p>
       </div>
-      <div class="zalo-choice-grid">
-        ${ZALO_CHOICES.map((choice) => `
-          <article class="zalo-choice-card">
-            <h3>${choice.title}</h3>
-            <p>${choice.description}</p>
-            <div class="zalo-choice-actions">
-              ${choice.zaloNumbers.map((number) => `<a class="zalo-choice-button zalo-choice-button--primary" href="https://zalo.me/${number}" target="_blank" rel="noopener noreferrer">Nhắn Zalo ${number}</a>`).join('')}
-            </div>
-            <div class="zalo-choice-actions zalo-choice-actions--secondary">
-              ${choice.callNumbers.map((number) => `<a class="zalo-choice-button zalo-choice-button--secondary" href="tel:${number}">Gọi ${number}</a>`).join('')}
-            </div>
-          </article>`).join('')}
-      </div>
+      <div class="zalo-choice-grid"></div>
     </div>`;
   document.body.appendChild(modal);
+  return modal;
+};
+
+const renderContactChoiceCard = (choice, useGlobalCopy = false) => `
+  <article class="zalo-choice-card">
+    <h3>${useGlobalCopy ? choice.globalTitle : choice.title}</h3>
+    <p>${useGlobalCopy ? choice.globalDescription : choice.description}</p>
+    <div class="zalo-choice-actions">
+      ${choice.callNumbers.map((number) => `<a class="zalo-choice-button zalo-choice-button--call" href="tel:${number}">Gọi ${number}</a>`).join('')}
+    </div>
+    <div class="zalo-choice-actions zalo-choice-actions--secondary">
+      ${choice.zaloNumbers.map((number) => `<a class="zalo-choice-button zalo-choice-button--zalo" href="https://zalo.me/${number}" target="_blank" rel="noopener noreferrer">Nhắn Zalo ${number}</a>`).join('')}
+    </div>
+  </article>`;
+
+const renderZaloChoiceModal = (mode) => {
+  const modal = getZaloChoiceModal();
+  const title = modal.querySelector('#zalo-choice-title');
+  const subtitle = modal.querySelector('#zalo-choice-subtitle');
+  const grid = modal.querySelector('.zalo-choice-grid');
+  const choice = CONTACT_CHOICES[mode];
+
+  if (choice) {
+    title.textContent = choice.title;
+    subtitle.textContent = choice.description;
+    grid.classList.add('zalo-choice-grid--single');
+    grid.innerHTML = renderContactChoiceCard(choice);
+    return modal;
+  }
+
+  title.textContent = 'Bạn muốn nhắn Zalo về nội dung nào?';
+  subtitle.textContent = 'Chọn đúng nhu cầu để Anh Minh Store hỗ trợ nhanh hơn.';
+  grid.classList.remove('zalo-choice-grid--single');
+  grid.innerHTML = ZALO_CHOICES.map((item) => renderContactChoiceCard(item, true)).join('');
   return modal;
 };
 
@@ -61,8 +89,8 @@ const closeZaloChoiceModal = () => {
   }
 };
 
-const openZaloChoiceModal = (trigger) => {
-  const modal = getZaloChoiceModal();
+const openZaloChoiceModal = (trigger, mode) => {
+  const modal = renderZaloChoiceModal(mode);
   lastZaloChoiceTrigger = trigger || document.activeElement;
   modal.classList.add('is-open');
   document.body.classList.add('zalo-choice-modal-open');
@@ -72,11 +100,19 @@ const openZaloChoiceModal = (trigger) => {
 };
 
 document.addEventListener('click', (event) => {
+  const contactChoiceTrigger = event.target.closest('[data-contact-choice]');
+  if (contactChoiceTrigger) {
+    event.preventDefault();
+    event.stopPropagation();
+    openZaloChoiceModal(contactChoiceTrigger, contactChoiceTrigger.dataset.contactChoice);
+    return;
+  }
+
   const zaloTrigger = event.target.closest('[data-zalo-choice]');
   if (zaloTrigger) {
     event.preventDefault();
     event.stopPropagation();
-    openZaloChoiceModal(zaloTrigger);
+    openZaloChoiceModal(zaloTrigger, zaloTrigger.dataset.zaloChoice);
     return;
   }
 

@@ -373,6 +373,8 @@ p { line-height: 1.65; }
 .section-heading span, .section-kicker { color: var(--color-primary-highlight); font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase; }
 .section-heading h2, .info-copy h2, .contact h2 { margin: 6px 0 10px; color: var(--color-primary-deep); font-size: clamp(1.55rem, 3vw, 2.2rem); font-weight: 750; line-height: 1.18; letter-spacing: -0.015em; }
 .section-heading p, .info-copy p { color: var(--color-gray-700); margin: 0; line-height: 1.65; }
+.info-copy .service-hotline { margin-top: var(--space-3); color: var(--color-primary-deep); font-weight: 700; }
+.info-copy .service-hotline strong { color: var(--color-accent); }
 .product-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 16px; }
 .product-card-wrap { min-width: 0; }
 .product-card { position: relative; display: flex; flex-direction: column; height: 100%; gap: 6px; border: 1px solid var(--color-gray-200); border-radius: 18px; padding: 14px; background: var(--color-white); box-shadow: var(--shadow-sm); transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition); }
@@ -2056,6 +2058,9 @@ body.zalo-choice-modal-open { overflow: hidden; }
   gap: 16px;
   padding: 20px 28px 28px;
 }
+.zalo-choice-grid--single {
+  grid-template-columns: minmax(0, 1fr);
+}
 .zalo-choice-card {
   display: flex;
   min-width: 0;
@@ -2103,11 +2108,18 @@ body.zalo-choice-modal-open { overflow: hidden; }
   transform: translateY(-1px);
   box-shadow: 0 10px 22px rgba(6, 42, 86, 0.14);
 }
+.zalo-choice-button--call,
 .zalo-choice-button--primary {
+  background: var(--color-accent);
+  color: var(--color-white);
+}
+.zalo-choice-button--call:hover,
+.zalo-choice-button--primary:hover { background: #d94b1e; }
+.zalo-choice-button--zalo {
   background: var(--color-primary-highlight);
   color: var(--color-white);
 }
-.zalo-choice-button--primary:hover { background: #0f5fc8; }
+.zalo-choice-button--zalo:hover { background: #0f5fc8; }
 .zalo-choice-button--secondary {
   border-color: rgba(6, 42, 86, 0.16);
   background: var(--color-white);
