@@ -539,3 +539,20 @@ File `supabase-schema.sql` đã mở rộng bảng `hero_banners` để dùng ch
 - index theo `placement`, `is_active`, `sort_order`, `created_at`.
 
 Nếu Supabase project đã có bảng `hero_banners`, hãy copy và chạy lại toàn bộ `supabase-schema.sql` trong **Supabase SQL Editor**. Các câu `alter table ... add column if not exists` sẽ thêm cột còn thiếu an toàn, không xoá dữ liệu banner cũ. Các banner carousel cũ sẽ mặc định có `placement = 'home_main_carousel'`.
+
+## Chuẩn bị public website
+
+Các hạng mục đã được chuẩn bị để đưa website Anh Minh Store lên GitHub Pages công khai:
+
+- Thêm/cập nhật SEO cơ bản: `sitemap.xml`, `robots.txt`, canonical URL, meta description, Open Graph và Twitter card cho các trang public chính.
+- Thêm các trang chính sách và hỗ trợ: `chinh-sach-bao-hanh.html`, `chinh-sach-doi-tra.html`, `lien-he.html`.
+- Cập nhật khu vực liên hệ với hotline sửa chữa, hotline tư vấn mua bán, giờ làm việc và Google Maps nhúng cho 2 cơ sở tại Đà Nẵng.
+- Thêm trang `404.html` thân thiện cho GitHub Pages.
+- Cập nhật footer để có nhóm thông tin Anh Minh Store, sản phẩm/dịch vụ và chính sách/hỗ trợ.
+- Thêm `supabase-rls-launch-check.sql` để rà soát RLS trước khi public.
+
+Lưu ý Supabase:
+
+- File `supabase-rls-launch-check.sql` chỉ là checklist SQL phục vụ review và phải được kiểm tra/chạy thủ công trong Supabase SQL Editor.
+- Không chạy SQL tự động từ frontend, không dùng service role key trên website public và không đưa secret key vào mã nguồn.
+- Sau khi áp dụng RLS, cần kiểm tra lại: khách public chỉ đọc được sản phẩm/banner đang active, tạo được đơn hàng mới nếu form đặt hàng hoạt động, nhưng không đọc/sửa/xoá được đơn hàng hoặc dữ liệu admin.

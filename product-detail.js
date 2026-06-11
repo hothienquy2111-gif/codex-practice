@@ -850,25 +850,36 @@
     renderProductDetail(normalizedProduct, recommendationSource);
   };
 
-  const setDetailMessage = (title, message) => {
+  const setDetailMessage = (title, message, actions = []) => {
     if (!productDetailRoot) {
       console.warn('Không tìm thấy vùng hiển thị chi tiết sản phẩm.');
       return;
     }
 
     clearGalleryAutoSlide();
+    const actionMarkup = actions.length
+      ? `<div class="detail-message__actions">${actions.map((action) => `<a class="btn ${escapeDetailHtml(action.className || 'btn--primary')}" href="${escapeDetailHtml(action.href)}"${action.attrs ? ` ${action.attrs}` : ''}>${escapeDetailHtml(action.label)}</a>`).join('')}</div>`
+      : '<a class="btn btn--primary" href="index.html">Quay lại trang chủ</a>';
     productDetailRoot.classList.add('product-detail-card--message');
     productDetailRoot.innerHTML = `
       <div class="detail-message">
         <span class="detail-message__icon" aria-hidden="true">!</span>
         <h1 id="product-detail-title">${escapeDetailHtml(title)}</h1>
         <p>${escapeDetailHtml(message)}</p>
-        <a class="btn btn--primary" href="index.html">Quay lại trang chủ</a>
+        ${actionMarkup}
       </div>`;
   };
 
   const renderMissingProduct = () => {
-    setDetailMessage('Không tìm thấy sản phẩm', 'Không tìm thấy sản phẩm. Vui lòng quay lại trang chủ.');
+    setDetailMessage(
+      'Không tìm thấy sản phẩm',
+      'Sản phẩm bạn đang tìm có thể đã được bán, tạm ẩn hoặc đường dẫn chưa chính xác. Vui lòng quay lại danh sách sản phẩm hoặc liên hệ Anh Minh Store để được tư vấn mẫu phù hợp.',
+      [
+        { label: 'Quay lại danh sách sản phẩm', href: 'index.html#san-pham', className: 'btn--primary' },
+        { label: 'Liên hệ tư vấn', href: 'index.html#lien-he', className: 'btn--secondary' },
+        { label: 'Gọi 0905111223', href: 'tel:0905111223', className: 'btn--hotline' },
+      ],
+    );
   };
 
   const renderProductsUpdating = () => {
