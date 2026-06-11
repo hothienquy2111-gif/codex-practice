@@ -396,3 +396,112 @@
     padding: 8px 14px;
   }
 }
+
+/* Launch readiness admin/mobile refinements */
+.admin-section-header__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+  align-items: center;
+}
+.admin-status--stock { margin-right: 6px; }
+.admin-status--available { background: #ecfdf3; color: #027a48; }
+.admin-status--sold { background: #fef3f2; color: #b42318; }
+.admin-status--coming_soon { background: #fff7ed; color: #c2410c; }
+.admin-status--hidden { background: #f1f5f9; color: #475569; }
+.admin-order-card__actions--quick .btn {
+  flex: 1 1 120px;
+  min-width: 0;
+  white-space: normal;
+}
+.admin-order-card__actions .btn:disabled {
+  border-color: #d0d5dd;
+  background: #f2f4f7;
+  color: #98a2b3;
+  cursor: not-allowed;
+}
+.admin-field input,
+.admin-field select,
+.admin-field textarea { max-width: 100%; }
+.admin-modal__card,
+.admin-banner-card,
+.admin-product-card,
+.admin-order-card { min-width: 0; }
+.admin-image-preview img,
+.admin-banner-card img,
+.admin-right-banner-preview img { object-fit: contain; }
+
+@media (max-width: 768px) {
+  .admin-shell,
+  .admin-dashboard,
+  .admin-management-section,
+  .admin-panel { max-width: 100%; overflow-x: hidden; }
+  .admin-dashboard__header,
+  .admin-section-header,
+  .admin-product-card,
+  .admin-banner-card,
+  .admin-order-card {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+  .admin-section-header__actions,
+  .admin-actions,
+  .admin-product-card__actions,
+  .admin-banner-card__actions,
+  .admin-order-card__actions,
+  .admin-form-actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+  .admin-section-header__actions .btn,
+  .admin-actions .btn,
+  .admin-product-card__actions .btn,
+  .admin-banner-card__actions .btn,
+  .admin-order-card__actions .btn,
+  .admin-form-actions .btn {
+    flex: 1 1 150px;
+  }
+  .admin-main-tabs,
+  .admin-product-type-tabs,
+  .admin-orders-filters {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+  .admin-orders-filters { width: 100%; }
+  .admin-orders-filter { flex: 0 0 auto; }
+  .admin-modal { align-items: end; padding: 8px; }
+  .admin-modal__card { width: 100%; max-height: calc(100dvh - 16px); border-radius: 18px 18px 0 0; }
+  .admin-product-form,
+  .admin-duplicate-form { overflow-y: auto; }
+}
+
+@media (max-width: 640px) {
+  .admin-orders-toolbar { align-items: stretch; }
+  .admin-orders-toolbar > .btn { width: 100%; }
+  .admin-orders-filters { flex-direction: row; }
+  .admin-order-card__actions--quick { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .admin-order-card__actions--quick .btn { width: 100%; }
+  .admin-form-grid { grid-template-columns: 1fr; }
+  .admin-section-header__actions { justify-content: stretch; }
+}
+
+@media (max-width: 480px) {
+  .admin-shell { padding-inline: 10px; }
+  .admin-dashboard,
+  .admin-login__card { padding-inline: 14px; }
+  .admin-main-tab,
+  .admin-product-type-tab,
+  .admin-orders-filter { padding-inline: 12px; font-size: 0.9rem; }
+  .admin-order-card__actions--quick { grid-template-columns: 1fr; }
+  .admin-product-card__actions .btn,
+  .admin-banner-card__actions .btn,
+  .admin-form-actions .btn,
+  .admin-section-header__actions .btn { flex-basis: 100%; }
+  .admin-modal__header { padding: 14px; }
+  .admin-product-form,
+  .admin-duplicate-form { padding: 14px; }
+}

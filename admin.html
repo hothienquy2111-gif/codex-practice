@@ -7,6 +7,8 @@
     <meta name="robots" content="noindex, nofollow, noarchive" />
     <meta name="googlebot" content="noindex, nofollow, noarchive" />
     <title>Quản trị sản phẩm - ANH MINH STORE</title>
+    <!-- Google Analytics placeholder: replace G-XXXXXXXXXX before public tracking -->
+    <!-- Google Search Console placeholder: add verification meta tag here after verifying the site. -->
     <link rel="stylesheet" href="styles.css" />
     <link rel="stylesheet" href="admin.css" />
   </head>
@@ -63,6 +65,9 @@
               <h2 id="admin-products-title">Danh sách sản phẩm</h2>
               <p class="admin-muted">Quản lý sản phẩm đang bán trên website.</p>
             </div>
+            <div class="admin-section-header__actions">
+              <button class="btn btn--secondary" type="button" data-export-products-csv>Xuất CSV sản phẩm</button>
+            </div>
           </div>
           <div class="admin-product-search" role="search" aria-label="Tìm kiếm sản phẩm trong admin">
             <label class="admin-product-search__label" for="admin-product-search-input">Tìm kiếm sản phẩm</label>
@@ -107,7 +112,10 @@
               <h2 id="admin-banners-title">Quản lý ảnh banner trang chủ</h2>
               <p class="admin-muted">Ảnh có số thứ tự thấp hơn sẽ hiển thị trước trên carousel trang chủ.</p>
             </div>
-            <button class="btn btn--primary" type="button" data-open-banner-form>+ Thêm ảnh banner</button>
+            <div class="admin-section-header__actions">
+              <button class="btn btn--secondary" type="button" data-export-banners-csv>Xuất CSV banner</button>
+              <button class="btn btn--primary" type="button" data-open-banner-form>+ Thêm ảnh banner</button>
+            </div>
           </div>
           <form class="admin-banner-form" data-banner-form hidden novalidate>
             <input type="hidden" name="bannerId" />
@@ -221,7 +229,8 @@
             </div>
             <div class="admin-field"><label for="product-main-image">Ảnh chính</label><input id="product-main-image" name="mainImage" type="file" accept="image/*" /></div>
             <div class="admin-field"><label for="product-gallery-images">Ảnh gallery nhiều ảnh</label><input id="product-gallery-images" name="galleryImages" type="file" accept="image/*" multiple /></div>
-            <div class="admin-field"><label for="product-active">Trạng thái</label><select id="product-active" name="isActive"><option value="true">Hiển thị</option><option value="false">Ẩn</option></select></div>
+            <div class="admin-field"><label for="product-stock-status">Trạng thái bán hàng</label><select id="product-stock-status" name="stockStatus"><option value="available">Đang bán</option><option value="sold">Đã bán</option><option value="coming_soon">Hàng sắp về</option><option value="hidden">Tạm ẩn</option></select></div>
+            <div class="admin-field"><label for="product-active">Hiển thị công khai</label><select id="product-active" name="isActive"><option value="true">Hiển thị</option><option value="false">Ẩn</option></select></div>
             <div class="admin-field admin-field--full"><p class="admin-muted">Ảnh hiện có</p><div class="admin-image-preview" data-existing-images>Chưa có ảnh.</div></div>
           </div>
           <p class="admin-message" data-form-message aria-live="polite"></p>

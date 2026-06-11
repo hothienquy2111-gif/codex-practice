@@ -17,6 +17,25 @@
       .replace(/\s+/g, ' ')
       .trim();
 
+  const PRODUCT_STOCK_STATUS = {
+    available: 'Đang bán',
+    sold: 'Đã bán',
+    coming_soon: 'Hàng sắp về',
+    hidden: 'Tạm ẩn',
+  };
+
+  const normalizeStockStatus = (value = '') => {
+    const normalized = String(value || '').trim().toLowerCase();
+    return Object.prototype.hasOwnProperty.call(PRODUCT_STOCK_STATUS, normalized) ? normalized : 'available';
+  };
+
+  const getProductStockStatusLabel = (value = '') => PRODUCT_STOCK_STATUS[normalizeStockStatus(value)] || PRODUCT_STOCK_STATUS.available;
+
+  const isProductAvailableOnPublic = (product = {}) => product.isActive !== false && normalizeStockStatus(product.stockStatus) !== 'hidden';
+  const isProductSold = (product = {}) => normalizeStockStatus(product.stockStatus) === 'sold';
+  const isProductComingSoon = (product = {}) => normalizeStockStatus(product.stockStatus) === 'coming_soon';
+  const isProductHidden = (product = {}) => normalizeStockStatus(product.stockStatus) === 'hidden' || product.isActive === false;
+
   const normalizeImages = (product = {}) => {
     const sourceImages = Array.isArray(product.images) && product.images.length
       ? product.images
@@ -151,6 +170,7 @@
       specifications: normalizeSpecifications(product),
       isActive: Boolean(product.is_active ?? product.isActive ?? true),
       isFeatured: Boolean(product.is_featured ?? product.isFeatured ?? false),
+      stockStatus: normalizeStockStatus(product.stock_status ?? product.stockStatus),
     };
   };
 
@@ -167,7 +187,8 @@
   const isRealRecommendationCandidate = (product = {}) => {
     const normalized = normalizeProductRecord(product);
     if (!normalized.id) return false;
-    if (!normalized.isActive) return false;
+    if (!isProductAvailableOnPublic(normalized)) return false;
+    if (isProductSold(normalized) || isProductHidden(normalized)) return false;
 
     const identityText = normalizeText([
       normalized.brand,
@@ -296,11 +317,26 @@
   };
 
   const renderTvPlaceholder = (label = 'Tivi Anh Minh Store') => `
-    <div class="product-detail__placeholder" role="img" aria-label="Ảnh minh họa tivi ${escapeDetailHtml(label)}">
+    <div class="product-detail__placeholder" role="img" aria-label="Ảnh sản phẩm đang cập nhật ${escapeDetailHtml(label)}">
       <div class="product-detail__screen"></div>
       <div class="product-detail__stand"></div>
       <div class="product-detail__base"></div>
+      <p class="product-image-placeholder__text">Ảnh sản phẩm đang cập nhật</p>
     </div>`;
+
+  const renderProductStatusBadge = (product = {}) => {
+    const status = normalizeStockStatus(product.stockStatus);
+    if (status === 'available') return '';
+    return `<span class="product-detail__badge product-detail__badge--status product-detail__badge--${escapeDetailHtml(status)}">${escapeDetailHtml(getProductStockStatusLabel(status))}</span>`;
+  };
+
+  const getOrderActionLabel = (product = {}) => {
+    if (isProductSold(product)) return 'Đã bán';
+    if (isProductComingSoon(product)) return 'Liên hệ giữ hàng';
+    return 'Đặt hàng ngay';
+  };
+
+  const isOrderActionDisabled = (product = {}) => isProductSold(product);
 
   const clearGalleryAutoSlide = () => {
     if (activeGalleryTimerId) {
@@ -476,12 +512,14 @@
       ? `<img src="${escapeDetailHtml(product.image)}" alt="Ảnh sản phẩm ${escapeDetailHtml(product.fullName)}" loading="lazy" decoding="async" />`
       : renderTvPlaceholder(product.fullName);
     const oldPrice = product.oldPrice ? `<p class="order-modal__old-price">Giá cũ: <del>${escapeDetailHtml(product.oldPrice)}</del></p>` : '';
+    const statusBadge = renderProductStatusBadge(product);
 
     return `
       <div class="order-modal__summary">
         <div class="order-modal__thumb">${thumbnail}</div>
         <div class="order-modal__product">
           <h3>${escapeDetailHtml(product.fullName)}</h3>
+          ${statusBadge ? `<p class="order-modal__status">${statusBadge}</p>` : ''}
           <p>Model: <strong>${escapeDetailHtml(product.model)}</strong></p>
           <p class="order-modal__price">Giá bán: <strong>${escapeDetailHtml(product.price)}</strong></p>
           ${oldPrice}
@@ -635,17 +673,20 @@
 
   const buildReferenceCard = (product) => {
     const detailUrl = `product-detail.html?id=${encodeURIComponent(product.id)}`;
+    const placeholder = renderTvPlaceholder(product.fullName);
     const imageMarkup = product.image
-      ? `<img src="${escapeDetailHtml(product.image)}" alt="${escapeDetailHtml(product.fullName)}" loading="lazy" decoding="async" />`
-      : renderTvPlaceholder(product.fullName);
+      ? `<img class="product-card__image" src="${escapeDetailHtml(product.image)}" alt="${escapeDetailHtml(product.fullName)}" loading="lazy" decoding="async" /><div class="product-card__fallback" aria-hidden="true">${placeholder}</div>`
+      : placeholder;
     const oldPrice = product.oldPrice
       ? `<span class="product-price__old">${escapeDetailHtml(product.oldPrice)}</span>`
       : '';
     const badge = product.badge ? `<span class="product-card__badge">${escapeDetailHtml(product.badge)}</span>` : '';
+    const statusBadge = renderProductStatusBadge(product);
 
     return `
       <article class="product-card product-reference-card">
         ${badge}
+        ${statusBadge}
         <a class="product-card__media product-reference-card__media" href="${detailUrl}" aria-label="Xem chi tiết ${escapeDetailHtml(product.fullName)}">
           ${imageMarkup}
         </a>
@@ -675,6 +716,14 @@
           ${recommendedProducts.map((product) => buildReferenceCard(product)).join('')}
         </div>
       </section>`;
+  };
+
+  const bindReferenceImageFallbacks = () => {
+    productDetailRoot?.querySelectorAll('.product-reference-card .product-card__image').forEach((image) => {
+      image.addEventListener('error', () => {
+        image.closest('.product-card__media')?.classList.add('is-image-error');
+      }, { once: true });
+    });
   };
 
   const bindProductGallery = () => {
@@ -780,6 +829,11 @@
     clearGalleryAutoSlide();
 
     const product = normalizeProductRecord(rawProduct);
+    if (isProductHidden(product) || !product.isActive) {
+      renderMissingProduct();
+      return;
+    }
+
     const label = `${product.brand} ${product.model}`.trim();
     document.title = `${label} - Anh Minh Store`;
 
@@ -794,6 +848,7 @@
       ? `<p class="product-detail__old-price"><span>Giá cũ:</span> <del>${escapeDetailHtml(product.oldPrice)}</del></p>`
       : '';
     const warrantySpec = product.warranty ? `<div><dt>Bảo hành</dt><dd class="product-spec-value">${escapeDetailHtml(product.warranty)}</dd></div>` : '';
+    const statusBadge = renderProductStatusBadge(product);
     const referenceSection = renderReferenceSection(product, recommendations);
 
     productDetailRoot.classList.remove('product-detail-card--message');
@@ -803,6 +858,7 @@
       </div>
       <article class="product-detail__info">
         <span class="product-detail__badge">${escapeDetailHtml(product.badge)}</span>
+        ${statusBadge}
         <p class="product-detail__brand">${escapeDetailHtml(product.brand)}</p>
         <p class="product-detail__model">${escapeDetailHtml(product.model)}</p>
         <h1 id="product-detail-title">${escapeDetailHtml(product.fullName)}</h1>
@@ -830,7 +886,7 @@
         </div>
 
         <div class="product-detail__actions">
-          <button class="btn btn--primary product-detail__order-button" type="button" data-order-now aria-label="Đặt hàng ngay sản phẩm ${escapeDetailHtml(label)}">Đặt hàng ngay</button>
+          <button class="btn btn--primary product-detail__order-button${isOrderActionDisabled(product) ? ' product-detail__order-button--disabled' : ''}" type="button" data-order-now aria-label="${escapeDetailHtml(getOrderActionLabel(product))} sản phẩm ${escapeDetailHtml(label)}"${isOrderActionDisabled(product) ? ' disabled aria-disabled="true"' : ''}>${escapeDetailHtml(getOrderActionLabel(product))}</button>
           <a class="btn btn--hotline" href="tel:0905111223" aria-label="Gọi tư vấn sản phẩm ${escapeDetailHtml(label)}">Gọi tư vấn</a>
           <a class="btn btn--zalo" href="#" aria-label="Nhắn Zalo hỏi sản phẩm ${escapeDetailHtml(label)}" data-zalo-choice>Nhắn Zalo</a>
           <a class="btn btn--secondary" href="index.html#san-pham">Quay lại danh sách</a>
@@ -839,6 +895,7 @@
       ${referenceSection}`;
 
     bindProductGallery();
+    bindReferenceImageFallbacks();
     bindProductModalButtons(product);
     bindOrderButton(product);
   };
