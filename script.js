@@ -454,8 +454,8 @@ const normalizeProduct = (product = {}, index = 0) => {
     features: Array.isArray(product.features) && product.features.length ? product.features : [],
     oldPrice: product.oldPrice || product.old_price || '',
     price: product.price || 'Giá đang cập nhật',
-    image: product.image || '',
-    images: Array.isArray(product.images) ? product.images : [],
+    image: product.image || product.image_url || product.imageUrl || (Array.isArray(product.image_urls) ? product.image_urls[0] : '') || (Array.isArray(product.imageUrls) ? product.imageUrls[0] : ''),
+    images: Array.isArray(product.images) ? product.images : (Array.isArray(product.image_urls) ? product.image_urls : (Array.isArray(product.imageUrls) ? product.imageUrls : [])),
     badge: product.badge || 'Tư vấn',
     description: product.description || 'Vui lòng liên hệ Anh Minh Store để được tư vấn chi tiết.',
     overview: product.overview || '',
@@ -467,6 +467,270 @@ const normalizeProduct = (product = {}, index = 0) => {
     stockStatus: normalizeStockStatus(product.stock_status ?? product.stockStatus),
   };
 };
+
+
+const COMPARE_STORAGE_KEY = 'anhMinhCompareProducts';
+const COMPARE_MAX_PRODUCTS = 3;
+
+const safeReadJsonArray = (key) => {
+  try {
+    const parsed = JSON.parse(window.localStorage.getItem(key) || '[]');
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    return [];
+  }
+};
+
+const safeWriteJsonArray = (key, value) => {
+  try {
+    window.localStorage.setItem(key, JSON.stringify(value));
+    return true;
+  } catch (error) {
+    return false;
+  }
+};
+
+const getCompareProductId = (product = {}) => String(product.id || product.product_id || product.model || product.fullName || product.full_name || '').trim();
+
+const getProductImageForStorage = (product = {}) => {
+  if (product.image) return product.image;
+  if (product.image_url) return product.image_url;
+  if (product.imageUrl) return product.imageUrl;
+  if (Array.isArray(product.images) && product.images[0]) return product.images[0];
+  if (Array.isArray(product.image_urls) && product.image_urls[0]) return product.image_urls[0];
+  if (Array.isArray(product.imageUrls) && product.imageUrls[0]) return product.imageUrls[0];
+  return '';
+};
+
+const buildComparableProduct = (product = {}) => {
+  const id = getCompareProductId(product);
+  const fullName = product.fullName || product.full_name || product.name || product.model || 'Tivi đang cập nhật';
+  const detailUrl = product.detail_url || product.detailUrl || (id ? `product-detail.html?id=${encodeURIComponent(id)}` : 'index.html#san-pham');
+  return {
+    id,
+    full_name: fullName,
+    fullName,
+    brand: product.brand || '',
+    model: product.model || '',
+    size: product.size || '',
+    type: product.type || '',
+    price: product.price || 'Giá đang cập nhật',
+    original_price: product.original_price || product.originalPrice || product.old_price || product.oldPrice || '',
+    oldPrice: product.oldPrice || product.old_price || product.original_price || product.originalPrice || '',
+    warranty: product.warranty || '',
+    condition: product.condition || product.status || product.stockStatus || product.stock_status || '',
+    status: product.status || product.stockStatus || product.stock_status || product.condition || '',
+    overview: product.overview || product.description || '',
+    features: Array.isArray(product.features) ? product.features.slice(0, 4) : product.features || '',
+    operating_system: product.operating_system || product.operatingSystem || product.os || '',
+    production_year: product.production_year || product.productionYear || product.year || '',
+    origin: product.origin || product.made_in || product.madeIn || '',
+    image_url: getProductImageForStorage(product),
+    detail_url: detailUrl,
+  };
+};
+
+const showCompareToast = (message) => {
+  if (!message) return;
+  let toast = document.querySelector('[data-compare-toast]');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.className = 'compare-toast';
+    toast.setAttribute('role', 'status');
+    toast.setAttribute('aria-live', 'polite');
+    toast.dataset.compareToast = 'true';
+    document.body.appendChild(toast);
+  }
+  toast.textContent = message;
+  toast.classList.add('is-visible');
+  window.clearTimeout(showCompareToast.timer);
+  showCompareToast.timer = window.setTimeout(() => toast.classList.remove('is-visible'), 2400);
+};
+
+const getCompareProducts = () => safeReadJsonArray(COMPARE_STORAGE_KEY).filter((item) => getCompareProductId(item));
+
+const setCompareProducts = (items) => {
+  const normalized = [];
+  items.forEach((item) => {
+    const comparable = buildComparableProduct(item);
+    if (!comparable.id || normalized.some((existing) => existing.id === comparable.id)) return;
+    normalized.push(comparable);
+  });
+  safeWriteJsonArray(COMPARE_STORAGE_KEY, normalized.slice(0, COMPARE_MAX_PRODUCTS));
+  document.dispatchEvent(new CustomEvent('anhminh:compare-updated'));
+  return normalized;
+};
+
+const addProductToCompare = (product) => {
+  const comparable = buildComparableProduct(product);
+  if (!comparable.id) return { added: false, reason: 'missing' };
+  const items = getCompareProducts();
+  if (items.some((item) => item.id === comparable.id)) {
+    updateCompareBar();
+    showCompareToast('Đã thêm vào danh sách so sánh.');
+    return { added: false, reason: 'duplicate' };
+  }
+  if (items.length >= COMPARE_MAX_PRODUCTS) {
+    showCompareToast('Bạn có thể so sánh tối đa 3 sản phẩm.');
+    return { added: false, reason: 'limit' };
+  }
+  setCompareProducts([comparable, ...items]);
+  showCompareToast('Đã thêm vào danh sách so sánh.');
+  return { added: true };
+};
+
+const removeProductFromCompare = (productId) => {
+  const nextItems = getCompareProducts().filter((item) => item.id !== String(productId));
+  setCompareProducts(nextItems);
+  showCompareToast('Đã xoá khỏi danh sách so sánh.');
+};
+
+const clearCompareProducts = () => {
+  setCompareProducts([]);
+  showCompareToast('Đã xoá khỏi danh sách so sánh.');
+};
+
+const getCompareBar = () => {
+  let bar = document.querySelector('[data-compare-bar]');
+  if (bar) return bar;
+  bar = document.createElement('aside');
+  bar.className = 'compare-bar';
+  bar.dataset.compareBar = 'true';
+  bar.setAttribute('aria-live', 'polite');
+  bar.innerHTML = `
+    <p data-compare-bar-count>Đang so sánh: 0 sản phẩm</p>
+    <div class="compare-bar__actions">
+      <a class="btn btn--primary compare-bar__view" href="compare.html">Xem so sánh</a>
+      <button class="btn btn--secondary compare-bar__clear" type="button" data-compare-clear>Xoá tất cả</button>
+    </div>`;
+  document.body.appendChild(bar);
+  bar.querySelector('[data-compare-clear]')?.addEventListener('click', clearCompareProducts);
+  return bar;
+};
+
+const updateCompareBar = () => {
+  const items = getCompareProducts();
+  const bar = getCompareBar();
+  const count = bar.querySelector('[data-compare-bar-count]');
+  if (count) count.textContent = `Đang so sánh: ${items.length} sản phẩm`;
+  bar.classList.toggle('is-visible', items.length > 0);
+};
+
+const renderComparePage = () => {
+  const root = document.querySelector('[data-compare-page]');
+  if (!root) return;
+  const items = getCompareProducts();
+  if (!items.length) {
+    root.innerHTML = `
+      <div class="compare-empty">
+        <p>Bạn chưa chọn sản phẩm nào để so sánh.</p>
+        <a class="btn btn--primary" href="index.html#san-pham">Quay lại danh sách sản phẩm</a>
+      </div>`;
+    return;
+  }
+
+  const renderValue = (value) => {
+    if (Array.isArray(value)) return value.filter(Boolean).map((item) => escapeHtml(item)).join('<br>') || '—';
+    return value ? escapeHtml(value) : '—';
+  };
+  const rows = [
+    ['Hình ảnh', (item) => item.image_url ? `<img class="compare-product-image" src="${escapeHtml(item.image_url)}" alt="${escapeHtml(item.full_name || item.fullName || 'Tivi so sánh')}" loading="lazy" decoding="async" />` : '<span class="compare-image-placeholder">Ảnh đang cập nhật</span>'],
+    ['Tên sản phẩm', (item) => renderValue(item.full_name || item.fullName)],
+    ['Hãng', (item) => renderValue(item.brand)],
+    ['Model', (item) => renderValue(item.model)],
+    ['Kích thước', (item) => renderValue(item.size)],
+    ['Loại sản phẩm', (item) => renderValue(item.type)],
+    ['Giá bán', (item) => renderValue(item.price)],
+    ['Giá gạch nếu có', (item) => renderValue(item.original_price || item.oldPrice)],
+    ['Bảo hành', (item) => renderValue(item.warranty)],
+    ['Tình trạng / trạng thái nếu có', (item) => renderValue(item.condition || item.status)],
+    ['Công nghệ nổi bật / tổng quan nếu có', (item) => renderValue(item.features || item.overview)],
+    ['Hệ điều hành nếu có', (item) => renderValue(item.operating_system)],
+    ['Năm sản xuất nếu có', (item) => renderValue(item.production_year)],
+    ['Xuất xứ nếu có', (item) => renderValue(item.origin)],
+    ['Link xem chi tiết', (item) => `<a class="btn btn--secondary compare-detail-link" href="${escapeHtml(item.detail_url || createProductDetailUrl(item))}">Xem chi tiết</a>`],
+  ];
+
+  root.innerHTML = `
+    <div class="compare-page-actions">
+      <a class="btn btn--secondary" href="index.html#san-pham">Thêm sản phẩm khác</a>
+      <button class="btn btn--secondary" type="button" data-compare-clear-page>Xoá tất cả</button>
+    </div>
+    <div class="compare-table-wrap" tabindex="0" aria-label="Bảng so sánh tivi">
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th scope="col">Tiêu chí</th>
+            ${items.map((item) => `<th scope="col">${escapeHtml(item.full_name || item.fullName || 'Sản phẩm')}</th>`).join('')}
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.map(([label, render]) => `<tr><th scope="row">${escapeHtml(label)}</th>${items.map((item) => `<td>${render(item)}</td>`).join('')}</tr>`).join('')}
+          <tr>
+            <th scope="row">Thao tác</th>
+            ${items.map((item) => `<td><button class="btn btn--secondary" type="button" data-compare-remove="${escapeHtml(item.id)}" aria-label="Xoá ${escapeHtml(item.full_name || item.fullName || 'sản phẩm')} khỏi so sánh">Xoá khỏi so sánh</button></td>`).join('')}
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="compare-card-list">
+      ${items.map((item) => `
+        <article class="compare-mobile-card">
+          <div class="compare-mobile-card__image">${item.image_url ? `<img src="${escapeHtml(item.image_url)}" alt="${escapeHtml(item.full_name || item.fullName || 'Tivi so sánh')}" loading="lazy" decoding="async" />` : '<span>Ảnh đang cập nhật</span>'}</div>
+          <h2>${escapeHtml(item.full_name || item.fullName || 'Sản phẩm')}</h2>
+          <p><strong>Hãng:</strong> ${renderValue(item.brand)}</p>
+          <p><strong>Model:</strong> ${renderValue(item.model)}</p>
+          <p><strong>Kích thước:</strong> ${renderValue(item.size)}</p>
+          <p><strong>Loại:</strong> ${renderValue(item.type)}</p>
+          <p><strong>Giá bán:</strong> ${renderValue(item.price)}</p>
+          <p><strong>Bảo hành:</strong> ${renderValue(item.warranty)}</p>
+          <p><strong>Tình trạng:</strong> ${renderValue(item.condition || item.status)}</p>
+          <a class="btn btn--primary" href="${escapeHtml(item.detail_url || createProductDetailUrl(item))}">Xem chi tiết</a>
+          <button class="btn btn--secondary" type="button" data-compare-remove="${escapeHtml(item.id)}">Xoá khỏi so sánh</button>
+        </article>`).join('')}
+    </div>`;
+};
+
+window.AnhMinhCompare = {
+  add: addProductToCompare,
+  remove: removeProductFromCompare,
+  clear: clearCompareProducts,
+  get: getCompareProducts,
+  updateBar: updateCompareBar,
+  renderPage: renderComparePage,
+  buildProduct: buildComparableProduct,
+};
+
+document.addEventListener('anhminh:compare-updated', () => {
+  updateCompareBar();
+  renderComparePage();
+});
+
+document.addEventListener('click', (event) => {
+  const removeButton = event.target.closest('[data-compare-remove]');
+  if (removeButton) {
+    event.preventDefault();
+    removeProductFromCompare(removeButton.dataset.compareRemove);
+    return;
+  }
+  const clearPageButton = event.target.closest('[data-compare-clear-page]');
+  if (clearPageButton) {
+    event.preventDefault();
+    clearCompareProducts();
+  }
+});
+
+window.addEventListener('storage', (event) => {
+  if (event.key === COMPARE_STORAGE_KEY) {
+    updateCompareBar();
+    renderComparePage();
+  }
+});
+
+window.addEventListener('DOMContentLoaded', () => {
+  updateCompareBar();
+  renderComparePage();
+});
 
 let products = [];
 
@@ -1313,6 +1577,7 @@ const renderFeaturedProductCard = (product) => {
         <strong class="product-price"><span>Giá:</span> ${renderedOldPrice}<span class="product-price__sale">${escapeHtml(price)}</span></strong>
         <span class="btn btn--primary product-card__cta" aria-hidden="true">Xem chi tiết</span>
       </a>
+      <button class="btn btn--secondary product-card__compare" type="button" data-compare-product-id="${escapeHtml(product.id)}" aria-label="Thêm ${escapeHtml(label)} vào so sánh">So sánh</button>
     </article>`;
 };
 
@@ -1345,6 +1610,7 @@ const renderSectionProductCard = (product, sectionType) => {
       <p class="product-type">${escapeHtml(product.type)}</p>
       <strong class="product-price"><span>Giá:</span> ${renderedOldPrice}<span class="product-price__sale">${escapeHtml(price)}</span></strong>
       <a class="btn btn--primary product-card__cta" href="${createProductDetailUrl(product)}">Xem chi tiết</a>
+      <button class="btn btn--secondary product-card__compare" type="button" data-compare-product-id="${escapeHtml(product.id)}" aria-label="Thêm ${escapeHtml(title)} vào so sánh">So sánh</button>
     </article>`;
 };
 
@@ -1601,6 +1867,16 @@ const renderProductMedia = (product, label) => {
 const getFilteredProducts = () => products.filter((product) => {
   const matchesType = activeType ? normalizeProductType(product) === normalizeProductType({ type: activeType }) : true;
   return productMatchesGlobalFilters(product) && matchesType && productMatchesSearch(product);
+});
+
+
+document.addEventListener('click', (event) => {
+  const compareButton = event.target.closest('[data-compare-product-id]');
+  if (!compareButton) return;
+  event.preventDefault();
+  event.stopPropagation();
+  const product = products.find((item) => String(item.id) === String(compareButton.dataset.compareProductId));
+  if (product) addProductToCompare(product);
 });
 
 const renderProductCards = () => {

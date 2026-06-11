@@ -39,9 +39,13 @@
   const normalizeImages = (product = {}) => {
     const sourceImages = Array.isArray(product.images) && product.images.length
       ? product.images
-      : product.image
-        ? [product.image]
-        : [];
+      : Array.isArray(product.image_urls) && product.image_urls.length
+        ? product.image_urls
+        : Array.isArray(product.imageUrls) && product.imageUrls.length
+          ? product.imageUrls
+          : (product.image || product.image_url || product.imageUrl)
+            ? [product.image || product.image_url || product.imageUrl]
+            : [];
 
     return [...new Set(sourceImages.map((image) => String(image || '').trim()).filter(Boolean))];
   };
@@ -140,11 +144,12 @@
     const type = String(product.type ?? 'Tivi').trim() || 'Tivi';
     const condition = String(product.condition ?? 'Liên hệ kiểm tra tình trạng').trim() || 'Liên hệ kiểm tra tình trạng';
     const warranty = String(product.warranty ?? '').trim();
-    const oldPrice = String(product.oldPrice ?? product.old_price ?? '').trim();
+    const oldPrice = String(product.oldPrice ?? product.old_price ?? product.original_price ?? product.originalPrice ?? '').trim();
     const price = String(product.price ?? 'Giá đang cập nhật').trim() || 'Giá đang cập nhật';
-    const image = String(product.image ?? images[0] ?? '').trim();
+    const image = String(product.image ?? product.image_url ?? product.imageUrl ?? images[0] ?? '').trim();
     const badge = String(product.badge ?? '').trim();
     const description = String(product.description ?? 'Vui lòng liên hệ Anh Minh Store để được tư vấn chi tiết.').trim() || 'Vui lòng liên hệ Anh Minh Store để được tư vấn chi tiết.';
+    const status = String(product.status ?? product.product_status ?? product.stock_status ?? product.stockStatus ?? '').trim();
 
     return {
       id: String(product.id ?? '').trim(),
@@ -155,6 +160,7 @@
       size,
       type,
       condition,
+      status,
       warranty,
       features: Array.isArray(product.features) && product.features.length
         ? product.features.map((feature) => String(feature).trim()).filter(Boolean)
@@ -171,6 +177,9 @@
       isActive: Boolean(product.is_active ?? product.isActive ?? true),
       isFeatured: Boolean(product.is_featured ?? product.isFeatured ?? false),
       stockStatus: normalizeStockStatus(product.stock_status ?? product.stockStatus),
+      operating_system: String(product.operating_system ?? product.operatingSystem ?? product.os ?? '').trim(),
+      production_year: String(product.production_year ?? product.productionYear ?? product.year ?? '').trim(),
+      origin: String(product.origin ?? product.made_in ?? product.madeIn ?? '').trim(),
     };
   };
 
@@ -820,6 +829,125 @@
     startGalleryAutoSlide();
   };
 
+
+  const RECENT_STORAGE_KEY = 'anhMinhRecentlyViewedProducts';
+  const RECENT_MAX_PRODUCTS = 8;
+
+  const safeReadJsonArray = (key) => {
+    try {
+      const parsed = JSON.parse(window.localStorage.getItem(key) || '[]');
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (error) {
+      return [];
+    }
+  };
+
+  const safeWriteJsonArray = (key, value) => {
+    try {
+      window.localStorage.setItem(key, JSON.stringify(value));
+      return true;
+    } catch (error) {
+      return false;
+    }
+  };
+
+  const findSpecificationValue = (product, keywords = []) => {
+    const normalizedKeywords = keywords.map(normalizeText);
+    for (const group of product.specifications || []) {
+      for (const row of group.rows || []) {
+        const label = normalizeText(row.label || '');
+        if (!normalizedKeywords.some((keyword) => label.includes(keyword))) continue;
+        return Array.isArray(row.value) ? row.value.join(', ') : String(row.value || '').trim();
+      }
+    }
+    return '';
+  };
+
+  const buildCompareProductFromDetail = (product) => ({
+    ...product,
+    full_name: product.fullName,
+    image_url: product.image,
+    detail_url: `product-detail.html?id=${encodeURIComponent(product.id)}`,
+    original_price: product.oldPrice,
+    operating_system: product.operating_system || findSpecificationValue(product, ['hệ điều hành', 'he dieu hanh', 'operating system']),
+    production_year: product.production_year || findSpecificationValue(product, ['năm sản xuất', 'nam san xuat', 'model year', 'year']),
+    origin: product.origin || findSpecificationValue(product, ['xuất xứ', 'xuat xu', 'origin']),
+    overview: product.overview.map((section) => section.content).filter(Boolean).join('\n'),
+  });
+
+  const buildRecentProduct = (product) => ({
+    id: product.id,
+    full_name: product.fullName,
+    brand: product.brand,
+    model: product.model,
+    size: product.size,
+    type: product.type,
+    price: product.price,
+    image_url: product.image,
+    detail_url: `product-detail.html?id=${encodeURIComponent(product.id)}`,
+    viewed_at: new Date().toISOString(),
+  });
+
+  const saveRecentlyViewedProduct = (product) => {
+    if (!product?.id) return;
+    const recentProduct = buildRecentProduct(product);
+    const currentItems = safeReadJsonArray(RECENT_STORAGE_KEY);
+    const nextItems = [recentProduct, ...currentItems.filter((item) => String(item.id) !== String(product.id))].slice(0, RECENT_MAX_PRODUCTS);
+    safeWriteJsonArray(RECENT_STORAGE_KEY, nextItems);
+  };
+
+  const getRecentlyViewedProducts = (currentProductId) => safeReadJsonArray(RECENT_STORAGE_KEY)
+    .filter((item) => item?.id && String(item.id) !== String(currentProductId))
+    .slice(0, RECENT_MAX_PRODUCTS);
+
+  const renderRecentProductCard = (product) => {
+    const name = product.full_name || product.fullName || product.model || 'Tivi đang cập nhật';
+    const image = product.image_url
+      ? `<img class="recent-product-card__image" src="${escapeDetailHtml(product.image_url)}" alt="${escapeDetailHtml(name)}" loading="lazy" decoding="async" />`
+      : '<span class="recent-product-card__placeholder">Ảnh đang cập nhật</span>';
+
+    return `
+      <article class="recent-product-card">
+        <a class="recent-product-card__media" href="${escapeDetailHtml(product.detail_url || '#')}">${image}</a>
+        <div class="recent-product-card__body">
+          <h3>${escapeDetailHtml(name)}</h3>
+          <p>${escapeDetailHtml([product.size, product.type].filter(Boolean).join(' • '))}</p>
+          <strong>${escapeDetailHtml(product.price || 'Giá đang cập nhật')}</strong>
+          <a class="btn btn--secondary" href="${escapeDetailHtml(product.detail_url || '#')}">Xem lại</a>
+        </div>
+      </article>`;
+  };
+
+  const renderRecentlyViewedSection = (currentProduct) => {
+    const recentProducts = getRecentlyViewedProducts(currentProduct.id);
+    if (!recentProducts.length) return '';
+    return `
+      <section class="recent-products-section" aria-labelledby="recent-products-title">
+        <div class="recent-products-header">
+          <p class="product-reference-kicker">Lịch sử xem</p>
+          <h2 id="recent-products-title">Sản phẩm bạn vừa xem</h2>
+        </div>
+        <div class="recent-products-scroller">
+          ${recentProducts.map(renderRecentProductCard).join('')}
+        </div>
+      </section>`;
+  };
+
+  const bindRecentImageFallbacks = () => {
+    productDetailRoot?.querySelectorAll('.recent-product-card__image').forEach((image) => {
+      image.addEventListener('error', () => {
+        const media = image.closest('.recent-product-card__media');
+        if (media) media.innerHTML = '<span class="recent-product-card__placeholder">Ảnh đang cập nhật</span>';
+      }, { once: true });
+    });
+  };
+
+  const bindCompareButton = (product) => {
+    productDetailRoot?.querySelector('[data-detail-compare]')?.addEventListener('click', () => {
+      window.AnhMinhCompare?.add(buildCompareProductFromDetail(product));
+    });
+  };
+
   const renderProductDetail = (rawProduct, recommendationSource = []) => {
     if (!productDetailRoot) {
       console.warn('Không tìm thấy vùng hiển thị chi tiết sản phẩm.');
@@ -850,6 +978,7 @@
     const warrantySpec = product.warranty ? `<div><dt>Bảo hành</dt><dd class="product-spec-value">${escapeDetailHtml(product.warranty)}</dd></div>` : '';
     const statusBadge = renderProductStatusBadge(product);
     const referenceSection = renderReferenceSection(product, recommendations);
+    const recentSection = renderRecentlyViewedSection(product);
 
     productDetailRoot.classList.remove('product-detail-card--message');
     productDetailRoot.innerHTML = `
@@ -887,17 +1016,22 @@
 
         <div class="product-detail__actions">
           <button class="btn btn--primary product-detail__order-button${isOrderActionDisabled(product) ? ' product-detail__order-button--disabled' : ''}" type="button" data-order-now aria-label="${escapeDetailHtml(getOrderActionLabel(product))} sản phẩm ${escapeDetailHtml(label)}"${isOrderActionDisabled(product) ? ' disabled aria-disabled="true"' : ''}>${escapeDetailHtml(getOrderActionLabel(product))}</button>
+          <button class="btn btn--secondary" type="button" data-detail-compare aria-label="Thêm ${escapeDetailHtml(label)} vào so sánh">Thêm vào so sánh</button>
           <a class="btn btn--hotline" href="tel:0905111223" aria-label="Gọi tư vấn sản phẩm ${escapeDetailHtml(label)}">Gọi tư vấn</a>
           <a class="btn btn--zalo" href="#" aria-label="Nhắn Zalo hỏi sản phẩm ${escapeDetailHtml(label)}" data-zalo-choice>Nhắn Zalo</a>
           <a class="btn btn--secondary" href="index.html#san-pham">Quay lại danh sách</a>
         </div>
       </article>
-      ${referenceSection}`;
+      ${referenceSection}
+      ${recentSection}`;
 
     bindProductGallery();
     bindReferenceImageFallbacks();
     bindProductModalButtons(product);
     bindOrderButton(product);
+    bindCompareButton(product);
+    bindRecentImageFallbacks();
+    saveRecentlyViewedProduct(product);
   };
 
   const renderProductDetailWithRecommendations = async (rawProduct) => {
