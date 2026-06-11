@@ -646,3 +646,13 @@ Khi triển khai chính thức:
 1. Dán script GA4 thật sau khi đã có **GA4 Measurement ID** dạng `G-XXXXXXXXXX`.
 2. Dán meta verification của **Google Search Console** vào phần `<head>` theo hướng dẫn của Google.
 3. Không commit service role key hoặc secret; chỉ giữ anon key public hiện có của Supabase.
+
+## So sánh tivi và sản phẩm vừa xem
+
+Website public hỗ trợ khách hàng thêm tivi vào danh sách **So sánh tivi** từ thẻ sản phẩm ở trang danh sách hoặc từ trang chi tiết sản phẩm. Mỗi trình duyệt chỉ có thể lưu tối đa **3 sản phẩm** trong danh sách so sánh; nếu khách chọn sản phẩm thứ 4, giao diện sẽ báo: `Bạn có thể so sánh tối đa 3 sản phẩm.`
+
+Danh sách so sánh được lưu bằng `localStorage` của trình duyệt với các thông tin nhẹ như mã sản phẩm, tên, hãng, model, kích thước, loại tivi, giá, bảo hành, tình trạng, ảnh và link chi tiết. Trang `compare.html` đọc dữ liệu này để hiển thị bảng/card so sánh, cho phép xoá từng sản phẩm hoặc xoá toàn bộ danh sách. Tính năng này không cần thêm bảng SQL và không ghi dữ liệu so sánh lên Supabase.
+
+Trang chi tiết sản phẩm cũng lưu mục **Sản phẩm bạn vừa xem** bằng `localStorage`. Danh sách này tối đa 8 sản phẩm, tự đưa sản phẩm vừa xem lại lên đầu, tránh trùng lặp và không hiển thị chính sản phẩm hiện tại trong mục vừa xem. Dữ liệu được lưu chỉ là thông tin sản phẩm công khai, bao gồm id, tên, hãng, model, kích thước, loại, giá, ảnh, link chi tiết và thời điểm xem.
+
+Hai tính năng **So sánh tivi** và **Sản phẩm bạn vừa xem** không lưu thông tin cá nhân riêng tư của khách hàng, không dùng API trả phí và không yêu cầu thay đổi cấu trúc cơ sở dữ liệu.
