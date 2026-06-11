@@ -1833,7 +1833,8 @@ document.addEventListener('keydown', (event) => {
 window.addEventListener('resize', () => setMenuState(false));
 
 dom.mobileCall?.addEventListener('click', () => {
-  window.location.href = 'tel:0905111223';
+  const phoneNumber = dom.mobileCall.dataset.callNumber || '0905111223';
+  window.location.href = `tel:${phoneNumber}`;
 });
 
 
