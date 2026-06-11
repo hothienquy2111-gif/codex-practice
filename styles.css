@@ -124,8 +124,8 @@ p { line-height: 1.65; }
 .menu-wrap:hover .category-dropdown, .menu-wrap.is-open .category-dropdown { opacity: 1; visibility: visible; transform: translateY(0); }
 .category-dropdown a { display: block; border-radius: 12px; padding: 10px 12px; color: var(--color-gray-700); font-weight: 700; }
 .category-dropdown a:hover, .category-dropdown a.is-active { background: var(--color-gray-100); color: var(--color-primary); }
-.nav-links { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin: 0; padding: 0; list-style: none; }
-.nav-link { display: block; border-radius: 999px; padding: 10px 12px; color: var(--color-gray-700); font-weight: 650; letter-spacing: 0.005em; line-height: 1.25; }
+.nav-links { display: flex; flex-wrap: nowrap; align-items: center; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.nav-link { display: block; border-radius: 999px; padding: 10px 12px; color: var(--color-gray-700); font-weight: 650; letter-spacing: 0.005em; line-height: 1.25; white-space: nowrap; }
 .nav-link:hover, .nav-link.is-active { background: rgba(19, 111, 206, 0.1); color: var(--color-primary); }
 
 .nav-other-products { position: relative; }
