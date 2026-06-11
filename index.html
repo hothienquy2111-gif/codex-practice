@@ -42,15 +42,20 @@
             </span>
           </a>
 
-          <form class="search-box" role="search" aria-label="Tìm kiếm tivi">
+          <form class="search-box" role="search" aria-label="Tìm kiếm tivi" data-search-form>
             <label class="sr-only" for="search-input">Tìm kiếm tivi</label>
             <input
               id="search-input"
               type="search"
               placeholder="Bạn cần tìm tivi gì?"
               autocomplete="off"
+              aria-autocomplete="list"
+              aria-expanded="false"
+              aria-controls="search-suggestions"
             />
+            <button type="button" class="search-box__clear" aria-label="Xóa tìm kiếm" data-search-clear hidden>×</button>
             <button type="submit" aria-label="Tìm kiếm">Tìm</button>
+            <div class="search-suggestions" id="search-suggestions" data-search-suggestions hidden></div>
           </form>
 
           <div class="header-actions">
