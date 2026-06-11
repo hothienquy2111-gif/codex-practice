@@ -34,7 +34,7 @@ const getZaloChoiceModal = () => {
   modal.innerHTML = `
     <div class="zalo-choice-modal__backdrop" data-zalo-choice-close></div>
     <div class="zalo-choice-modal__dialog" role="document" tabindex="-1">
-      <button class="zalo-choice-modal__close" type="button" aria-label="Đóng lựa chọn Zalo" data-zalo-choice-close>×</button>
+      <button class="zalo-choice-modal__close" type="button" aria-label="Đóng cửa sổ liên hệ" data-zalo-choice-close>×</button>
       <div class="zalo-choice-modal__header">
         <h2 id="zalo-choice-title">Bạn muốn nhắn Zalo về nội dung nào?</h2>
         <p id="zalo-choice-subtitle">Chọn đúng nhu cầu để Anh Minh Store hỗ trợ nhanh hơn.</p>
@@ -95,7 +95,10 @@ const openZaloChoiceModal = (trigger, mode) => {
   modal.classList.add('is-open');
   document.body.classList.add('zalo-choice-modal-open');
   window.requestAnimationFrame(() => {
-    modal.querySelector('.zalo-choice-modal__dialog')?.focus({ preventScroll: true });
+    const dialog = modal.querySelector('.zalo-choice-modal__dialog');
+    if (!dialog) return;
+    dialog.scrollTop = 0;
+    dialog.focus({ preventScroll: true });
   });
 };
 
