@@ -225,8 +225,14 @@
 .am-chatbot-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 7px;
   margin: 8px 0 14px;
+}
+
+.am-chatbot-quick-replies {
+  max-height: 108px;
+  overflow-y: auto;
+  padding-right: 2px;
 }
 
 .am-chatbot-quick-btn,
@@ -237,10 +243,10 @@
   border-radius: 999px;
   background: #ffffff;
   color: var(--am-chatbot-blue);
-  font-size: 0.86rem;
+  font-size: 0.84rem;
   font-weight: 750;
   line-height: 1.2;
-  padding: 8px 11px;
+  padding: 8px 10px;
   transition: transform 160ms ease, background 160ms ease, color 160ms ease, border-color 160ms ease;
 }
 
@@ -505,6 +511,17 @@
 
   .am-chatbot-form {
     grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .am-chatbot-quick-replies {
+    gap: 6px;
+    max-height: 96px;
+  }
+
+  .am-chatbot-quick-btn,
+  .am-chatbot-action-btn {
+    font-size: 0.8rem;
+    padding: 7px 9px;
   }
 
   .am-chatbot-product-card {
