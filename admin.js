@@ -14,9 +14,12 @@
     loginMessage: document.querySelector('[data-login-message]'),
     adminMessage: document.querySelector('[data-admin-message]'),
     products: document.querySelector('[data-admin-products]'),
+    adminTabs: document.querySelectorAll('[data-admin-tab]'),
+    adminPanels: document.querySelectorAll('[data-admin-panel]'),
     productSearchInput: document.querySelector('[data-product-search]'),
     productSearchClear: document.querySelector('[data-product-search-clear]'),
     productSearchCount: document.querySelector('[data-product-search-count]'),
+    productTypeFilters: document.querySelectorAll('[data-admin-product-type-filter]'),
     orders: document.querySelector('[data-admin-orders]'),
     orderFilters: document.querySelectorAll('[data-order-filter]'),
     exportOrdersCsvButton: document.querySelector('[data-export-orders-csv]'),
@@ -59,8 +62,10 @@
 
   let products = [];
 
-  const getNextProductSortOrder = () => {
-    const maxOrder = products.reduce((max, product) => {
+  const getNextProductSortOrder = (type = '') => {
+    const normalizedType = normalizeText(type);
+    const matchingProducts = products.filter((product) => normalizeText(product.type) === normalizedType);
+    const maxOrder = matchingProducts.reduce((max, product) => {
       const value = Number(product.sort_order);
       return Number.isFinite(value) ? Math.max(max, value) : max;
     }, 0);
@@ -70,6 +75,9 @@
   let editingProduct = null;
   let duplicatingProduct = null;
   let productIdManuallyEdited = false;
+  let sortOrderManuallyEdited = false;
+  let activeAdminTab = 'products';
+  let activeProductTypeFilter = 'all';
   let productSearchTerm = '';
   let productSearchTimer = null;
   let removedProductImages = new Set();
@@ -455,19 +463,72 @@
     serializeSearchValue(product.specifications),
   ].filter(Boolean).join(' '));
 
+  const getProductTypeRank = (type = '') => {
+    const normalizedType = normalizeText(type);
+    if (normalizedType === 'Tivi mới') return 1;
+    if (normalizedType === 'Tivi cũ') return 2;
+    return 3;
+  };
+
+  const compareProductOrder = (a = {}, b = {}) => {
+    const sortA = Number(a.sort_order);
+    const sortB = Number(b.sort_order);
+    const safeSortA = Number.isFinite(sortA) ? sortA : Number.MAX_SAFE_INTEGER;
+    const safeSortB = Number.isFinite(sortB) ? sortB : Number.MAX_SAFE_INTEGER;
+    if (safeSortA !== safeSortB) return safeSortA - safeSortB;
+    return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
+  };
+
+  const sortProductsForAdmin = (items = []) => [...items].sort((a, b) => {
+    if (activeProductTypeFilter === 'all') {
+      const typeRankDiff = getProductTypeRank(a.type) - getProductTypeRank(b.type);
+      if (typeRankDiff) return typeRankDiff;
+      const typeDiff = normalizeText(a.type).localeCompare(normalizeText(b.type), 'vi');
+      if (getProductTypeRank(a.type) === 3 && typeDiff) return typeDiff;
+    }
+    return compareProductOrder(a, b);
+  });
+
   const getFilteredProducts = () => {
     const term = normalizeSearchText(productSearchTerm);
-    if (!term) return products;
-    return products.filter((product) => getProductSearchText(product).includes(term));
+    const normalizedType = normalizeText(activeProductTypeFilter);
+    return sortProductsForAdmin(products.filter((product) => {
+      const matchesType = normalizedType === 'all' || normalizeText(product.type) === normalizedType;
+      const matchesSearch = !term || getProductSearchText(product).includes(term);
+      return matchesType && matchesSearch;
+    }));
+  };
+
+  const getProductTypeFilterTotal = () => {
+    const normalizedType = normalizeText(activeProductTypeFilter);
+    if (normalizedType === 'all') return products.length;
+    return products.filter((product) => normalizeText(product.type) === normalizedType).length;
   };
 
   const updateProductSearchCount = (count) => {
-    if (dom.productSearchCount) dom.productSearchCount.textContent = `Đang hiển thị ${count}/${products.length} sản phẩm`;
+    const total = getProductTypeFilterTotal();
+    const typeLabel = activeProductTypeFilter === 'all' ? 'tất cả loại' : activeProductTypeFilter;
+    if (dom.productSearchCount) dom.productSearchCount.textContent = `Đang hiển thị ${count}/${total} sản phẩm trong ${typeLabel}`;
     if (dom.productSearchClear) dom.productSearchClear.disabled = !normalizeText(productSearchTerm);
+  };
+
+  const updateProductTypeFilterButtons = () => {
+    dom.productTypeFilters?.forEach((button) => {
+      const isActive = normalizeText(button.dataset.adminProductTypeFilter) === normalizeText(activeProductTypeFilter);
+      button.classList.toggle('is-active', isActive);
+      button.setAttribute('aria-pressed', String(isActive));
+    });
+  };
+
+  const setProductTypeFilter = (filter = 'all') => {
+    activeProductTypeFilter = filter || 'all';
+    updateProductTypeFilterButtons();
+    renderProducts();
   };
 
   const renderProducts = () => {
     if (!dom.products) return;
+    updateProductTypeFilterButtons();
     const filteredProducts = getFilteredProducts();
     updateProductSearchCount(filteredProducts.length);
     if (!products.length) {
@@ -483,7 +544,8 @@
         <div>
           <p class="admin-product-card__brand">${escapeHtml(product.brand)} · ${escapeHtml(product.model)}</p>
           <h2>${escapeHtml(product.full_name || product.fullName || product.model)}</h2>
-          <p>${escapeHtml(product.size)} · ${escapeHtml(product.type)} · ${escapeHtml(product.price)}</p>
+          <p>${escapeHtml(product.size)} · ${escapeHtml(product.price)}</p>
+          <p>Thứ tự: ${escapeHtml(product.sort_order ?? 0)} · Loại: ${escapeHtml(product.type || 'Chưa chọn')}</p>
           <span class="admin-status ${product.is_active ? 'is-active' : 'is-hidden'}">${product.is_active ? 'Hiển thị' : 'Ẩn'}</span>
           <span class="admin-status ${product.is_featured ? 'is-active' : 'is-hidden'}">${product.is_featured ? 'Nổi bật' : 'Không nổi bật'}</span>
         </div>
@@ -496,6 +558,21 @@
       </article>`).join('');
   };
 
+
+  const setAdminTab = (tab = 'products') => {
+    activeAdminTab = ['products', 'orders', 'banners'].includes(tab) ? tab : 'products';
+    dom.adminTabs?.forEach((button) => {
+      const isActive = button.dataset.adminTab === activeAdminTab;
+      button.classList.toggle('is-active', isActive);
+      button.setAttribute('aria-selected', String(isActive));
+    });
+    dom.adminPanels?.forEach((panel) => {
+      const isActive = panel.dataset.adminPanel === activeAdminTab;
+      panel.hidden = !isActive;
+      panel.classList.toggle('is-active', isActive);
+    });
+    if (dom.openFormButton) dom.openFormButton.hidden = activeAdminTab !== 'products';
+  };
 
   const formatDateTime = (value = '') => {
     if (!value) return 'Chưa có thời gian';
@@ -1069,6 +1146,7 @@
   const openForm = (product = null) => {
     editingProduct = product;
     productIdManuallyEdited = Boolean(product);
+    sortOrderManuallyEdited = Boolean(product);
     removedProductImages = new Set();
     currentProductImages = product ? getUniqueProductImages(product) : [];
     dom.form?.reset();
@@ -1080,9 +1158,11 @@
     document.body.classList.add('admin-modal-open');
     const form = dom.form;
     if (form && !product) {
+      const selectedType = activeProductTypeFilter === 'all' ? 'Tivi mới' : activeProductTypeFilter;
+      form.type.value = selectedType;
       form.isFeatured.value = 'false';
       form.isActive.value = 'true';
-      form.sortOrder.value = getNextProductSortOrder();
+      form.sortOrder.value = getNextProductSortOrder(selectedType);
     }
     if (form && product) {
       form.editingOriginalId.value = product.id || '';
@@ -1097,7 +1177,7 @@
       form.oldPrice.value = product.old_price || product.oldPrice || '';
       form.price.value = product.price || '';
       form.badge.value = product.badge || '';
-      form.sortOrder.value = product.sort_order ?? getNextProductSortOrder();
+      form.sortOrder.value = product.sort_order ?? getNextProductSortOrder(product.type);
       form.isFeatured.value = product.is_featured === true ? 'true' : 'false';
       form.description.value = product.description || '';
       form.features.value = Array.isArray(product.features) ? product.features.join('\n') : '';
@@ -1325,7 +1405,7 @@
     duplicate.images = Array.isArray(source.images) ? [...source.images] : [];
     duplicate.is_active = false;
     duplicate.is_featured = false;
-    duplicate.sort_order = getNextProductSortOrder();
+    duplicate.sort_order = getNextProductSortOrder(duplicate.type || source.type);
     duplicate.created_at = undefined;
     duplicate.updated_at = new Date().toISOString();
     return Object.fromEntries(Object.entries(duplicate).filter(([, value]) => value !== undefined));
@@ -1521,6 +1601,8 @@
 
   dom.logoutButton?.addEventListener('click', async () => { await client?.auth.signOut(); showLoginOnly(); });
   dom.openFormButton?.addEventListener('click', () => openForm());
+  dom.adminTabs?.forEach((button) => button.addEventListener('click', () => setAdminTab(button.dataset.adminTab || 'products')));
+  dom.productTypeFilters?.forEach((button) => button.addEventListener('click', () => setProductTypeFilter(button.dataset.adminProductTypeFilter || 'all')));
   dom.openBannerFormButton?.addEventListener('click', () => openBannerForm());
   dom.cancelBannerFormButton?.addEventListener('click', closeBannerForm);
   dom.bannerForm?.addEventListener('submit', handleBannerSave);
@@ -1548,6 +1630,11 @@
     showMessage(dom.formMessage, 'Đã xoá thông số chi tiết.', 'success');
   });
   dom.form?.addEventListener('submit', handleSave);
+
+  dom.form?.type?.addEventListener('change', () => {
+    if (!dom.form || editingProduct || sortOrderManuallyEdited) return;
+    dom.form.sortOrder.value = getNextProductSortOrder(dom.form.type.value);
+  });
   dom.duplicateForm?.addEventListener('submit', handleDuplicateSave);
   dom.duplicateForm?.duplicateSize?.addEventListener('change', () => {
     const isCustom = dom.duplicateForm.duplicateSize.value === 'custom';
@@ -1583,12 +1670,20 @@
     removeExistingImage(button.dataset.removeExistingImage);
   });
   dom.form?.addEventListener('input', (event) => {
+    const form = dom.form;
+    if (!form) return;
+    if (event.target?.name === 'sortOrder') {
+      sortOrderManuallyEdited = true;
+      return;
+    }
+    if (event.target?.name === 'type' && !editingProduct && !sortOrderManuallyEdited) {
+      form.sortOrder.value = getNextProductSortOrder(form.type.value);
+    }
     if (event.target?.name === 'id') {
       productIdManuallyEdited = true;
       return;
     }
     if (editingProduct || productIdManuallyEdited) return;
-    const form = dom.form;
     form.id.value = generateProductId(form.brand.value, form.model.value, form.size.value);
   });
   dom.products?.addEventListener('click', (event) => {
@@ -1629,5 +1724,7 @@
     if (event.target.dataset.deleteBanner) deleteBanner(banner);
   });
 
+  setAdminTab('products');
+  updateProductTypeFilterButtons();
   init();
 })();
