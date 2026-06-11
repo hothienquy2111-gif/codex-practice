@@ -510,7 +510,10 @@ const getProductSearchText = (product = {}) => [
   .map(stringifySearchPart)
   .join(' ');
 
-const normalizeSearchText = (value = '') => normalizeText(String(value).replace(/[^a-z0-9]+/g, ' '));
+const normalizeSearchText = (value = '') => normalizeText(value)
+  .replace(/[^a-z0-9]+/g, ' ')
+  .replace(/\s+/g, ' ')
+  .trim();
 
 const getProductSearchFields = (product = {}) => {
   const brand = normalizeSearchText(product.brand);
