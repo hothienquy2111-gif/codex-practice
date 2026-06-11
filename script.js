@@ -548,6 +548,19 @@ const showCompareToast = (message) => {
 };
 
 const getCompareProducts = () => safeReadJsonArray(COMPARE_STORAGE_KEY).filter((item) => getCompareProductId(item));
+const isProductInCompare = (productId) => getCompareProducts().some((item) => item.id === String(productId));
+
+const updateCompareButtons = (root = document) => {
+  root.querySelectorAll('[data-compare-product-id]').forEach((button) => {
+    const productId = button.dataset.compareProductId || '';
+    const isSelected = isProductInCompare(productId);
+    button.classList.toggle('is-selected', isSelected);
+    button.setAttribute('aria-pressed', String(isSelected));
+    const productLabel = button.dataset.compareProductLabel || 'sản phẩm';
+    button.textContent = isSelected ? 'Đã chọn' : 'So sánh';
+    button.setAttribute('aria-label', isSelected ? `Xoá ${productLabel} khỏi so sánh` : `Thêm ${productLabel} vào so sánh`);
+  });
+};
 
 const setCompareProducts = (items) => {
   const normalized = [];
@@ -588,6 +601,16 @@ const removeProductFromCompare = (productId) => {
 const clearCompareProducts = () => {
   setCompareProducts([]);
   showCompareToast('Đã xoá khỏi danh sách so sánh.');
+};
+
+const toggleProductCompare = (product) => {
+  const comparable = buildComparableProduct(product);
+  if (!comparable.id) return { added: false, reason: 'missing' };
+  if (isProductInCompare(comparable.id)) {
+    removeProductFromCompare(comparable.id);
+    return { added: false, removed: true };
+  }
+  return addProductToCompare(product);
 };
 
 const getCompareBar = () => {
@@ -697,12 +720,14 @@ window.AnhMinhCompare = {
   clear: clearCompareProducts,
   get: getCompareProducts,
   updateBar: updateCompareBar,
+  updateButtons: updateCompareButtons,
   renderPage: renderComparePage,
   buildProduct: buildComparableProduct,
 };
 
 document.addEventListener('anhminh:compare-updated', () => {
   updateCompareBar();
+  updateCompareButtons();
   renderComparePage();
 });
 
@@ -723,6 +748,7 @@ document.addEventListener('click', (event) => {
 window.addEventListener('storage', (event) => {
   if (event.key === COMPARE_STORAGE_KEY) {
     updateCompareBar();
+    updateCompareButtons();
     renderComparePage();
   }
 });
@@ -1551,53 +1577,21 @@ const bindProductImageFallbacks = (root) => {
   });
 };
 
-const renderFeaturedProductCard = (product) => {
+const renderProductCardActions = (product, title) => `
+  <a class="btn btn--primary product-card__cta" href="${createProductDetailUrl(product)}">Xem chi tiết</a>
+  <button class="btn btn--secondary product-card__compare" type="button" data-compare-product-id="${escapeHtml(product.id)}" data-compare-product-label="${escapeHtml(title)}" aria-label="Thêm ${escapeHtml(title)} vào so sánh">So sánh</button>`;
+
+const renderProductListingCard = (product, { classes = 'product-card', dataset = '' } = {}) => {
   const brand = product.brand || '';
   const model = product.model || '';
   const fullName = product.fullName || product.full_name || '';
   const oldPrice = product.oldPrice || product.old_price || '';
   const price = product.price || '';
-  const label = `${fullName} ${model}`.trim();
-  const media = renderProductMedia(product, label);
-  const renderedOldPrice = oldPrice ? `<span class="product-price__old">${escapeHtml(oldPrice)}</span>` : '';
-
-  return `
-    <article class="product-card-wrap">
-      <a class="product-card" href="${createProductDetailUrl(product)}" aria-label="Xem chi tiết ${escapeHtml(label)}">
-        <span class="product-card__badge">${escapeHtml(product.badge)}</span>
-        ${renderProductStockBadge(product)}
-        ${media}
-        <div class="product-card-meta">
-          <span class="product-card-brand">${escapeHtml(brand)}</span>
-          <span class="product-card-model">${escapeHtml(model)}</span>
-        </div>
-        <h3 class="product-card-name">${escapeHtml(fullName || model)}</h3>
-        <p class="product-size">${escapeHtml(formatProductCardSize(product.size))}</p>
-        <p class="product-type">${escapeHtml(product.type)}</p>
-        <strong class="product-price"><span>Giá:</span> ${renderedOldPrice}<span class="product-price__sale">${escapeHtml(price)}</span></strong>
-        <span class="btn btn--primary product-card__cta" aria-hidden="true">Xem chi tiết</span>
-      </a>
-      <button class="btn btn--secondary product-card__compare" type="button" data-compare-product-id="${escapeHtml(product.id)}" aria-label="Thêm ${escapeHtml(label)} vào so sánh">So sánh</button>
-    </article>`;
-};
-
-
-const renderSectionProductCard = (product, sectionType) => {
-  const brand = product.brand || '';
-  const model = product.model || '';
-  const fullName = product.fullName || product.full_name || '';
-  const oldPrice = product.oldPrice || product.old_price || '';
-  const price = product.price || '';
-  const isUsed = sectionType === 'used';
-  const cardDataset = isUsed
-    ? `data-used-tv-card data-used-size="${escapeHtml(product.size)}" data-used-brand="${escapeHtml(brand)}"`
-    : `data-new-tv-card data-new-size="${escapeHtml(product.size)}" data-new-brand="${escapeHtml(brand)}"`;
-  const classes = isUsed ? 'used-tv-card' : 'used-tv-card new-tv-card';
-  const renderedOldPrice = oldPrice ? `<span class="product-price__old">${escapeHtml(oldPrice)}</span>` : '';
   const title = fullName || model;
+  const renderedOldPrice = oldPrice ? `<span class="product-price__old">${escapeHtml(oldPrice)}</span>` : '';
 
   return `
-    <article class="${classes}" ${cardDataset}>
+    <article class="${classes}" ${dataset}>
       <span class="product-card__badge">${escapeHtml(product.badge)}</span>
       ${renderProductStockBadge(product)}
       ${renderProductMedia(product, title)}
@@ -1609,9 +1603,20 @@ const renderSectionProductCard = (product, sectionType) => {
       <p class="product-size">${escapeHtml(formatProductCardSize(product.size))}</p>
       <p class="product-type">${escapeHtml(product.type)}</p>
       <strong class="product-price"><span>Giá:</span> ${renderedOldPrice}<span class="product-price__sale">${escapeHtml(price)}</span></strong>
-      <a class="btn btn--primary product-card__cta" href="${createProductDetailUrl(product)}">Xem chi tiết</a>
-      <button class="btn btn--secondary product-card__compare" type="button" data-compare-product-id="${escapeHtml(product.id)}" aria-label="Thêm ${escapeHtml(title)} vào so sánh">So sánh</button>
+      ${renderProductCardActions(product, title)}
     </article>`;
+};
+
+const renderFeaturedProductCard = (product) => renderProductListingCard(product, { classes: 'product-card' });
+
+const renderSectionProductCard = (product, sectionType) => {
+  const brand = product.brand || '';
+  const isUsed = sectionType === 'used';
+  const dataset = isUsed
+    ? `data-used-tv-card data-used-size="${escapeHtml(product.size)}" data-used-brand="${escapeHtml(brand)}"`
+    : `data-new-tv-card data-new-size="${escapeHtml(product.size)}" data-new-brand="${escapeHtml(brand)}"`;
+  const classes = isUsed ? 'used-tv-card' : 'used-tv-card new-tv-card';
+  return renderProductListingCard(product, { classes, dataset });
 };
 
 const renderTvSection = ({ grid, empty, count, sectionKey, filterState, sectionType, loadMoreButton }) => {
@@ -1625,6 +1630,7 @@ const renderTvSection = ({ grid, empty, count, sectionKey, filterState, sectionT
   if (empty) empty.hidden = filteredProducts.length > 0;
   updateLoadMoreButton(loadMoreButton, sectionKey, filteredProducts.length);
   bindProductImageFallbacks(grid);
+  updateCompareButtons(grid);
 };
 
 const renderUsedTvSection = () => renderTvSection({ grid: dom.usedTvGrid, empty: dom.usedTvEmpty, count: dom.usedTvCount, sectionKey: 'oldTv', filterState: oldTvFilters, sectionType: 'used', loadMoreButton: dom.usedTvLoadMoreButton });
@@ -1824,6 +1830,8 @@ document.addEventListener('keydown', (event) => {
   }
 });
 
+window.addEventListener('resize', () => setMenuState(false));
+
 dom.mobileCall?.addEventListener('click', () => {
   window.location.href = 'tel:0905111223';
 });
@@ -1876,7 +1884,7 @@ document.addEventListener('click', (event) => {
   event.preventDefault();
   event.stopPropagation();
   const product = products.find((item) => String(item.id) === String(compareButton.dataset.compareProductId));
-  if (product) addProductToCompare(product);
+  if (product) toggleProductCompare(product);
 });
 
 const renderProductCards = () => {
@@ -1898,6 +1906,7 @@ const renderProductCards = () => {
   dom.productGrid.innerHTML = visibleProducts.map(renderFeaturedProductCard).join('');
   updateLoadMoreButton(dom.featuredLoadMoreButton, 'featured', filteredProducts.length);
   bindProductImageFallbacks(dom.productGrid);
+  updateCompareButtons(dom.productGrid);
 };
 
 const renderProductSection = (sectionKey) => {
