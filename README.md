@@ -1,7 +1,7 @@
 # ANH MINH STORE - Website tivi và hệ thống quản trị Supabase
 
 ## 1. Tổng quan hệ thống admin
-Website ANH MINH STORE vẫn là website tĩnh chạy bằng HTML, CSS và JavaScript trên GitHub Pages. Hệ thống mới bổ sung trang `admin.html` để chủ cửa hàng đăng nhập, thêm sản phẩm, upload ảnh, sửa, ẩn/hiện và xoá sản phẩm mà không cần sửa code GitHub thủ công.
+Website ANH MINH STORE vẫn là website tĩnh chạy bằng HTML, CSS và JavaScript trên GitHub Pages. Hệ thống admin trong `admin.html` có 3 khu vực chính: **Danh sách sản phẩm**, **Quản lý đơn hàng** và **Quản lý banner** để chủ cửa hàng thao tác gọn hơn. Admin vẫn đăng nhập bằng Supabase để thêm sản phẩm, upload ảnh, sửa, ẩn/hiện, xoá sản phẩm, quản lý đơn hàng và cập nhật banner mà không cần sửa code GitHub thủ công.
 
 ## 2. Vì sao cần Supabase
 Supabase được dùng cho 3 phần chính:
@@ -192,10 +192,12 @@ Nếu trang admin báo “Chưa cấu hình Supabase”, hãy kiểm tra:
 1. Đăng nhập `admin.html`.
 2. Bấm **+ Thêm sản phẩm**.
 3. Nhập thông tin tivi: hãng, model, tên đầy đủ, kích thước, loại sản phẩm, giá bán...
-4. Mã sản phẩm được tự tạo từ hãng + model + kích thước, ví dụ `Samsung + QA55Q7FA + 55 inch` thành `samsung-qa55q7fa-55-inch`.
-5. Có thể sửa mã sản phẩm thủ công nếu cần.
-6. Chọn **Hiện lên sản phẩm nổi bật: Có / Không**. Chọn **Có** sẽ lưu `is_featured = true`, chọn **Không** sẽ lưu `is_featured = false`; sản phẩm cũ chưa có trường này được hiểu là **Không**.
-7. Bấm **Lưu sản phẩm**.
+4. Nếu đang lọc theo **Tivi mới** hoặc **Tivi cũ**, form sẽ chọn sẵn loại sản phẩm tương ứng. Trường **Thứ tự hiển thị** được gợi ý theo loại sản phẩm đang chọn: Tivi mới đếm riêng với Tivi mới, Tivi cũ đếm riêng với Tivi cũ và không cần tự cộng chung toàn bộ sản phẩm.
+5. Khi đổi **Loại sản phẩm** trong form thêm mới, hệ thống tự tính lại thứ tự kế tiếp theo loại mới nếu admin chưa sửa tay trường thứ tự.
+6. Mã sản phẩm được tự tạo từ hãng + model + kích thước, ví dụ `Samsung + QA55Q7FA + 55 inch` thành `samsung-qa55q7fa-55-inch`.
+7. Có thể sửa mã sản phẩm hoặc thứ tự hiển thị thủ công nếu cần.
+8. Chọn **Hiện lên sản phẩm nổi bật: Có / Không**. Chọn **Có** sẽ lưu `is_featured = true`, chọn **Không** sẽ lưu `is_featured = false`; sản phẩm cũ chưa có trường này được hiểu là **Không**.
+9. Bấm **Lưu sản phẩm**.
 
 Nếu mã sản phẩm đã tồn tại, trang admin sẽ báo: “Mã sản phẩm đã tồn tại. Vui lòng đổi model hoặc mã sản phẩm.”
 
@@ -210,7 +212,7 @@ Trong form sản phẩm có:
 Nếu không upload ảnh, sản phẩm vẫn lưu được và website public sẽ hiển thị placeholder tivi bằng CSS.
 
 ## 14. Tìm kiếm, xoá ảnh và nhân bản sản phẩm trong Admin
-Sau khi đăng nhập `admin.html`, khu vực **Danh sách sản phẩm** có thêm ô tìm kiếm cục bộ để lọc nhanh theo mã sản phẩm, model, tên tivi, hãng, kích thước, loại sản phẩm, tình trạng, bảo hành, giá, badge, mô tả, đặc điểm nổi bật, tổng quan và thông số kỹ thuật. Tìm kiếm không gọi Supabase trên từng phím bấm; dữ liệu được lọc từ danh sách sản phẩm đã tải sẵn. Có thể bấm **Xoá tìm kiếm** để quay lại toàn bộ danh sách.
+Sau khi đăng nhập `admin.html`, khu vực **Khu vực quản lý** hiển thị 3 tab chính: **Danh sách sản phẩm**, **Quản lý đơn hàng** và **Quản lý banner**. Tab **Danh sách sản phẩm** có thêm ô tìm kiếm cục bộ và bộ lọc loại **Tất cả sản phẩm / Tivi mới / Tivi cũ** để lọc nhanh theo mã sản phẩm, model, tên tivi, hãng, kích thước, loại sản phẩm, tình trạng, bảo hành, giá, badge, mô tả, đặc điểm nổi bật, tổng quan và thông số kỹ thuật. Tìm kiếm không gọi Supabase trên từng phím bấm; dữ liệu được lọc từ danh sách sản phẩm đã tải sẵn và kết hợp với loại sản phẩm đang chọn. Có thể bấm **Xoá tìm kiếm** để quay lại danh sách trong bộ lọc hiện tại.
 
 Khi sửa sản phẩm, mục **Ảnh hiện có** hiển thị từng ảnh kèm nút **Xoá**. Nút này chỉ bỏ URL ảnh khỏi danh sách ảnh của sản phẩm trong form; ảnh không bị xoá khỏi Supabase Storage ngay lúc bấm. Cần bấm **Lưu sản phẩm** để lưu thay đổi vào bản ghi `products`. Cách này giúp tránh xoá nhầm ảnh đang được sản phẩm khác dùng chung.
 
@@ -221,6 +223,7 @@ Mỗi sản phẩm trong danh sách admin có nút **Nhân bản**. Quy trình n
 - Dùng lại URL ảnh hiện có theo mặc định, không upload/copy file ảnh và không xoá ảnh gốc.
 - Không tự động sao chép `price` hoặc `old_price`; admin phải nhập giá bán mới, còn giá gạch để trống nếu không nhập.
 - Đặt `is_active = false` và `is_featured = false` để sản phẩm là bản nháp cần kiểm tra trước khi bật hiển thị.
+- Tự lấy **Thứ tự hiển thị** kế tiếp theo đúng loại sản phẩm của bản gốc, ví dụ bản nhân bản Tivi cũ chỉ đếm trong nhóm Tivi cũ.
 
 Sau khi tạo xong, admin sẽ tự mở form sửa bản nhân bản để kiểm tra lại thông tin, ảnh và trạng thái trước khi xuất bản.
 

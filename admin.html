@@ -34,7 +34,7 @@
         <header class="admin-dashboard__header">
           <div>
             <p class="admin-eyebrow">ANH MINH STORE</p>
-            <h1 id="admin-dashboard-title">Quản lý sản phẩm</h1>
+            <h1 id="admin-dashboard-title">Quản trị cửa hàng</h1>
           </div>
           <div class="admin-actions">
             <a class="btn btn--secondary" href="index.html">Xem website</a>
@@ -43,7 +43,18 @@
           </div>
         </header>
         <p class="admin-message" data-admin-message aria-live="polite"></p>
-        <section class="admin-management-section" aria-labelledby="admin-products-title">
+        <nav class="admin-tabs-section" aria-labelledby="admin-tabs-title">
+          <div class="admin-tabs-section__copy">
+            <h2 id="admin-tabs-title">Khu vực quản lý</h2>
+            <p class="admin-muted">Chọn mục cần quản lý để thao tác nhanh hơn.</p>
+          </div>
+          <div class="admin-main-tabs" role="tablist" aria-label="Khu vực quản lý admin">
+            <button class="admin-main-tab is-active" type="button" data-admin-tab="products" role="tab" aria-selected="true">Danh sách sản phẩm</button>
+            <button class="admin-main-tab" type="button" data-admin-tab="orders" role="tab" aria-selected="false">Quản lý đơn hàng</button>
+            <button class="admin-main-tab" type="button" data-admin-tab="banners" role="tab" aria-selected="false">Quản lý banner</button>
+          </div>
+        </nav>
+        <section class="admin-management-section admin-panel is-active" data-admin-panel="products" aria-labelledby="admin-products-title">
           <div class="admin-section-header">
             <div>
               <h2 id="admin-products-title">Danh sách sản phẩm</h2>
@@ -56,12 +67,17 @@
               <input class="admin-product-search__input" id="admin-product-search-input" type="search" placeholder="Tìm theo model, tên tivi, hãng, kích thước, giá..." data-product-search />
               <button class="btn btn--ghost admin-product-search__clear" type="button" data-product-search-clear>Xoá tìm kiếm</button>
             </div>
+            <div class="admin-product-type-tabs" role="tablist" aria-label="Lọc sản phẩm theo loại">
+              <button class="admin-product-type-tab is-active" type="button" data-admin-product-type-filter="all" aria-pressed="true">Tất cả sản phẩm</button>
+              <button class="admin-product-type-tab" type="button" data-admin-product-type-filter="Tivi mới" aria-pressed="false">Tivi mới</button>
+              <button class="admin-product-type-tab" type="button" data-admin-product-type-filter="Tivi cũ" aria-pressed="false">Tivi cũ</button>
+            </div>
             <p class="admin-product-count" data-product-search-count aria-live="polite">Đang hiển thị 0/0 sản phẩm</p>
           </div>
           <div class="admin-products" data-admin-products aria-live="polite"></div>
         </section>
 
-        <section class="admin-management-section" aria-labelledby="admin-orders-title">
+        <section class="admin-management-section admin-panel" data-admin-panel="orders" aria-labelledby="admin-orders-title" hidden>
           <div class="admin-section-header">
             <div>
               <h2 id="admin-orders-title">Quản lý đơn hàng</h2>
@@ -80,7 +96,9 @@
           <div class="admin-orders" data-admin-orders aria-live="polite"></div>
         </section>
 
-        <section class="admin-management-section" aria-labelledby="admin-banners-title">
+        <section class="admin-panel admin-banner-panel" data-admin-panel="banners" aria-labelledby="admin-banners-panel-title" hidden>
+          <h2 class="admin-panel__sr-title" id="admin-banners-panel-title">Quản lý banner</h2>
+          <section class="admin-management-section" aria-labelledby="admin-banners-title">
           <div class="admin-section-header">
             <div>
               <h2 id="admin-banners-title">Quản lý ảnh banner trang chủ</h2>
@@ -142,6 +160,7 @@
             </div>
           </form>
           <div class="admin-banner-list" data-admin-right-banner-current aria-live="polite"></div>
+          </section>
         </section>
       </section>
     </main>
