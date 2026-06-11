@@ -680,7 +680,11 @@ const renderComparePage = () => {
       <button class="btn btn--secondary" type="button" data-compare-clear-page>Xoá tất cả</button>
     </div>
     <div class="compare-table-wrap" tabindex="0" aria-label="Bảng so sánh tivi">
-      <table class="compare-table">
+      <table class="compare-table" style="--compare-product-count: ${items.length}">
+        <colgroup>
+          <col class="compare-table__criteria-col">
+          ${items.map(() => '<col class="compare-table__product-col">').join('')}
+        </colgroup>
         <thead>
           <tr>
             <th scope="col">Tiêu chí</th>
