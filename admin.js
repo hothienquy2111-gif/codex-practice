@@ -5,6 +5,8 @@
   const bannerBucketName = 'site-banners';
   const maxBannerFileSize = 10 * 1024 * 1024;
   const allowedBannerTypes = new Set(['image/jpeg', 'image/png', 'image/webp']);
+  const ADMIN_IDLE_TIMEOUT_MS = 30 * 60 * 1000;
+  const ADMIN_IDLE_WARNING_MS = 25 * 60 * 1000;
 
   const dom = {
     loginSection: document.querySelector('[data-admin-login]'),
@@ -13,6 +15,7 @@
     loginButton: document.querySelector('[data-login-button]'),
     loginMessage: document.querySelector('[data-login-message]'),
     adminMessage: document.querySelector('[data-admin-message]'),
+    adminStatus: document.querySelector('[data-admin-status]'),
     products: document.querySelector('[data-admin-products]'),
     adminTabs: document.querySelectorAll('[data-admin-tab]'),
     adminPanels: document.querySelectorAll('[data-admin-panel]'),
@@ -87,6 +90,10 @@
   let rightBanner = null;
   let orders = [];
   let orderViewFilter = 'active';
+  let isAdminVerified = false;
+  let idleTimeoutId = null;
+  let idleWarningId = null;
+  let authStateListenerAttached = false;
 
   const orderStatusLabels = {
     new: 'Đơn mới',
@@ -140,6 +147,7 @@
   const canRestoreOrder = (order = {}) => isArchivedOrder(order);
   const canDeleteOrder = (order = {}) => isArchivedOrder(order);
   const exportOrdersCsv = () => {
+    if (!requireAdminVerified()) return;
     const rows = getFilteredOrders().map((order) => [
       order.id,
       order.customer_name || '',
@@ -414,18 +422,106 @@
     }
     return true;
   };
-  const showLoginOnly = () => { if (dom.loginSection) dom.loginSection.hidden = false; if (dom.dashboard) dom.dashboard.hidden = true; };
-  const showDashboard = () => { if (dom.loginSection) dom.loginSection.hidden = true; if (dom.dashboard) dom.dashboard.hidden = false; };
+  const stopIdleTimer = () => {
+    window.clearTimeout(idleTimeoutId);
+    window.clearTimeout(idleWarningId);
+    idleTimeoutId = null;
+    idleWarningId = null;
+  };
 
-  const isAdmin = async () => {
-    const { data: { user } } = await client.auth.getUser();
+  const showLoginOnly = () => {
+    if (dom.loginSection) dom.loginSection.hidden = false;
+    if (dom.dashboard) dom.dashboard.hidden = true;
+    if (dom.adminStatus) {
+      dom.adminStatus.hidden = true;
+      dom.adminStatus.textContent = 'Đang đăng nhập quyền quản trị';
+    }
+  };
+
+  const updateAdminStatus = (user = null) => {
+    if (!dom.adminStatus) return;
+    const email = normalizeText(user?.email || '');
+    dom.adminStatus.textContent = email ? `Quản trị viên: ${email} · Đang đăng nhập quyền quản trị` : 'Đang đăng nhập quyền quản trị';
+    dom.adminStatus.hidden = false;
+  };
+
+  const showDashboard = (user = null) => {
+    if (dom.loginSection) dom.loginSection.hidden = true;
+    if (dom.dashboard) dom.dashboard.hidden = false;
+    updateAdminStatus(user);
+  };
+
+  const clearAdminState = () => {
+    isAdminVerified = false;
+    stopIdleTimer();
+    products = [];
+    orders = [];
+    banners = [];
+    rightBanner = null;
+  };
+
+  const denyAdminAction = () => {
+    showMessage(dom.adminMessage, 'Bạn không có quyền thực hiện thao tác này.', 'error');
+    return false;
+  };
+
+  const requireAdminVerified = () => isAdminVerified || denyAdminAction();
+
+  const handleSignedOut = (message = '') => {
+    clearAdminState();
+    showLoginOnly();
+    if (message) showMessage(dom.loginMessage, message, 'error');
+  };
+
+  const handleIdleTimeout = async () => {
+    await client?.auth.signOut();
+    handleSignedOut('Phiên quản trị đã hết hạn do không hoạt động. Vui lòng đăng nhập lại.');
+  };
+
+  const resetIdleTimer = () => {
+    if (!isAdminVerified) return;
+    stopIdleTimer();
+    idleWarningId = window.setTimeout(() => {
+      if (isAdminVerified) showMessage(dom.adminMessage, 'Phiên quản trị sắp hết hạn do không hoạt động.', 'info');
+    }, ADMIN_IDLE_WARNING_MS);
+    idleTimeoutId = window.setTimeout(handleIdleTimeout, ADMIN_IDLE_TIMEOUT_MS);
+  };
+
+  const verifyAdminAccess = async () => {
+    const { data: { user }, error: userError } = await client.auth.getUser();
+    if (userError) throw userError;
     if (!user) return false;
     const { data, error } = await client.from('profiles').select('role').eq('id', user.id).maybeSingle();
     if (error) throw error;
-    return data?.role === 'admin';
+    const hasAdminRole = data?.role === 'admin';
+    isAdminVerified = hasAdminRole;
+    if (hasAdminRole) updateAdminStatus(user);
+    return hasAdminRole;
+  };
+
+  const loadAdminData = async () => {
+    if (!isAdminVerified) return;
+    await loadProducts();
+    await loadOrders();
+    await loadBanners();
+    await loadRightBanner();
+  };
+
+  const verifyAndShowDashboard = async () => {
+    if (!(await verifyAdminAccess())) {
+      await client.auth.signOut();
+      handleSignedOut('Tài khoản này không có quyền quản trị.');
+      return false;
+    }
+    const { data: { user } } = await client.auth.getUser();
+    showDashboard(user);
+    resetIdleTimer();
+    await loadAdminData();
+    return true;
   };
 
   const loadProducts = async () => {
+    if (!isAdminVerified) return;
     showMessage(dom.adminMessage, 'Đang tải danh sách sản phẩm...');
     try {
       const { data, error } = await client.from('products').select('*').order('sort_order', { ascending: true }).order('created_at', { ascending: false });
@@ -435,7 +531,7 @@
       showMessage(dom.adminMessage, '');
     } catch (error) {
       console.warn(error);
-      showMessage(dom.adminMessage, 'Không thể kết nối dữ liệu. Vui lòng thử lại.', 'error');
+      showMessage(dom.adminMessage, 'Không thể tải dữ liệu. Vui lòng thử lại.', 'error');
     }
   };
 
@@ -582,7 +678,7 @@
   };
 
   const loadOrders = async () => {
-    if (!dom.orders) return;
+    if (!isAdminVerified || !dom.orders) return;
     try {
       const { data, error } = await client.from('orders').select('*').order('created_at', { ascending: false });
       if (error) throw error;
@@ -590,7 +686,7 @@
       renderOrders();
     } catch (error) {
       console.warn(error);
-      dom.orders.innerHTML = '<p class="admin-empty">Không thể tải đơn hàng. Vui lòng kiểm tra bảng orders.</p>';
+      dom.orders.innerHTML = '<p class="admin-empty">Không thể tải dữ liệu. Vui lòng thử lại.</p>';
     }
   };
 
@@ -647,6 +743,7 @@
   };
 
   const updateOrderStatus = async (orderId, status) => {
+    if (!requireAdminVerified()) return;
     try {
       const { error } = await client.from('orders').update({ status }).eq('id', orderId);
       if (error) throw error;
@@ -656,12 +753,13 @@
       showMessage(dom.adminMessage, 'Đã cập nhật trạng thái đơn hàng.', 'success');
     } catch (error) {
       console.warn(error);
-      showMessage(dom.adminMessage, 'Không thể cập nhật trạng thái đơn hàng. Vui lòng thử lại.', 'error');
+      showMessage(dom.adminMessage, 'Không thể lưu thay đổi. Vui lòng kiểm tra quyền quản trị hoặc cấu trúc dữ liệu.', 'error');
       await loadOrders();
     }
   };
 
   const archiveOrder = async (orderId) => {
+    if (!requireAdminVerified()) return;
     if (!window.confirm('Bạn có chắc muốn lưu trữ đơn hàng này không?')) return;
     try {
       const archivedAt = new Date().toISOString();
@@ -676,12 +774,13 @@
       showMessage(dom.adminMessage, 'Đã lưu trữ đơn hàng.', 'success');
     } catch (error) {
       console.warn(error);
-      showMessage(dom.adminMessage, 'Không thể lưu trữ đơn hàng. Vui lòng kiểm tra lại cấu trúc bảng orders.', 'error');
+      showMessage(dom.adminMessage, 'Không thể lưu thay đổi. Vui lòng kiểm tra quyền quản trị hoặc cấu trúc dữ liệu.', 'error');
       await loadOrders();
     }
   };
 
   const restoreOrder = async (orderId) => {
+    if (!requireAdminVerified()) return;
     if (!window.confirm('Bạn có chắc muốn khôi phục đơn hàng này không?')) return;
     try {
       const { error } = await client.from('orders').update({ is_archived: false, archived_at: null }).eq('id', orderId);
@@ -695,12 +794,13 @@
       showMessage(dom.adminMessage, 'Đã khôi phục đơn hàng.', 'success');
     } catch (error) {
       console.warn(error);
-      showMessage(dom.adminMessage, 'Không thể khôi phục đơn hàng. Vui lòng thử lại.', 'error');
+      showMessage(dom.adminMessage, 'Không thể lưu thay đổi. Vui lòng kiểm tra quyền quản trị hoặc cấu trúc dữ liệu.', 'error');
       await loadOrders();
     }
   };
 
   const deleteOrder = async (orderId) => {
+    if (!requireAdminVerified()) return;
     if (!window.confirm('Bạn có chắc muốn xoá vĩnh viễn đơn hàng này không? Hành động này không thể hoàn tác.')) return;
     try {
       const { error } = await client.from('orders').delete().eq('id', orderId);
@@ -710,14 +810,14 @@
       showMessage(dom.adminMessage, 'Đã xoá đơn hàng.', 'success');
     } catch (error) {
       console.warn(error);
-      showMessage(dom.adminMessage, 'Không thể xoá đơn hàng. Vui lòng thử lại.', 'error');
+      showMessage(dom.adminMessage, 'Không thể lưu thay đổi. Vui lòng kiểm tra quyền quản trị hoặc cấu trúc dữ liệu.', 'error');
       await loadOrders();
     }
   };
 
 
   const loadBanners = async () => {
-    if (!dom.banners) return;
+    if (!isAdminVerified || !dom.banners) return;
     try {
       const { data, error } = await client
         .from('hero_banners')
@@ -730,7 +830,7 @@
       renderBanners();
     } catch (error) {
       console.warn(error);
-      showMessage(dom.adminMessage, 'Không thể tải danh sách banner. Vui lòng kiểm tra bảng hero_banners.', 'error');
+      showMessage(dom.adminMessage, 'Không thể tải dữ liệu. Vui lòng thử lại.', 'error');
     }
   };
 
@@ -800,6 +900,7 @@
 
   const handleBannerSave = async (event) => {
     event.preventDefault();
+    if (!requireAdminVerified()) return;
     const form = dom.bannerForm;
     if (!form) return;
     const file = form.bannerImage.files?.[0];
@@ -839,13 +940,14 @@
       await loadRightBanner();
     } catch (error) {
       console.warn(error);
-      showMessage(dom.bannerMessage, 'Không thể tải ảnh banner lên. Vui lòng thử lại.', 'error');
+      showMessage(dom.bannerMessage, 'Không thể lưu thay đổi. Vui lòng kiểm tra quyền quản trị hoặc cấu trúc dữ liệu.', 'error');
     } finally {
       dom.saveBannerButton.disabled = false;
     }
   };
 
   const toggleBanner = async (banner) => {
+    if (!requireAdminVerified()) return;
     try {
       const { error } = await client.from('hero_banners').update({ is_active: !banner.is_active, updated_at: new Date().toISOString() }).eq('id', banner.id);
       if (error) throw error;
@@ -853,12 +955,13 @@
       await loadRightBanner();
     } catch (error) {
       console.warn(error);
-      showMessage(dom.adminMessage, 'Không thể cập nhật trạng thái banner. Vui lòng thử lại.', 'error');
+      showMessage(dom.adminMessage, 'Không thể lưu thay đổi. Vui lòng kiểm tra quyền quản trị hoặc cấu trúc dữ liệu.', 'error');
     }
   };
 
   const deleteBanner = async (banner) => {
-    if (!window.confirm('Bạn có chắc muốn xoá ảnh banner này không?')) return;
+    if (!requireAdminVerified()) return;
+    if (!window.confirm('Bạn có chắc muốn xoá banner này không?')) return;
     try {
       const { error } = await client.from('hero_banners').delete().eq('id', banner.id);
       if (error) throw error;
@@ -872,7 +975,7 @@
       showMessage(dom.adminMessage, storageWarning ? 'Đã xoá banner khỏi danh sách, nhưng chưa xoá được file trong Storage.' : 'Đã xoá ảnh banner.', storageWarning ? 'info' : 'success');
     } catch (error) {
       console.warn(error);
-      showMessage(dom.adminMessage, 'Không thể xoá ảnh banner. Vui lòng thử lại.', 'error');
+      showMessage(dom.adminMessage, 'Không thể lưu thay đổi. Vui lòng kiểm tra quyền quản trị hoặc cấu trúc dữ liệu.', 'error');
     }
   };
 
@@ -923,7 +1026,7 @@
   };
 
   const loadRightBanner = async () => {
-    if (!dom.rightBannerForm) return;
+    if (!isAdminVerified || !dom.rightBannerForm) return;
     try {
       const { data, error } = await client
         .from('hero_banners')
@@ -939,7 +1042,7 @@
       renderRightBannerCurrent();
     } catch (error) {
       console.warn(error);
-      showMessage(dom.rightBannerMessage, 'Không thể tải banner dọc. Vui lòng kiểm tra cột placement/link_url trong bảng hero_banners.', 'error');
+      showMessage(dom.rightBannerMessage, 'Không thể tải dữ liệu. Vui lòng thử lại.', 'error');
       fillRightBannerForm(null);
       renderRightBannerCurrent();
     }
@@ -956,6 +1059,7 @@
 
   const handleRightBannerSave = async (event) => {
     event.preventDefault();
+    if (!requireAdminVerified()) return;
     const form = dom.rightBannerForm;
     if (!form) return;
     const file = form.bannerImage.files?.[0];
@@ -993,15 +1097,16 @@
       await loadRightBanner();
     } catch (error) {
       console.warn(error);
-      showMessage(dom.rightBannerMessage, 'Không thể lưu banner dọc. Vui lòng thử lại.', 'error');
+      showMessage(dom.rightBannerMessage, 'Không thể lưu thay đổi. Vui lòng kiểm tra quyền quản trị hoặc cấu trúc dữ liệu.', 'error');
     } finally {
       dom.saveRightBannerButton.disabled = false;
     }
   };
 
   const deleteRightBanner = async () => {
+    if (!requireAdminVerified()) return;
     if (!rightBanner?.id) return;
-    if (!window.confirm('Bạn có chắc muốn xoá banner dọc trang chủ này không?')) return;
+    if (!window.confirm('Bạn có chắc muốn xoá banner này không?')) return;
     try {
       const deletingBanner = rightBanner;
       const { error } = await client.from('hero_banners').delete().eq('id', deletingBanner.id);
@@ -1017,7 +1122,7 @@
       showMessage(dom.rightBannerMessage, storageWarning ? 'Đã xoá banner dọc khỏi dữ liệu, nhưng chưa xoá được file trong Storage.' : 'Đã xoá banner dọc trang chủ.', storageWarning ? 'info' : 'success');
     } catch (error) {
       console.warn(error);
-      showMessage(dom.rightBannerMessage, 'Không thể xoá banner dọc. Vui lòng thử lại.', 'error');
+      showMessage(dom.rightBannerMessage, 'Không thể lưu thay đổi. Vui lòng kiểm tra quyền quản trị hoặc cấu trúc dữ liệu.', 'error');
     }
   };
 
@@ -1210,8 +1315,10 @@
   };
 
   const removeExistingImage = (imageUrl = '') => {
+    if (!requireAdminVerified()) return;
     const url = normalizeText(imageUrl);
     if (!url) return;
+    if (!window.confirm('Bạn có chắc muốn xoá ảnh này khỏi sản phẩm không?')) return;
     currentProductImages = currentProductImages.filter((image) => image !== url);
     removedProductImages.add(url);
     renderExistingImages();
@@ -1246,6 +1353,7 @@
   };
 
   const uploadImages = async (form, productId) => {
+    if (!isAdminVerified) throw new Error('Bạn không có quyền thực hiện thao tác này.');
     const mainFile = form.mainImage.files?.[0];
     const galleryFiles = Array.from(form.galleryImages.files || []);
     const removedImages = removedProductImages;
@@ -1412,6 +1520,7 @@
   };
   const handleDuplicateSave = async (event) => {
     event.preventDefault();
+    if (!requireAdminVerified()) return;
     if (!duplicatingProduct || !dom.duplicateForm) return;
     const form = dom.duplicateForm;
     const newSize = normalizeDuplicateSizeText(getDuplicateSize(form));
@@ -1441,7 +1550,7 @@
       showMessage(dom.formMessage, 'Đã nhân bản sản phẩm. Vui lòng kiểm tra lại kích thước, khối lượng và thông số lắp đặt cho size mới.', 'info');
     } catch (error) {
       console.warn(error);
-      showMessage(dom.duplicateMessage, error.message || 'Không thể nhân bản sản phẩm. Vui lòng thử lại.', 'error');
+      showMessage(dom.duplicateMessage, 'Không thể lưu thay đổi. Vui lòng kiểm tra quyền quản trị hoặc cấu trúc dữ liệu.', 'error');
     } finally {
       dom.createDuplicateButton.disabled = false;
     }
@@ -1495,6 +1604,7 @@
 
   const handleSave = async (event) => {
     event.preventDefault();
+    if (!requireAdminVerified()) return;
     const form = dom.form;
     if (!form || !validateForm(form)) return;
     const productId = normalizeText(form.id.value) || generateProductId(form.brand.value, form.model.value, form.size.value);
@@ -1520,55 +1630,81 @@
       closeForm();
     } catch (error) {
       console.warn(error);
-      showMessage(dom.formMessage, error.message || 'Không thể kết nối dữ liệu. Vui lòng thử lại.', 'error');
+      showMessage(dom.formMessage, 'Không thể lưu thay đổi. Vui lòng kiểm tra quyền quản trị hoặc cấu trúc dữ liệu.', 'error');
     } finally {
       dom.saveButton.disabled = false;
     }
   };
 
   const toggleProduct = async (product) => {
+    if (!requireAdminVerified()) return;
     try {
       const { error } = await client.from('products').update({ is_active: !product.is_active, updated_at: new Date().toISOString() }).eq('id', product.id);
       if (error) throw error;
       await loadProducts();
     } catch (error) {
       console.warn(error);
-      showMessage(dom.adminMessage, 'Không thể kết nối dữ liệu. Vui lòng thử lại.', 'error');
+      showMessage(dom.adminMessage, 'Không thể lưu thay đổi. Vui lòng kiểm tra quyền quản trị hoặc cấu trúc dữ liệu.', 'error');
     }
   };
 
   const deleteProduct = async (product) => {
-    if (!window.confirm('Bạn có chắc muốn xoá sản phẩm này không?')) return;
+    if (!requireAdminVerified()) return;
+    const productName = [product.full_name || product.fullName, product.model].filter(Boolean).join(' / ') || product.id || 'sản phẩm này';
+    if (!window.confirm(`Bạn có chắc muốn xoá sản phẩm "${productName}" không?`)) return;
     try {
       const { error } = await client.from('products').delete().eq('id', product.id);
       if (error) throw error;
       await loadProducts();
     } catch (error) {
       console.warn(error);
-      showMessage(dom.adminMessage, 'Không thể kết nối dữ liệu. Vui lòng thử lại.', 'error');
+      showMessage(dom.adminMessage, 'Không thể lưu thay đổi. Vui lòng kiểm tra quyền quản trị hoặc cấu trúc dữ liệu.', 'error');
     }
   };
 
-  const init = async () => {
-    if (!requireSupabase()) return;
-    const { data: { session } } = await client.auth.getSession();
-    if (!session) { showLoginOnly(); return; }
-    try {
-      if (!(await isAdmin())) {
-        showLoginOnly();
-        showMessage(dom.loginMessage, 'Tài khoản này không có quyền quản trị.', 'error');
-        await client.auth.signOut();
+  const attachAuthStateListener = () => {
+    if (authStateListenerAttached || !client?.auth?.onAuthStateChange) return;
+    authStateListenerAttached = true;
+    client.auth.onAuthStateChange(async (event) => {
+      if (event === 'SIGNED_OUT') {
+        handleSignedOut();
         return;
       }
-      showDashboard();
-      await loadProducts();
-      await loadOrders();
-      await loadBanners();
-      await loadRightBanner();
+      if (event === 'TOKEN_REFRESHED') {
+        try {
+          if (!isAdminVerified) {
+            handleSignedOut();
+            return;
+          }
+          if (!(await verifyAdminAccess())) {
+            await client.auth.signOut();
+            handleSignedOut('Tài khoản này không có quyền quản trị.');
+            return;
+          }
+          resetIdleTimer();
+        } catch (error) {
+          console.warn(error);
+          await client.auth.signOut();
+          handleSignedOut();
+        }
+      }
+    });
+  };
+
+  const init = async () => {
+    showLoginOnly();
+    if (!requireSupabase()) return;
+    attachAuthStateListener();
+    try {
+      const { data: { session } } = await client.auth.getSession();
+      if (!session) {
+        handleSignedOut();
+        return;
+      }
+      await verifyAndShowDashboard();
     } catch (error) {
       console.warn(error);
-      showLoginOnly();
-      showMessage(dom.loginMessage, 'Không thể kết nối dữ liệu. Vui lòng thử lại.', 'error');
+      handleSignedOut('Không thể tải dữ liệu. Vui lòng thử lại.');
     }
   };
 
@@ -1579,27 +1715,21 @@
     dom.loginButton.disabled = true;
     const form = new FormData(dom.loginForm);
     try {
+      clearAdminState();
+      showLoginOnly();
       const { error } = await client.auth.signInWithPassword({ email: normalizeText(form.get('email')), password: String(form.get('password') || '') });
       if (error) throw error;
-      if (!(await isAdmin())) {
-        await client.auth.signOut();
-        showMessage(dom.loginMessage, 'Tài khoản này không có quyền quản trị.', 'error');
-        return;
-      }
-      showDashboard();
-      await loadProducts();
-      await loadOrders();
-      await loadBanners();
-      await loadRightBanner();
+      await verifyAndShowDashboard();
     } catch (error) {
       console.warn(error);
-      showMessage(dom.loginMessage, 'Sai tài khoản hoặc mật khẩu. Vui lòng thử lại.', 'error');
+      await client.auth.signOut();
+      handleSignedOut('Sai tài khoản hoặc mật khẩu. Vui lòng thử lại.');
     } finally {
       dom.loginButton.disabled = false;
     }
   });
 
-  dom.logoutButton?.addEventListener('click', async () => { await client?.auth.signOut(); showLoginOnly(); });
+  dom.logoutButton?.addEventListener('click', async () => { await client?.auth.signOut(); handleSignedOut(); });
   dom.openFormButton?.addEventListener('click', () => openForm());
   dom.adminTabs?.forEach((button) => button.addEventListener('click', () => setAdminTab(button.dataset.adminTab || 'products')));
   dom.productTypeFilters?.forEach((button) => button.addEventListener('click', () => setProductTypeFilter(button.dataset.adminProductTypeFilter || 'all')));
@@ -1724,7 +1854,12 @@
     if (event.target.dataset.deleteBanner) deleteBanner(banner);
   });
 
+  ['click', 'keydown', 'scroll', 'touchstart'].forEach((eventName) => {
+    document.addEventListener(eventName, resetIdleTimer, { passive: true });
+  });
+
   setAdminTab('products');
   updateProductTypeFilterButtons();
+  showLoginOnly();
   init();
 })();
