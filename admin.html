@@ -68,6 +68,15 @@
               <p class="admin-muted">Xem đơn mới nhất và cập nhật trạng thái chăm sóc khách hàng.</p>
             </div>
           </div>
+          <div class="admin-orders-toolbar">
+            <div class="admin-orders-filters" role="tablist" aria-label="Lọc đơn hàng">
+              <button class="btn btn--ghost admin-orders-filter is-active" type="button" data-order-filter="active" aria-pressed="true">Đơn đang xử lý</button>
+              <button class="btn btn--ghost admin-orders-filter" type="button" data-order-filter="archived" aria-pressed="false">Đơn đã lưu trữ</button>
+              <button class="btn btn--ghost admin-orders-filter" type="button" data-order-filter="all" aria-pressed="false">Tất cả đơn</button>
+            </div>
+            <button class="btn btn--secondary" type="button" data-export-orders-csv>Xuất CSV đơn hàng</button>
+          </div>
+          <p class="admin-muted admin-orders__hint">Bạn có thể mở file CSV này bằng Google Sheets để lưu trữ hoặc xử lý thêm.</p>
           <div class="admin-orders" data-admin-orders aria-live="polite"></div>
         </section>
 

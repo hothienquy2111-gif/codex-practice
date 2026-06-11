@@ -18,6 +18,8 @@
     productSearchClear: document.querySelector('[data-product-search-clear]'),
     productSearchCount: document.querySelector('[data-product-search-count]'),
     orders: document.querySelector('[data-admin-orders]'),
+    orderFilters: document.querySelectorAll('[data-order-filter]'),
+    exportOrdersCsvButton: document.querySelector('[data-export-orders-csv]'),
     logoutButton: document.querySelector('[data-logout-button]'),
     openFormButton: document.querySelector('[data-open-product-form]'),
     modal: document.querySelector('[data-product-modal]'),
@@ -76,6 +78,7 @@
   let editingBanner = null;
   let rightBanner = null;
   let orders = [];
+  let orderViewFilter = 'active';
 
   const orderStatusLabels = {
     new: 'Đơn mới',
@@ -85,6 +88,68 @@
   };
 
   const escapeHtml = (value = '') => String(value).replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
+  const escapeCsvValue = (value = '') => {
+    const textValue = String(value ?? '');
+    return /[\",\n\r]/.test(textValue) ? `"${textValue.replace(/"/g, '""')}"` : textValue;
+  };
+  const isArchivedOrder = (order = {}) => Boolean(order.is_archived);
+  const getFilteredOrders = () => orders.filter((order) => {
+    if (orderViewFilter === 'archived') return isArchivedOrder(order);
+    if (orderViewFilter === 'active') return !isArchivedOrder(order);
+    return true;
+  });
+  const updateOrderFilterButtons = () => {
+    dom.orderFilters?.forEach((button) => {
+      const isActive = button.dataset.orderFilter === orderViewFilter;
+      button.classList.toggle('is-active', isActive);
+      button.setAttribute('aria-pressed', String(isActive));
+    });
+  };
+  const setOrderFilter = (filter) => {
+    orderViewFilter = filter;
+    updateOrderFilterButtons();
+    renderOrders();
+  };
+  const downloadTextFile = (content, fileName, mimeType = 'text/plain;charset=utf-8') => {
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
+  const formatCsvDateTime = (value = '') => {
+    if (!value) return '';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return normalizeText(value);
+    return date.toLocaleString('vi-VN', { dateStyle: 'short', timeStyle: 'short' });
+  };
+  const getOrderStatusLabel = (status = '') => orderStatusLabels[status] || status || 'Chưa cập nhật';
+  const canArchiveOrder = (order = {}) => ['completed', 'cancelled'].includes(order.status) && !isArchivedOrder(order);
+  const canRestoreOrder = (order = {}) => isArchivedOrder(order);
+  const canDeleteOrder = (order = {}) => isArchivedOrder(order);
+  const exportOrdersCsv = () => {
+    const rows = getFilteredOrders().map((order) => [
+      order.id,
+      order.customer_name || '',
+      order.customer_phone || '',
+      order.product_name || '',
+      order.product_model || '',
+      order.product_price || '',
+      order.customer_note || '',
+      getOrderStatusLabel(order.status),
+      formatCsvDateTime(order.created_at),
+      formatCsvDateTime(order.archived_at),
+    ]);
+    const header = ['Mã đơn', 'Tên khách hàng', 'Số điện thoại', 'Sản phẩm', 'Model', 'Giá bán', 'Ghi chú', 'Trạng thái', 'Thời gian tạo', 'Thời gian lưu trữ'];
+    const csv = ['\uFEFF' + header.map(escapeCsvValue).join(',')].concat(rows.map((row) => row.map(escapeCsvValue).join(','))).join('\r\n');
+    const dateStamp = new Date().toISOString().slice(0, 10);
+    downloadTextFile(csv, `don-hang-anh-minh-store-${dateStamp}.csv`, 'text/csv;charset=utf-8');
+    showMessage(dom.adminMessage, 'Đã xuất CSV đơn hàng. Bạn có thể mở file bằng Google Sheets.', 'success');
+  };
   const showMessage = (node, text = '', type = '') => {
     if (!node) return;
     node.textContent = text;
@@ -454,31 +519,51 @@
 
   const renderOrders = () => {
     if (!dom.orders) return;
-    if (!orders.length) {
-      dom.orders.innerHTML = '<p class="admin-empty">Chưa có đơn hàng nào.</p>';
+    updateOrderFilterButtons();
+    const visibleOrders = getFilteredOrders();
+    if (!visibleOrders.length) {
+      const emptyMessage = orderViewFilter === 'archived'
+        ? 'Chưa có đơn hàng đã lưu trữ.'
+        : orderViewFilter === 'active'
+          ? 'Chưa có đơn hàng đang xử lý.'
+          : 'Chưa có đơn hàng nào.';
+      dom.orders.innerHTML = `<p class="admin-empty">${emptyMessage}</p>`;
       return;
     }
 
-    dom.orders.innerHTML = orders.map((order) => {
+    dom.orders.innerHTML = visibleOrders.map((order) => {
       const status = order.status || 'new';
       const productText = [order.product_name, order.product_model].filter(Boolean).join(' · ') || 'Sản phẩm chưa cập nhật';
+      const archiveText = isArchivedOrder(order) ? 'Đã lưu trữ' : 'Đang xử lý';
+      const archiveDate = isArchivedOrder(order) ? formatDateTime(order.archived_at) : '';
       return `
         <article class="admin-order-card" data-order-id="${escapeHtml(order.id)}">
           <div class="admin-order-card__main">
-            <p class="admin-product-card__brand">${escapeHtml(order.customer_name || 'Khách hàng')}</p>
+            <div class="admin-order-card__header">
+              <p class="admin-product-card__brand">${escapeHtml(order.customer_name || 'Khách hàng')}</p>
+              <span class="admin-status ${isArchivedOrder(order) ? 'is-hidden' : 'is-active'}">${archiveText}</span>
+            </div>
             <h2>${escapeHtml(productText)}</h2>
             <dl class="admin-order-meta">
               <div><dt>Số điện thoại</dt><dd>${escapeHtml(order.customer_phone || 'Chưa có')}</dd></div>
               <div><dt>Giá bán</dt><dd>${escapeHtml(order.product_price || 'Chưa cập nhật')}</dd></div>
               <div><dt>Ghi chú</dt><dd>${escapeHtml(order.customer_note || 'Không có')}</dd></div>
-              <div><dt>Thời gian</dt><dd>${escapeHtml(formatDateTime(order.created_at))}</dd></div>
+              <div><dt>Thời gian tạo</dt><dd>${escapeHtml(formatDateTime(order.created_at))}</dd></div>
+              ${archiveDate ? `<div><dt>Thời gian lưu trữ</dt><dd>${escapeHtml(archiveDate)}</dd></div>` : ''}
             </dl>
           </div>
-          <div class="admin-order-card__status">
-            <label for="order-status-${escapeHtml(order.id)}">Trạng thái</label>
-            <select id="order-status-${escapeHtml(order.id)}" data-order-status="${escapeHtml(order.id)}">
-              ${Object.entries(orderStatusLabels).map(([value, label]) => `<option value="${value}"${value === status ? ' selected' : ''}>${label}</option>`).join('')}
-            </select>
+          <div class="admin-order-card__side">
+            <div class="admin-order-card__status">
+              <label for="order-status-${escapeHtml(order.id)}">Trạng thái</label>
+              <select id="order-status-${escapeHtml(order.id)}" data-order-status="${escapeHtml(order.id)}">
+                ${Object.entries(orderStatusLabels).map(([value, label]) => `<option value="${value}"${value === status ? ' selected' : ''}>${label}</option>`).join('')}
+              </select>
+            </div>
+            <div class="admin-order-card__actions">
+              ${canArchiveOrder(order) ? `<button type="button" class="btn btn--secondary" data-archive-order="${escapeHtml(order.id)}">Lưu trữ đơn</button>` : ''}
+              ${canRestoreOrder(order) ? `<button type="button" class="btn btn--secondary" data-restore-order="${escapeHtml(order.id)}">Khôi phục đơn</button>` : ''}
+              ${canDeleteOrder(order) ? `<button type="button" class="btn btn--danger" data-delete-order="${escapeHtml(order.id)}">Xoá đơn</button>` : ''}
+            </div>
           </div>
         </article>`;
     }).join('');
@@ -490,10 +575,65 @@
       if (error) throw error;
       const order = orders.find((item) => String(item.id) === String(orderId));
       if (order) order.status = status;
+      renderOrders();
       showMessage(dom.adminMessage, 'Đã cập nhật trạng thái đơn hàng.', 'success');
     } catch (error) {
       console.warn(error);
       showMessage(dom.adminMessage, 'Không thể cập nhật trạng thái đơn hàng. Vui lòng thử lại.', 'error');
+      await loadOrders();
+    }
+  };
+
+  const archiveOrder = async (orderId) => {
+    if (!window.confirm('Bạn có chắc muốn lưu trữ đơn hàng này không?')) return;
+    try {
+      const archivedAt = new Date().toISOString();
+      const { error } = await client.from('orders').update({ is_archived: true, archived_at: archivedAt }).eq('id', orderId);
+      if (error) throw error;
+      const order = orders.find((item) => String(item.id) === String(orderId));
+      if (order) {
+        order.is_archived = true;
+        order.archived_at = archivedAt;
+      }
+      renderOrders();
+      showMessage(dom.adminMessage, 'Đã lưu trữ đơn hàng.', 'success');
+    } catch (error) {
+      console.warn(error);
+      showMessage(dom.adminMessage, 'Không thể lưu trữ đơn hàng. Vui lòng kiểm tra lại cấu trúc bảng orders.', 'error');
+      await loadOrders();
+    }
+  };
+
+  const restoreOrder = async (orderId) => {
+    if (!window.confirm('Bạn có chắc muốn khôi phục đơn hàng này không?')) return;
+    try {
+      const { error } = await client.from('orders').update({ is_archived: false, archived_at: null }).eq('id', orderId);
+      if (error) throw error;
+      const order = orders.find((item) => String(item.id) === String(orderId));
+      if (order) {
+        order.is_archived = false;
+        order.archived_at = null;
+      }
+      renderOrders();
+      showMessage(dom.adminMessage, 'Đã khôi phục đơn hàng.', 'success');
+    } catch (error) {
+      console.warn(error);
+      showMessage(dom.adminMessage, 'Không thể khôi phục đơn hàng. Vui lòng thử lại.', 'error');
+      await loadOrders();
+    }
+  };
+
+  const deleteOrder = async (orderId) => {
+    if (!window.confirm('Bạn có chắc muốn xoá vĩnh viễn đơn hàng này không? Hành động này không thể hoàn tác.')) return;
+    try {
+      const { error } = await client.from('orders').delete().eq('id', orderId);
+      if (error) throw error;
+      orders = orders.filter((item) => String(item.id) !== String(orderId));
+      renderOrders();
+      showMessage(dom.adminMessage, 'Đã xoá đơn hàng.', 'success');
+    } catch (error) {
+      console.warn(error);
+      showMessage(dom.adminMessage, 'Không thể xoá đơn hàng. Vui lòng thử lại.', 'error');
       await loadOrders();
     }
   };
@@ -1468,6 +1608,17 @@
     if (!orderId) return;
     updateOrderStatus(orderId, event.target.value);
   });
+  dom.orders?.addEventListener('click', (event) => {
+    const actionButton = event.target.closest('[data-archive-order], [data-restore-order], [data-delete-order]');
+    if (!actionButton) return;
+    const orderId = actionButton.dataset.archiveOrder || actionButton.dataset.restoreOrder || actionButton.dataset.deleteOrder;
+    if (!orderId) return;
+    if (actionButton.dataset.archiveOrder) archiveOrder(orderId);
+    if (actionButton.dataset.restoreOrder) restoreOrder(orderId);
+    if (actionButton.dataset.deleteOrder) deleteOrder(orderId);
+  });
+  dom.orderFilters?.forEach((button) => button.addEventListener('click', () => setOrderFilter(button.dataset.orderFilter || 'active')));
+  dom.exportOrdersCsvButton?.addEventListener('click', exportOrdersCsv);
   dom.banners?.addEventListener('click', (event) => {
     const id = event.target.dataset.editBanner || event.target.dataset.toggleBanner || event.target.dataset.deleteBanner;
     if (!id) return;

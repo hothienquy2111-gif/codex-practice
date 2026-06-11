@@ -113,6 +113,21 @@ exists (
 )
 ```
 
+## 7.2. Quản lý đơn hàng và lưu trữ CSV
+Khu vực **Quản lý đơn hàng** trong `admin.html` hỗ trợ:
+
+- Lọc theo `Đơn đang xử lý`, `Đơn đã lưu trữ`, `Tất cả đơn`.
+- Với đơn `Hoàn tất` hoặc `Đã huỷ`, admin có thể bấm **Lưu trữ đơn** để chuyển sang trạng thái đã lưu trữ.
+- Đơn đã lưu trữ có thể bấm **Khôi phục đơn** để đưa quay lại danh sách đang xử lý.
+- Đơn đã lưu trữ có thể bấm **Xoá đơn** kèm xác nhận mạnh để xoá vĩnh viễn.
+- Nút **Xuất CSV đơn hàng** tạo file CSV UTF-8 có BOM để mở trực tiếp bằng Google Sheets hoặc Excel mà vẫn giữ đúng tiếng Việt.
+
+Nếu bảng `orders` chưa có cột lưu trữ, hãy chạy thủ công file `supabase-orders-archive.sql` trong Supabase SQL Editor. File này chỉ thêm cột `is_archived`, `archived_at` và policy cần thiết cho admin; không tự động chạy trong ứng dụng.
+
+Public visitor vẫn chỉ được tạo đơn mới bằng `INSERT`. Không mở rộng quyền `SELECT`, `UPDATE` hay `DELETE` cho khách truy cập. Admin vẫn là tài khoản duy nhất được xem, cập nhật, lưu trữ và xoá đơn hàng.
+
+Google Sheets API không được gọi trực tiếp từ frontend vì như vậy sẽ phải nhúng credential hoặc token nhạy cảm vào mã chạy trên trình duyệt. Phiên bản hiện tại dùng CSV xuất thủ công để an toàn hơn.
+
 ## 8. Cách tạo storage bucket product-images
 Có 2 cách:
 
