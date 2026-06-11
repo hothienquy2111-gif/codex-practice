@@ -77,7 +77,7 @@ Kiểm thử thủ công đề xuất:
 3. Mở file `supabase-schema.sql` trong repo.
 4. Copy toàn bộ SQL và chạy.
 
-Bảng `products` chứa các trường: `id`, `brand`, `model`, `full_name`, `size`, `type`, `condition`, `warranty`, `old_price`, `price`, `badge`, `description`, `features`, `image`, `images`, `overview`, `specifications`, `is_active`, `is_featured`, `sort_order`, `created_at`, `updated_at`. Trường `is_featured` là boolean, mặc định `false`, dùng để chọn sản phẩm hiện ở mục “Sản phẩm nổi bật”.
+Bảng `products` chứa các trường: `id`, `brand`, `model`, `full_name`, `size`, `type`, `condition`, `warranty`, `old_price`, `price`, `badge`, `description`, `features`, `image`, `images`, `overview`, `specifications`, `stock_status`, `is_active`, `is_featured`, `sort_order`, `created_at`, `updated_at`. Trường `is_featured` là boolean, mặc định `false`, dùng để chọn sản phẩm hiện ở mục “Sản phẩm nổi bật”.
 
 ## 6. Cách tạo bảng profiles
 File `supabase-schema.sql` cũng tạo bảng `profiles` với các trường:
@@ -584,3 +584,65 @@ Lưu ý Supabase:
 - File `supabase-rls-launch-check.sql` chỉ là checklist SQL phục vụ review và phải được kiểm tra/chạy thủ công trong Supabase SQL Editor.
 - Không chạy SQL tự động từ frontend, không dùng service role key trên website public và không đưa secret key vào mã nguồn.
 - Sau khi áp dụng RLS, cần kiểm tra lại: khách public chỉ đọc được sản phẩm/banner đang active, tạo được đơn hàng mới nếu form đặt hàng hoạt động, nhưng không đọc/sửa/xoá được đơn hàng hoặc dữ liệu admin.
+
+## 24. Ghi chú launch readiness 2026
+
+### Quy tắc hiển thị ảnh
+
+- Ảnh sản phẩm trong danh sách, gợi ý tìm kiếm, gallery chi tiết và sản phẩm tham khảo dùng `object-fit: contain` để TV hiển thị đủ khung, không bị crop/zoom mất viền.
+- Khung ảnh sản phẩm dùng nền sáng nhất quán để ảnh có nền trong suốt hoặc tỷ lệ khác nhau vẫn dễ nhìn.
+- Ảnh banner trang chủ và banner dọc vẫn có thể dùng `object-fit: cover` vì đây là ảnh truyền thông cần phủ đầy khung.
+- Nếu sản phẩm chưa có ảnh hoặc URL ảnh bị lỗi, website hiển thị placeholder sạch với nội dung “Ảnh sản phẩm đang cập nhật”/khung TV minh hoạ, không cần tạo thêm file ảnh mới.
+- Ảnh danh sách sản phẩm, gợi ý, sản phẩm tham khảo và logo hãng được lazy-load; banner hero đầu tiên không bị ép lazy-load để tránh ảnh hưởng LCP.
+
+### Tối ưu mobile
+
+- Header, thanh tìm kiếm, dropdown gợi ý, card sản phẩm, gallery chi tiết, modal tổng quan/thông số, popup Zalo và nút nổi được tối ưu bằng media query ở các mốc `768px`, `640px`, `480px`.
+- Trang admin có tab chính, bộ lọc loại sản phẩm và lọc đơn hàng cuộn ngang khi thiếu chỗ; card sản phẩm/đơn hàng/banner tự xuống dòng nút để không tràn ngang.
+- Modal admin và modal đặt hàng giới hạn chiều cao theo viewport, phần nội dung cuộn được trên màn hình nhỏ.
+
+### Quy trình trạng thái sản phẩm
+
+Bảng `products` vẫn giữ `is_active` để quyết định có hiển thị công khai hay không. Trường mới `stock_status` dùng cho trạng thái kinh doanh:
+
+- `available` = **Đang bán**: hiển thị bình thường nếu `is_active = true`.
+- `sold` = **Đã bán**: ẩn khỏi danh sách public chính, nhưng trang chi tiết cũ vẫn có thể hiển thị badge “Đã bán” và làm mềm/vô hiệu CTA đặt hàng.
+- `coming_soon` = **Hàng sắp về**: vẫn hiển thị public nếu `is_active = true`, có badge “Hàng sắp về” và CTA “Liên hệ giữ hàng”.
+- `hidden` = **Tạm ẩn**: ẩn khỏi public, vẫn quản lý được trong admin.
+
+Nếu database chưa có cột `stock_status`, hãy review và chạy thủ công file `supabase-product-status.sql` trong Supabase SQL Editor. File này thêm cột và constraint kiểm tra trạng thái theo cách idempotent; ứng dụng có fallback `available` để không lỗi khi đọc dữ liệu cũ.
+
+### Thao tác nhanh đơn hàng
+
+Trong admin, mỗi card đơn hàng có các thao tác nhanh:
+
+- **Gọi khách**: mở `tel:` bằng số điện thoại đã chuẩn hoá.
+- **Nhắn Zalo**: mở `https://zalo.me/...` nếu có số điện thoại hợp lệ.
+- **Đã liên hệ**: cập nhật trạng thái đơn sang `contacted`.
+- **Hoàn tất**: cập nhật trạng thái đơn sang `completed`.
+- **Lưu trữ**: dùng logic lưu trữ đơn hiện có; các thao tác khôi phục/xoá đơn lưu trữ vẫn giữ nguyên.
+
+### Sao lưu CSV
+
+Admin có thể xuất CSV để sao lưu dữ liệu:
+
+- Sản phẩm: `san-pham-anh-minh-store-YYYY-MM-DD.csv`.
+- Đơn hàng: `don-hang-anh-minh-store-YYYY-MM-DD.csv`.
+- Banner: `banner-anh-minh-store-YYYY-MM-DD.csv`.
+
+CSV có UTF-8 BOM để tiếng Việt mở đúng trong Excel/Google Sheets. Có thể mở trực tiếp bằng Google Sheets hoặc lưu lại như bản backup thủ công trước khi chỉnh dữ liệu lớn.
+
+### Placeholder Google Analytics và Search Console
+
+Các file HTML chính có comment placeholder, chưa gọi script tracking giả và chưa dùng ID thật:
+
+```html
+<!-- Google Analytics placeholder: replace G-XXXXXXXXXX before public tracking -->
+<!-- Google Search Console placeholder: add verification meta tag here after verifying the site. -->
+```
+
+Khi triển khai chính thức:
+
+1. Dán script GA4 thật sau khi đã có **GA4 Measurement ID** dạng `G-XXXXXXXXXX`.
+2. Dán meta verification của **Google Search Console** vào phần `<head>` theo hướng dẫn của Google.
+3. Không commit service role key hoặc secret; chỉ giữ anon key public hiện có của Supabase.

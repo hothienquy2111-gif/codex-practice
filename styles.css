@@ -2553,3 +2553,156 @@ body.zalo-choice-modal-open {
     width: 100%;
   }
 }
+
+/* Launch readiness image/status/mobile refinements */
+.brand__logo { object-fit: contain; background: #f7fbff; }
+.search-suggestion-card__media {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 92px;
+  height: 60px;
+  overflow: hidden;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #f7fbff, #eef6ff);
+}
+.search-suggestion-card__media .search-suggestion-card__image { width: 100%; height: 100%; }
+.search-suggestion-card__fallback {
+  position: absolute;
+  inset: 0;
+  display: none;
+  place-items: center;
+  border: 1px solid rgba(6, 42, 86, 0.08);
+  border-radius: 12px;
+  color: var(--color-primary);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  background: linear-gradient(135deg, #f7fbff, #eef6ff);
+}
+.search-suggestion-card__media.is-image-error .search-suggestion-card__image { display: none; }
+.search-suggestion-card__media.is-image-error .search-suggestion-card__fallback { display: grid; }
+.product-card__stock-badge,
+.product-detail__badge--status {
+  justify-self: start;
+  border-radius: 999px;
+  padding: 5px 10px;
+  background: #fff7ed;
+  color: #c2410c;
+  font-size: 0.74rem;
+  font-weight: 800;
+  line-height: 1.15;
+}
+.product-card__stock-badge--sold,
+.product-detail__badge--sold { background: #fef2f2; color: #b42318; }
+.product-card__stock-badge--coming_soon,
+.product-detail__badge--coming_soon { background: #fff7ed; color: #c2410c; }
+.product-card__stock-badge--hidden,
+.product-detail__badge--hidden { background: #f1f5f9; color: #475569; }
+.product-detail__order-button:disabled,
+.product-detail__order-button--disabled {
+  border-color: #cbd5e1;
+  background: #e2e8f0;
+  color: #64748b;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+.order-modal__status { margin: 4px 0; }
+.product-gallery,
+.product-detail-gallery-slider,
+.product-detail-gallery-track,
+.product-detail-gallery-slide { max-width: 100%; }
+.product-detail-gallery-slide img,
+.product-gallery__thumb img,
+.product-card__image,
+.search-suggestion-card__image,
+.brand-logo-box img,
+.brand-logo-img { object-fit: contain; }
+.product-card__media,
+.product-detail-gallery-slide,
+.product-gallery__thumb,
+.search-suggestion-card__media { background: linear-gradient(145deg, #f7fbff, #ffffff); }
+
+@media (max-width: 768px) {
+  html, body { max-width: 100%; overflow-x: hidden; }
+  .main-header__inner,
+  .main-nav__inner,
+  .product-detail-card,
+  .product-reference-section,
+  .product-modal__card,
+  .zalo-choice-modal__dialog { min-width: 0; }
+  .search-suggestions { width: min(100%, calc(100vw - 24px)); max-width: calc(100vw - 24px); }
+  .product-detail-gallery-slide { min-height: 280px; }
+  .product-detail-gallery-slide img { max-height: 340px; padding: 12px; }
+  .product-specs { gap: 6px; }
+  .product-specs div { padding-bottom: 6px; }
+  .product-modal__content,
+  .order-modal__content { max-height: calc(100dvh - 170px); overflow-y: auto; }
+}
+
+@media (max-width: 640px) {
+  .search-suggestion-card__media,
+  .search-suggestion-card__image,
+  .search-suggestion-card__image--placeholder { width: 78px; height: 52px; }
+  .product-grid,
+  .used-tv-grid,
+  .new-tv-grid { align-items: stretch; }
+  .product-card,
+  .used-tv-card,
+  .new-tv-card { min-width: 0; }
+  .product-card__media,
+  .product-card__image,
+  .tv-mockup { aspect-ratio: 16 / 10; }
+  .product-detail__media { width: 100%; }
+  .product-detail-gallery-slide { min-height: 240px; }
+  .product-detail__placeholder { width: min(360px, 100%); }
+  .zalo-choice-modal__dialog { overflow-y: auto; }
+}
+
+@media (max-width: 480px) {
+  .main-header__inner { grid-template-columns: minmax(0, 1fr) auto; }
+  .brand__content strong { overflow-wrap: anywhere; }
+  .search-box { grid-template-columns: minmax(0, 1fr) auto auto; width: 100%; }
+  .search-box button { padding-inline: 11px; }
+  .search-suggestion-card { grid-template-columns: 70px minmax(0, 1fr); }
+  .search-suggestion-card__media,
+  .search-suggestion-card__image,
+  .search-suggestion-card__image--placeholder { width: 70px; height: 48px; }
+  .product-grid,
+  .used-tv-grid,
+  .new-tv-grid,
+  .product-reference-grid { gap: 10px; }
+  .product-card,
+  .used-tv-card,
+  .new-tv-card { padding: 10px; }
+  .product-card__media,
+  .product-card__image,
+  .tv-mockup { max-height: 170px; }
+  .floating-contact { bottom: 10px; }
+  .product-modal { padding: 8px; }
+  .product-modal__card { width: calc(100vw - 16px); max-height: calc(100dvh - 16px); }
+  .zalo-choice-modal__dialog { max-height: calc(100dvh - 16px); }
+}
+.tv-mockup em,
+.product-image-placeholder__text {
+  position: absolute;
+  left: 50%;
+  bottom: 8px;
+  max-width: calc(100% - 18px);
+  margin: 0;
+  color: var(--color-gray-600);
+  font-size: 0.72rem;
+  font-style: normal;
+  font-weight: 800;
+  line-height: 1.25;
+  text-align: center;
+  transform: translateX(-50%);
+}
+.product-detail__placeholder .product-image-placeholder__text { bottom: 4px; font-size: 0.88rem; }
+.search-suggestion-card__fallback,
+.search-suggestion-card__image--placeholder {
+  padding-inline: 6px;
+  font-size: 0.62rem;
+  line-height: 1.2;
+  text-align: center;
+}

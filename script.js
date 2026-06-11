@@ -408,6 +408,25 @@ const formatProductCardSize = (size = '') =>
     .trim()
     .replace(/\binch\b/gi, 'inch');
 
+const PRODUCT_STOCK_STATUS = {
+  available: 'Đang bán',
+  sold: 'Đã bán',
+  coming_soon: 'Hàng sắp về',
+  hidden: 'Tạm ẩn',
+};
+
+const normalizeStockStatus = (value = '') => {
+  const normalized = String(value || '').trim().toLowerCase();
+  return Object.prototype.hasOwnProperty.call(PRODUCT_STOCK_STATUS, normalized) ? normalized : 'available';
+};
+
+const getProductStockStatusLabel = (value = '') => PRODUCT_STOCK_STATUS[normalizeStockStatus(value)] || PRODUCT_STOCK_STATUS.available;
+
+const isPublicStockStatus = (value = '') => {
+  const status = normalizeStockStatus(value);
+  return status !== 'sold' && status !== 'hidden';
+};
+
 const normalizeProduct = (product = {}, index = 0) => {
   const fallbackId = `san-pham-${index + 1}`;
   const id = String(product.id || fallbackId).trim();
@@ -444,6 +463,8 @@ const normalizeProduct = (product = {}, index = 0) => {
     searchableText: product.searchableText || product.searchable_text || '',
     sortOrder: Number(product.sort_order ?? product.sortOrder ?? index),
     isFeatured: Boolean(product.is_featured ?? product.isFeatured ?? false),
+    isActive: Boolean(product.is_active ?? product.isActive ?? true),
+    stockStatus: normalizeStockStatus(product.stock_status ?? product.stockStatus),
   };
 };
 
@@ -619,6 +640,7 @@ const getSearchSuggestions = (query, sourceProducts = products, limit = 4) => {
   if (!normalizedQuery) return [];
 
   return sourceProducts
+    .filter((product) => isPublicProduct(product))
     .map((product) => ({ product, score: scoreSearchProduct(product, normalizedQuery) }))
     .filter(({ score }) => score > 0)
     .sort((a, b) => {
@@ -642,8 +664,11 @@ const renderSearchSuggestionCard = (product, index) => {
   const type = normalizeProductType(product);
   const image = product.image || (Array.isArray(product.images) ? product.images[0] : '');
   const thumb = image
-    ? `<img class="search-suggestion-card__image" src="${escapeHtml(image)}" alt="${escapeHtml(fullName)}" loading="lazy" decoding="async" />`
-    : `<div class="search-suggestion-card__image search-suggestion-card__image--placeholder" aria-hidden="true">Tivi</div>`;
+    ? `<div class="search-suggestion-card__media">
+        <img class="search-suggestion-card__image" src="${escapeHtml(image)}" alt="${escapeHtml(fullName)}" loading="lazy" decoding="async" />
+        <div class="search-suggestion-card__fallback" aria-hidden="true">Ảnh sản phẩm đang cập nhật</div>
+      </div>`
+    : `<div class="search-suggestion-card__media search-suggestion-card__media--placeholder" aria-hidden="true"><div class="search-suggestion-card__image search-suggestion-card__image--placeholder">Ảnh sản phẩm đang cập nhật</div></div>`;
 
   return `<a class="search-suggestion-card" href="${createProductDetailUrl(product)}" data-search-suggestion data-suggestion-index="${index}" role="option" tabindex="-1" aria-label="Xem chi tiết ${escapeHtml(fullName)}">
     ${thumb}
@@ -657,6 +682,14 @@ const renderSearchSuggestionCard = (product, index) => {
       <div class="search-suggestion-card__price">${escapeHtml(price)}</div>
     </div>
   </a>`;
+};
+
+const bindSearchSuggestionImageFallbacks = (root) => {
+  root?.querySelectorAll('.search-suggestion-card__image').forEach((image) => {
+    image.addEventListener('error', () => {
+      image.closest('.search-suggestion-card__media')?.classList.add('is-image-error');
+    }, { once: true });
+  });
 };
 
 const openSearchSuggestions = () => {
@@ -725,6 +758,7 @@ const renderSearchSuggestions = (results = [], query = dom.searchInput?.value ||
   const cards = results.map((product, index) => renderSearchSuggestionCard(product, index)).join('');
   const footer = hasMore ? `<div class="search-suggestions__footer"><button type="button" data-search-show-all>Xem tất cả kết quả</button></div>` : '';
   dom.searchSuggestions.innerHTML = `${cards}${footer}`;
+  bindSearchSuggestionImageFallbacks(dom.searchSuggestions);
   dom.searchSuggestions.setAttribute('role', 'listbox');
   openSearchSuggestions();
   searchSuggestionsState = results;
@@ -1039,9 +1073,10 @@ const normalizeProductType = (product = {}) => {
   return normalizeFilterValue(product.type || 'Tivi');
 };
 
-const getFeaturedProducts = (sourceProducts = products) => sourceProducts.filter((product) => product.isFeatured === true);
-const getNewTvProducts = (sourceProducts = products) => sourceProducts.filter((product) => normalizeProductType(product) === 'Tivi mới');
-const getOldTvProducts = (sourceProducts = products) => sourceProducts.filter((product) => normalizeProductType(product) === 'Tivi cũ');
+const isPublicProduct = (product = {}) => Boolean(product?.isActive !== false && isPublicStockStatus(product?.stockStatus));
+const getFeaturedProducts = (sourceProducts = products) => sourceProducts.filter((product) => isPublicProduct(product) && product.isFeatured === true);
+const getNewTvProducts = (sourceProducts = products) => sourceProducts.filter((product) => isPublicProduct(product) && normalizeProductType(product) === 'Tivi mới');
+const getOldTvProducts = (sourceProducts = products) => sourceProducts.filter((product) => isPublicProduct(product) && normalizeProductType(product) === 'Tivi cũ');
 const resetVisibleCount = (sectionKey) => { visibleCounts[sectionKey] = PRODUCTS_BATCH_SIZE; };
 const resetAllVisibleCounts = () => Object.keys(visibleCounts).forEach(resetVisibleCount);
 
@@ -1056,7 +1091,7 @@ const createBrandLogoElement = (brand, extraClass = '') => {
 
   const wideClass = brand.wide ? ' is-wide' : '';
   return `<span class="brand-logo-box ${extraClass}">
-    <img class="brand-logo-img${wideClass}" src="${escapeHtml(brand.logo)}" alt="Logo ${escapeHtml(brandName)}" loading="eager" decoding="async" width="${BRAND_LOGO_WIDTH}" height="${BRAND_LOGO_HEIGHT}" />
+    <img class="brand-logo-img${wideClass}" src="${escapeHtml(brand.logo)}" alt="Logo ${escapeHtml(brandName)}" loading="lazy" decoding="async" width="${BRAND_LOGO_WIDTH}" height="${BRAND_LOGO_HEIGHT}" />
     <span class="brand-fallback-badge" aria-hidden="true">${escapeHtml(getBrandInitial(brandName))}</span>
   </span>`;
 };
@@ -1266,6 +1301,7 @@ const renderFeaturedProductCard = (product) => {
     <article class="product-card-wrap">
       <a class="product-card" href="${createProductDetailUrl(product)}" aria-label="Xem chi tiết ${escapeHtml(label)}">
         <span class="product-card__badge">${escapeHtml(product.badge)}</span>
+        ${renderProductStockBadge(product)}
         ${media}
         <div class="product-card-meta">
           <span class="product-card-brand">${escapeHtml(brand)}</span>
@@ -1298,6 +1334,7 @@ const renderSectionProductCard = (product, sectionType) => {
   return `
     <article class="${classes}" ${cardDataset}>
       <span class="product-card__badge">${escapeHtml(product.badge)}</span>
+      ${renderProductStockBadge(product)}
       ${renderProductMedia(product, title)}
       <div class="product-card-meta">
         <span class="product-card-brand">${escapeHtml(brand)}</span>
@@ -1540,9 +1577,16 @@ if ('IntersectionObserver' in window && dom.sections.length) {
 const createProductDetailUrl = (product) => `product-detail.html?id=${encodeURIComponent(product.id)}`;
 
 const renderTvPlaceholder = (label = 'Tivi Anh Minh Store') => `
-  <div class="tv-mockup" role="img" aria-label="Ảnh minh họa ${escapeHtml(label)}">
+  <div class="tv-mockup" role="img" aria-label="Ảnh sản phẩm đang cập nhật ${escapeHtml(label)}">
     <span></span>
+    <em>Ảnh sản phẩm đang cập nhật</em>
   </div>`;
+
+const renderProductStockBadge = (product = {}) => {
+  const status = normalizeStockStatus(product.stockStatus);
+  if (status === 'available') return '';
+  return `<span class="product-card__stock-badge product-card__stock-badge--${escapeHtml(status)}">${escapeHtml(getProductStockStatusLabel(status))}</span>`;
+};
 
 const renderProductMedia = (product, label) => {
   const placeholder = renderTvPlaceholder(label);

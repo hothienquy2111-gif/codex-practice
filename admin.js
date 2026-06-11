@@ -25,7 +25,9 @@
     productTypeFilters: document.querySelectorAll('[data-admin-product-type-filter]'),
     orders: document.querySelector('[data-admin-orders]'),
     orderFilters: document.querySelectorAll('[data-order-filter]'),
+    exportProductsCsvButton: document.querySelector('[data-export-products-csv]'),
     exportOrdersCsvButton: document.querySelector('[data-export-orders-csv]'),
+    exportBannersCsvButton: document.querySelector('[data-export-banners-csv]'),
     logoutButton: document.querySelector('[data-logout-button]'),
     openFormButton: document.querySelector('[data-open-product-form]'),
     modal: document.querySelector('[data-product-modal]'),
@@ -102,6 +104,13 @@
     cancelled: 'Đã huỷ',
   };
 
+  const productStockStatusLabels = {
+    available: 'Đang bán',
+    sold: 'Đã bán',
+    coming_soon: 'Hàng sắp về',
+    hidden: 'Tạm ẩn',
+  };
+
   const escapeHtml = (value = '') => String(value).replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
   const escapeCsvValue = (value = '') => {
     const textValue = String(value ?? '');
@@ -136,6 +145,7 @@
     link.remove();
     window.setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
+  const toCsv = (header, rows) => ['\uFEFF' + header.map(escapeCsvValue).join(',')].concat(rows.map((row) => row.map(escapeCsvValue).join(','))).join('\r\n');
   const formatCsvDateTime = (value = '') => {
     if (!value) return '';
     const date = new Date(value);
@@ -143,7 +153,13 @@
     return date.toLocaleString('vi-VN', { dateStyle: 'short', timeStyle: 'short' });
   };
   const getOrderStatusLabel = (status = '') => orderStatusLabels[status] || status || 'Chưa cập nhật';
-  const canArchiveOrder = (order = {}) => ['completed', 'cancelled'].includes(order.status) && !isArchivedOrder(order);
+  const getProductStockStatus = (value = '') => {
+    const normalized = String(value || '').trim().toLowerCase();
+    return Object.prototype.hasOwnProperty.call(productStockStatusLabels, normalized) ? normalized : 'available';
+  };
+  const getProductStockStatusLabel = (value = '') => productStockStatusLabels[getProductStockStatus(value)] || productStockStatusLabels.available;
+  const shouldRetryWithoutStockStatus = (error) => /stock_status|column .*stock_status|schema cache/i.test(String(error?.message || error || ''));
+  const canArchiveOrder = (order = {}) => !isArchivedOrder(order);
   const canRestoreOrder = (order = {}) => isArchivedOrder(order);
   const canDeleteOrder = (order = {}) => isArchivedOrder(order);
   const exportOrdersCsv = () => {
@@ -156,15 +172,61 @@
       order.product_model || '',
       order.product_price || '',
       order.customer_note || '',
-      getOrderStatusLabel(order.status),
+      order.status || '',
+      String(Boolean(order.is_archived)),
       formatCsvDateTime(order.created_at),
       formatCsvDateTime(order.archived_at),
     ]);
-    const header = ['Mã đơn', 'Tên khách hàng', 'Số điện thoại', 'Sản phẩm', 'Model', 'Giá bán', 'Ghi chú', 'Trạng thái', 'Thời gian tạo', 'Thời gian lưu trữ'];
-    const csv = ['\uFEFF' + header.map(escapeCsvValue).join(',')].concat(rows.map((row) => row.map(escapeCsvValue).join(','))).join('\r\n');
+    const header = ['Mã đơn', 'Tên khách hàng', 'Số điện thoại', 'Sản phẩm', 'Model', 'Giá bán', 'Ghi chú', 'Trạng thái', 'Đã lưu trữ', 'Thời gian tạo', 'Thời gian lưu trữ'];
+    const csv = toCsv(header, rows);
     const dateStamp = new Date().toISOString().slice(0, 10);
     downloadTextFile(csv, `don-hang-anh-minh-store-${dateStamp}.csv`, 'text/csv;charset=utf-8');
     showMessage(dom.adminMessage, 'Đã xuất CSV đơn hàng. Bạn có thể mở file bằng Google Sheets.', 'success');
+  };
+  const exportProductsCsv = () => {
+    if (!requireAdminVerified()) return;
+    const rows = sortProductsForAdmin(products).map((product) => [
+      product.id || '',
+      product.full_name || product.fullName || '',
+      product.brand || '',
+      product.model || '',
+      product.size || '',
+      product.type || '',
+      product.price || '',
+      product.original_price || product.old_price || product.oldPrice || '',
+      product.warranty || '',
+      getProductStockStatusLabel(product.stock_status || product.stockStatus),
+      String(Boolean(product.is_active)),
+      String(Boolean(product.is_featured)),
+      Number(product.sort_order ?? 0),
+      Array.from(new Set([product.image, ...(Array.isArray(product.images) ? product.images : [])].filter(Boolean))).join(' | '),
+      formatCsvDateTime(product.created_at),
+      formatCsvDateTime(product.updated_at),
+    ]);
+    const header = ['Mã sản phẩm', 'Tên đầy đủ', 'Hãng', 'Model', 'Kích thước', 'Loại', 'Giá bán', 'Giá cũ', 'Bảo hành', 'Trạng thái kho', 'Đang hiển thị', 'Nổi bật', 'Thứ tự', 'Danh sách ảnh', 'Thời gian tạo', 'Thời gian cập nhật'];
+    const csv = toCsv(header, rows);
+    const dateStamp = new Date().toISOString().slice(0, 10);
+    downloadTextFile(csv, `san-pham-anh-minh-store-${dateStamp}.csv`, 'text/csv;charset=utf-8');
+    showMessage(dom.adminMessage, 'Đã xuất CSV sản phẩm. Bạn có thể mở file bằng Google Sheets.', 'success');
+  };
+  const exportBannersCsv = () => {
+    if (!requireAdminVerified()) return;
+    const rows = banners.map((banner) => [
+      banner.id || '',
+      banner.title || '',
+      banner.image_url || '',
+      banner.link_url || '',
+      banner.placement || '',
+      Number(banner.sort_order || 0),
+      String(Boolean(banner.is_active)),
+      formatCsvDateTime(banner.created_at),
+      formatCsvDateTime(banner.updated_at),
+    ]);
+    const header = ['Mã banner', 'Tiêu đề', 'Đường dẫn ảnh', 'Link', 'Vị trí', 'Thứ tự', 'Đang hiển thị', 'Thời gian tạo', 'Thời gian cập nhật'];
+    const csv = toCsv(header, rows);
+    const dateStamp = new Date().toISOString().slice(0, 10);
+    downloadTextFile(csv, `banner-anh-minh-store-${dateStamp}.csv`, 'text/csv;charset=utf-8');
+    showMessage(dom.adminMessage, 'Đã xuất CSV banner. Bạn có thể mở file bằng Google Sheets.', 'success');
   };
   const showMessage = (node, text = '', type = '') => {
     if (!node) return;
@@ -553,6 +615,7 @@
     product.price,
     product.old_price || product.oldPrice,
     product.badge,
+    getProductStockStatusLabel(product.stock_status || product.stockStatus),
     product.description,
     serializeSearchValue(product.features),
     serializeSearchValue(product.overview),
@@ -642,6 +705,7 @@
           <h2>${escapeHtml(product.full_name || product.fullName || product.model)}</h2>
           <p>${escapeHtml(product.size)} · ${escapeHtml(product.price)}</p>
           <p>Thứ tự: ${escapeHtml(product.sort_order ?? 0)} · Loại: ${escapeHtml(product.type || 'Chưa chọn')}</p>
+          <span class="admin-status admin-status--stock admin-status--${escapeHtml(getProductStockStatus(product.stock_status || product.stockStatus))}">${escapeHtml(getProductStockStatusLabel(product.stock_status || product.stockStatus))}</span>
           <span class="admin-status ${product.is_active ? 'is-active' : 'is-hidden'}">${product.is_active ? 'Hiển thị' : 'Ẩn'}</span>
           <span class="admin-status ${product.is_featured ? 'is-active' : 'is-hidden'}">${product.is_featured ? 'Nổi bật' : 'Không nổi bật'}</span>
         </div>
@@ -677,6 +741,34 @@
     return date.toLocaleString('vi-VN', { dateStyle: 'short', timeStyle: 'short' });
   };
 
+  const normalizePhoneNumber = (value = '') => {
+    const digits = String(value || '').replace(/\D/g, '');
+    if (!digits) return '';
+    if (digits.startsWith('84') && digits.length === 11) return `0${digits.slice(2)}`;
+    if (digits.startsWith('84') && digits.length === 10) return `0${digits.slice(2)}`;
+    if (digits.startsWith('0')) return digits;
+    if (digits.length === 9) return `0${digits}`;
+    return digits;
+  };
+
+  const formatPhoneNumber = (value = '') => {
+    const digits = normalizePhoneNumber(value);
+    if (!digits) return '';
+    return digits.replace(/(\d{4})(\d{3})(\d{3})/, '$1 $2 $3').trim();
+  };
+
+  const buildTelHref = (value = '') => {
+    const digits = normalizePhoneNumber(value);
+    if (!digits) return '';
+    return `tel:${digits}`;
+  };
+
+  const buildZaloHref = (value = '') => {
+    const digits = normalizePhoneNumber(value);
+    if (!digits) return '';
+    return `https://zalo.me/${digits}`;
+  };
+
   const loadOrders = async () => {
     if (!isAdminVerified || !dom.orders) return;
     try {
@@ -709,6 +801,11 @@
       const productText = [order.product_name, order.product_model].filter(Boolean).join(' · ') || 'Sản phẩm chưa cập nhật';
       const archiveText = isArchivedOrder(order) ? 'Đã lưu trữ' : 'Đang xử lý';
       const archiveDate = isArchivedOrder(order) ? formatDateTime(order.archived_at) : '';
+      const phoneNumber = normalizePhoneNumber(order.customer_phone || '');
+      const phoneText = formatPhoneNumber(order.customer_phone || '') || 'Chưa có';
+      const telHref = buildTelHref(phoneNumber);
+      const zaloHref = buildZaloHref(phoneNumber);
+      const hasPhone = Boolean(phoneNumber);
       return `
         <article class="admin-order-card" data-order-id="${escapeHtml(order.id)}">
           <div class="admin-order-card__main">
@@ -718,7 +815,7 @@
             </div>
             <h2>${escapeHtml(productText)}</h2>
             <dl class="admin-order-meta">
-              <div><dt>Số điện thoại</dt><dd>${escapeHtml(order.customer_phone || 'Chưa có')}</dd></div>
+              <div><dt>Số điện thoại</dt><dd>${escapeHtml(phoneText)}</dd></div>
               <div><dt>Giá bán</dt><dd>${escapeHtml(order.product_price || 'Chưa cập nhật')}</dd></div>
               <div><dt>Ghi chú</dt><dd>${escapeHtml(order.customer_note || 'Không có')}</dd></div>
               <div><dt>Thời gian tạo</dt><dd>${escapeHtml(formatDateTime(order.created_at))}</dd></div>
@@ -732,8 +829,12 @@
                 ${Object.entries(orderStatusLabels).map(([value, label]) => `<option value="${value}"${value === status ? ' selected' : ''}>${label}</option>`).join('')}
               </select>
             </div>
-            <div class="admin-order-card__actions">
-              ${canArchiveOrder(order) ? `<button type="button" class="btn btn--secondary" data-archive-order="${escapeHtml(order.id)}">Lưu trữ đơn</button>` : ''}
+            <div class="admin-order-card__actions admin-order-card__actions--quick">
+              ${hasPhone ? `<a class="btn btn--secondary" href="${escapeHtml(telHref)}" aria-label="Gọi khách ${escapeHtml(order.customer_name || '')}">Gọi khách</a>` : `<button type="button" class="btn btn--secondary" disabled aria-disabled="true">Gọi khách</button>`}
+              ${hasPhone ? `<a class="btn btn--secondary" href="${escapeHtml(zaloHref)}" target="_blank" rel="noopener noreferrer" aria-label="Nhắn Zalo khách ${escapeHtml(order.customer_name || '')}">Nhắn Zalo</a>` : `<button type="button" class="btn btn--secondary" disabled aria-disabled="true">Nhắn Zalo</button>`}
+              <button type="button" class="btn btn--secondary" data-update-order-status="${escapeHtml(order.id)}" data-order-next-status="contacted">Đã liên hệ</button>
+              <button type="button" class="btn btn--secondary" data-update-order-status="${escapeHtml(order.id)}" data-order-next-status="completed">Hoàn tất</button>
+              ${canArchiveOrder(order) ? `<button type="button" class="btn btn--secondary" data-archive-order="${escapeHtml(order.id)}">Lưu trữ</button>` : ''}
               ${canRestoreOrder(order) ? `<button type="button" class="btn btn--secondary" data-restore-order="${escapeHtml(order.id)}">Khôi phục đơn</button>` : ''}
               ${canDeleteOrder(order) ? `<button type="button" class="btn btn--danger" data-delete-order="${escapeHtml(order.id)}">Xoá đơn</button>` : ''}
             </div>
@@ -1267,6 +1368,7 @@
       form.type.value = selectedType;
       form.isFeatured.value = 'false';
       form.isActive.value = 'true';
+      form.stockStatus.value = 'available';
       form.sortOrder.value = getNextProductSortOrder(selectedType);
     }
     if (form && product) {
@@ -1290,6 +1392,7 @@
       renderOverviewPreview(parseOverview(form.overview.value), { showEmpty: false });
       form.specifications.value = stringifySpecificationsForAdmin(product.specifications ?? product.specificationsText ?? []);
       updateSpecificationPreview(parseSpecifications(form.specifications.value), { showEmpty: false });
+      form.stockStatus.value = getProductStockStatus(product.stock_status || product.stockStatus);
       form.isActive.value = String(product.is_active !== false);
     }
     renderExistingImages();
@@ -1511,6 +1614,7 @@
     duplicate.old_price = newOldPrice || '';
     duplicate.image = source.image || '';
     duplicate.images = Array.isArray(source.images) ? [...source.images] : [];
+    duplicate.stock_status = 'available';
     duplicate.is_active = false;
     duplicate.is_featured = false;
     duplicate.sort_order = getNextProductSortOrder(duplicate.type || source.type);
@@ -1540,10 +1644,9 @@
     dom.createDuplicateButton.disabled = true;
     try {
       const duplicate = buildDuplicatedProduct(duplicatingProduct, newSize, newPrice, newOldPrice);
-      const { error } = await client.from('products').insert(duplicate);
-      if (error) throw error;
+      const result = await saveProductRecord(duplicate);
       closeDuplicateModal();
-      showMessage(dom.adminMessage, 'Đã nhân bản sản phẩm. Vui lòng kiểm tra lại thông tin, kích thước, khối lượng và giá trước khi bật hiển thị.', 'success');
+      showMessage(dom.adminMessage, result.usedFallback ? 'Đã nhân bản sản phẩm. Hệ thống đã bỏ qua cột trạng thái kho vì Supabase chưa có cột này.' : 'Đã nhân bản sản phẩm. Vui lòng kiểm tra lại thông tin, kích thước, khối lượng và giá trước khi bật hiển thị.', 'success');
       await loadProducts();
       const createdProduct = products.find((product) => product.id === duplicate.id) || duplicate;
       openForm(createdProduct);
@@ -1596,11 +1699,30 @@
     specifications: getParsedSpecificationsForSave(form),
     image: imageData.image || '',
     images: imageData.images || [],
+    stock_status: getProductStockStatus(form.stockStatus?.value),
     is_featured: form.isFeatured.value === 'true',
     is_active: form.isActive.value === 'true',
     sort_order: Number(form.sortOrder.value || 0),
     updated_at: new Date().toISOString(),
   });
+
+  const saveProductRecord = async (payload, originalId = '') => {
+    const isUpdate = Boolean(originalId);
+    const request = isUpdate
+      ? client.from('products').update(payload).eq('id', originalId)
+      : client.from('products').insert(payload);
+    let { error } = await request;
+    if (!error) return { usedFallback: false };
+    if (!payload || payload.stock_status === undefined || !shouldRetryWithoutStockStatus(error)) throw error;
+    const fallbackPayload = { ...payload };
+    delete fallbackPayload.stock_status;
+    const fallbackRequest = isUpdate
+      ? client.from('products').update(fallbackPayload).eq('id', originalId)
+      : client.from('products').insert(fallbackPayload);
+    const fallbackResult = await fallbackRequest;
+    if (fallbackResult.error) throw fallbackResult.error;
+    return { usedFallback: true };
+  };
 
   const handleSave = async (event) => {
     event.preventDefault();
@@ -1621,11 +1743,8 @@
       }
       const imageData = await uploadImages(form, productId);
       const product = buildProduct(form, imageData);
-      const { error } = editingProduct
-        ? await client.from('products').update(product).eq('id', editingProduct.id)
-        : await client.from('products').insert(product);
-      if (error) throw error;
-      showMessage(dom.adminMessage, 'Đã lưu sản phẩm thành công.', 'success');
+      const result = await saveProductRecord(product, editingProduct?.id || '');
+      showMessage(dom.adminMessage, result.usedFallback ? 'Đã lưu sản phẩm thành công. Cột trạng thái kho chưa có trên Supabase nên hệ thống đã lưu chế độ tương thích.' : 'Đã lưu sản phẩm thành công.', 'success');
       await loadProducts();
       closeForm();
     } catch (error) {
@@ -1834,16 +1953,19 @@
     updateOrderStatus(orderId, event.target.value);
   });
   dom.orders?.addEventListener('click', (event) => {
-    const actionButton = event.target.closest('[data-archive-order], [data-restore-order], [data-delete-order]');
+    const actionButton = event.target.closest('[data-update-order-status], [data-archive-order], [data-restore-order], [data-delete-order]');
     if (!actionButton) return;
-    const orderId = actionButton.dataset.archiveOrder || actionButton.dataset.restoreOrder || actionButton.dataset.deleteOrder;
+    const orderId = actionButton.dataset.updateOrderStatus || actionButton.dataset.archiveOrder || actionButton.dataset.restoreOrder || actionButton.dataset.deleteOrder;
     if (!orderId) return;
+    if (actionButton.dataset.updateOrderStatus) updateOrderStatus(orderId, actionButton.dataset.orderNextStatus || 'contacted');
     if (actionButton.dataset.archiveOrder) archiveOrder(orderId);
     if (actionButton.dataset.restoreOrder) restoreOrder(orderId);
     if (actionButton.dataset.deleteOrder) deleteOrder(orderId);
   });
   dom.orderFilters?.forEach((button) => button.addEventListener('click', () => setOrderFilter(button.dataset.orderFilter || 'active')));
+  dom.exportProductsCsvButton?.addEventListener('click', exportProductsCsv);
   dom.exportOrdersCsvButton?.addEventListener('click', exportOrdersCsv);
+  dom.exportBannersCsvButton?.addEventListener('click', exportBannersCsv);
   dom.banners?.addEventListener('click', (event) => {
     const id = event.target.dataset.editBanner || event.target.dataset.toggleBanner || event.target.dataset.deleteBanner;
     if (!id) return;
