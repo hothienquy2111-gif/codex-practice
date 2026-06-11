@@ -189,6 +189,9 @@ const dom = {
   usedTvCount: document.querySelector('[data-used-tv-count]'),
   usedTvEmpty: document.querySelector('[data-used-tv-empty]'),
   usedTvLoadMoreButton: document.querySelector('[data-load-more="oldTv"]'),
+  localUsedTvGrid: document.querySelector('[data-local-used-tv-grid]'),
+  localUsedTvCount: document.querySelector('[data-local-used-tv-count]'),
+  localUsedTvEmpty: document.querySelector('[data-local-used-tv-empty]'),
   newTvSizeRow: document.querySelector('[data-new-tv-size-row]'),
   newTvBrandRow: document.querySelector('[data-new-tv-brand-row]'),
   newTvGrid: document.querySelector('[data-new-tv-grid]'),
@@ -1362,6 +1365,20 @@ const renderTvSection = ({ grid, empty, count, sectionKey, filterState, sectionT
 };
 
 const renderUsedTvSection = () => renderTvSection({ grid: dom.usedTvGrid, empty: dom.usedTvEmpty, count: dom.usedTvCount, sectionKey: 'oldTv', filterState: oldTvFilters, sectionType: 'used', loadMoreButton: dom.usedTvLoadMoreButton });
+
+const renderLocalUsedTvLandingProducts = () => {
+  if (!dom.localUsedTvGrid) return;
+  const localProducts = getOldTvProducts(products);
+  dom.localUsedTvGrid.innerHTML = localProducts.map((product) => renderSectionProductCard(product, 'used')).join('');
+  if (dom.localUsedTvCount) {
+    dom.localUsedTvCount.textContent = localProducts.length
+      ? `Đang hiển thị ${localProducts.length} tivi cũ đang tư vấn`
+      : 'Danh sách tivi cũ đang được cập nhật';
+  }
+  if (dom.localUsedTvEmpty) dom.localUsedTvEmpty.hidden = localProducts.length > 0;
+  bindProductImageFallbacks(dom.localUsedTvGrid);
+};
+
 const renderNewTvSection = () => renderTvSection({ grid: dom.newTvGrid, empty: dom.newTvEmpty, count: dom.newTvCount, sectionKey: 'newTv', filterState: newTvFilters, sectionType: 'new', loadMoreButton: dom.newTvLoadMoreButton });
 
 const syncSectionBrandRows = () => {
@@ -1627,7 +1644,10 @@ const renderProductCards = () => {
 const renderProductSection = (sectionKey) => {
   if (sectionKey === 'featured') renderProductCards();
   if (sectionKey === 'newTv') renderNewTvSection();
-  if (sectionKey === 'oldTv') renderUsedTvSection();
+  if (sectionKey === 'oldTv') {
+    renderUsedTvSection();
+    renderLocalUsedTvLandingProducts();
+  }
 };
 
 const showMoreProducts = (sectionKey) => {
@@ -1642,6 +1662,7 @@ const applyFiltersAndRender = ({ resetSections = ['featured', 'newTv', 'oldTv'] 
   renderSeriesSelectorForSection('newTv', newTvFilters.brand);
   renderProductCards();
   renderUsedTvSection();
+  renderLocalUsedTvLandingProducts();
   renderNewTvSection();
 };
 
@@ -1652,6 +1673,7 @@ const applyFiltersForSection = (sectionKey) => {
   if (sectionKey === 'oldTv') {
     renderSeriesSelectorForSection('oldTv', oldTvFilters.brand);
     renderUsedTvSection();
+    renderLocalUsedTvLandingProducts();
   }
   if (sectionKey === 'newTv') {
     renderSeriesSelectorForSection('newTv', newTvFilters.brand);
@@ -1802,6 +1824,7 @@ const refreshPublicProductsFromSupabase = async () => {
     publishProductsForChatbot();
     productsReady = true;
     updateSearchSuggestions(true);
+    renderLocalUsedTvLandingProducts();
     return;
   }
 
@@ -1823,6 +1846,7 @@ const refreshPublicProductsFromSupabase = async () => {
     syncBrandPanelActive();
     syncSectionBrandRows();
     applyProductFilters();
+    renderLocalUsedTvLandingProducts();
   } catch (error) {
     console.warn('Không thể tải sản phẩm từ Supabase. Website công khai sẽ không dùng dữ liệu demo products.js.', error);
   } finally {

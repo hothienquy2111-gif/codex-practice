@@ -2706,3 +2706,68 @@ body.zalo-choice-modal-open {
   line-height: 1.2;
   text-align: center;
 }
+
+/* Local SEO landing pages */
+.local-seo-page { background: linear-gradient(180deg, #f8fbff 0%, var(--color-gray-50) 42%, #ffffff 100%); }
+.local-hero { padding: var(--space-7) 0; background: radial-gradient(circle at 20% 10%, rgba(19, 111, 206, 0.16), transparent 28%), linear-gradient(135deg, #ffffff 0%, #eef6ff 52%, #dcecff 100%); }
+.local-hero__grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(280px, 0.75fr); gap: var(--space-6); align-items: center; }
+.local-hero__content { min-width: 0; }
+.local-hero__content h1 { margin: 8px 0 14px; color: var(--color-primary-deep); font-size: clamp(2rem, 5vw, 4rem); }
+.local-hero__content p { max-width: 720px; margin: 0; color: var(--color-gray-700); font-size: clamp(1.03rem, 2vw, 1.25rem); }
+.local-cta-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-top: var(--space-5); }
+.local-cta-row .btn { min-height: 46px; justify-content: center; }
+.local-hero__panel, .local-info-card { display: grid; gap: 12px; min-width: 0; padding: var(--space-5); border: 1px solid rgba(19, 111, 206, 0.18); border-radius: var(--radius-lg); background: rgba(255, 255, 255, 0.88); box-shadow: var(--shadow-md); }
+.local-hero__panel strong { color: var(--color-primary-deep); font-size: 1.25rem; }
+.local-hero__panel span, .local-info-card p { margin: 0; padding: 12px 14px; border-radius: 14px; background: #eef5ff; color: var(--color-primary-deep); font-weight: 700; }
+.local-section { background: var(--color-white); }
+.local-section--light { background: var(--color-gray-50); }
+.local-section--blue { background: linear-gradient(135deg, var(--color-primary-deep), var(--color-primary)); color: var(--color-white); }
+.local-section--blue h2, .local-section--blue .section-kicker, .local-section--blue p { color: var(--color-white); }
+.local-card-grid { display: grid; gap: 16px; }
+.local-card-grid--three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.local-card-grid--four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.local-card-grid article { min-width: 0; padding: 20px; border: 1px solid rgba(6, 42, 86, 0.1); border-radius: var(--radius-md); background: var(--color-white); color: var(--color-primary-deep); box-shadow: var(--shadow-sm); font-weight: 750; }
+.local-section--light .local-card-grid article { background: #ffffff; }
+.local-products-grid { margin-top: 16px; }
+.local-empty-state { margin-top: var(--space-4); }
+.local-empty-state[hidden] { display: none !important; }
+.local-two-column { display: grid; grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr); gap: var(--space-6); align-items: start; }
+.local-check-list { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
+.local-check-list li { position: relative; padding: 13px 16px 13px 42px; border: 1px solid rgba(19, 111, 206, 0.16); border-radius: 14px; background: #ffffff; color: var(--color-gray-700); font-weight: 650; }
+.local-check-list li::before { content: "✓"; position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--color-primary-highlight); font-weight: 900; }
+.local-check-list--light li { border-color: rgba(255, 255, 255, 0.22); background: rgba(255, 255, 255, 0.12); color: var(--color-white); }
+.local-check-list--light li::before { color: #ffffff; }
+.local-info-strip { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.local-info-strip span { min-width: 0; padding: 18px; border: 1px solid rgba(19, 111, 206, 0.15); border-radius: var(--radius-md); background: #ffffff; color: var(--color-primary-deep); box-shadow: var(--shadow-sm); font-weight: 750; }
+.faq-list { display: grid; gap: 12px; }
+.faq-list details { border: 1px solid rgba(6, 42, 86, 0.12); border-radius: var(--radius-md); background: var(--color-white); box-shadow: var(--shadow-sm); overflow: hidden; }
+.faq-list summary { cursor: pointer; padding: 16px 18px; color: var(--color-primary-deep); font-weight: 800; }
+.faq-list details[open] summary { border-bottom: 1px solid var(--color-gray-200); }
+.faq-list p { margin: 0; padding: 14px 18px 18px; color: var(--color-gray-700); }
+.local-step-list { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; margin: 0; padding: 0; list-style: none; counter-reset: steps; }
+.local-step-list li { display: grid; gap: 10px; min-width: 0; padding: 18px; border: 1px solid rgba(19, 111, 206, 0.14); border-radius: var(--radius-md); background: #ffffff; box-shadow: var(--shadow-sm); }
+.local-step-list span { display: inline-grid; place-items: center; width: 38px; height: 38px; border-radius: 999px; background: var(--color-primary); color: #ffffff; font-weight: 800; }
+.local-step-list strong { color: var(--color-primary-deep); }
+.local-final-cta { background: linear-gradient(135deg, var(--color-primary), var(--color-primary-deep)); color: #ffffff; text-align: center; }
+.local-final-cta h2 { color: #ffffff; margin-bottom: 0; }
+.local-final-cta .local-cta-row { justify-content: center; }
+
+@media (max-width: 980px) {
+  .local-hero__grid, .local-two-column { grid-template-columns: 1fr; }
+  .local-card-grid--three, .local-card-grid--four, .local-info-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .local-step-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 640px) {
+  .local-hero { padding: 34px 0; }
+  .local-hero__grid { gap: 18px; }
+  .local-hero__panel, .local-info-card { padding: 18px; }
+  .local-card-grid--three, .local-card-grid--four, .local-info-strip, .local-step-list { grid-template-columns: 1fr; }
+  .local-cta-row .btn { width: 100%; }
+  .faq-list summary { padding: 14px 16px; }
+  .faq-list p { padding-inline: 16px; }
+}
+.inline-service-link { color: var(--color-primary); font-weight: 800; text-decoration: underline; text-underline-offset: 3px; }
+.service-action-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-top: var(--space-4); }
+.service-action-row .btn { min-height: 44px; }
+@media (max-width: 640px) { .service-action-row .btn { width: 100%; } }
