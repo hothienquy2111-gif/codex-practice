@@ -1,3 +1,10 @@
+.admin-status-line {
+  margin: 8px 0 0;
+  color: var(--color-primary-deep);
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
 .admin-product-search {
   display: grid;
   gap: 8px;
