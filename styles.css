@@ -2289,3 +2289,266 @@ body.zalo-choice-modal-open {
     font-size: 0.98rem;
   }
 }
+
+/* Public launch pages and contact maps */
+.simple-header__inner {
+  grid-template-columns: minmax(260px, 1fr) auto auto;
+}
+
+.nav-links--simple {
+  width: 100%;
+  justify-content: center;
+}
+
+.contact__layout {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.contact-map-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.contact-map-card {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 20px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--color-white);
+  box-shadow: 0 16px 36px rgba(4, 18, 39, 0.14);
+}
+
+.contact-map-card h2,
+.contact-map-card h3,
+.contact-map-card p {
+  color: inherit;
+}
+
+.contact-map-card h2,
+.contact-map-card h3 {
+  margin: 0 0 6px;
+  font-size: 1.12rem;
+}
+
+.contact-map-card p {
+  margin: 0 0 12px;
+}
+
+.contact-map-card iframe {
+  display: block;
+  width: 100%;
+  min-height: 280px;
+  border: 0;
+  border-radius: 16px;
+  background: var(--color-gray-100);
+}
+
+.contact-map-grid--light .contact-map-card {
+  border-color: var(--color-gray-200);
+  background: var(--color-white);
+  color: var(--color-gray-700);
+}
+
+.contact-map-grid--light .contact-map-card h2 {
+  color: var(--color-primary-deep);
+}
+
+.launch-page {
+  background: linear-gradient(180deg, #f8fbff, var(--color-gray-50));
+}
+
+.launch-hero {
+  padding: var(--space-7) 0 var(--space-5);
+}
+
+.launch-section {
+  padding: 0 0 var(--space-6);
+}
+
+.launch-section--compact {
+  padding-bottom: var(--space-7);
+}
+
+.launch-card {
+  min-width: 0;
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-lg);
+  padding: clamp(20px, 4vw, 36px);
+  background: var(--color-white);
+  box-shadow: var(--shadow-sm);
+}
+
+.launch-card--hero {
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+}
+
+.launch-card--hero::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto auto;
+  width: 210px;
+  height: 210px;
+  border-radius: 0 0 0 100%;
+  background: linear-gradient(135deg, rgba(19, 111, 206, 0.14), rgba(240, 90, 40, 0.14));
+  pointer-events: none;
+}
+
+.launch-kicker {
+  display: inline-flex;
+  margin-bottom: 10px;
+  border-radius: 999px;
+  padding: 7px 12px;
+  background: #fff1e9;
+  color: var(--color-accent);
+  font-weight: 800;
+}
+
+.launch-card h1 {
+  max-width: 840px;
+  margin-bottom: 12px;
+  font-size: clamp(2rem, 5vw, 3.3rem);
+}
+
+.launch-card h2 {
+  margin-bottom: 12px;
+  font-size: clamp(1.3rem, 3vw, 1.85rem);
+}
+
+.launch-card p {
+  max-width: 900px;
+  color: var(--color-gray-700);
+}
+
+.launch-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-5);
+}
+
+.launch-list {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.launch-list li {
+  position: relative;
+  padding: 14px 16px 14px 44px;
+  border: 1px solid var(--color-gray-200);
+  border-radius: 16px;
+  background: #fbfdff;
+  color: var(--color-gray-700);
+  font-weight: 650;
+}
+
+.launch-list li::before {
+  content: "";
+  position: absolute;
+  top: 19px;
+  left: 18px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--color-primary-highlight);
+  box-shadow: 0 0 0 5px rgba(19, 111, 206, 0.12);
+}
+
+.launch-list--accent li::before {
+  background: var(--color-accent);
+  box-shadow: 0 0 0 5px rgba(240, 90, 40, 0.14);
+}
+
+.launch-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+}
+
+.launch-actions .btn {
+  min-height: 46px;
+}
+
+.launch-note {
+  border-left: 5px solid var(--color-primary-highlight);
+}
+
+.contact-info-list {
+  display: grid;
+  gap: 4px;
+  margin-top: var(--space-4);
+}
+
+.contact-info-list p {
+  margin: 0;
+}
+
+.not-found-page {
+  min-height: 54vh;
+  display: grid;
+  align-items: center;
+}
+
+.not-found-card {
+  text-align: center;
+}
+
+.not-found-card p,
+.not-found-card .launch-actions {
+  justify-content: center;
+  margin-inline: auto;
+}
+
+@media (max-width: 860px) {
+  .simple-header__inner,
+  .contact-map-grid,
+  .launch-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .nav-links--simple {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 560px) {
+  .launch-hero {
+    padding: 28px 0 18px;
+  }
+
+  .launch-section,
+  .launch-section--compact {
+    padding-bottom: 28px;
+  }
+
+  .launch-actions .btn {
+    width: 100%;
+  }
+
+  .contact-map-card iframe {
+    min-height: 230px;
+  }
+}
+
+.detail-message__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+}
+
+@media (max-width: 560px) {
+  .detail-message__actions .btn {
+    width: 100%;
+  }
+}
