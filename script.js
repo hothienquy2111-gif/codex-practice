@@ -124,8 +124,10 @@ const dom = {
   featuredLoadMoreButton: document.querySelector('[data-load-more="featured"]'),
   sizeOptions: document.querySelector('.size-options'),
   featuredSelectedSize: document.querySelector('.selected-size span'),
-  searchForm: document.querySelector('.search-box'),
+  searchForm: document.querySelector('[data-search-form]') || document.querySelector('.search-box'),
   searchInput: document.querySelector('#search-input'),
+  searchClear: document.querySelector('[data-search-clear]'),
+  searchSuggestions: document.querySelector('[data-search-suggestions]'),
   backToTop: document.querySelector('.back-to-top'),
   mobileCall: document.querySelector('[data-call-button]'),
   brandList: document.querySelector('[data-brand-list]'),
@@ -165,6 +167,10 @@ let activeType = '';
 let featuredSelectedBrand = '';
 let featuredSelectedSize = activeSize;
 let searchTerm = '';
+let productsReady = false;
+let searchSuggestionsState = [];
+let searchSuggestionsIndex = -1;
+let searchSuggestionsTimer = null;
 
 
 const BRAND_LOGO_WIDTH = 48;
@@ -449,7 +455,16 @@ const getProductSearchText = (product = {}) => [
   product.fullName,
   product.full_name,
   product.name,
+  product.size,
   product.type,
+  product.series,
+  product.line,
+  product.tv_line,
+  product.product_line,
+  product.badge,
+  product.price,
+  product.oldPrice,
+  product.old_price,
   product.features,
   product.description,
   product.overview,
@@ -458,6 +473,272 @@ const getProductSearchText = (product = {}) => [
 ]
   .map(stringifySearchPart)
   .join(' ');
+
+const normalizeSearchText = (value = '') => normalizeText(String(value).replace(/[^a-z0-9]+/g, ' '));
+
+const getProductSearchFields = (product = {}) => {
+  const brand = normalizeSearchText(product.brand);
+  const model = normalizeSearchText(product.model);
+  const fullName = normalizeSearchText([product.fullName, product.full_name, product.name].map(stringifySearchPart).join(' '));
+  const size = normalizeSearchText(product.size);
+  const type = normalizeSearchText(product.type);
+  const series = normalizeSearchText([product.series, product.line, product.tv_line, product.product_line].map(stringifySearchPart).join(' '));
+  const badge = normalizeSearchText(product.badge);
+  const price = normalizeSearchText([product.price, product.oldPrice, product.old_price].map(stringifySearchPart).join(' '));
+  const detail = normalizeSearchText([
+    product.features,
+    product.description,
+    product.overview,
+    product.specifications,
+    product.searchableText,
+  ].map(stringifySearchPart).join(' '));
+
+  return {
+    brand,
+    model,
+    fullName,
+    size,
+    type,
+    series,
+    badge,
+    price,
+    detail,
+    image: Boolean(product.image || (Array.isArray(product.images) && product.images.length)),
+  };
+};
+
+const getSearchTokens = (query = '') => normalizeSearchText(query).split(' ').filter(Boolean);
+
+const scoreSearchProduct = (product = {}, query = '') => {
+  const normalizedQuery = normalizeSearchText(query);
+  if (!normalizedQuery) return 0;
+
+  const fields = getProductSearchFields(product);
+  const queryTokens = getSearchTokens(normalizedQuery);
+  const seriesTokens = getSearchTokens(fields.series);
+  const detailText = `${fields.detail} ${fields.price} ${fields.badge}`.trim();
+
+  const includesAllTokens = (text, tokens) => tokens.length > 0 && tokens.every((token) => text.includes(token));
+  const hasAnyToken = (text, tokens) => tokens.some((token) => text.includes(token));
+  const firstToken = queryTokens[0] || '';
+
+  if (![
+    fields.brand,
+    fields.model,
+    fields.fullName,
+    fields.size,
+    fields.type,
+    fields.series,
+    fields.badge,
+    fields.price,
+    detailText,
+  ].some((text) => text.includes(normalizedQuery) || includesAllTokens(text, queryTokens))) {
+    return 0;
+  }
+
+  let score = 0;
+
+  if (fields.model === normalizedQuery) score += 5000;
+  else if (fields.model.includes(normalizedQuery) || normalizedQuery.includes(fields.model)) score += 4200;
+  else if (hasAnyToken(fields.model, queryTokens)) score += 3200;
+
+  const brandModelMatch = fields.brand && hasAnyToken(fields.brand, queryTokens) && (hasAnyToken(fields.model, queryTokens) || fields.fullName.includes(normalizedQuery));
+  if (brandModelMatch) score += 3000;
+
+  if (fields.fullName.includes(normalizedQuery)) score += 2400;
+  else if (includesAllTokens(fields.fullName, queryTokens)) score += 2100;
+  else if (hasAnyToken(fields.fullName, queryTokens)) score += 1600;
+
+  if (fields.brand.includes(normalizedQuery)) score += 1200;
+  else if (hasAnyToken(fields.brand, queryTokens)) score += 1000;
+
+  if (fields.size.includes(normalizedQuery)) score += 900;
+  else if (hasAnyToken(fields.size, queryTokens)) score += 700;
+
+  if (fields.series.includes(normalizedQuery) || hasAnyToken(fields.series, queryTokens) || hasAnyToken(seriesTokens, queryTokens)) score += 650;
+  if (fields.type.includes(normalizedQuery)) score += 500;
+  if (fields.badge.includes(normalizedQuery)) score += 420;
+  if (fields.price.includes(normalizedQuery)) score += 380;
+  if (detailText.includes(normalizedQuery) || hasAnyToken(detailText, queryTokens)) score += 240;
+  if (queryTokens.length > 1 && includesAllTokens(detailText, queryTokens)) score += 300;
+
+  if (fields.image) score += 18;
+  if (product.isFeatured) score += 12;
+  score += Math.max(0, 10 - Math.min(Number(product.sortOrder) || 0, 10));
+
+  if (firstToken && fields.model.startsWith(firstToken)) score += 220;
+  if (firstToken && fields.brand.startsWith(firstToken)) score += 120;
+
+  return score;
+};
+
+const getSearchSuggestions = (query, sourceProducts = products, limit = 4) => {
+  const normalizedQuery = normalizeSearchText(query);
+  if (!normalizedQuery) return [];
+
+  return sourceProducts
+    .map((product) => ({ product, score: scoreSearchProduct(product, normalizedQuery) }))
+    .filter(({ score }) => score > 0)
+    .sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score;
+      if (Boolean(b.product.isFeatured) !== Boolean(a.product.isFeatured)) return Number(Boolean(b.product.isFeatured)) - Number(Boolean(a.product.isFeatured));
+      const imageA = Boolean(a.product.image || (Array.isArray(a.product.images) && a.product.images.length));
+      const imageB = Boolean(b.product.image || (Array.isArray(b.product.images) && b.product.images.length));
+      if (imageB !== imageA) return Number(imageB) - Number(imageA);
+      return (a.product.sortOrder || 0) - (b.product.sortOrder || 0);
+    })
+    .slice(0, limit)
+    .map(({ product }) => product);
+};
+
+const renderSearchSuggestionCard = (product, index) => {
+  const brand = product.brand || 'Anh Minh Store';
+  const model = product.model || product.fullName || product.name || 'Đang cập nhật';
+  const fullName = product.fullName || product.full_name || product.name || model;
+  const size = product.size || 'Liên hệ tư vấn';
+  const price = product.price || 'Giá đang cập nhật';
+  const type = normalizeProductType(product);
+  const image = product.image || (Array.isArray(product.images) ? product.images[0] : '');
+  const thumb = image
+    ? `<img class="search-suggestion-card__image" src="${escapeHtml(image)}" alt="${escapeHtml(fullName)}" loading="lazy" decoding="async" />`
+    : `<div class="search-suggestion-card__image search-suggestion-card__image--placeholder" aria-hidden="true">Tivi</div>`;
+
+  return `<a class="search-suggestion-card" href="${createProductDetailUrl(product)}" data-search-suggestion data-suggestion-index="${index}" role="option" tabindex="-1" aria-label="Xem chi tiết ${escapeHtml(fullName)}">
+    ${thumb}
+    <div class="search-suggestion-card__body">
+      <div class="search-suggestion-card__meta">
+        <strong>${escapeHtml(brand)}</strong>
+        <span>${escapeHtml(model)}</span>
+      </div>
+      <h3>${escapeHtml(fullName)}</h3>
+      <p>${escapeHtml(size)} • ${escapeHtml(type)}</p>
+      <div class="search-suggestion-card__price">${escapeHtml(price)}</div>
+    </div>
+  </a>`;
+};
+
+const openSearchSuggestions = () => {
+  dom.searchSuggestions?.classList.add('is-open');
+  if (dom.searchInput) dom.searchInput.setAttribute('aria-expanded', 'true');
+  if (dom.searchSuggestions) dom.searchSuggestions.hidden = false;
+};
+
+const closeSearchSuggestions = () => {
+  if (searchSuggestionsTimer) {
+    window.clearTimeout(searchSuggestionsTimer);
+    searchSuggestionsTimer = null;
+  }
+  dom.searchSuggestions?.classList.remove('is-open');
+  if (dom.searchInput) dom.searchInput.setAttribute('aria-expanded', 'false');
+  if (dom.searchSuggestions) dom.searchSuggestions.hidden = true;
+  searchSuggestionsIndex = -1;
+};
+
+const setSearchSuggestionsIndex = (nextIndex) => {
+  const items = dom.searchSuggestions?.querySelectorAll('[data-search-suggestion]') || [];
+  const total = items.length;
+  if (!total) {
+    searchSuggestionsIndex = -1;
+    return;
+  }
+
+  const normalizedIndex = ((nextIndex % total) + total) % total;
+  searchSuggestionsIndex = normalizedIndex;
+  items.forEach((item, index) => {
+    const isActive = index === normalizedIndex;
+    item.classList.toggle('is-active', isActive);
+    item.setAttribute('aria-selected', String(isActive));
+    if (isActive && typeof item.focus === 'function') item.focus({ preventScroll: true });
+  });
+};
+
+const openProductDetail = (product) => {
+  if (!product) return;
+  window.location.href = createProductDetailUrl(product);
+};
+
+const renderSearchSuggestions = (results = [], query = dom.searchInput?.value || '') => {
+  if (!dom.searchSuggestions) return;
+
+  const normalizedQuery = normalizeSearchText(query);
+  if (!normalizedQuery) {
+    dom.searchSuggestions.innerHTML = '';
+    closeSearchSuggestions();
+    return;
+  }
+
+  if (!productsReady) {
+    dom.searchSuggestions.innerHTML = '<p class="search-suggestions__empty">Đang tải sản phẩm...</p>';
+    openSearchSuggestions();
+    return;
+  }
+
+  if (!results.length) {
+    dom.searchSuggestions.innerHTML = '<p class="search-suggestions__empty">Không tìm thấy sản phẩm phù hợp.</p>';
+    openSearchSuggestions();
+    return;
+  }
+
+  const hasMore = getSearchSuggestions(query, products, 999).length > results.length;
+  const cards = results.map((product, index) => renderSearchSuggestionCard(product, index)).join('');
+  const footer = hasMore ? `<div class="search-suggestions__footer"><button type="button" data-search-show-all>Xem tất cả kết quả</button></div>` : '';
+  dom.searchSuggestions.innerHTML = `${cards}${footer}`;
+  dom.searchSuggestions.setAttribute('role', 'listbox');
+  openSearchSuggestions();
+  searchSuggestionsState = results;
+  searchSuggestionsIndex = -1;
+};
+
+const updateSearchSuggestions = (force = false) => {
+  if (!dom.searchInput) return;
+  const query = dom.searchInput.value.trim();
+  if (searchSuggestionsTimer) {
+    window.clearTimeout(searchSuggestionsTimer);
+    searchSuggestionsTimer = null;
+  }
+  const run = () => {
+    const normalizedQuery = normalizeSearchText(query);
+    if (!normalizedQuery) {
+      closeSearchSuggestions();
+      if (dom.searchSuggestions) dom.searchSuggestions.innerHTML = '';
+      searchSuggestionsState = [];
+      return;
+    }
+    const results = getSearchSuggestions(normalizedQuery, products, 4);
+    searchSuggestionsState = results;
+    renderSearchSuggestions(results, normalizedQuery);
+  };
+
+  if (force) {
+    run();
+    return;
+  }
+
+  searchSuggestionsTimer = window.setTimeout(run, 140);
+};
+
+const submitSearch = ({ openHighlightedSuggestion = false } = {}) => {
+  const query = dom.searchInput?.value.trim() || '';
+  if (openHighlightedSuggestion && searchSuggestionsIndex >= 0 && searchSuggestionsState[searchSuggestionsIndex]) {
+    openProductDetail(searchSuggestionsState[searchSuggestionsIndex]);
+    return;
+  }
+
+  searchTerm = normalizeSearchText(query);
+  if (dom.featuredSelectedSize) dom.featuredSelectedSize.textContent = searchTerm ? `Tìm: ${query}` : (featuredSelectedSize || featuredSelectedBrand || 'Tất cả');
+  applyProductFilters();
+  closeSearchSuggestions();
+  scrollToHash('#san-pham');
+};
+
+const resetSearchInput = () => {
+  if (dom.searchInput) dom.searchInput.value = '';
+  searchTerm = '';
+  searchSuggestionsState = [];
+  closeSearchSuggestions();
+  if (dom.featuredSelectedSize) dom.featuredSelectedSize.textContent = featuredSelectedSize || featuredSelectedBrand || 'Tất cả';
+  applyProductFilters();
+};
 
 const getBrandSeriesConfig = (brand = '') => {
   const normalizedBrand = normalizeBrand(brand);
@@ -887,7 +1168,7 @@ const syncSectionSizeRow = (sectionKey) => {
 
 const productMatchesSearch = (product) => {
   if (!searchTerm) return true;
-  return normalizeText(getProductSearchText(product)).includes(searchTerm);
+  return normalizeSearchText(getProductSearchText(product)).includes(searchTerm);
 };
 
 const productMatchesSectionFilter = (product, filterState) => {
@@ -1315,11 +1596,85 @@ dom.sizeOptions?.addEventListener('click', (event) => {
 
 dom.searchForm?.addEventListener('submit', (event) => {
   event.preventDefault();
-  searchTerm = normalizeText(dom.searchInput?.value.trim() || '');
-  if (dom.featuredSelectedSize) dom.featuredSelectedSize.textContent = searchTerm ? `Tìm: ${dom.searchInput.value.trim()}` : (featuredSelectedSize || featuredSelectedBrand || 'Tất cả');
-  applyProductFilters();
-  scrollToHash('#san-pham');
+  submitSearch();
 });
+
+dom.searchInput?.addEventListener('input', () => {
+  if (dom.searchClear) dom.searchClear.hidden = !dom.searchInput.value.trim();
+  updateSearchSuggestions();
+});
+
+dom.searchInput?.addEventListener('keydown', (event) => {
+  if (event.key === 'ArrowDown') {
+    event.preventDefault();
+    if (!dom.searchSuggestions || dom.searchSuggestions.hidden) updateSearchSuggestions(true);
+    setSearchSuggestionsIndex(searchSuggestionsIndex + 1);
+    return;
+  }
+  if (event.key === 'ArrowUp') {
+    event.preventDefault();
+    if (!dom.searchSuggestions || dom.searchSuggestions.hidden) updateSearchSuggestions(true);
+    setSearchSuggestionsIndex(searchSuggestionsIndex <= 0 ? searchSuggestionsState.length - 1 : searchSuggestionsIndex - 1);
+    return;
+  }
+  if (event.key === 'Enter') {
+    event.preventDefault();
+    submitSearch({ openHighlightedSuggestion: true });
+    return;
+  }
+  if (event.key === 'Escape') {
+    closeSearchSuggestions();
+  }
+});
+
+dom.searchClear?.addEventListener('click', () => {
+  resetSearchInput();
+  dom.searchInput?.focus();
+});
+
+dom.searchForm?.addEventListener('click', (event) => {
+  const showAllButton = event.target.closest('[data-search-show-all]');
+  if (showAllButton) {
+    event.preventDefault();
+    submitSearch();
+    return;
+  }
+});
+
+dom.searchSuggestions?.addEventListener('keydown', (event) => {
+  if (event.key === 'ArrowDown') {
+    event.preventDefault();
+    setSearchSuggestionsIndex(searchSuggestionsIndex + 1);
+    return;
+  }
+  if (event.key === 'ArrowUp') {
+    event.preventDefault();
+    setSearchSuggestionsIndex(searchSuggestionsIndex <= 0 ? searchSuggestionsState.length - 1 : searchSuggestionsIndex - 1);
+    return;
+  }
+  if (event.key === 'Escape') {
+    event.preventDefault();
+    closeSearchSuggestions();
+    dom.searchInput?.focus();
+    return;
+  }
+  if (event.key === 'Enter' && searchSuggestionsIndex >= 0 && searchSuggestionsState[searchSuggestionsIndex]) {
+    event.preventDefault();
+    openProductDetail(searchSuggestionsState[searchSuggestionsIndex]);
+  }
+});
+
+document.addEventListener('click', (event) => {
+  if (!dom.searchForm || dom.searchForm.contains(event.target)) return;
+  closeSearchSuggestions();
+});
+
+window.addEventListener('resize', () => {
+  if (!dom.searchInput?.value.trim()) return;
+  updateSearchSuggestions(true);
+});
+
+if (dom.searchClear) dom.searchClear.hidden = !dom.searchInput?.value.trim();
 
 dom.productFilterLinks.forEach((link) => {
   link.addEventListener('click', (event) => {
@@ -1359,6 +1714,8 @@ const refreshPublicProductsFromSupabase = async () => {
   const storeSupabase = window.AnhMinhSupabase;
   if (!storeSupabase?.isConfigured || !storeSupabase.client) {
     publishProductsForChatbot();
+    productsReady = true;
+    updateSearchSuggestions(true);
     return;
   }
 
@@ -1382,6 +1739,9 @@ const refreshPublicProductsFromSupabase = async () => {
     applyProductFilters();
   } catch (error) {
     console.warn('Không thể tải sản phẩm từ Supabase. Website công khai sẽ không dùng dữ liệu demo products.js.', error);
+  } finally {
+    productsReady = true;
+    updateSearchSuggestions(true);
   }
 };
 
