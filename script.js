@@ -315,12 +315,17 @@ const TV_SERIES_BY_BRAND = {
     { label: 'LED', aliases: ['led'] },
   ],
   Xiaomi: [
-    { label: 'Xiaomi TV A', aliases: ['tv a', 'xiaomi tv a', 'a series'] },
-    { label: 'Xiaomi TV A Pro', aliases: ['a pro', 'tv a pro'] },
+    { label: 'Xiaomi Smart Display S Mini LED', aliases: ['smart display s mini led', 'smart display mini led', 'smart display', 's mini led 98', 'l98mc-stwn', 'l98mc'] },
+    { label: 'Xiaomi S Pro Mini LED', aliases: ['s pro mini led', 'xiaomi s pro mini led', 's pro', 'l75mb-ssea', 'l65mb-ssea', 'l55mb-ssea', 'l75mb', 'l65mb', 'l55mb'] },
+    { label: 'Xiaomi S Mini LED', aliases: ['s mini led', 'xiaomi s mini led', 's mini led 2026', 'mini led 2026', 'l75mc-ssea', 'l65mc-ssea', 'l55mc-ssea', 'l75mc', 'l65mc', 'l55mc'] },
+    { label: 'Xiaomi TV A Pro', aliases: ['a pro', 'tv a pro', 'xiaomi tv a pro', 'qled a pro', 'l75mb-apsea', 'l65mb-apsea', 'l55mb-apsea', 'l43mb-apsea'] },
+    { label: 'Xiaomi TV A', aliases: ['tv a', 'xiaomi tv a', 'a series', 'xiaomi a', 'l32mb-apsea', 'l65mb-asea', 'l55mb-asea', 'l43mb-ausea', 'l43mb-afsea'] },
     { label: 'Xiaomi TV P1', aliases: ['p1', 'tv p1'] },
+    { label: 'Mini LED', aliases: ['mini led'] },
     { label: 'QLED', aliases: ['qled'] },
     { label: 'UHD / 4K UHD', aliases: ['uhd', '4k uhd', 'ultra hd'] },
-    { label: 'Google TV', aliases: ['google tv'] },
+    { label: 'HD / Full HD', aliases: ['hd', 'full hd', 'fhd'] },
+    { label: 'Google TV', aliases: ['google tv', 'google tivi'] },
     { label: 'Android TV', aliases: ['android tv'] },
   ],
   Casper: [
@@ -1139,6 +1144,7 @@ const PRIMARY_SERIES_PRIORITY_BY_BRAND = {
   tcl: ['Mini LED', 'QLED', 'C Series', 'P Series', 'S Series', 'Google TV', 'Android TV', 'UHD / 4K UHD', 'LED'],
   hisense: ['ULED Mini LED', 'ULED', 'QLED', 'Laser TV', 'U Series', 'A Series', 'Google TV', 'VIDAA', 'UHD / 4K UHD', 'LED'],
   toshiba: ['Z Series', 'M Series', 'C Series', 'V Series', 'QLED', 'REGZA', 'Google TV', 'Android TV', 'UHD / 4K UHD', 'LED'],
+  xiaomi: ['Xiaomi Smart Display S Mini LED', 'Xiaomi S Pro Mini LED', 'Xiaomi S Mini LED', 'Xiaomi TV A Pro', 'Xiaomi TV A', 'Xiaomi TV P1', 'Mini LED', 'QLED', 'UHD / 4K UHD', 'HD / Full HD', 'Google TV', 'Android TV'],
 };
 
 const GENERIC_PRIMARY_SERIES_PRIORITY = [
