@@ -2635,7 +2635,6 @@ body.zalo-choice-modal-open {
   .product-detail__media,
   .product-gallery,
   .product-detail-gallery-slider,
-  .product-detail-gallery-track,
   .product-detail-gallery-slide {
     width: 100%;
     max-width: 100%;
@@ -2649,7 +2648,13 @@ body.zalo-choice-modal-open {
     align-items: center;
     justify-content: center;
   }
-  .product-detail-gallery-track { display: flex; }
+  .product-detail-gallery-track {
+    display: flex;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
   .product-detail-gallery-slide {
     flex: 0 0 100%;
     min-height: 0;
