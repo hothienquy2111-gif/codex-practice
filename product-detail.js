@@ -693,7 +693,7 @@
     const statusBadge = renderProductStatusBadge(product);
 
     return `
-      <article class="product-card product-reference-card">
+      <article class="product-card product-reference-card product-card--clickable" data-product-detail-url="${escapeDetailHtml(detailUrl)}">
         ${badge}
         ${statusBadge}
         <a class="product-card__media product-reference-card__media" href="${detailUrl}" aria-label="Xem chi tiết ${escapeDetailHtml(product.fullName)}">
@@ -907,7 +907,7 @@
       : '<span class="recent-product-card__placeholder">Ảnh đang cập nhật</span>';
 
     return `
-      <article class="recent-product-card">
+      <article class="recent-product-card${product.detail_url ? ' product-card--clickable' : ''}"${product.detail_url ? ` data-product-detail-url="${escapeDetailHtml(product.detail_url)}"` : ''}>
         <a class="recent-product-card__media" href="${escapeDetailHtml(product.detail_url || '#')}">${image}</a>
         <div class="recent-product-card__body">
           <h3>${escapeDetailHtml(name)}</h3>
