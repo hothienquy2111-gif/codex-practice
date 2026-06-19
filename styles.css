@@ -1315,7 +1315,7 @@ body.product-modal-open { overflow: hidden; }
     border-radius: 18px;
   }
   .product-detail-gallery-slide { min-height: 0; aspect-ratio: 16 / 11; border-radius: 18px; }
-  .product-detail-gallery-slide img { max-height: 300px; padding: 10px; }
+  .product-detail-gallery-slide img { max-height: 100%; padding: 10px; }
   .product-detail__main-media { min-height: 0; aspect-ratio: 16 / 11; border-radius: 18px; }
   .product-detail__image { max-height: 300px; padding: 10px; }
   .product-gallery__thumbs {
@@ -1326,7 +1326,7 @@ body.product-modal-open { overflow: hidden; }
     -webkit-overflow-scrolling: touch;
   }
   .product-gallery__thumb { flex: 0 0 72px; min-height: 64px; border-radius: 14px; }
-  .product-gallery__thumb img { height: 54px; }
+  .product-gallery__thumb img { height: 54px; object-fit: contain; object-position: center; }
   .product-reference-section { padding: 16px; }
   .product-reference-header { margin-bottom: 14px; }
   .product-reference-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
@@ -2632,8 +2632,53 @@ body.zalo-choice-modal-open {
   .product-modal__card,
   .zalo-choice-modal__dialog { min-width: 0; }
   .search-suggestions { width: min(100%, calc(100vw - 24px)); max-width: calc(100vw - 24px); }
-  .product-detail-gallery-slide { min-height: 280px; }
-  .product-detail-gallery-slide img { max-height: 340px; padding: 12px; }
+  .product-detail__media,
+  .product-gallery,
+  .product-detail-gallery-slider,
+  .product-detail-gallery-slide {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+  .product-detail-gallery-slider,
+  .product-detail-gallery-slide {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .product-detail-gallery-track {
+    display: flex;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+  .product-detail-gallery-slide {
+    flex: 0 0 100%;
+    min-height: 0;
+  }
+  .product-detail-gallery-slide img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    box-sizing: border-box;
+    padding: 12px;
+    object-fit: contain;
+    object-position: center;
+  }
+  .product-gallery__thumbs {
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+  .product-gallery__thumb img {
+    object-fit: contain;
+    object-position: center;
+  }
   .product-specs { gap: 6px; }
   .product-specs div { padding-bottom: 6px; }
   .product-modal__content,
@@ -2653,8 +2698,8 @@ body.zalo-choice-modal-open {
   .product-card__media,
   .product-card__image,
   .tv-mockup { aspect-ratio: 16 / 10; }
-  .product-detail__media { width: 100%; }
-  .product-detail-gallery-slide { min-height: 240px; }
+  .product-detail__media { width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; overflow: hidden; }
+  .product-detail-gallery-slide { min-height: 0; }
   .product-detail__placeholder { width: min(360px, 100%); }
   .zalo-choice-modal__dialog { overflow-y: auto; }
 }
