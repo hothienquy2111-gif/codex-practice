@@ -1588,7 +1588,7 @@ const bindProductImageFallbacks = (root) => {
 };
 
 const renderProductCardActions = (product, title) => `
-  <a class="btn btn--primary product-card__cta" href="${createProductDetailUrl(product)}">Xem chi tiết</a>
+  <a class="btn btn--primary product-card__cta" href="${getProductCardDetailUrl(product)}">Xem chi tiết</a>
   <button class="btn btn--secondary product-card__compare" type="button" data-compare-product-id="${escapeHtml(product.id)}" data-compare-product-label="${escapeHtml(title)}" aria-label="Thêm ${escapeHtml(title)} vào so sánh">So sánh</button>`;
 
 const renderProductListingCard = (product, { classes = 'product-card', dataset = '' } = {}) => {
@@ -1599,9 +1599,11 @@ const renderProductListingCard = (product, { classes = 'product-card', dataset =
   const price = product.price || '';
   const title = fullName || model;
   const renderedOldPrice = oldPrice ? `<span class="product-price__old">${escapeHtml(oldPrice)}</span>` : '';
+  const detailUrl = getProductCardDetailUrl(product);
+  const clickableClass = detailUrl ? ' product-card--clickable' : '';
 
   return `
-    <article class="${classes}" ${dataset}>
+    <article class="${classes}${clickableClass}"${renderProductCardLinkAttributes(detailUrl)} ${dataset}>
       <span class="product-card__badge">${escapeHtml(product.badge)}</span>
       ${renderProductStockBadge(product)}
       ${renderProductMedia(product, title)}
@@ -1860,6 +1862,51 @@ if ('IntersectionObserver' in window && dom.sections.length) {
 }
 
 const createProductDetailUrl = (product) => `product-detail.html?id=${encodeURIComponent(product.id)}`;
+
+const getProductCardDetailUrl = (product = {}) => {
+  if (!product?.id) return '';
+  return createProductDetailUrl(product);
+};
+
+const renderProductCardLinkAttributes = (detailUrl) => {
+  if (!detailUrl) return '';
+  return ` data-product-detail-url="${escapeHtml(detailUrl)}"`;
+};
+
+const CARD_DETAIL_SELECTOR = '[data-product-detail-url]';
+const CARD_INTERACTIVE_SELECTOR = [
+  'a',
+  'button',
+  'input',
+  'select',
+  'textarea',
+  'label',
+  'summary',
+  '[role="button"]',
+  '[role="link"]',
+  '[data-no-card-link]',
+  '[data-compare-product-id]',
+  '[data-compare-product]',
+  '[data-compare-toggle]',
+  '[data-compare-button]',
+  '[data-zalo-choice]',
+  '[data-call-button]',
+  '[data-admin-action]',
+  '[data-filter]',
+  '[data-brand-filter]',
+  '[data-size-filter]',
+].join(',');
+
+document.addEventListener('click', (event) => {
+  const card = event.target.closest(CARD_DETAIL_SELECTOR);
+  if (!card) return;
+  if (event.target.closest(CARD_INTERACTIVE_SELECTOR)) return;
+
+  const detailUrl = card.dataset.productDetailUrl;
+  if (!detailUrl) return;
+
+  window.location.href = detailUrl;
+});
 
 const renderTvPlaceholder = (label = 'Tivi Anh Minh Store') => `
   <div class="tv-mockup" role="img" aria-label="Ảnh sản phẩm đang cập nhật ${escapeHtml(label)}">

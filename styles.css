@@ -389,6 +389,8 @@ p { line-height: 1.65; }
 .product-card-wrap { min-width: 0; }
 .product-card { position: relative; display: flex; flex-direction: column; height: 100%; gap: 6px; border: 1px solid var(--color-gray-200); border-radius: 18px; padding: 14px; background: var(--color-white); box-shadow: var(--shadow-sm); transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition); }
 .product-card:hover { transform: translateY(-3px); border-color: rgba(19, 111, 206, 0.34); box-shadow: var(--shadow-md); }
+.product-card--clickable { cursor: pointer; }
+.product-card--clickable :is(a, button, input, select, textarea, label, summary, [role="button"], [role="link"]) { cursor: auto; }
 .product-card__badge { justify-self: start; border-radius: 999px; padding: 6px 10px; background: #e9f3ff; color: var(--color-primary); font-size: 0.75rem; font-weight: 750; line-height: 1.15; }
 .product-detail__badge { justify-self: start; border-radius: 999px; padding: 5px 10px; background: #e9f3ff; color: var(--color-primary); font-size: 0.78rem; font-weight: 750; }
 .product-card__media { position: relative; width: 100%; aspect-ratio: 4 / 3; height: auto; overflow: hidden; border: 1px solid var(--color-gray-200); border-radius: 14px; background: linear-gradient(145deg, #f7fbff, #ffffff); }
