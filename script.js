@@ -241,6 +241,7 @@ const TV_SERIES_BY_BRAND = {
     { label: 'The Serif', aliases: ['the serif'] },
     { label: 'The Sero', aliases: ['the sero'] },
     { label: 'UHD / 4K UHD', aliases: ['uhd', '4k uhd', 'ultra hd'] },
+    { label: 'HD / Full HD', aliases: ['hd', 'full hd', 'fhd', 'h series', 'h5000', 'h5000f', 'ls32h5000f', '32h5000f'] },
     { label: 'LED', aliases: ['led'] },
   ],
   LG: [
@@ -1125,6 +1126,7 @@ const getSeriesOptionsForBrand = (brand = '') => (isAllFilter(brand) ? [] : getB
 const escapeRegExp = (value = '') => String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const isWeakSeriesAlias = (alias = '') => {
   const compactAlias = normalizeText(alias).replace(/\s+/g, '');
+  if (compactAlias === 'hd') return false;
   return compactAlias.length <= 2 && !/\d/.test(compactAlias);
 };
 const textHasSeriesAlias = (text = '', alias = '') => {
@@ -1138,7 +1140,7 @@ const textHasSeriesAlias = (text = '', alias = '') => {
   return new RegExp(`(^|[^a-z0-9])${escapeRegExp(normalizedAlias)}([^a-z0-9]|$)`).test(normalizedText);
 };
 const PRIMARY_SERIES_PRIORITY_BY_BRAND = {
-  samsung: ['OLED', 'Neo QLED', 'QLED', 'Crystal UHD', 'The Frame', 'The Serif', 'The Sero', 'Lifestyle TV', 'UHD / 4K UHD', 'LED'],
+  samsung: ['OLED', 'Neo QLED', 'QLED', 'Crystal UHD', 'The Frame', 'The Serif', 'The Sero', 'Lifestyle TV', 'UHD / 4K UHD', 'HD / Full HD', 'LED'],
   lg: ['OLED', 'QNED', 'NanoCell', 'StanbyME', 'UHD / 4K UHD', 'LED', 'webOS'],
   sony: ['BRAVIA XR', 'OLED', 'Mini LED', 'Full Array LED', 'BRAVIA', 'Google TV', 'UHD / 4K UHD', 'LED'],
   tcl: ['Mini LED', 'QLED', 'C Series', 'P Series', 'S Series', 'Google TV', 'Android TV', 'UHD / 4K UHD', 'LED'],
