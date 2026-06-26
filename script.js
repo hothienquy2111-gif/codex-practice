@@ -234,7 +234,7 @@ const TV_SERIES_BY_BRAND = {
   Samsung: [
     { label: 'Crystal UHD', aliases: ['crystal uhd', 'crystal', 'crystal 4k'] },
     { label: 'QLED', aliases: ['qled', 'quantum dot'] },
-    { label: 'Neo QLED', aliases: ['neo qled', 'neo quantum', 'mini led', 'neo led'] },
+    { label: 'Neo QLED / Mini LED', aliases: ['neo qled', 'neo quantum', 'mini led', 'neo led'] },
     { label: 'OLED', aliases: ['oled'] },
     { label: 'Lifestyle TV', aliases: ['lifestyle', 'the frame', 'the serif', 'the sero', 'the terrace'] },
     { label: 'The Frame', aliases: ['the frame'] },
@@ -1140,7 +1140,7 @@ const textHasSeriesAlias = (text = '', alias = '') => {
   return new RegExp(`(^|[^a-z0-9])${escapeRegExp(normalizedAlias)}([^a-z0-9]|$)`).test(normalizedText);
 };
 const PRIMARY_SERIES_PRIORITY_BY_BRAND = {
-  samsung: ['OLED', 'Neo QLED', 'QLED', 'Crystal UHD', 'The Frame', 'The Serif', 'The Sero', 'Lifestyle TV', 'UHD / 4K UHD', 'HD / Full HD', 'LED'],
+  samsung: ['OLED', 'Neo QLED / Mini LED', 'QLED', 'Crystal UHD', 'The Frame', 'The Serif', 'The Sero', 'Lifestyle TV', 'UHD / 4K UHD', 'HD / Full HD', 'LED'],
   lg: ['OLED', 'QNED', 'NanoCell', 'StanbyME', 'UHD / 4K UHD', 'LED', 'webOS'],
   sony: ['BRAVIA XR', 'OLED', 'Mini LED', 'Full Array LED', 'BRAVIA', 'Google TV', 'UHD / 4K UHD', 'LED'],
   tcl: ['Mini LED', 'QLED', 'C Series', 'P Series', 'S Series', 'Google TV', 'Android TV', 'UHD / 4K UHD', 'LED'],
