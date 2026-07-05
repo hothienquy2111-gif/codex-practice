@@ -63,6 +63,9 @@
     rightBannerCurrent: document.querySelector('[data-admin-right-banner-current]'),
     saveRightBannerButton: document.querySelector('[data-save-right-banner]'),
     deleteRightBannerButton: document.querySelector('[data-delete-right-banner]'),
+    stickerLibraryOptions: document.querySelector('[data-sticker-library-options]'),
+    uploadStickerAssetButton: document.querySelector('[data-upload-sticker-asset]'),
+    stickerLibraryMessage: document.querySelector('[data-sticker-library-message]'),
   };
 
   let products = [];
@@ -88,6 +91,7 @@
   let removedProductImages = new Set();
   let currentProductImages = [];
   let banners = [];
+  let stickerAssets = [];
   let editingBanner = null;
   let rightBanner = null;
   let orders = [];
@@ -158,6 +162,29 @@
     return Object.prototype.hasOwnProperty.call(productStockStatusLabels, normalized) ? normalized : 'available';
   };
   const getProductStockStatusLabel = (value = '') => productStockStatusLabels[getProductStockStatus(value)] || productStockStatusLabels.available;
+  const categoryStickerModes = new Set(['auto', 'new', 'used', 'none']);
+  const promoStickerModes = new Set(['none', 'wc', 'click2', 'custom']);
+  const STICKER_ASSET_PROMO_PREFIX = 'sticker_asset:';
+  const getCategoryStickerMode = (value = '') => {
+    const normalized = String(value || '').trim().toLowerCase();
+    return categoryStickerModes.has(normalized) ? normalized : 'auto';
+  };
+  const isStickerAssetPromoValue = (value = '') => String(value || '').startsWith(STICKER_ASSET_PROMO_PREFIX);
+  const getPromoStickerMode = (value = '') => {
+    const normalized = String(value || '').trim().toLowerCase();
+    if (isStickerAssetPromoValue(normalized)) return 'custom';
+    return promoStickerModes.has(normalized) ? normalized : 'none';
+  };
+  const getStickerAssetPromoValue = (asset = {}) => `${STICKER_ASSET_PROMO_PREFIX}${asset.id || ''}`;
+  const getStickerAssetByPromoValue = (value = '') => {
+    if (!isStickerAssetPromoValue(value)) return null;
+    const id = String(value).slice(STICKER_ASSET_PROMO_PREFIX.length);
+    return stickerAssets.find((asset) => String(asset.id || '') === id) || null;
+  };
+  const getStickerAssetByUrl = (url = '') => {
+    const normalizedUrl = normalizeText(url);
+    return normalizedUrl ? stickerAssets.find((asset) => normalizeText(asset.url) === normalizedUrl) || null : null;
+  };
   const shouldRetryWithoutStockStatus = (error) => /stock_status|column .*stock_status|schema cache/i.test(String(error?.message || error || ''));
   const canArchiveOrder = (order = {}) => !isArchivedOrder(order);
   const canRestoreOrder = (order = {}) => isArchivedOrder(order);
@@ -519,7 +546,9 @@
     products = [];
     orders = [];
     banners = [];
+    stickerAssets = [];
     rightBanner = null;
+    renderStickerAssetOptions();
   };
 
   const denyAdminAction = () => {
@@ -561,8 +590,58 @@
     return hasAdminRole;
   };
 
+  const renderStickerAssetOptions = () => {
+    if (!dom.stickerLibraryOptions) return;
+    const select = dom.form?.promoStickerMode;
+    const currentValue = select?.value || '';
+    dom.stickerLibraryOptions.innerHTML = '';
+
+    if (!stickerAssets.length) {
+      const option = document.createElement('option');
+      option.value = '';
+      option.disabled = true;
+      option.textContent = 'Chưa có sticker trong thư viện';
+      dom.stickerLibraryOptions.appendChild(option);
+    } else {
+      stickerAssets.forEach((asset) => {
+        const option = document.createElement('option');
+        option.value = getStickerAssetPromoValue(asset);
+        option.textContent = asset.name || asset.url || 'Sticker ưu đãi';
+        dom.stickerLibraryOptions.appendChild(option);
+      });
+    }
+
+    if (select && currentValue && Array.from(select.options).some((option) => option.value === currentValue)) {
+      select.value = currentValue;
+    }
+    syncCustomStickerField();
+  };
+
+  const loadStickerAssets = async ({ silent = false } = {}) => {
+    if (!isAdminVerified) return;
+    try {
+      const { data, error } = await client
+        .from('sticker_assets')
+        .select('id,name,url,storage_path,sticker_type,is_active,sort_order,created_at,updated_at')
+        .eq('is_active', true)
+        .eq('sticker_type', 'promo')
+        .order('sort_order', { ascending: true })
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      stickerAssets = Array.isArray(data) ? data : [];
+      renderStickerAssetOptions();
+      if (!silent && dom.stickerLibraryMessage) showMessage(dom.stickerLibraryMessage, stickerAssets.length ? `Đã tải ${stickerAssets.length} sticker từ thư viện.` : 'Thư viện sticker đang trống.', stickerAssets.length ? 'success' : 'info');
+    } catch (error) {
+      console.warn(error);
+      stickerAssets = [];
+      renderStickerAssetOptions();
+      if (!silent && dom.stickerLibraryMessage) showMessage(dom.stickerLibraryMessage, 'Không thể tải thư viện sticker. Vui lòng kiểm tra quyền RLS/Data API của bảng sticker_assets.', 'error');
+    }
+  };
+
   const loadAdminData = async () => {
     if (!isAdminVerified) return;
+    await loadStickerAssets({ silent: true });
     await loadProducts();
     await loadOrders();
     await loadBanners();
@@ -1349,6 +1428,26 @@
 
   const getUniqueProductImages = (product = {}) => Array.from(new Set([product?.image, ...(Array.isArray(product?.images) ? product.images : [])].filter(Boolean)));
 
+  const getPromoStickerSelectValue = (product = {}) => {
+    const mode = getPromoStickerMode(product.promo_sticker_mode || product.promoStickerMode);
+    const customUrl = product.custom_sticker_url || product.customStickerUrl || '';
+    if (mode !== 'custom') return mode;
+    const matchingAsset = getStickerAssetByUrl(customUrl);
+    return matchingAsset ? getStickerAssetPromoValue(matchingAsset) : 'custom';
+  };
+
+  const syncCustomStickerField = () => {
+    const form = dom.form;
+    if (!form?.customStickerUrl || !form?.promoStickerMode) return;
+    const selectedAsset = getStickerAssetByPromoValue(form.promoStickerMode.value);
+    if (selectedAsset) {
+      form.customStickerUrl.value = selectedAsset.url || '';
+      form.customStickerUrl.disabled = true;
+      return;
+    }
+    form.customStickerUrl.disabled = getPromoStickerMode(form.promoStickerMode.value) !== 'custom';
+  };
+
   const openForm = (product = null) => {
     editingProduct = product;
     productIdManuallyEdited = Boolean(product);
@@ -1369,6 +1468,9 @@
       form.isFeatured.value = 'false';
       form.isActive.value = 'true';
       form.stockStatus.value = 'available';
+      form.categoryStickerMode.value = 'auto';
+      form.promoStickerMode.value = 'none';
+      form.customStickerUrl.value = '';
       form.sortOrder.value = getNextProductSortOrder(selectedType);
     }
     if (form && product) {
@@ -1393,8 +1495,12 @@
       form.specifications.value = stringifySpecificationsForAdmin(product.specifications ?? product.specificationsText ?? []);
       updateSpecificationPreview(parseSpecifications(form.specifications.value), { showEmpty: false });
       form.stockStatus.value = getProductStockStatus(product.stock_status || product.stockStatus);
+      form.categoryStickerMode.value = getCategoryStickerMode(product.category_sticker_mode || product.categoryStickerMode);
+      form.promoStickerMode.value = getPromoStickerSelectValue(product);
+      form.customStickerUrl.value = product.custom_sticker_url || product.customStickerUrl || '';
       form.isActive.value = String(product.is_active !== false);
     }
+    syncCustomStickerField();
     renderExistingImages();
     setTimeout(() => form?.brand?.focus(), 0);
   };
@@ -1453,6 +1559,86 @@
     if (error) throw error;
     const { data } = client.storage.from(bucketName).getPublicUrl(path);
     return data?.publicUrl || '';
+  };
+
+  const validateStickerAssetFile = (file) => {
+    if (!file) return false;
+    if (!allowedBannerTypes.has(file.type) || file.size > maxBannerFileSize) {
+      showMessage(dom.stickerLibraryMessage || dom.formMessage, 'Sticker phải là PNG, JPG hoặc WebP và dung lượng tối đa khoảng 10MB.', 'error');
+      return false;
+    }
+    return true;
+  };
+
+  const getNextStickerSortOrder = () => {
+    const maxOrder = stickerAssets.reduce((max, asset) => {
+      const value = Number(asset.sort_order);
+      return Number.isFinite(value) ? Math.max(max, value) : max;
+    }, 0);
+    return maxOrder + 1;
+  };
+
+  const uploadStickerAssetFile = async (file) => {
+    const path = `sticker-assets/${sanitizeFileName(file.name)}`;
+    const { error } = await client.storage.from(bucketName).upload(path, file, { cacheControl: '3600', upsert: false });
+    if (error) throw error;
+    const { data } = client.storage.from(bucketName).getPublicUrl(path);
+    return {
+      url: data?.publicUrl || '',
+      storagePath: `${bucketName}/${path}`,
+    };
+  };
+
+  const handleStickerAssetUpload = async () => {
+    if (!requireAdminVerified()) return;
+    const form = dom.form;
+    if (!form) return;
+    const file = form.stickerAssetFile?.files?.[0];
+    if (!validateStickerAssetFile(file)) {
+      form.stickerAssetFile?.focus();
+      return;
+    }
+
+    const fallbackName = String(file.name || '').replace(/\.[^.]+$/, '').trim() || 'Sticker ưu đãi';
+    const stickerName = normalizeText(form.stickerAssetName?.value) || fallbackName;
+    dom.uploadStickerAssetButton.disabled = true;
+    showMessage(dom.stickerLibraryMessage || dom.formMessage, 'Đang upload sticker vào thư viện...', 'info');
+
+    try {
+      const uploaded = await uploadStickerAssetFile(file);
+      if (!uploaded.url) throw new Error('Không lấy được URL công khai của sticker.');
+      const payload = {
+        name: stickerName,
+        url: uploaded.url,
+        storage_path: uploaded.storagePath,
+        sticker_type: 'promo',
+        is_active: true,
+        sort_order: getNextStickerSortOrder(),
+        updated_at: new Date().toISOString(),
+      };
+      const { data, error } = await client
+        .from('sticker_assets')
+        .insert(payload)
+        .select('id,name,url,storage_path,sticker_type,is_active,sort_order,created_at,updated_at')
+        .single();
+      if (error) throw error;
+
+      await loadStickerAssets({ silent: true });
+      const createdAsset = getStickerAssetByUrl(data?.url || uploaded.url) || data;
+      if (createdAsset?.id && form.promoStickerMode) {
+        form.promoStickerMode.value = getStickerAssetPromoValue(createdAsset);
+        form.customStickerUrl.value = createdAsset.url || uploaded.url;
+        syncCustomStickerField();
+      }
+      form.stickerAssetName.value = '';
+      form.stickerAssetFile.value = '';
+      showMessage(dom.stickerLibraryMessage || dom.formMessage, 'Đã upload và chọn sticker mới cho sản phẩm này.', 'success');
+    } catch (error) {
+      console.warn(error);
+      showMessage(dom.stickerLibraryMessage || dom.formMessage, 'Không thể lưu sticker vào thư viện. Vui lòng kiểm tra quyền Storage/RLS của sticker_assets.', 'error');
+    } finally {
+      dom.uploadStickerAssetButton.disabled = false;
+    }
   };
 
   const uploadImages = async (form, productId) => {
@@ -1681,30 +1867,38 @@
     }
   };
 
-  const buildProduct = (form, imageData) => ({
-    id: normalizeText(form.id.value) || generateProductId(form.brand.value, form.model.value, form.size.value),
-    brand: normalizeText(form.brand.value),
-    model: normalizeText(form.model.value),
-    full_name: normalizeText(form.fullName.value),
-    size: normalizeText(form.size.value),
-    type: normalizeText(form.type.value),
-    condition: normalizeText(form.condition.value),
-    warranty: normalizeText(form.warranty.value),
-    old_price: normalizeText(form.oldPrice.value),
-    price: normalizeText(form.price.value),
-    badge: normalizeText(form.badge.value),
-    description: normalizeText(form.description.value),
-    features: parseLines(form.features.value),
-    overview: getParsedOverviewForSave(form),
-    specifications: getParsedSpecificationsForSave(form),
-    image: imageData.image || '',
-    images: imageData.images || [],
-    stock_status: getProductStockStatus(form.stockStatus?.value),
-    is_featured: form.isFeatured.value === 'true',
-    is_active: form.isActive.value === 'true',
-    sort_order: Number(form.sortOrder.value || 0),
-    updated_at: new Date().toISOString(),
-  });
+  const buildProduct = (form, imageData) => {
+    const selectedStickerAsset = getStickerAssetByPromoValue(form.promoStickerMode?.value);
+    const promoStickerMode = getPromoStickerMode(form.promoStickerMode?.value);
+    const customStickerUrl = selectedStickerAsset?.url || normalizeText(form.customStickerUrl?.value);
+    return {
+      id: normalizeText(form.id.value) || generateProductId(form.brand.value, form.model.value, form.size.value),
+      brand: normalizeText(form.brand.value),
+      model: normalizeText(form.model.value),
+      full_name: normalizeText(form.fullName.value),
+      size: normalizeText(form.size.value),
+      type: normalizeText(form.type.value),
+      condition: normalizeText(form.condition.value),
+      warranty: normalizeText(form.warranty.value),
+      old_price: normalizeText(form.oldPrice.value),
+      price: normalizeText(form.price.value),
+      badge: normalizeText(form.badge.value),
+      description: normalizeText(form.description.value),
+      features: parseLines(form.features.value),
+      overview: getParsedOverviewForSave(form),
+      specifications: getParsedSpecificationsForSave(form),
+      image: imageData.image || '',
+      images: imageData.images || [],
+      stock_status: getProductStockStatus(form.stockStatus?.value),
+      category_sticker_mode: getCategoryStickerMode(form.categoryStickerMode?.value),
+      promo_sticker_mode: promoStickerMode,
+      custom_sticker_url: promoStickerMode === 'custom' ? customStickerUrl || null : null,
+      is_featured: form.isFeatured.value === 'true',
+      is_active: form.isActive.value === 'true',
+      sort_order: Number(form.sortOrder.value || 0),
+      updated_at: new Date().toISOString(),
+    };
+  };
 
   const saveProductRecord = async (payload, originalId = '') => {
     const isUpdate = Boolean(originalId);
@@ -1883,6 +2077,12 @@
   dom.form?.type?.addEventListener('change', () => {
     if (!dom.form || editingProduct || sortOrderManuallyEdited) return;
     dom.form.sortOrder.value = getNextProductSortOrder(dom.form.type.value);
+  });
+  dom.form?.promoStickerMode?.addEventListener('change', syncCustomStickerField);
+  dom.uploadStickerAssetButton?.addEventListener('click', handleStickerAssetUpload);
+  dom.form?.stickerAssetFile?.addEventListener('change', () => {
+    const file = dom.form.stickerAssetFile.files?.[0];
+    if (file && !validateStickerAssetFile(file)) dom.form.stickerAssetFile.value = '';
   });
   dom.duplicateForm?.addEventListener('submit', handleDuplicateSave);
   dom.duplicateForm?.duplicateSize?.addEventListener('change', () => {
