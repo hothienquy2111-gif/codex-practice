@@ -471,6 +471,12 @@ const normalizeProduct = (product = {}, index = 0) => {
     isFeatured: Boolean(product.is_featured ?? product.isFeatured ?? false),
     isActive: Boolean(product.is_active ?? product.isActive ?? true),
     stockStatus: normalizeStockStatus(product.stock_status ?? product.stockStatus),
+    categoryStickerMode: product.categoryStickerMode ?? product.category_sticker_mode ?? 'auto',
+    category_sticker_mode: product.category_sticker_mode ?? product.categoryStickerMode ?? 'auto',
+    promoStickerMode: product.promoStickerMode ?? product.promo_sticker_mode ?? 'none',
+    promo_sticker_mode: product.promo_sticker_mode ?? product.promoStickerMode ?? 'none',
+    customStickerUrl: product.customStickerUrl ?? product.custom_sticker_url ?? '',
+    custom_sticker_url: product.custom_sticker_url ?? product.customStickerUrl ?? '',
   };
 };
 
@@ -1322,6 +1328,15 @@ const getSeriesCountForSection = (sectionKey, filterState, seriesLabel = '') => 
   )).length;
 };
 
+const getSizeCountForSection = (sectionKey, filterState, sizeLabel = FILTER_ALL_VALUE) => {
+  const sectionProducts = sectionKey === 'newTv' ? getNewTvProducts(products) : getOldTvProducts(products);
+  return sectionProducts.filter((product) => (
+    productMatchesBrand(product, filterState.brand)
+    && (isAllFilter(filterState.brand) ? true : productMatchesSeries(product, filterState.series, filterState.brand))
+    && (isAllFilter(sizeLabel) ? true : productMatchesSize(product, sizeLabel))
+  )).length;
+};
+
 const resetSeriesForSection = (sectionKey) => {
   const config = getSectionDomConfig(sectionKey);
   if (config?.filterState) config.filterState.series = FILTER_ALL_VALUE;
@@ -1467,14 +1482,28 @@ const renderBrandFilterRow = ({ container, sectionType }) => {
   const dataAttr = isUsed ? 'data-used-brand' : 'data-new-brand';
   const cardClass = isUsed ? 'old-tv-brand-card' : 'old-tv-brand-card new-tv-brand-card';
   const logoClass = isUsed ? 'old-tv-brand-card__logo' : 'old-tv-brand-card__logo new-tv-brand-card__logo';
+  const sectionProducts = isUsed ? getOldTvProducts(products) : getNewTvProducts(products);
+  const getBrandProductCount = (brandName = '') => (
+    isAllFilter(brandName)
+      ? sectionProducts.length
+      : sectionProducts.filter((product) => productMatchesBrand(product, brandName)).length
+  );
+  const renderBrandCount = (count) => `<span class="filter-count-badge old-tv-brand-card__count" aria-label="${count} sản phẩm">${count}</span>`;
+  const totalCount = getBrandProductCount(FILTER_ALL_VALUE);
   const allCard = `<button class="${cardClass} is-active" type="button" ${dataAttr}="all" aria-pressed="true">
     ${createBrandLogoElement(null, logoClass)}
     <span class="old-tv-brand-card__name">Tất cả</span>
+    ${renderBrandCount(totalCount)}
   </button>`;
-  const brandCards = BRAND_DATA.map((brand) => `<button class="${cardClass}" type="button" ${dataAttr}="${escapeHtml(brand.name)}" aria-pressed="false">
-    ${createBrandLogoElement(brand, logoClass)}
-    <span class="old-tv-brand-card__name">${escapeHtml(brand.name)}</span>
-  </button>`).join('');
+  const brandCards = BRAND_DATA.map((brand) => {
+    const count = getBrandProductCount(brand.name);
+    const disabledAttrs = count ? '' : ' disabled aria-disabled="true"';
+    return `<button class="${cardClass}${count ? '' : ' is-disabled'}" type="button" ${dataAttr}="${escapeHtml(brand.name)}" aria-pressed="false"${disabledAttrs}>
+      ${createBrandLogoElement(brand, logoClass)}
+      <span class="old-tv-brand-card__name">${escapeHtml(brand.name)}</span>
+      ${renderBrandCount(count)}
+    </button>`;
+  }).join('');
 
   container.innerHTML = `${allCard}${brandCards}`;
   initBrandLogoFallbacks(container);
@@ -1540,8 +1569,16 @@ const syncSectionSizeRow = (sectionKey) => {
   config.row?.querySelectorAll('button[aria-pressed]').forEach((button) => {
     const buttonSize = button.dataset[config.dataKey] || FILTER_ALL_VALUE;
     const isActive = (isAllFilter(buttonSize) && isAllFilter(config.filterState.size)) || normalizeText(buttonSize) === normalizeText(config.filterState.size);
+    const count = getSizeCountForSection(sectionKey, config.filterState, buttonSize);
+    const label = button.dataset.filterLabel || button.textContent.trim() || FILTER_ALL_LABEL;
+    button.dataset.filterLabel = label;
+    button.innerHTML = `${escapeHtml(label)} <span class="filter-count-badge">${count}</span>`;
+    const isDisabled = !isActive && !isAllFilter(buttonSize) && count === 0;
+    button.disabled = isDisabled;
     button.classList.toggle('is-active', isActive);
+    button.classList.toggle('is-disabled', isDisabled);
     button.setAttribute('aria-pressed', String(isActive));
+    button.setAttribute('aria-disabled', String(isDisabled));
   });
 };
 
@@ -1590,8 +1627,10 @@ const bindProductImageFallbacks = (root) => {
 };
 
 const renderProductCardActions = (product, title) => `
-  <a class="btn btn--primary product-card__cta" href="${getProductCardDetailUrl(product)}">Xem chi tiết</a>
-  <button class="btn btn--secondary product-card__compare" type="button" data-compare-product-id="${escapeHtml(product.id)}" data-compare-product-label="${escapeHtml(title)}" aria-label="Thêm ${escapeHtml(title)} vào so sánh">So sánh</button>`;
+  <div class="product-card__actions">
+    <a class="btn btn--primary product-card__cta" href="${getProductCardDetailUrl(product)}">Xem chi tiết</a>
+    <button class="btn btn--secondary product-card__compare" type="button" data-compare-product-id="${escapeHtml(product.id)}" data-compare-product-label="${escapeHtml(title)}" aria-label="Thêm ${escapeHtml(title)} vào so sánh">So sánh</button>
+  </div>`;
 
 const renderProductListingCard = (product, { classes = 'product-card', dataset = '' } = {}) => {
   const brand = product.brand || '';
@@ -1606,17 +1645,17 @@ const renderProductListingCard = (product, { classes = 'product-card', dataset =
 
   return `
     <article class="${classes}${clickableClass}"${renderProductCardLinkAttributes(detailUrl)} ${dataset}>
-      <span class="product-card__badge">${escapeHtml(product.badge)}</span>
-      ${renderProductStockBadge(product)}
       ${renderProductMedia(product, title)}
-      <div class="product-card-meta">
-        <span class="product-card-brand">${escapeHtml(brand)}</span>
-        <span class="product-card-model">${escapeHtml(model)}</span>
+      <div class="product-card__body">
+        <div class="product-card-meta">
+          <span class="product-card-brand">${escapeHtml(brand)}</span>
+          <span class="product-card-model">${escapeHtml(model)}</span>
+        </div>
+        <h3 class="product-card-name">${escapeHtml(title)}</h3>
+        <p class="product-size">${escapeHtml(formatProductCardSize(product.size))}</p>
+        <p class="product-type">${escapeHtml(product.type)}</p>
+        <strong class="product-price"><span>Giá:</span> ${renderedOldPrice}<span class="product-price__sale">${escapeHtml(price)}</span></strong>
       </div>
-      <h3 class="product-card-name">${escapeHtml(title)}</h3>
-      <p class="product-size">${escapeHtml(formatProductCardSize(product.size))}</p>
-      <p class="product-type">${escapeHtml(product.type)}</p>
-      <strong class="product-price"><span>Giá:</span> ${renderedOldPrice}<span class="product-price__sale">${escapeHtml(price)}</span></strong>
       ${renderProductCardActions(product, title)}
     </article>`;
 };
@@ -1922,11 +1961,100 @@ const renderProductStockBadge = (product = {}) => {
   return `<span class="product-card__stock-badge product-card__stock-badge--${escapeHtml(status)}">${escapeHtml(getProductStockStatusLabel(status))}</span>`;
 };
 
+const PROMO_STICKERS = {
+  wc: {
+    src: 'assets/wc.png',
+    alt: 'Ưu đãi World Cup',
+  },
+  click2: {
+    src: 'assets/click2.png',
+    alt: 'Giảm thêm 300K',
+  },
+};
+
+const CATEGORY_BADGES = {
+  newTv: {
+    src: 'assets/tivimoi.png',
+    alt: 'Tivi moi',
+  },
+  oldTv: {
+    src: 'assets/tivicu2.png',
+    alt: 'Tivi cu',
+  },
+};
+
+const getProductTypeStickerKey = (product = {}) => {
+  const normalizedType = normalizeVietnameseText(product.type || product.productType || '');
+  if (['tivi moi', 'tv moi', 'moi', 'new'].includes(normalizedType) || normalizedType.includes('tivi moi') || normalizedType.includes('tv moi')) return 'newTv';
+  if (['tivi cu', 'tv cu', 'cu', 'used', 'da qua su dung'].includes(normalizedType) || normalizedType.includes('tivi cu') || normalizedType.includes('tv cu') || normalizedType.includes('da qua su dung')) return 'oldTv';
+  return '';
+};
+
+const normalizeCategoryStickerMode = (value = '') => {
+  const mode = String(value || '').trim().toLowerCase();
+  return ['auto', 'new', 'used', 'none'].includes(mode) ? mode : 'auto';
+};
+
+const normalizePromoStickerMode = (value = '') => {
+  const mode = String(value || '').trim().toLowerCase();
+  return ['none', 'wc', 'click2', 'custom'].includes(mode) ? mode : 'none';
+};
+
+const getPromoStickerForProduct = (product = {}) => {
+  const promoMode = normalizePromoStickerMode(product.promoStickerMode ?? product.promo_sticker_mode);
+  if (promoMode === 'wc') return PROMO_STICKERS.wc;
+  if (promoMode === 'click2') return PROMO_STICKERS.click2;
+  if (promoMode === 'custom') {
+    const customUrl = String(product.customStickerUrl ?? product.custom_sticker_url ?? '').trim();
+    return customUrl ? { src: customUrl, alt: 'Sticker ưu đãi' } : null;
+  }
+  return null;
+};
+
+const renderPromoSticker = (product = {}, className = 'product-promo-sticker') => {
+  const sticker = getPromoStickerForProduct(product);
+  if (!sticker) return '';
+  return `<img class="${className}" src="${escapeHtml(sticker.src)}" alt="${escapeHtml(sticker.alt)}" loading="lazy" decoding="async" aria-hidden="true" />`;
+};
+
+const getCategoryBadgeForProduct = (product = {}) => {
+  const categoryMode = normalizeCategoryStickerMode(product.categoryStickerMode ?? product.category_sticker_mode);
+  if (categoryMode === 'none') return null;
+  if (categoryMode === 'new') return CATEGORY_BADGES.newTv;
+  if (categoryMode === 'used') return CATEGORY_BADGES.oldTv;
+  const productTypeKey = getProductTypeStickerKey(product);
+  return productTypeKey ? CATEGORY_BADGES[productTypeKey] : null;
+};
+
+const renderCategoryBadge = (product = {}, className = 'product-category-badge') => {
+  const badge = getCategoryBadgeForProduct(product);
+  if (!badge) return '';
+  return `<img class="${className}" src="${escapeHtml(badge.src)}" alt="${escapeHtml(badge.alt)}" loading="lazy" decoding="async" aria-hidden="true" />`;
+};
+
 const renderProductMedia = (product, label) => {
   const placeholder = renderTvPlaceholder(label);
-  if (!product.image) return placeholder;
+  const categoryBadge = renderCategoryBadge(product, 'product-category-badge product-category-badge--card');
+  const stockBadge = renderProductStockBadge(product);
+  const badges = categoryBadge || stockBadge
+    ? `
+    <div class="product-card__badge-row">
+      ${categoryBadge}
+      ${stockBadge}
+    </div>`
+    : '';
+  if (!product.image) {
+    return `
+      <div class="product-card__media product-card__media--placeholder">
+        ${badges}
+        ${renderPromoSticker(product, 'product-promo-sticker product-promo-sticker--card')}
+        ${placeholder}
+      </div>`;
+  }
   return `
     <div class="product-card__media">
+      ${badges}
+      ${renderPromoSticker(product, 'product-promo-sticker product-promo-sticker--card')}
       <img class="product-card__image" src="${escapeHtml(product.image)}" alt="${escapeHtml(label)}" loading="lazy" decoding="async" />
       <div class="product-card__fallback" aria-hidden="true">${placeholder}</div>
     </div>`;
@@ -1985,6 +2113,8 @@ const applyFiltersAndRender = ({ resetSections = ['featured', 'newTv', 'oldTv'] 
   resetSections.forEach(resetVisibleCount);
   renderSeriesSelectorForSection('oldTv', oldTvFilters.brand);
   renderSeriesSelectorForSection('newTv', newTvFilters.brand);
+  syncSectionSizeRow('oldTv');
+  syncSectionSizeRow('newTv');
   renderProductCards();
   renderUsedTvSection();
   renderNewTvSection();
@@ -1996,10 +2126,12 @@ const applyFiltersForSection = (sectionKey) => {
   resetVisibleCount(sectionKey);
   if (sectionKey === 'oldTv') {
     renderSeriesSelectorForSection('oldTv', oldTvFilters.brand);
+    syncSectionSizeRow('oldTv');
     renderUsedTvSection();
   }
   if (sectionKey === 'newTv') {
     renderSeriesSelectorForSection('newTv', newTvFilters.brand);
+    syncSectionSizeRow('newTv');
     renderNewTvSection();
   }
 };

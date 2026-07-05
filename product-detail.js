@@ -31,6 +31,77 @@
 
   const getProductStockStatusLabel = (value = '') => PRODUCT_STOCK_STATUS[normalizeStockStatus(value)] || PRODUCT_STOCK_STATUS.available;
 
+  const PROMO_STICKERS = {
+    wc: {
+      src: 'assets/wc.png',
+      alt: 'Ưu đãi World Cup',
+    },
+    click2: {
+      src: 'assets/click2.png',
+      alt: 'Giảm thêm 300K',
+    },
+  };
+
+  const CATEGORY_BADGES = {
+    newTv: {
+      src: 'assets/tivimoi.png',
+      alt: 'Tivi moi',
+    },
+    oldTv: {
+      src: 'assets/tivicu2.png',
+      alt: 'Tivi cu',
+    },
+  };
+
+  const getProductTypeStickerKey = (product = {}) => {
+    const normalizedType = normalizeText(product.type || product.productType || '');
+    if (['tivi moi', 'tv moi', 'moi', 'new'].includes(normalizedType) || normalizedType.includes('tivi moi') || normalizedType.includes('tv moi')) return 'newTv';
+    if (['tivi cu', 'tv cu', 'cu', 'used', 'da qua su dung'].includes(normalizedType) || normalizedType.includes('tivi cu') || normalizedType.includes('tv cu') || normalizedType.includes('da qua su dung')) return 'oldTv';
+    return '';
+  };
+
+  const normalizeCategoryStickerMode = (value = '') => {
+    const mode = String(value || '').trim().toLowerCase();
+    return ['auto', 'new', 'used', 'none'].includes(mode) ? mode : 'auto';
+  };
+
+  const normalizePromoStickerMode = (value = '') => {
+    const mode = String(value || '').trim().toLowerCase();
+    return ['none', 'wc', 'click2', 'custom'].includes(mode) ? mode : 'none';
+  };
+
+  const getPromoStickerForProduct = (product = {}) => {
+    const promoMode = normalizePromoStickerMode(product.promoStickerMode ?? product.promo_sticker_mode);
+    if (promoMode === 'wc') return PROMO_STICKERS.wc;
+    if (promoMode === 'click2') return PROMO_STICKERS.click2;
+    if (promoMode === 'custom') {
+      const customUrl = String(product.customStickerUrl ?? product.custom_sticker_url ?? '').trim();
+      return customUrl ? { src: customUrl, alt: 'Sticker ưu đãi' } : null;
+    }
+    return null;
+  };
+
+  const renderPromoSticker = (product = {}, className = 'product-promo-sticker') => {
+    const sticker = getPromoStickerForProduct(product);
+    if (!sticker) return '';
+    return `<img class="${className}" src="${escapeDetailHtml(sticker.src)}" alt="${escapeDetailHtml(sticker.alt)}" loading="lazy" decoding="async" aria-hidden="true" />`;
+  };
+
+  const getCategoryBadgeForProduct = (product = {}) => {
+    const categoryMode = normalizeCategoryStickerMode(product.categoryStickerMode ?? product.category_sticker_mode);
+    if (categoryMode === 'none') return null;
+    if (categoryMode === 'new') return CATEGORY_BADGES.newTv;
+    if (categoryMode === 'used') return CATEGORY_BADGES.oldTv;
+    const productTypeKey = getProductTypeStickerKey(product);
+    return productTypeKey ? CATEGORY_BADGES[productTypeKey] : null;
+  };
+
+  const renderCategoryBadge = (product = {}, className = 'product-category-badge') => {
+    const badge = getCategoryBadgeForProduct(product);
+    if (!badge) return '';
+    return `<img class="${className}" src="${escapeDetailHtml(badge.src)}" alt="${escapeDetailHtml(badge.alt)}" loading="lazy" decoding="async" aria-hidden="true" />`;
+  };
+
   const isProductAvailableOnPublic = (product = {}) => product.isActive !== false && normalizeStockStatus(product.stockStatus) !== 'hidden';
   const isProductSold = (product = {}) => normalizeStockStatus(product.stockStatus) === 'sold';
   const isProductComingSoon = (product = {}) => normalizeStockStatus(product.stockStatus) === 'coming_soon';
@@ -177,6 +248,12 @@
       isActive: Boolean(product.is_active ?? product.isActive ?? true),
       isFeatured: Boolean(product.is_featured ?? product.isFeatured ?? false),
       stockStatus: normalizeStockStatus(product.stock_status ?? product.stockStatus),
+      categoryStickerMode: product.categoryStickerMode ?? product.category_sticker_mode ?? 'auto',
+      category_sticker_mode: product.category_sticker_mode ?? product.categoryStickerMode ?? 'auto',
+      promoStickerMode: product.promoStickerMode ?? product.promo_sticker_mode ?? 'none',
+      promo_sticker_mode: product.promo_sticker_mode ?? product.promoStickerMode ?? 'none',
+      customStickerUrl: product.customStickerUrl ?? product.custom_sticker_url ?? '',
+      custom_sticker_url: product.custom_sticker_url ?? product.customStickerUrl ?? '',
       operating_system: String(product.operating_system ?? product.operatingSystem ?? product.os ?? '').trim(),
       production_year: String(product.production_year ?? product.productionYear ?? product.year ?? '').trim(),
       origin: String(product.origin ?? product.made_in ?? product.madeIn ?? '').trim(),
@@ -689,14 +766,19 @@
     const oldPrice = product.oldPrice
       ? `<span class="product-price__old">${escapeDetailHtml(product.oldPrice)}</span>`
       : '';
-    const badge = product.badge ? `<span class="product-card__badge">${escapeDetailHtml(product.badge)}</span>` : '';
     const statusBadge = renderProductStatusBadge(product);
+    const categoryBadge = renderCategoryBadge(product, 'product-category-badge product-category-badge--card');
+    const promoSticker = renderPromoSticker(product, 'product-promo-sticker product-promo-sticker--card');
+    const mediaBadgeRow = categoryBadge
+      ? `<div class="product-card__badge-row">${categoryBadge}</div>`
+      : '';
 
     return `
       <article class="product-card product-reference-card product-card--clickable" data-product-detail-url="${escapeDetailHtml(detailUrl)}">
-        ${badge}
         ${statusBadge}
         <a class="product-card__media product-reference-card__media" href="${detailUrl}" aria-label="Xem chi tiết ${escapeDetailHtml(product.fullName)}">
+          ${mediaBadgeRow}
+          ${promoSticker}
           ${imageMarkup}
         </a>
         <div class="product-card-meta product-reference-card__meta">
@@ -975,22 +1057,50 @@
     const oldPrice = product.oldPrice
       ? `<p class="product-detail__old-price"><span>Giá cũ:</span> <del>${escapeDetailHtml(product.oldPrice)}</del></p>`
       : '';
+    const hasDisplayPrice = product.price && normalizeText(product.price) !== normalizeText('Giá đang cập nhật');
+    const detailCategoryBadge = renderCategoryBadge(product, 'product-category-badge product-category-badge--detail');
+    const detailPromoSticker = renderPromoSticker(product, 'product-promo-sticker product-promo-sticker--detail');
+    const detailGalleryStickers = detailCategoryBadge || detailPromoSticker
+      ? `<div class="product-detail__gallery-stickers">${detailCategoryBadge}${detailPromoSticker}</div>`
+      : '';
+    const priceBox = hasDisplayPrice
+      ? `<div class="product-detail__price-box product-detail__price-box--near-title">
+          <div class="product-detail__price-copy">
+            ${hasDisplayPrice ? `${oldPrice}<p class="product-detail__price"><span>Giá bán:</span> <strong>${escapeDetailHtml(product.price)}</strong></p>` : ''}
+          </div>
+        </div>`
+      : '';
     const warrantySpec = product.warranty ? `<div><dt>Bảo hành</dt><dd class="product-spec-value">${escapeDetailHtml(product.warranty)}</dd></div>` : '';
     const statusBadge = renderProductStatusBadge(product);
     const referenceSection = renderReferenceSection(product, recommendations);
     const recentSection = renderRecentlyViewedSection(product);
+    const dealPanel = `
+      <div class="product-detail__deal-panel" aria-label="Ưu đãi và hỗ trợ khi mua sản phẩm">
+        <p class="product-detail__deal-title">Ưu đãi và hỗ trợ tại Anh Minh Store</p>
+        <ul>
+          <li><strong>Bảo hành:</strong> ${escapeDetailHtml(product.warranty || 'Xác nhận theo từng mẫu trước khi chốt')}</li>
+          <li><strong>Giao/lắp:</strong> Hỗ trợ tư vấn theo địa chỉ và tình trạng đơn hàng</li>
+          <li><strong>Tư vấn:</strong> Chọn đúng kích thước, nhu cầu xem và ngân sách</li>
+        </ul>
+      </div>`;
 
     productDetailRoot.classList.remove('product-detail-card--message');
     productDetailRoot.innerHTML = `
       <div class="product-detail__media">
+        ${detailGalleryStickers}
         ${renderImageGallery(product)}
       </div>
       <article class="product-detail__info">
-        <span class="product-detail__badge">${escapeDetailHtml(product.badge)}</span>
-        ${statusBadge}
-        <p class="product-detail__brand">${escapeDetailHtml(product.brand)}</p>
-        <p class="product-detail__model">${escapeDetailHtml(product.model)}</p>
+        <div class="product-detail__badge-row">
+          ${product.badge ? `<span class="product-detail__badge">${escapeDetailHtml(product.badge)}</span>` : ''}
+          ${statusBadge}
+        </div>
+        <div class="product-detail__identity">
+          <p class="product-detail__brand">${escapeDetailHtml(product.brand)}</p>
+          <p class="product-detail__model">${escapeDetailHtml(product.model)}</p>
+        </div>
         <h1 id="product-detail-title">${escapeDetailHtml(product.fullName)}</h1>
+        ${priceBox}
         <p class="product-detail__description">${escapeDetailHtml(product.description)}</p>
 
         <dl class="product-specs">
@@ -1009,10 +1119,7 @@
 
         ${renderDetailModalButtons(product)}
 
-        <div class="product-detail__price-box">
-          ${oldPrice}
-          <p class="product-detail__price"><span>Giá bán:</span> <strong>${escapeDetailHtml(product.price)}</strong></p>
-        </div>
+        ${dealPanel}
 
         <div class="product-detail__actions">
           <button class="btn btn--primary product-detail__order-button${isOrderActionDisabled(product) ? ' product-detail__order-button--disabled' : ''}" type="button" data-order-now aria-label="${escapeDetailHtml(getOrderActionLabel(product))} sản phẩm ${escapeDetailHtml(label)}"${isOrderActionDisabled(product) ? ' disabled aria-disabled="true"' : ''}>${escapeDetailHtml(getOrderActionLabel(product))}</button>
