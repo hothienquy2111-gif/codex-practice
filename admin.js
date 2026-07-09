@@ -23,6 +23,11 @@
     productSearchClear: document.querySelector('[data-product-search-clear]'),
     productSearchCount: document.querySelector('[data-product-search-count]'),
     productTypeFilters: document.querySelectorAll('[data-admin-product-type-filter]'),
+    productAreaTabs: document.querySelectorAll('[data-product-area]'),
+    productFilterGroups: document.querySelectorAll('[data-product-filter-group]'),
+    productAreaTitle: document.querySelector('[data-product-area-title]'),
+    productAreaDescription: document.querySelector('[data-product-area-description]'),
+    sizeLabel: document.querySelector('[data-size-label]'),
     orders: document.querySelector('[data-admin-orders]'),
     orderFilters: document.querySelectorAll('[data-order-filter]'),
     exportProductsCsvButton: document.querySelector('[data-export-products-csv]'),
@@ -84,8 +89,9 @@
   let duplicatingProduct = null;
   let productIdManuallyEdited = false;
   let sortOrderManuallyEdited = false;
-  let activeAdminTab = 'products';
-  let activeProductTypeFilter = 'all';
+  let activeAdminTab = 'tv-products';
+  let currentProductArea = 'tv';
+  let activeProductTypeFilter = 'all-tv';
   let productSearchTerm = '';
   let productSearchTimer = null;
   let removedProductImages = new Set();
@@ -172,6 +178,15 @@
     'dieu-hoa': 'Điều hoà',
     'do-gia-dung': 'Đồ gia dụng',
   };
+  const TV_FILTER_ALL = 'all-tv';
+  const HOME_FILTER_ALL = 'all-home';
+  const TV_PRODUCT_TYPES = new Set(['tivi-moi', 'tivi-cu']);
+  const HOME_SIZE_PLACEHOLDERS = {
+    'may-giat': '10.5kg / 15kg / Giặt 12kg, sấy 8kg',
+    'tu-lanh': '300L / 450L',
+    'dieu-hoa': '1HP / 1.5HP / 2HP',
+    'do-gia-dung': 'Liên hệ',
+  };
   const normalizeKey = (value = '') =>
     String(value || '')
       .normalize('NFD')
@@ -206,6 +221,7 @@
     const type = normalizeKey(product.type);
     return category === HOME_PRODUCT_CATEGORY || Object.prototype.hasOwnProperty.call(HOME_PRODUCT_SUBCATEGORIES, subcategory) || HOME_PRODUCT_TYPES.has(type);
   };
+  const isTvProduct = (product = {}) => TV_PRODUCT_TYPES.has(normalizeKey(product.type));
   const getHomeProductTypeFromSubcategory = (subcategory = '') => HOME_PRODUCT_SUBCATEGORIES[normalizeKey(subcategory)] || '';
   const getHomeProductSubcategoryFromType = (type = '') => {
     const normalizedType = normalizeKey(type);
@@ -213,9 +229,12 @@
   };
   const getHomeProductFilterLabel = (filter = '') => {
     const normalized = normalizeKey(filter);
+    if (normalized === TV_FILTER_ALL) return 'tất cả tivi';
+    if (normalized === HOME_FILTER_ALL) return 'tất cả gia dụng';
     if (normalized === HOME_PRODUCT_CATEGORY) return 'Sản phẩm gia đình';
     return HOME_PRODUCT_SUBCATEGORIES[normalized] || filter;
   };
+  const getDefaultFilterForArea = (area = currentProductArea) => area === 'home' ? HOME_FILTER_ALL : TV_FILTER_ALL;
   const shouldRetryWithoutStockStatus = (error) => /stock_status|column .*stock_status|schema cache/i.test(String(error?.message || error || ''));
   const shouldRetryWithoutHomeProductFields = (error) => /category|subcategory|capacity_or_size|column .*category|column .*subcategory|column .*capacity_or_size|schema cache/i.test(String(error?.message || error || ''));
   const canArchiveOrder = (order = {}) => !isArchivedOrder(order);
@@ -739,11 +758,12 @@
     serializeSearchValue(product.specifications),
   ].filter(Boolean).join(' '));
 
-  const getProductTypeRank = (type = '') => {
-    const normalizedType = normalizeText(type);
+  const getProductTypeRank = (productOrType = '') => {
+    const product = typeof productOrType === 'object' ? productOrType : { type: productOrType };
+    const normalizedType = normalizeText(product.type);
     if (normalizedType === 'Tivi mới') return 1;
     if (normalizedType === 'Tivi cũ') return 2;
-    if (isHomeProduct({ type })) return 3;
+    if (isHomeProduct(product)) return 3;
     return 3;
   };
 
@@ -757,11 +777,11 @@
   };
 
   const sortProductsForAdmin = (items = []) => [...items].sort((a, b) => {
-    if (activeProductTypeFilter === 'all') {
-      const typeRankDiff = getProductTypeRank(a.type) - getProductTypeRank(b.type);
+    if ([TV_FILTER_ALL, HOME_FILTER_ALL].includes(normalizeKey(activeProductTypeFilter))) {
+      const typeRankDiff = getProductTypeRank(a) - getProductTypeRank(b);
       if (typeRankDiff) return typeRankDiff;
       const typeDiff = normalizeText(a.type).localeCompare(normalizeText(b.type), 'vi');
-      if (getProductTypeRank(a.type) === 3 && typeDiff) return typeDiff;
+      if (getProductTypeRank(a) === 3 && typeDiff) return typeDiff;
     }
     return compareProductOrder(a, b);
   });
@@ -772,29 +792,31 @@
     return sortProductsForAdmin(products.filter((product) => {
       const productType = normalizeKey(product.type);
       const productSubcategory = normalizeKey(product.subcategory);
+      const matchesArea = currentProductArea === 'home' ? isHomeProduct(product) : isTvProduct(product);
       const matchesType =
-        normalizedType === 'all' ||
-        (normalizedType === HOME_PRODUCT_CATEGORY && isHomeProduct(product)) ||
+        normalizedType === TV_FILTER_ALL ||
+        normalizedType === HOME_FILTER_ALL ||
         productSubcategory === normalizedType ||
         productType === normalizedType;
       const matchesSearch = !term || getProductSearchText(product).includes(term);
-      return matchesType && matchesSearch;
+      return matchesArea && matchesType && matchesSearch;
     }));
   };
 
   const getProductTypeFilterTotal = () => {
     const normalizedType = normalizeKey(activeProductTypeFilter);
-    if (normalizedType === 'all') return products.length;
-    return products.filter((product) => {
+    const areaProducts = products.filter((product) => currentProductArea === 'home' ? isHomeProduct(product) : isTvProduct(product));
+    if (normalizedType === TV_FILTER_ALL || normalizedType === HOME_FILTER_ALL) return areaProducts.length;
+    return areaProducts.filter((product) => {
       const productType = normalizeKey(product.type);
       const productSubcategory = normalizeKey(product.subcategory);
-      return (normalizedType === HOME_PRODUCT_CATEGORY && isHomeProduct(product)) || productSubcategory === normalizedType || productType === normalizedType;
+      return productSubcategory === normalizedType || productType === normalizedType;
     }).length;
   };
 
   const updateProductSearchCount = (count) => {
     const total = getProductTypeFilterTotal();
-    const typeLabel = activeProductTypeFilter === 'all' ? 'tất cả loại' : getHomeProductFilterLabel(activeProductTypeFilter);
+    const typeLabel = getHomeProductFilterLabel(activeProductTypeFilter);
     if (dom.productSearchCount) dom.productSearchCount.textContent = `Đang hiển thị ${count}/${total} sản phẩm trong ${typeLabel}`;
     if (dom.productSearchClear) dom.productSearchClear.disabled = !normalizeText(productSearchTerm);
   };
@@ -807,9 +829,44 @@
     });
   };
 
-  const setProductTypeFilter = (filter = 'all') => {
-    activeProductTypeFilter = filter || 'all';
+  const syncProductAreaUi = () => {
+    const isHome = currentProductArea === 'home';
+    dom.productAreaTabs?.forEach((button) => {
+      const isActive = button.dataset.productArea === currentProductArea;
+      button.classList.toggle('is-active', isActive);
+      button.setAttribute('aria-pressed', String(isActive));
+    });
+    dom.productFilterGroups?.forEach((group) => {
+      const isActive = group.dataset.productFilterGroup === currentProductArea;
+      group.hidden = !isActive;
+      group.classList.toggle('is-active', isActive);
+    });
+    if (dom.productAreaTitle) dom.productAreaTitle.textContent = isHome ? 'Quản lý Sản phẩm gia đình' : 'Quản lý Tivi';
+    if (dom.productAreaDescription) dom.productAreaDescription.textContent = isHome
+      ? 'Quản lý máy giặt, tủ lạnh, điều hoà và đồ gia dụng theo hàng thực tế.'
+      : 'Quản lý Tivi mới và Tivi cũ đang bán trên website.';
+    if (dom.openFormButton) {
+      dom.openFormButton.textContent = isHome ? '+ Thêm sản phẩm gia đình' : '+ Thêm tivi';
+      dom.openFormButton.hidden = !['tv-products', 'home-products'].includes(activeAdminTab);
+    }
+    if (dom.productSearchInput) {
+      dom.productSearchInput.placeholder = isHome
+        ? 'Tìm theo model, tên sản phẩm, hãng, dung tích, giá...'
+        : 'Tìm theo model, tên tivi, hãng, kích thước, giá...';
+    }
     updateProductTypeFilterButtons();
+  };
+
+  const setProductTypeFilter = (filter = 'all') => {
+    activeProductTypeFilter = filter || getDefaultFilterForArea();
+    syncProductAreaUi();
+    renderProducts();
+  };
+
+  const setProductArea = (area = 'tv', { resetFilter = true } = {}) => {
+    currentProductArea = area === 'home' ? 'home' : 'tv';
+    if (resetFilter) activeProductTypeFilter = getDefaultFilterForArea();
+    syncProductAreaUi();
     renderProducts();
   };
 
@@ -823,7 +880,10 @@
       return;
     }
     if (!filteredProducts.length) {
-      dom.products.innerHTML = '<p class="admin-empty">Không tìm thấy sản phẩm phù hợp.</p>';
+      const emptyText = currentProductArea === 'home'
+        ? 'Không tìm thấy sản phẩm gia đình phù hợp.'
+        : 'Không tìm thấy tivi phù hợp.';
+      dom.products.innerHTML = `<p class="admin-empty">${emptyText}</p>`;
       return;
     }
     dom.products.innerHTML = filteredProducts.map((product) => `
@@ -839,7 +899,7 @@
         </div>
         <div class="admin-product-card__actions">
           <button type="button" class="btn btn--secondary" data-edit-product="${escapeHtml(product.id)}">Sửa</button>
-          <button type="button" class="btn btn--secondary admin-duplicate-button" data-duplicate-product="${escapeHtml(product.id)}">Nhân bản</button>
+          ${isTvProduct(product) ? `<button type="button" class="btn btn--secondary admin-duplicate-button" data-duplicate-product="${escapeHtml(product.id)}">Nhân bản</button>` : ''}
           <button type="button" class="btn btn--ghost" data-toggle-product="${escapeHtml(product.id)}">${product.is_active ? 'Ẩn' : 'Hiện'}</button>
           <button type="button" class="btn btn--danger" data-delete-product="${escapeHtml(product.id)}">Xoá</button>
         </div>
@@ -847,19 +907,25 @@
   };
 
 
-  const setAdminTab = (tab = 'products') => {
-    activeAdminTab = ['products', 'orders', 'banners'].includes(tab) ? tab : 'products';
+  const setAdminTab = (tab = 'tv-products') => {
+    activeAdminTab = ['tv-products', 'home-products', 'orders', 'banners'].includes(tab) ? tab : 'tv-products';
+    if (activeAdminTab === 'tv-products') currentProductArea = 'tv';
+    if (activeAdminTab === 'home-products') currentProductArea = 'home';
+    if (['tv-products', 'home-products'].includes(activeAdminTab)) activeProductTypeFilter = getDefaultFilterForArea();
     dom.adminTabs?.forEach((button) => {
       const isActive = button.dataset.adminTab === activeAdminTab;
       button.classList.toggle('is-active', isActive);
       button.setAttribute('aria-selected', String(isActive));
     });
     dom.adminPanels?.forEach((panel) => {
-      const isActive = panel.dataset.adminPanel === activeAdminTab;
+      const isActive = ['tv-products', 'home-products'].includes(activeAdminTab)
+        ? panel.dataset.adminPanel === 'products'
+        : panel.dataset.adminPanel === activeAdminTab;
       panel.hidden = !isActive;
       panel.classList.toggle('is-active', isActive);
     });
-    if (dom.openFormButton) dom.openFormButton.hidden = activeAdminTab !== 'products';
+    syncProductAreaUi();
+    if (['tv-products', 'home-products'].includes(activeAdminTab)) renderProducts();
   };
 
   const formatDateTime = (value = '') => {
@@ -1497,7 +1563,42 @@
     form.customStickerUrl.disabled = getPromoStickerMode(form.promoStickerMode.value) !== 'custom';
   };
 
+  const getFieldWrapper = (name = '') => document.querySelector(`[data-product-form-field="${name}"]`);
+  const setFormFieldHidden = (name, hidden) => {
+    const wrapper = getFieldWrapper(name);
+    if (wrapper) wrapper.hidden = Boolean(hidden);
+  };
+  const getDefaultHomeSubcategory = () => {
+    const filter = normalizeKey(activeProductTypeFilter);
+    return Object.prototype.hasOwnProperty.call(HOME_PRODUCT_SUBCATEGORIES, filter) ? filter : 'may-giat';
+  };
+  const getHomeSizePlaceholder = (subcategory = '') => HOME_SIZE_PLACEHOLDERS[normalizeKey(subcategory)] || HOME_SIZE_PLACEHOLDERS['may-giat'];
+
+  const updateProductFormMode = (area = currentProductArea, { isNew = false } = {}) => {
+    const form = dom.form;
+    if (!form) return;
+    const isHome = area === 'home';
+    form.dataset.productArea = isHome ? 'home' : 'tv';
+    setFormFieldHidden('subcategory', !isHome);
+    setFormFieldHidden('capacity', !isHome);
+    setFormFieldHidden('category-sticker', isHome);
+    if (dom.sizeLabel) dom.sizeLabel.textContent = isHome ? 'Kích thước / dung tích' : 'Kích thước';
+    if (form.size) form.size.placeholder = isHome ? getHomeSizePlaceholder(form.subcategory?.value || getDefaultHomeSubcategory()) : '55 inch';
+    if (isHome) {
+      form.category.value = HOME_PRODUCT_CATEGORY;
+      if (!form.subcategory.value) form.subcategory.value = getDefaultHomeSubcategory();
+      form.type.value = getHomeProductTypeFromSubcategory(form.subcategory.value) || form.type.value || 'Máy giặt';
+      if (form.categoryStickerMode) form.categoryStickerMode.value = 'none';
+      return;
+    }
+    form.category.value = 'tivi';
+    form.subcategory.value = '';
+    form.capacityOrSize.value = '';
+    if (isNew && form.categoryStickerMode) form.categoryStickerMode.value = 'auto';
+  };
+
   const openForm = (product = null) => {
+    const formArea = product ? (isHomeProduct(product) ? 'home' : 'tv') : currentProductArea;
     editingProduct = product;
     productIdManuallyEdited = Boolean(product);
     sortOrderManuallyEdited = Boolean(product);
@@ -1507,22 +1608,25 @@
     showMessage(dom.formMessage, '');
     clearOverviewPreview();
     clearSpecificationPreview();
-    if (dom.formTitle) dom.formTitle.textContent = product ? 'Sửa sản phẩm' : 'Thêm sản phẩm';
+    if (dom.formTitle) dom.formTitle.textContent = product
+      ? 'Sửa sản phẩm'
+      : (formArea === 'home' ? 'Thêm sản phẩm gia đình' : 'Thêm tivi');
     if (dom.modal) dom.modal.hidden = false;
     document.body.classList.add('admin-modal-open');
     const form = dom.form;
     if (form && !product) {
-      const selectedHomeType = getHomeProductTypeFromSubcategory(activeProductTypeFilter);
-      const isFamilyFilter = normalizeKey(activeProductTypeFilter) === HOME_PRODUCT_CATEGORY;
-      const selectedType = selectedHomeType || (isFamilyFilter ? 'Máy giặt' : (activeProductTypeFilter === 'all' ? 'Tivi mới' : activeProductTypeFilter));
-      form.category.value = (selectedHomeType || isFamilyFilter) ? HOME_PRODUCT_CATEGORY : 'tivi';
-      form.subcategory.value = selectedHomeType ? normalizeKey(activeProductTypeFilter) : '';
+      const subcategory = formArea === 'home' ? getDefaultHomeSubcategory() : '';
+      const selectedType = formArea === 'home'
+        ? getHomeProductTypeFromSubcategory(subcategory)
+        : (normalizeText(activeProductTypeFilter) === 'Tivi cũ' ? 'Tivi cũ' : 'Tivi mới');
+      form.category.value = formArea === 'home' ? HOME_PRODUCT_CATEGORY : 'tivi';
+      form.subcategory.value = subcategory;
       form.type.value = selectedType;
       form.capacityOrSize.value = '';
       form.isFeatured.value = 'false';
       form.isActive.value = 'true';
       form.stockStatus.value = 'available';
-      form.categoryStickerMode.value = 'auto';
+      form.categoryStickerMode.value = formArea === 'home' ? 'none' : 'auto';
       form.promoStickerMode.value = 'none';
       form.customStickerUrl.value = '';
       form.sortOrder.value = getNextProductSortOrder(selectedType);
@@ -1557,6 +1661,7 @@
       form.customStickerUrl.value = product.custom_sticker_url || product.customStickerUrl || '';
       form.isActive.value = String(product.is_active !== false);
     }
+    updateProductFormMode(formArea, { isNew: !product });
     syncCustomStickerField();
     renderExistingImages();
     setTimeout(() => form?.brand?.focus(), 0);
@@ -1929,18 +2034,16 @@
     const promoStickerMode = getPromoStickerMode(form.promoStickerMode?.value);
     const customStickerUrl = selectedStickerAsset?.url || normalizeText(form.customStickerUrl?.value);
     const subcategory = normalizeKey(form.subcategory?.value);
-    const category = (subcategory || normalizeKey(form.category?.value) === HOME_PRODUCT_CATEGORY) ? HOME_PRODUCT_CATEGORY : normalizeText(form.category?.value);
+    const type = normalizeText(form.type.value);
+    const isHomePayload = Boolean(subcategory) || normalizeKey(form.category?.value) === HOME_PRODUCT_CATEGORY || HOME_PRODUCT_TYPES.has(normalizeKey(type));
     const capacityOrSize = normalizeText(form.capacityOrSize?.value) || normalizeText(form.size.value);
-    return {
+    const product = {
       id: normalizeText(form.id.value) || generateProductId(form.brand.value, form.model.value, form.size.value),
       brand: normalizeText(form.brand.value),
       model: normalizeText(form.model.value),
       full_name: normalizeText(form.fullName.value),
       size: normalizeText(form.size.value),
-      capacity_or_size: capacityOrSize,
-      type: normalizeText(form.type.value),
-      category,
-      subcategory: subcategory || null,
+      type,
       condition: normalizeText(form.condition.value),
       warranty: normalizeText(form.warranty.value),
       old_price: normalizeText(form.oldPrice.value),
@@ -1953,7 +2056,6 @@
       image: imageData.image || '',
       images: imageData.images || [],
       stock_status: getProductStockStatus(form.stockStatus?.value),
-      category_sticker_mode: getCategoryStickerMode(form.categoryStickerMode?.value),
       promo_sticker_mode: promoStickerMode,
       custom_sticker_url: promoStickerMode === 'custom' ? customStickerUrl || null : null,
       is_featured: form.isFeatured.value === 'true',
@@ -1961,6 +2063,14 @@
       sort_order: Number(form.sortOrder.value || 0),
       updated_at: new Date().toISOString(),
     };
+    if (isHomePayload) {
+      product.category = HOME_PRODUCT_CATEGORY;
+      product.subcategory = subcategory || getHomeProductSubcategoryFromType(type) || null;
+      product.capacity_or_size = capacityOrSize;
+    } else {
+      product.category_sticker_mode = getCategoryStickerMode(form.categoryStickerMode?.value);
+    }
+    return product;
   };
 
   const saveProductRecord = async (payload, originalId = '') => {
@@ -2082,13 +2192,16 @@
     if (homeType) {
       form.category.value = HOME_PRODUCT_CATEGORY;
       form.type.value = homeType;
+      updateProductFormMode('home');
       return;
     }
     if (normalizeKey(form.category?.value) !== HOME_PRODUCT_CATEGORY) {
       form.subcategory.value = '';
+      updateProductFormMode('tv');
+      return;
     }
+    updateProductFormMode('home');
   };
-
   const init = async () => {
     showLoginOnly();
     if (!requireSupabase()) return;
@@ -2129,7 +2242,11 @@
 
   dom.logoutButton?.addEventListener('click', async () => { await client?.auth.signOut(); handleSignedOut(); });
   dom.openFormButton?.addEventListener('click', () => openForm());
-  dom.adminTabs?.forEach((button) => button.addEventListener('click', () => setAdminTab(button.dataset.adminTab || 'products')));
+  dom.adminTabs?.forEach((button) => button.addEventListener('click', () => setAdminTab(button.dataset.adminTab || 'tv-products')));
+  dom.productAreaTabs?.forEach((button) => button.addEventListener('click', () => {
+    const area = button.dataset.productArea === 'home' ? 'home' : 'tv';
+    setAdminTab(area === 'home' ? 'home-products' : 'tv-products');
+  }));
   dom.productTypeFilters?.forEach((button) => button.addEventListener('click', () => setProductTypeFilter(button.dataset.adminProductTypeFilter || 'all')));
   dom.openBannerFormButton?.addEventListener('click', () => openBannerForm());
   dom.cancelBannerFormButton?.addEventListener('click', closeBannerForm);
@@ -2271,8 +2388,7 @@
     document.addEventListener(eventName, resetIdleTimer, { passive: true });
   });
 
-  setAdminTab('products');
-  updateProductTypeFilterButtons();
+  setAdminTab('tv-products');
   showLoginOnly();
   init();
 })();
