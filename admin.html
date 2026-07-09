@@ -79,6 +79,8 @@
               <button class="admin-product-type-tab is-active" type="button" data-admin-product-type-filter="all" aria-pressed="true">Tất cả sản phẩm</button>
               <button class="admin-product-type-tab" type="button" data-admin-product-type-filter="Tivi mới" aria-pressed="false">Tivi mới</button>
               <button class="admin-product-type-tab" type="button" data-admin-product-type-filter="Tivi cũ" aria-pressed="false">Tivi cũ</button>
+              <button class="admin-product-type-tab" type="button" data-admin-product-type-filter="san-pham-gia-dinh" aria-pressed="false">Sản phẩm gia đình</button>
+              <button class="admin-product-type-tab" type="button" data-admin-product-type-filter="may-giat" aria-pressed="false">Máy giặt</button>
             </div>
             <p class="admin-product-count" data-product-search-count aria-live="polite">Đang hiển thị 0/0 sản phẩm</p>
           </div>
@@ -189,8 +191,11 @@
             <div class="admin-field"><label for="product-brand">Hãng</label><input id="product-brand" name="brand" required /></div>
             <div class="admin-field"><label for="product-model">Model</label><input id="product-model" name="model" required /></div>
             <div class="admin-field admin-field--full"><label for="product-full-name">Tên đầy đủ</label><input id="product-full-name" name="fullName" required /></div>
-            <div class="admin-field"><label for="product-size">Kích thước</label><input id="product-size" name="size" placeholder="55 inch" required /></div>
-            <div class="admin-field"><label for="product-type">Loại sản phẩm</label><select id="product-type" name="type" required><option value="">Chọn loại sản phẩm</option><option>Tivi mới</option><option>Tivi cũ</option></select></div>
+            <div class="admin-field"><label for="product-category">Nhóm sản phẩm</label><select id="product-category" name="category"><option value="">Chưa phân nhóm</option><option value="tivi">Tivi</option><option value="san-pham-gia-dinh">Sản phẩm gia đình</option></select></div>
+            <div class="admin-field"><label for="product-subcategory">Danh mục con</label><select id="product-subcategory" name="subcategory"><option value="">Không có</option><option value="may-giat">Máy giặt</option><option value="tu-lanh">Tủ lạnh</option><option value="dieu-hoa">Điều hoà</option><option value="do-gia-dung">Đồ gia dụng</option></select></div>
+            <div class="admin-field"><label for="product-size">Kích thước / dung tích</label><input id="product-size" name="size" placeholder="55 inch hoặc 10.5kg" required /></div>
+            <div class="admin-field"><label for="product-capacity-or-size">Khối lượng / dung tích chi tiết</label><input id="product-capacity-or-size" name="capacityOrSize" placeholder="10.5kg / 15kg / Giặt 12kg, sấy 8kg" /></div>
+            <div class="admin-field"><label for="product-type">Loại sản phẩm</label><select id="product-type" name="type" required><option value="">Chọn loại sản phẩm</option><option>Tivi mới</option><option>Tivi cũ</option><option>Máy giặt</option><option>Tủ lạnh</option><option>Điều hoà</option><option>Đồ gia dụng</option></select></div>
             <div class="admin-field"><label for="product-id">Mã sản phẩm</label><input id="product-id" name="id" placeholder="Tự tạo từ hãng, model, kích thước" /></div>
             <div class="admin-field"><label for="product-condition">Tình trạng</label><input id="product-condition" name="condition" /></div>
             <div class="admin-field"><label for="product-warranty">Bảo hành</label><input id="product-warranty" name="warranty" /></div>

@@ -165,6 +165,21 @@
   const categoryStickerModes = new Set(['auto', 'new', 'used', 'none']);
   const promoStickerModes = new Set(['none', 'wc', 'click2', 'custom']);
   const STICKER_ASSET_PROMO_PREFIX = 'sticker_asset:';
+  const HOME_PRODUCT_CATEGORY = 'san-pham-gia-dinh';
+  const HOME_PRODUCT_SUBCATEGORIES = {
+    'may-giat': 'Máy giặt',
+    'tu-lanh': 'Tủ lạnh',
+    'dieu-hoa': 'Điều hoà',
+    'do-gia-dung': 'Đồ gia dụng',
+  };
+  const normalizeKey = (value = '') =>
+    String(value || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/\s+/g, '-')
+      .trim();
+  const HOME_PRODUCT_TYPES = new Set(Object.values(HOME_PRODUCT_SUBCATEGORIES).map(normalizeKey));
   const getCategoryStickerMode = (value = '') => {
     const normalized = String(value || '').trim().toLowerCase();
     return categoryStickerModes.has(normalized) ? normalized : 'auto';
@@ -185,7 +200,24 @@
     const normalizedUrl = normalizeText(url);
     return normalizedUrl ? stickerAssets.find((asset) => normalizeText(asset.url) === normalizedUrl) || null : null;
   };
+  const isHomeProduct = (product = {}) => {
+    const category = normalizeKey(product.category);
+    const subcategory = normalizeKey(product.subcategory);
+    const type = normalizeKey(product.type);
+    return category === HOME_PRODUCT_CATEGORY || Object.prototype.hasOwnProperty.call(HOME_PRODUCT_SUBCATEGORIES, subcategory) || HOME_PRODUCT_TYPES.has(type);
+  };
+  const getHomeProductTypeFromSubcategory = (subcategory = '') => HOME_PRODUCT_SUBCATEGORIES[normalizeKey(subcategory)] || '';
+  const getHomeProductSubcategoryFromType = (type = '') => {
+    const normalizedType = normalizeKey(type);
+    return Object.entries(HOME_PRODUCT_SUBCATEGORIES).find(([, label]) => normalizeKey(label) === normalizedType)?.[0] || '';
+  };
+  const getHomeProductFilterLabel = (filter = '') => {
+    const normalized = normalizeKey(filter);
+    if (normalized === HOME_PRODUCT_CATEGORY) return 'Sản phẩm gia đình';
+    return HOME_PRODUCT_SUBCATEGORIES[normalized] || filter;
+  };
   const shouldRetryWithoutStockStatus = (error) => /stock_status|column .*stock_status|schema cache/i.test(String(error?.message || error || ''));
+  const shouldRetryWithoutHomeProductFields = (error) => /category|subcategory|capacity_or_size|column .*category|column .*subcategory|column .*capacity_or_size|schema cache/i.test(String(error?.message || error || ''));
   const canArchiveOrder = (order = {}) => !isArchivedOrder(order);
   const canRestoreOrder = (order = {}) => isArchivedOrder(order);
   const canDeleteOrder = (order = {}) => isArchivedOrder(order);
@@ -218,7 +250,10 @@
       product.brand || '',
       product.model || '',
       product.size || '',
+      product.capacity_or_size || product.capacityOrSize || '',
       product.type || '',
+      product.category || '',
+      product.subcategory || '',
       product.price || '',
       product.original_price || product.old_price || product.oldPrice || '',
       product.warranty || '',
@@ -230,7 +265,7 @@
       formatCsvDateTime(product.created_at),
       formatCsvDateTime(product.updated_at),
     ]);
-    const header = ['Mã sản phẩm', 'Tên đầy đủ', 'Hãng', 'Model', 'Kích thước', 'Loại', 'Giá bán', 'Giá cũ', 'Bảo hành', 'Trạng thái kho', 'Đang hiển thị', 'Nổi bật', 'Thứ tự', 'Danh sách ảnh', 'Thời gian tạo', 'Thời gian cập nhật'];
+    const header = ['Mã sản phẩm', 'Tên đầy đủ', 'Hãng', 'Model', 'Kích thước', 'Khối lượng / dung tích', 'Loại', 'Nhóm sản phẩm', 'Danh mục con', 'Giá bán', 'Giá cũ', 'Bảo hành', 'Trạng thái kho', 'Đang hiển thị', 'Nổi bật', 'Thứ tự', 'Danh sách ảnh', 'Thời gian tạo', 'Thời gian cập nhật'];
     const csv = toCsv(header, rows);
     const dateStamp = new Date().toISOString().slice(0, 10);
     downloadTextFile(csv, `san-pham-anh-minh-store-${dateStamp}.csv`, 'text/csv;charset=utf-8');
@@ -686,10 +721,13 @@
     product.id,
     product.brand,
     product.model,
-    product.full_name || product.fullName,
-    product.size,
-    product.type,
-    product.condition,
+      product.full_name || product.fullName,
+      product.size,
+      product.capacity_or_size || product.capacityOrSize,
+      product.type,
+      product.category,
+      product.subcategory,
+      product.condition,
     product.warranty,
     product.price,
     product.old_price || product.oldPrice,
@@ -705,6 +743,7 @@
     const normalizedType = normalizeText(type);
     if (normalizedType === 'Tivi mới') return 1;
     if (normalizedType === 'Tivi cũ') return 2;
+    if (isHomeProduct({ type })) return 3;
     return 3;
   };
 
@@ -729,30 +768,40 @@
 
   const getFilteredProducts = () => {
     const term = normalizeSearchText(productSearchTerm);
-    const normalizedType = normalizeText(activeProductTypeFilter);
+    const normalizedType = normalizeKey(activeProductTypeFilter);
     return sortProductsForAdmin(products.filter((product) => {
-      const matchesType = normalizedType === 'all' || normalizeText(product.type) === normalizedType;
+      const productType = normalizeKey(product.type);
+      const productSubcategory = normalizeKey(product.subcategory);
+      const matchesType =
+        normalizedType === 'all' ||
+        (normalizedType === HOME_PRODUCT_CATEGORY && isHomeProduct(product)) ||
+        productSubcategory === normalizedType ||
+        productType === normalizedType;
       const matchesSearch = !term || getProductSearchText(product).includes(term);
       return matchesType && matchesSearch;
     }));
   };
 
   const getProductTypeFilterTotal = () => {
-    const normalizedType = normalizeText(activeProductTypeFilter);
+    const normalizedType = normalizeKey(activeProductTypeFilter);
     if (normalizedType === 'all') return products.length;
-    return products.filter((product) => normalizeText(product.type) === normalizedType).length;
+    return products.filter((product) => {
+      const productType = normalizeKey(product.type);
+      const productSubcategory = normalizeKey(product.subcategory);
+      return (normalizedType === HOME_PRODUCT_CATEGORY && isHomeProduct(product)) || productSubcategory === normalizedType || productType === normalizedType;
+    }).length;
   };
 
   const updateProductSearchCount = (count) => {
     const total = getProductTypeFilterTotal();
-    const typeLabel = activeProductTypeFilter === 'all' ? 'tất cả loại' : activeProductTypeFilter;
+    const typeLabel = activeProductTypeFilter === 'all' ? 'tất cả loại' : getHomeProductFilterLabel(activeProductTypeFilter);
     if (dom.productSearchCount) dom.productSearchCount.textContent = `Đang hiển thị ${count}/${total} sản phẩm trong ${typeLabel}`;
     if (dom.productSearchClear) dom.productSearchClear.disabled = !normalizeText(productSearchTerm);
   };
 
   const updateProductTypeFilterButtons = () => {
     dom.productTypeFilters?.forEach((button) => {
-      const isActive = normalizeText(button.dataset.adminProductTypeFilter) === normalizeText(activeProductTypeFilter);
+      const isActive = normalizeKey(button.dataset.adminProductTypeFilter) === normalizeKey(activeProductTypeFilter);
       button.classList.toggle('is-active', isActive);
       button.setAttribute('aria-pressed', String(isActive));
     });
@@ -782,8 +831,8 @@
         <div>
           <p class="admin-product-card__brand">${escapeHtml(product.brand)} · ${escapeHtml(product.model)}</p>
           <h2>${escapeHtml(product.full_name || product.fullName || product.model)}</h2>
-          <p>${escapeHtml(product.size)} · ${escapeHtml(product.price)}</p>
-          <p>Thứ tự: ${escapeHtml(product.sort_order ?? 0)} · Loại: ${escapeHtml(product.type || 'Chưa chọn')}</p>
+          <p>${escapeHtml(product.capacity_or_size || product.capacityOrSize || product.size)} · ${escapeHtml(product.price)}</p>
+          <p>Thứ tự: ${escapeHtml(product.sort_order ?? 0)} · Loại: ${escapeHtml(product.type || 'Chưa chọn')}${product.subcategory ? ` · Danh mục: ${escapeHtml(HOME_PRODUCT_SUBCATEGORIES[normalizeKey(product.subcategory)] || product.subcategory)}` : ''}</p>
           <span class="admin-status admin-status--stock admin-status--${escapeHtml(getProductStockStatus(product.stock_status || product.stockStatus))}">${escapeHtml(getProductStockStatusLabel(product.stock_status || product.stockStatus))}</span>
           <span class="admin-status ${product.is_active ? 'is-active' : 'is-hidden'}">${product.is_active ? 'Hiển thị' : 'Ẩn'}</span>
           <span class="admin-status ${product.is_featured ? 'is-active' : 'is-hidden'}">${product.is_featured ? 'Nổi bật' : 'Không nổi bật'}</span>
@@ -1463,8 +1512,13 @@
     document.body.classList.add('admin-modal-open');
     const form = dom.form;
     if (form && !product) {
-      const selectedType = activeProductTypeFilter === 'all' ? 'Tivi mới' : activeProductTypeFilter;
+      const selectedHomeType = getHomeProductTypeFromSubcategory(activeProductTypeFilter);
+      const isFamilyFilter = normalizeKey(activeProductTypeFilter) === HOME_PRODUCT_CATEGORY;
+      const selectedType = selectedHomeType || (isFamilyFilter ? 'Máy giặt' : (activeProductTypeFilter === 'all' ? 'Tivi mới' : activeProductTypeFilter));
+      form.category.value = (selectedHomeType || isFamilyFilter) ? HOME_PRODUCT_CATEGORY : 'tivi';
+      form.subcategory.value = selectedHomeType ? normalizeKey(activeProductTypeFilter) : '';
       form.type.value = selectedType;
+      form.capacityOrSize.value = '';
       form.isFeatured.value = 'false';
       form.isActive.value = 'true';
       form.stockStatus.value = 'available';
@@ -1478,7 +1532,10 @@
       form.brand.value = product.brand || '';
       form.model.value = product.model || '';
       form.fullName.value = product.full_name || product.fullName || '';
+      form.category.value = product.category || (isHomeProduct(product) ? HOME_PRODUCT_CATEGORY : 'tivi');
+      form.subcategory.value = product.subcategory || getHomeProductSubcategoryFromType(product.type);
       form.size.value = product.size || '';
+      form.capacityOrSize.value = product.capacity_or_size || product.capacityOrSize || '';
       form.type.value = product.type || '';
       form.id.value = product.id || '';
       form.condition.value = product.condition || '';
@@ -1871,13 +1928,19 @@
     const selectedStickerAsset = getStickerAssetByPromoValue(form.promoStickerMode?.value);
     const promoStickerMode = getPromoStickerMode(form.promoStickerMode?.value);
     const customStickerUrl = selectedStickerAsset?.url || normalizeText(form.customStickerUrl?.value);
+    const subcategory = normalizeKey(form.subcategory?.value);
+    const category = (subcategory || normalizeKey(form.category?.value) === HOME_PRODUCT_CATEGORY) ? HOME_PRODUCT_CATEGORY : normalizeText(form.category?.value);
+    const capacityOrSize = normalizeText(form.capacityOrSize?.value) || normalizeText(form.size.value);
     return {
       id: normalizeText(form.id.value) || generateProductId(form.brand.value, form.model.value, form.size.value),
       brand: normalizeText(form.brand.value),
       model: normalizeText(form.model.value),
       full_name: normalizeText(form.fullName.value),
       size: normalizeText(form.size.value),
+      capacity_or_size: capacityOrSize,
       type: normalizeText(form.type.value),
+      category,
+      subcategory: subcategory || null,
       condition: normalizeText(form.condition.value),
       warranty: normalizeText(form.warranty.value),
       old_price: normalizeText(form.oldPrice.value),
@@ -1907,15 +1970,22 @@
       : client.from('products').insert(payload);
     let { error } = await request;
     if (!error) return { usedFallback: false };
-    if (!payload || payload.stock_status === undefined || !shouldRetryWithoutStockStatus(error)) throw error;
+    const canRetryWithoutStockStatus = payload?.stock_status !== undefined && shouldRetryWithoutStockStatus(error);
+    const canRetryWithoutHomeProductFields = shouldRetryWithoutHomeProductFields(error);
+    if (!payload || (!canRetryWithoutStockStatus && !canRetryWithoutHomeProductFields)) throw error;
     const fallbackPayload = { ...payload };
-    delete fallbackPayload.stock_status;
+    if (canRetryWithoutStockStatus) delete fallbackPayload.stock_status;
+    if (canRetryWithoutHomeProductFields) {
+      delete fallbackPayload.category;
+      delete fallbackPayload.subcategory;
+      delete fallbackPayload.capacity_or_size;
+    }
     const fallbackRequest = isUpdate
       ? client.from('products').update(fallbackPayload).eq('id', originalId)
       : client.from('products').insert(fallbackPayload);
     const fallbackResult = await fallbackRequest;
     if (fallbackResult.error) throw fallbackResult.error;
-    return { usedFallback: true };
+    return { usedFallback: true, missingHomeProductFields: canRetryWithoutHomeProductFields };
   };
 
   const handleSave = async (event) => {
@@ -1938,7 +2008,7 @@
       const imageData = await uploadImages(form, productId);
       const product = buildProduct(form, imageData);
       const result = await saveProductRecord(product, editingProduct?.id || '');
-      showMessage(dom.adminMessage, result.usedFallback ? 'Đã lưu sản phẩm thành công. Cột trạng thái kho chưa có trên Supabase nên hệ thống đã lưu chế độ tương thích.' : 'Đã lưu sản phẩm thành công.', 'success');
+      showMessage(dom.adminMessage, result.missingHomeProductFields ? 'Đã lưu sản phẩm bằng chế độ tương thích. Cần chạy SQL draft cột Sản phẩm gia đình để lưu nhóm/danh mục con đầy đủ.' : (result.usedFallback ? 'Đã lưu sản phẩm thành công. Cột trạng thái kho chưa có trên Supabase nên hệ thống đã lưu chế độ tương thích.' : 'Đã lưu sản phẩm thành công.'), 'success');
       await loadProducts();
       closeForm();
     } catch (error) {
@@ -2002,6 +2072,21 @@
         }
       }
     });
+  };
+
+  const syncHomeProductFormFields = () => {
+    const form = dom.form;
+    if (!form) return;
+    const subcategory = normalizeKey(form.subcategory?.value);
+    const homeType = getHomeProductTypeFromSubcategory(subcategory);
+    if (homeType) {
+      form.category.value = HOME_PRODUCT_CATEGORY;
+      form.type.value = homeType;
+      return;
+    }
+    if (normalizeKey(form.category?.value) !== HOME_PRODUCT_CATEGORY) {
+      form.subcategory.value = '';
+    }
   };
 
   const init = async () => {
@@ -2075,6 +2160,12 @@
   dom.form?.addEventListener('submit', handleSave);
 
   dom.form?.type?.addEventListener('change', () => {
+    if (!dom.form || editingProduct || sortOrderManuallyEdited) return;
+    dom.form.sortOrder.value = getNextProductSortOrder(dom.form.type.value);
+  });
+  dom.form?.category?.addEventListener('change', syncHomeProductFormFields);
+  dom.form?.subcategory?.addEventListener('change', () => {
+    syncHomeProductFormFields();
     if (!dom.form || editingProduct || sortOrderManuallyEdited) return;
     dom.form.sortOrder.value = getNextProductSortOrder(dom.form.type.value);
   });
