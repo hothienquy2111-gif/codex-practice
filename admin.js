@@ -1579,6 +1579,7 @@
     if (!form) return;
     const isHome = area === 'home';
     form.dataset.productArea = isHome ? 'home' : 'tv';
+    setFormFieldHidden('category', !isHome);
     setFormFieldHidden('subcategory', !isHome);
     setFormFieldHidden('capacity', !isHome);
     setFormFieldHidden('category-sticker', isHome);

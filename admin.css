@@ -358,6 +358,10 @@
   display: none !important;
 }
 
+.admin-field[hidden] {
+  display: none !important;
+}
+
 .admin-banner-panel {
   display: grid;
   gap: 22px;
