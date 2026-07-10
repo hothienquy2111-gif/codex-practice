@@ -43,7 +43,7 @@
           </div>
           <div class="admin-actions">
             <a class="btn btn--secondary" href="index.html">Xem website</a>
-            <button class="btn btn--primary" type="button" data-open-product-form>+ Thêm sản phẩm</button>
+            <button class="btn btn--primary" type="button" data-open-product-form>+ Thêm tivi</button>
             <button class="btn btn--ghost" type="button" data-logout-button>Đăng xuất</button>
           </div>
         </header>
@@ -54,7 +54,8 @@
             <p class="admin-muted">Chọn mục cần quản lý để thao tác nhanh hơn.</p>
           </div>
           <div class="admin-main-tabs" role="tablist" aria-label="Khu vực quản lý admin">
-            <button class="admin-main-tab is-active" type="button" data-admin-tab="products" role="tab" aria-selected="true">Danh sách sản phẩm</button>
+            <button class="admin-main-tab is-active" type="button" data-admin-tab="tv-products" role="tab" aria-selected="true">Quản lý Tivi</button>
+            <button class="admin-main-tab" type="button" data-admin-tab="home-products" role="tab" aria-selected="false">Quản lý Sản phẩm gia đình</button>
             <button class="admin-main-tab" type="button" data-admin-tab="orders" role="tab" aria-selected="false">Quản lý đơn hàng</button>
             <button class="admin-main-tab" type="button" data-admin-tab="banners" role="tab" aria-selected="false">Quản lý banner</button>
           </div>
@@ -62,12 +63,16 @@
         <section class="admin-management-section admin-panel is-active" data-admin-panel="products" aria-labelledby="admin-products-title">
           <div class="admin-section-header">
             <div>
-              <h2 id="admin-products-title">Danh sách sản phẩm</h2>
-              <p class="admin-muted">Quản lý sản phẩm đang bán trên website.</p>
+              <h2 id="admin-products-title" data-product-area-title>Quản lý Tivi</h2>
+              <p class="admin-muted" data-product-area-description>Quản lý Tivi mới và Tivi cũ đang bán trên website.</p>
             </div>
             <div class="admin-section-header__actions">
               <button class="btn btn--secondary" type="button" data-export-products-csv>Xuất CSV sản phẩm</button>
             </div>
+          </div>
+          <div class="admin-product-area-tabs" role="tablist" aria-label="Khu vực sản phẩm">
+            <button class="admin-product-area-tab is-active" type="button" data-product-area="tv" aria-pressed="true">Tivi</button>
+            <button class="admin-product-area-tab" type="button" data-product-area="home" aria-pressed="false">Sản phẩm gia đình</button>
           </div>
           <div class="admin-product-search" role="search" aria-label="Tìm kiếm sản phẩm trong admin">
             <label class="admin-product-search__label" for="admin-product-search-input">Tìm kiếm sản phẩm</label>
@@ -75,10 +80,17 @@
               <input class="admin-product-search__input" id="admin-product-search-input" type="search" placeholder="Tìm theo model, tên tivi, hãng, kích thước, giá..." data-product-search />
               <button class="btn btn--ghost admin-product-search__clear" type="button" data-product-search-clear>Xoá tìm kiếm</button>
             </div>
-            <div class="admin-product-type-tabs" role="tablist" aria-label="Lọc sản phẩm theo loại">
-              <button class="admin-product-type-tab is-active" type="button" data-admin-product-type-filter="all" aria-pressed="true">Tất cả sản phẩm</button>
+            <div class="admin-product-type-tabs is-active" role="tablist" aria-label="Lọc tivi theo loại" data-product-filter-group="tv">
+              <button class="admin-product-type-tab is-active" type="button" data-admin-product-type-filter="all-tv" aria-pressed="true">Tất cả tivi</button>
               <button class="admin-product-type-tab" type="button" data-admin-product-type-filter="Tivi mới" aria-pressed="false">Tivi mới</button>
               <button class="admin-product-type-tab" type="button" data-admin-product-type-filter="Tivi cũ" aria-pressed="false">Tivi cũ</button>
+            </div>
+            <div class="admin-product-type-tabs" role="tablist" aria-label="Lọc sản phẩm gia đình theo danh mục" data-product-filter-group="home" hidden>
+              <button class="admin-product-type-tab is-active" type="button" data-admin-product-type-filter="all-home" aria-pressed="true">Tất cả gia dụng</button>
+              <button class="admin-product-type-tab" type="button" data-admin-product-type-filter="may-giat" aria-pressed="false">Máy giặt</button>
+              <button class="admin-product-type-tab" type="button" data-admin-product-type-filter="tu-lanh" aria-pressed="false">Tủ lạnh</button>
+              <button class="admin-product-type-tab" type="button" data-admin-product-type-filter="dieu-hoa" aria-pressed="false">Điều hoà</button>
+              <button class="admin-product-type-tab" type="button" data-admin-product-type-filter="do-gia-dung" aria-pressed="false">Đồ gia dụng</button>
             </div>
             <p class="admin-product-count" data-product-search-count aria-live="polite">Đang hiển thị 0/0 sản phẩm</p>
           </div>
@@ -189,15 +201,18 @@
             <div class="admin-field"><label for="product-brand">Hãng</label><input id="product-brand" name="brand" required /></div>
             <div class="admin-field"><label for="product-model">Model</label><input id="product-model" name="model" required /></div>
             <div class="admin-field admin-field--full"><label for="product-full-name">Tên đầy đủ</label><input id="product-full-name" name="fullName" required /></div>
-            <div class="admin-field"><label for="product-size">Kích thước</label><input id="product-size" name="size" placeholder="55 inch" required /></div>
-            <div class="admin-field"><label for="product-type">Loại sản phẩm</label><select id="product-type" name="type" required><option value="">Chọn loại sản phẩm</option><option>Tivi mới</option><option>Tivi cũ</option></select></div>
+            <div class="admin-field" data-product-form-field="category"><label for="product-category">Nhóm sản phẩm</label><select id="product-category" name="category"><option value="">Chưa phân nhóm</option><option value="tivi">Tivi</option><option value="san-pham-gia-dinh">Sản phẩm gia đình</option></select></div>
+            <div class="admin-field" data-product-form-field="subcategory"><label for="product-subcategory">Danh mục con</label><select id="product-subcategory" name="subcategory"><option value="">Không có</option><option value="may-giat">Máy giặt</option><option value="tu-lanh">Tủ lạnh</option><option value="dieu-hoa">Điều hoà</option><option value="do-gia-dung">Đồ gia dụng</option></select></div>
+            <div class="admin-field" data-product-form-field="size"><label for="product-size" data-size-label>Kích thước</label><input id="product-size" name="size" placeholder="55 inch" required /></div>
+            <div class="admin-field" data-product-form-field="capacity"><label for="product-capacity-or-size">Khối lượng / dung tích chi tiết</label><input id="product-capacity-or-size" name="capacityOrSize" placeholder="10.5kg / 15kg / Giặt 12kg, sấy 8kg" /></div>
+            <div class="admin-field"><label for="product-type">Loại sản phẩm</label><select id="product-type" name="type" required><option value="">Chọn loại sản phẩm</option><option>Tivi mới</option><option>Tivi cũ</option><option>Máy giặt</option><option>Tủ lạnh</option><option>Điều hoà</option><option>Đồ gia dụng</option></select></div>
             <div class="admin-field"><label for="product-id">Mã sản phẩm</label><input id="product-id" name="id" placeholder="Tự tạo từ hãng, model, kích thước" /></div>
             <div class="admin-field"><label for="product-condition">Tình trạng</label><input id="product-condition" name="condition" /></div>
             <div class="admin-field"><label for="product-warranty">Bảo hành</label><input id="product-warranty" name="warranty" /></div>
             <div class="admin-field"><label for="product-old-price">Giá gạch</label><input id="product-old-price" name="oldPrice" /></div>
             <div class="admin-field"><label for="product-price">Giá bán</label><input id="product-price" name="price" required /></div>
             <div class="admin-field"><label for="product-badge">Badge</label><input id="product-badge" name="badge" /></div>
-            <div class="admin-field"><label for="product-category-sticker-mode">Tem loại sản phẩm</label><select id="product-category-sticker-mode" name="categoryStickerMode"><option value="auto">Tự động theo loại tivi</option><option value="new">Tivi mới</option><option value="used">Tivi cũ</option><option value="none">Không hiển thị tem loại</option></select></div>
+            <div class="admin-field" data-product-form-field="category-sticker"><label for="product-category-sticker-mode">Tem loại sản phẩm</label><select id="product-category-sticker-mode" name="categoryStickerMode"><option value="auto">Tự động theo loại tivi</option><option value="new">Tivi mới</option><option value="used">Tivi cũ</option><option value="none">Không hiển thị tem loại</option></select></div>
             <div class="admin-field"><label for="product-promo-sticker-mode">Tem ưu đãi</label><select id="product-promo-sticker-mode" name="promoStickerMode"><option value="none">Không hiển thị ưu đãi</option><option value="wc">World Cup - wc.png</option><option value="click2">Click nhận mã 300K - click2.png</option><option value="custom">Sticker tuỳ chỉnh</option><optgroup label="Thư viện sticker đã upload" data-sticker-library-options><option value="" disabled>Chưa có sticker trong thư viện</option></optgroup></select></div>
             <div class="admin-field admin-field--full"><label for="product-custom-sticker-url">Đường dẫn sticker tuỳ chỉnh</label><input id="product-custom-sticker-url" name="customStickerUrl" placeholder="assets/my-sticker.png hoặc https://..." /><small class="admin-help-text">Tem loại sản phẩm có thể tự động theo Tivi mới/Tivi cũ. Tem ưu đãi là chọn thủ công cho từng sản phẩm.</small></div>
             <div class="admin-field"><label for="product-sticker-asset-name">Tên sticker lưu thư viện</label><input id="product-sticker-asset-name" name="stickerAssetName" placeholder="Ví dụ: Ưu đãi 300K tháng 7" /></div>

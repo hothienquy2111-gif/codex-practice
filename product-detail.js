@@ -212,6 +212,7 @@
     const model = String(product.model ?? product.name ?? 'Tivi đang cập nhật').trim() || 'Tivi đang cập nhật';
     const fullName = String(product.fullName ?? product.full_name ?? product.name ?? product.model ?? 'Tivi đang cập nhật').trim() || 'Tivi đang cập nhật';
     const size = String(product.size ?? 'Liên hệ tư vấn').trim() || 'Liên hệ tư vấn';
+    const capacityOrSize = String(product.capacityOrSize ?? product.capacity_or_size ?? size).trim() || size;
     const type = String(product.type ?? 'Tivi').trim() || 'Tivi';
     const condition = String(product.condition ?? 'Liên hệ kiểm tra tình trạng').trim() || 'Liên hệ kiểm tra tình trạng';
     const warranty = String(product.warranty ?? '').trim();
@@ -229,7 +230,11 @@
       fullName,
       full_name: fullName,
       size,
+      capacityOrSize,
+      capacity_or_size: capacityOrSize,
       type,
+      category: String(product.category ?? '').trim(),
+      subcategory: String(product.subcategory ?? '').trim(),
       condition,
       status,
       warranty,

@@ -303,7 +303,8 @@
 }
 
 .admin-main-tabs,
-.admin-product-type-tabs {
+.admin-product-type-tabs,
+.admin-product-area-tabs {
   display: flex;
   gap: 10px;
   max-width: 100%;
@@ -315,7 +316,8 @@
 }
 
 .admin-main-tab,
-.admin-product-type-tab {
+.admin-product-type-tab,
+.admin-product-area-tab {
   flex: 0 0 auto;
   min-height: 42px;
   border: 1px solid var(--color-primary-deep);
@@ -333,7 +335,9 @@
 .admin-main-tab:hover,
 .admin-main-tab:focus-visible,
 .admin-product-type-tab:hover,
-.admin-product-type-tab:focus-visible {
+.admin-product-type-tab:focus-visible,
+.admin-product-area-tab:hover,
+.admin-product-area-tab:focus-visible {
   outline: 3px solid rgba(19, 111, 206, 0.2);
   outline-offset: 2px;
 }
@@ -341,7 +345,9 @@
 .admin-main-tab.is-active,
 .admin-main-tab[aria-selected="true"],
 .admin-product-type-tab.is-active,
-.admin-product-type-tab[aria-pressed="true"] {
+.admin-product-type-tab[aria-pressed="true"],
+.admin-product-area-tab.is-active,
+.admin-product-area-tab[aria-pressed="true"] {
   border-color: var(--color-primary-deep);
   background: var(--color-primary-deep);
   color: #fff;
@@ -349,6 +355,10 @@
 }
 
 .admin-panel[hidden] {
+  display: none !important;
+}
+
+.admin-field[hidden] {
   display: none !important;
 }
 
@@ -374,7 +384,8 @@
   border: 0;
 }
 
-.admin-product-type-tabs {
+.admin-product-type-tabs,
+.admin-product-area-tabs {
   margin-top: 4px;
   padding-top: 2px;
 }
@@ -385,13 +396,15 @@
   }
 
   .admin-main-tabs,
-  .admin-product-type-tabs {
+  .admin-product-type-tabs,
+  .admin-product-area-tabs {
     margin-inline: -4px;
     padding-inline: 4px;
   }
 
   .admin-main-tab,
-  .admin-product-type-tab {
+  .admin-product-type-tab,
+  .admin-product-area-tab {
     min-height: 40px;
     padding: 8px 14px;
   }
@@ -464,6 +477,7 @@
   }
   .admin-main-tabs,
   .admin-product-type-tabs,
+  .admin-product-area-tabs,
   .admin-orders-filters {
     flex-wrap: nowrap;
     overflow-x: auto;
@@ -494,6 +508,7 @@
   .admin-dashboard,
   .admin-login__card { padding-inline: 14px; }
   .admin-main-tab,
+  .admin-product-area-tab,
   .admin-product-type-tab,
   .admin-orders-filter { padding-inline: 12px; font-size: 0.9rem; }
   .admin-order-card__actions--quick { grid-template-columns: 1fr; }
