@@ -5,8 +5,10 @@
   const bannerBucketName = 'site-banners';
   const maxBannerFileSize = 10 * 1024 * 1024;
   const allowedBannerTypes = new Set(['image/jpeg', 'image/png', 'image/webp']);
-  const ADMIN_IDLE_TIMEOUT_MS = 30 * 60 * 1000;
-  const ADMIN_IDLE_WARNING_MS = 25 * 60 * 1000;
+  const ADMIN_IDLE_TIMEOUT_MS = 15 * 60 * 1000;
+  const ADMIN_IDLE_WARNING_MS = 12 * 60 * 1000;
+  const GENERIC_LOGIN_ERROR = 'Không thể đăng nhập. Vui lòng kiểm tra tài khoản, mật khẩu hoặc quyền quản trị.';
+  const IDLE_TIMEOUT_MESSAGE = 'Phiên quản trị đã hết hạn do không hoạt động. Vui lòng đăng nhập lại.';
 
   const dom = {
     loginSection: document.querySelector('[data-admin-login]'),
@@ -106,6 +108,8 @@
   let idleTimeoutId = null;
   let idleWarningId = null;
   let authStateListenerAttached = false;
+  let isLoginRequestPending = false;
+  let isRoleRecheckPending = false;
 
   const orderStatusLabels = {
     new: 'Đơn mới',
@@ -572,13 +576,19 @@
     idleWarningId = null;
   };
 
-  const showLoginOnly = () => {
+  const clearLoginPassword = () => {
+    const passwordInput = dom.loginForm?.elements?.namedItem('password');
+    if (passwordInput && 'value' in passwordInput) passwordInput.value = '';
+  };
+
+  const showLoginOnly = ({ clearPassword = true } = {}) => {
     if (dom.loginSection) dom.loginSection.hidden = false;
     if (dom.dashboard) dom.dashboard.hidden = true;
     if (dom.adminStatus) {
       dom.adminStatus.hidden = true;
       dom.adminStatus.textContent = 'Đang đăng nhập quyền quản trị';
     }
+    if (clearPassword) clearLoginPassword();
   };
 
   const updateAdminStatus = (user = null) => {
@@ -594,15 +604,50 @@
     updateAdminStatus(user);
   };
 
+  const closeAdminUi = () => {
+    if (dom.modal) dom.modal.hidden = true;
+    if (dom.duplicateModal) dom.duplicateModal.hidden = true;
+    if (dom.bannerForm) dom.bannerForm.hidden = true;
+    document.body.classList.remove('admin-modal-open');
+    editingProduct = null;
+    duplicatingProduct = null;
+    editingBanner = null;
+    removedProductImages = new Set();
+    currentProductImages = [];
+    dom.form?.reset();
+    dom.duplicateForm?.reset();
+    dom.bannerForm?.reset();
+    dom.rightBannerForm?.reset();
+    clearOverviewPreview();
+    clearSpecificationPreview();
+  };
+
   const clearAdminState = () => {
     isAdminVerified = false;
+    isRoleRecheckPending = false;
     stopIdleTimer();
+    closeAdminUi();
     products = [];
     orders = [];
     banners = [];
     stickerAssets = [];
     rightBanner = null;
+    productSearchTerm = '';
+    orderViewFilter = 'active';
+    if (dom.productSearchInput) dom.productSearchInput.value = '';
+    if (dom.products) dom.products.replaceChildren();
+    if (dom.orders) dom.orders.replaceChildren();
+    if (dom.banners) dom.banners.replaceChildren();
+    if (dom.rightBannerCurrent) dom.rightBannerCurrent.replaceChildren();
+    if (dom.rightBannerPreview) dom.rightBannerPreview.replaceChildren();
+    if (dom.existingImages) dom.existingImages.replaceChildren();
     renderStickerAssetOptions();
+    showMessage(dom.adminMessage, '');
+    showMessage(dom.formMessage, '');
+    showMessage(dom.bannerMessage, '');
+    showMessage(dom.duplicateMessage, '');
+    showMessage(dom.rightBannerMessage, '');
+    showMessage(dom.stickerLibraryMessage, '');
   };
 
   const denyAdminAction = () => {
@@ -615,12 +660,27 @@
   const handleSignedOut = (message = '') => {
     clearAdminState();
     showLoginOnly();
-    if (message) showMessage(dom.loginMessage, message, 'error');
+    showMessage(dom.loginMessage, message, message ? 'error' : '');
+  };
+
+  const signOutCurrentAdmin = async () => {
+    if (!client?.auth?.signOut) return;
+    try {
+      const { error } = await client.auth.signOut({ scope: 'local' });
+      if (error) console.warn('ADMIN_LOCAL_SIGN_OUT_FAILED');
+    } catch {
+      console.warn('ADMIN_LOCAL_SIGN_OUT_FAILED');
+    }
+  };
+
+  const endAdminSession = async (message = '') => {
+    handleSignedOut(message);
+    await signOutCurrentAdmin();
+    handleSignedOut(message);
   };
 
   const handleIdleTimeout = async () => {
-    await client?.auth.signOut();
-    handleSignedOut('Phiên quản trị đã hết hạn do không hoạt động. Vui lòng đăng nhập lại.');
+    await endAdminSession(IDLE_TIMEOUT_MESSAGE);
   };
 
   const resetIdleTimer = () => {
@@ -632,16 +692,13 @@
     idleTimeoutId = window.setTimeout(handleIdleTimeout, ADMIN_IDLE_TIMEOUT_MS);
   };
 
-  const verifyAdminAccess = async () => {
+  const getVerifiedAdminUser = async () => {
     const { data: { user }, error: userError } = await client.auth.getUser();
-    if (userError) throw userError;
-    if (!user) return false;
+    if (userError) throw new Error('ADMIN_USER_VALIDATION_FAILED');
+    if (!user) return null;
     const { data, error } = await client.from('profiles').select('role').eq('id', user.id).maybeSingle();
-    if (error) throw error;
-    const hasAdminRole = data?.role === 'admin';
-    isAdminVerified = hasAdminRole;
-    if (hasAdminRole) updateAdminStatus(user);
-    return hasAdminRole;
+    if (error) throw new Error('ADMIN_ROLE_VALIDATION_FAILED');
+    return data?.role === 'admin' ? user : null;
   };
 
   const renderStickerAssetOptions = () => {
@@ -702,13 +759,10 @@
     await loadRightBanner();
   };
 
-  const verifyAndShowDashboard = async () => {
-    if (!(await verifyAdminAccess())) {
-      await client.auth.signOut();
-      handleSignedOut('Tài khoản này không có quyền quản trị.');
-      return false;
-    }
-    const { data: { user } } = await client.auth.getUser();
+  const activateDashboardAfterPasswordSignIn = async () => {
+    const user = await getVerifiedAdminUser();
+    if (!user) return false;
+    isAdminVerified = true;
     showDashboard(user);
     resetIdleTimer();
     await loadAdminData();
@@ -2156,33 +2210,49 @@
     }
   };
 
+  const recheckVerifiedAdminRole = async () => {
+    if (!isAdminVerified || isRoleRecheckPending) return;
+    isRoleRecheckPending = true;
+    try {
+      const user = await getVerifiedAdminUser();
+      if (!user) {
+        await endAdminSession(GENERIC_LOGIN_ERROR);
+        return;
+      }
+      updateAdminStatus(user);
+    } catch {
+      await endAdminSession(GENERIC_LOGIN_ERROR);
+    } finally {
+      isRoleRecheckPending = false;
+    }
+  };
+
   const attachAuthStateListener = () => {
     if (authStateListenerAttached || !client?.auth?.onAuthStateChange) return;
-    authStateListenerAttached = true;
-    client.auth.onAuthStateChange(async (event) => {
+    client.auth.onAuthStateChange((event) => {
       if (event === 'SIGNED_OUT') {
         handleSignedOut();
         return;
       }
+      if (event === 'INITIAL_SESSION') {
+        showLoginOnly();
+        return;
+      }
+      if (event === 'SIGNED_IN') return;
       if (event === 'TOKEN_REFRESHED') {
-        try {
-          if (!isAdminVerified) {
-            handleSignedOut();
-            return;
-          }
-          if (!(await verifyAdminAccess())) {
-            await client.auth.signOut();
-            handleSignedOut('Tài khoản này không có quyền quản trị.');
-            return;
-          }
-          resetIdleTimer();
-        } catch (error) {
-          console.warn(error);
-          await client.auth.signOut();
+        if (!isAdminVerified) {
           handleSignedOut();
+          window.setTimeout(() => {
+            void signOutCurrentAdmin();
+          }, 0);
+          return;
         }
+        window.setTimeout(() => {
+          void recheckVerifiedAdminRole();
+        }, 0);
       }
     });
+    authStateListenerAttached = true;
   };
 
   const syncHomeProductFormFields = () => {
@@ -2203,45 +2273,47 @@
     }
     updateProductFormMode('home');
   };
-  const init = async () => {
+  const init = () => {
+    clearAdminState();
+    showMessage(dom.loginMessage, '');
     showLoginOnly();
     if (!requireSupabase()) return;
     attachAuthStateListener();
-    try {
-      const { data: { session } } = await client.auth.getSession();
-      if (!session) {
-        handleSignedOut();
-        return;
-      }
-      await verifyAndShowDashboard();
-    } catch (error) {
-      console.warn(error);
-      handleSignedOut('Không thể tải dữ liệu. Vui lòng thử lại.');
-    }
   };
 
   dom.loginForm?.addEventListener('submit', async (event) => {
     event.preventDefault();
-    if (!requireSupabase()) return;
+    if (isLoginRequestPending || !requireSupabase()) return;
+    const emailInput = dom.loginForm.elements.namedItem('email');
+    const passwordInput = dom.loginForm.elements.namedItem('password');
+    isLoginRequestPending = true;
     showMessage(dom.loginMessage, 'Đang đăng nhập...', 'info');
     dom.loginButton.disabled = true;
-    const form = new FormData(dom.loginForm);
+    dom.loginButton.setAttribute('aria-busy', 'true');
     try {
       clearAdminState();
-      showLoginOnly();
-      const { error } = await client.auth.signInWithPassword({ email: normalizeText(form.get('email')), password: String(form.get('password') || '') });
-      if (error) throw error;
-      await verifyAndShowDashboard();
-    } catch (error) {
-      console.warn(error);
-      await client.auth.signOut();
-      handleSignedOut('Sai tài khoản hoặc mật khẩu. Vui lòng thử lại.');
+      showLoginOnly({ clearPassword: false });
+      const { error } = await client.auth.signInWithPassword({
+        email: normalizeText(emailInput?.value || ''),
+        password: passwordInput?.value || '',
+      });
+      if (error) throw new Error('PASSWORD_SIGN_IN_FAILED');
+      clearLoginPassword();
+      if (!(await activateDashboardAfterPasswordSignIn())) throw new Error('ADMIN_ROLE_REQUIRED');
+      showMessage(dom.loginMessage, '');
+    } catch {
+      await endAdminSession(GENERIC_LOGIN_ERROR);
     } finally {
+      clearLoginPassword();
+      isLoginRequestPending = false;
       dom.loginButton.disabled = false;
+      dom.loginButton.removeAttribute('aria-busy');
     }
   });
 
-  dom.logoutButton?.addEventListener('click', async () => { await client?.auth.signOut(); handleSignedOut(); });
+  dom.logoutButton?.addEventListener('click', async () => {
+    await endAdminSession();
+  });
   dom.openFormButton?.addEventListener('click', () => openForm());
   dom.adminTabs?.forEach((button) => button.addEventListener('click', () => setAdminTab(button.dataset.adminTab || 'tv-products')));
   dom.productAreaTabs?.forEach((button) => button.addEventListener('click', () => {
@@ -2385,11 +2457,23 @@
     if (event.target.dataset.deleteBanner) deleteBanner(banner);
   });
 
-  ['click', 'keydown', 'scroll', 'touchstart'].forEach((eventName) => {
+  ['click', 'keydown', 'scroll', 'touchstart', 'pointerdown'].forEach((eventName) => {
     document.addEventListener(eventName, resetIdleTimer, { passive: true });
   });
 
+  window.addEventListener('pageshow', (event) => {
+    if (!event.persisted) return;
+    isLoginRequestPending = false;
+    if (dom.loginButton) {
+      dom.loginButton.disabled = false;
+      dom.loginButton.removeAttribute('aria-busy');
+    }
+    handleSignedOut();
+    window.setTimeout(() => {
+      void signOutCurrentAdmin();
+    }, 0);
+  });
+
   setAdminTab('tv-products');
-  showLoginOnly();
   init();
 })();
