@@ -2,9 +2,9 @@
 
 Ngày: 2026-07-30
 
-## P0 — Cần xác nhận để hoàn tất nhánh
+## P0 — Crawl files đã được owner xác nhận
 
-Repository protection gate yêu cầu chủ sở hữu xác nhận lại trước khi Codex sửa crawl files. Phạm vi chính xác:
+Owner đã xác nhận ngày 2026-07-30 cho đúng phạm vi:
 
 1. Đổi `robots.txt` để công bố:
    `Sitemap: https://www.anhminhstore.io.vn/sitemap.xml`
@@ -13,7 +13,7 @@ Repository protection gate yêu cầu chủ sở hữu xác nhận lại trướ
 4. Thêm `sitemap-products.xml` chứa sản phẩm `is_active=true`.
 5. Thêm `scripts/generate-product-sitemap.mjs`, chỉ đọc REST API công khai hiện có; fail closed nếu lỗi/rỗng/sai id; không log key.
 
-Không sửa Supabase, CNAME, workflow hay database. Không deploy.
+Phạm vi này đã được triển khai và validate mà không sửa Supabase, CNAME, workflow hay database. Chưa merge/deploy.
 
 ## P0 — Xác minh nội dung kinh doanh/pháp lý
 
@@ -82,4 +82,3 @@ Chỉ bổ sung khi có bằng chứng:
 - review thật có nguồn và consent;
 - quy trình kiểm tra, bảo hành, đổi trả chi tiết;
 - tác giả/ngày cập nhật cho nội dung quan trọng.
-

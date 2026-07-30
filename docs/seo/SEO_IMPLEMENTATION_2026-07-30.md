@@ -1,8 +1,8 @@
 # SEO Implementation — Anh Minh Store
 
-Ngày: 2026-07-30  
-Nhánh: `seo/full-spectrum-seo-v2`  
-Trạng thái: triển khai source hoàn tất; thay đổi crawl files đang chờ xác nhận lại do repository protection gate.
+Ngày: 2026-07-30
+Nhánh: `seo/full-spectrum-seo-v2`
+Trạng thái: triển khai source và crawl architecture hoàn tất; đã validate local, chưa merge/deploy.
 
 ## 1. Mục tiêu
 
@@ -88,17 +88,20 @@ Kết quả đo cùng phương pháp trên homepage local:
 - local file references;
 - host công bố trong robots/sitemap.
 
-## 3. Thay đổi chưa được áp dụng
+## 3. Crawl architecture đã triển khai
 
-Repository protection gate đã chặn:
+Sau khi owner xác nhận lại đúng phạm vi:
 
-- chuẩn hóa `robots.txt`;
-- chuyển `sitemap.xml` thành sitemap index;
-- thêm `sitemap-static.xml`;
-- thêm/generate `sitemap-products.xml`;
-- thêm script generator read-only cho sản phẩm active.
+- `robots.txt` công bố sitemap production.
+- `sitemap.xml` là sitemap index, trỏ tới static và product sitemap.
+- `sitemap-static.xml` chứa 8 canonical URL indexable theo allowlist.
+- `sitemap-products.xml` chứa 107 sản phẩm public `is_active=true`.
+- `scripts/generate-product-sitemap.mjs` chỉ gọi REST bằng `GET`, dùng publishable/anon config hiện có, exact count và giới hạn 50.000 URL.
+- Generator từ chối secret/service-role key, id sai/trùng, response lỗi, count thiếu/rỗng, lastmod sai và dữ liệu không đầy đủ.
+- File được ghi vào temporary path, validate nội bộ rồi mới rename sang sitemap chính.
+- Không có SQL, RPC hoặc request ghi dữ liệu.
 
-Không có workaround hoặc sửa gián tiếp được thực hiện. Validator hiện cố ý FAIL đúng hai lỗi này.
+XML parser và SEO validator cuối đều PASS.
 
 ## 4. File tác động
 
@@ -134,4 +137,3 @@ Không thay đổi:
 - `.github/workflows`;
 - ảnh;
 - database hoặc dữ liệu production.
-
