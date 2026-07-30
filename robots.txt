@@ -1,4 +1,6 @@
 User-agent: *
 Allow: /
+Disallow: /admin.html
+Disallow: /admin
 
-Sitemap: https://hothienquy2111-gif.github.io/codex-practice/sitemap.xml
+Sitemap: https://www.anhminhstore.io.vn/sitemap.xml
