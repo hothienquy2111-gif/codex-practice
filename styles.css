@@ -4271,3 +4271,38 @@ body.zalo-choice-modal-open {
     white-space: normal;
   }
 }
+.seo-breadcrumb {
+  padding-block: 14px 4px;
+}
+
+.seo-breadcrumb ol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: #5f6b7a;
+  font-size: 0.875rem;
+}
+
+.seo-breadcrumb li + li::before {
+  content: "/";
+  margin-right: 6px;
+  color: #98a2b3;
+}
+
+.seo-breadcrumb a {
+  color: #245da8;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.seo-breadcrumb [aria-current="page"] {
+  color: #344054;
+}
+
+.contact-address {
+  font-style: normal;
+}

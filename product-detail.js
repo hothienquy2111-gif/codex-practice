@@ -2,6 +2,10 @@
   const productDetailRoot = document.querySelector('#product-detail-root');
   const params = new URLSearchParams(window.location.search);
   const productId = params.get('id');
+  const SITE_ORIGIN = 'https://www.anhminhstore.io.vn';
+  const PRODUCT_PAGE_PATH = '/product-detail.html';
+  const PRODUCT_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/;
+  const DEFAULT_SOCIAL_IMAGE = `${SITE_ORIGIN}/Create_an_ultra-realistic_premium_World_202606042116.jpeg`;
   let activeModal = null;
   let activeGalleryTimerId = null;
   let activeGalleryState = null;
@@ -16,6 +20,142 @@
       .toLowerCase()
       .replace(/\s+/g, ' ')
       .trim();
+
+  const setMetaContent = (selector, attribute, value) => {
+    let element = document.head.querySelector(selector);
+    if (!element) {
+      element = document.createElement('meta');
+      const match = selector.match(/^meta\[(name|property)="([^"]+)"\]$/);
+      if (!match) return;
+      element.setAttribute(match[1], match[2]);
+      document.head.appendChild(element);
+    }
+    element.setAttribute(attribute, value);
+  };
+
+  const setCanonicalUrl = (url = '') => {
+    document.head.querySelector('link[rel="canonical"]')?.remove();
+    if (!url) return;
+    const canonical = document.createElement('link');
+    canonical.rel = 'canonical';
+    canonical.href = url;
+    document.head.appendChild(canonical);
+  };
+
+  const setJsonLd = (data = null) => {
+    document.head.querySelector('script[data-product-schema]')?.remove();
+    if (!data) return;
+    const script = document.createElement('script');
+    script.type = 'application/ld+json';
+    script.dataset.productSchema = 'true';
+    script.textContent = JSON.stringify(data);
+    document.head.appendChild(script);
+  };
+
+  const toAbsoluteHttpUrl = (value = '') => {
+    if (!value) return '';
+    try {
+      const url = new URL(String(value), `${SITE_ORIGIN}/`);
+      return ['http:', 'https:'].includes(url.protocol) ? url.href : '';
+    } catch {
+      return '';
+    }
+  };
+
+  const buildProductDescription = (product = {}) => {
+    const source = String(product.description || '').replace(/\s+/g, ' ').trim();
+    const fallback = `${product.fullName} tại Anh Minh Store Đà Nẵng. Xem thông tin model, giá bán và liên hệ tư vấn.`;
+    const description = source && !normalizeText(source).includes('dang cap nhat') ? source : fallback;
+    return description.length > 158 ? `${description.slice(0, 155).trimEnd()}...` : description;
+  };
+
+  const updateProductSeo = (product = {}) => {
+    const canonicalId = String(product.id || '').trim();
+    if (!PRODUCT_ID_PATTERN.test(canonicalId)) return false;
+
+    const canonicalUrl = `${SITE_ORIGIN}${PRODUCT_PAGE_PATH}?id=${encodeURIComponent(canonicalId)}`;
+    const title = `${product.fullName} - Anh Minh Store`;
+    const description = buildProductDescription(product);
+    const images = product.images.map(toAbsoluteHttpUrl).filter(Boolean);
+    const socialImage = images[0] || DEFAULT_SOCIAL_IMAGE;
+
+    document.title = title;
+    setCanonicalUrl(canonicalUrl);
+    setMetaContent('meta[name="description"]', 'content', description);
+    setMetaContent('meta[name="robots"]', 'content', 'index,follow,max-image-preview:large');
+    setMetaContent('meta[property="og:title"]', 'content', title);
+    setMetaContent('meta[property="og:description"]', 'content', description);
+    setMetaContent('meta[property="og:type"]', 'content', 'product');
+    setMetaContent('meta[property="og:url"]', 'content', canonicalUrl);
+    setMetaContent('meta[property="og:image"]', 'content', socialImage);
+    setMetaContent('meta[property="og:image:alt"]', 'content', `Ảnh ${product.fullName}`);
+    setMetaContent('meta[name="twitter:title"]', 'content', title);
+    setMetaContent('meta[name="twitter:description"]', 'content', description);
+    setMetaContent('meta[name="twitter:image"]', 'content', socialImage);
+    setMetaContent('meta[name="twitter:image:alt"]', 'content', `Ảnh ${product.fullName}`);
+
+    const breadcrumb = document.querySelector('[data-product-breadcrumb]');
+    if (breadcrumb) breadcrumb.textContent = product.fullName;
+
+    const productSchema = {
+      '@type': 'Product',
+      '@id': `${canonicalUrl}#product`,
+      name: product.fullName,
+      description,
+      sku: canonicalId,
+      url: canonicalUrl,
+      ...(images.length ? { image: images } : {}),
+      ...(product.hasExplicitBrand ? { brand: { '@type': 'Brand', name: product.brand } } : {}),
+      ...(product.model && !normalizeText(product.model).includes('dang cap nhat') ? { model: product.model } : {}),
+      ...(product.category ? { category: product.category } : {}),
+    };
+    const price = parsePriceValue(product.price);
+    if (price && price > 0) {
+      productSchema.offers = {
+        '@type': 'Offer',
+        url: canonicalUrl,
+        priceCurrency: 'VND',
+        price,
+        seller: { '@id': `${SITE_ORIGIN}/#organization` },
+      };
+    }
+
+    setJsonLd({
+      '@context': 'https://schema.org',
+      '@graph': [
+        productSchema,
+        {
+          '@type': 'BreadcrumbList',
+          '@id': `${canonicalUrl}#breadcrumb`,
+          itemListElement: [
+            { '@type': 'ListItem', position: 1, name: 'Trang chủ', item: `${SITE_ORIGIN}/` },
+            { '@type': 'ListItem', position: 2, name: product.fullName, item: canonicalUrl },
+          ],
+        },
+      ],
+    });
+    return true;
+  };
+
+  const setNonIndexProductSeo = (title, description) => {
+    document.title = `${title} - Anh Minh Store`;
+    setCanonicalUrl('');
+    setMetaContent('meta[name="description"]', 'content', description);
+    setMetaContent('meta[name="robots"]', 'content', 'noindex,follow');
+    setMetaContent('meta[property="og:title"]', 'content', `${title} - Anh Minh Store`);
+    setMetaContent('meta[property="og:description"]', 'content', description);
+    setMetaContent('meta[property="og:type"]', 'content', 'website');
+    setMetaContent('meta[property="og:url"]', 'content', `${SITE_ORIGIN}${PRODUCT_PAGE_PATH}`);
+    setMetaContent('meta[property="og:image"]', 'content', DEFAULT_SOCIAL_IMAGE);
+    setMetaContent('meta[property="og:image:alt"]', 'content', 'Anh Minh Store');
+    setMetaContent('meta[name="twitter:title"]', 'content', `${title} - Anh Minh Store`);
+    setMetaContent('meta[name="twitter:description"]', 'content', description);
+    setMetaContent('meta[name="twitter:image"]', 'content', DEFAULT_SOCIAL_IMAGE);
+    setMetaContent('meta[name="twitter:image:alt"]', 'content', 'Anh Minh Store');
+    setJsonLd(null);
+    const breadcrumb = document.querySelector('[data-product-breadcrumb]');
+    if (breadcrumb) breadcrumb.textContent = title;
+  };
 
   const PRODUCT_STOCK_STATUS = {
     available: 'Đang bán',
@@ -226,6 +366,7 @@
     return {
       id: String(product.id ?? '').trim(),
       brand,
+      hasExplicitBrand: Boolean(String(product.brand ?? '').trim()),
       model,
       fullName,
       full_name: fullName,
@@ -1050,11 +1191,9 @@
     }
 
     const label = `${product.brand} ${product.model}`.trim();
-    document.title = `${label} - Anh Minh Store`;
-
-    const metaDescription = document.querySelector('meta[name="description"]');
-    if (metaDescription) {
-      metaDescription.setAttribute('content', `${label} tại Anh Minh Store Đà Nẵng. Gọi 0905111223 để được tư vấn tivi cũ, tivi mới, thu hư đổi mới và sửa tivi.`);
+    if (!updateProductSeo(product)) {
+      renderMissingProduct();
+      return;
     }
 
     const recommendations = getRecommendedProductsForDetail(product, recommendationSource);
@@ -1174,6 +1313,10 @@
   };
 
   const renderMissingProduct = () => {
+    setNonIndexProductSeo(
+      'Không tìm thấy sản phẩm',
+      'Sản phẩm có thể đã được bán, tạm ẩn hoặc đường dẫn chưa chính xác. Quay lại danh sách sản phẩm Anh Minh Store để tiếp tục.',
+    );
     setDetailMessage(
       'Không tìm thấy sản phẩm',
       'Sản phẩm bạn đang tìm có thể đã được bán, tạm ẩn hoặc đường dẫn chưa chính xác. Vui lòng quay lại danh sách sản phẩm hoặc liên hệ Anh Minh Store để được tư vấn mẫu phù hợp.',
@@ -1186,11 +1329,15 @@
   };
 
   const renderProductsUpdating = () => {
+    setNonIndexProductSeo(
+      'Dữ liệu sản phẩm đang được cập nhật',
+      'Không thể tải dữ liệu sản phẩm tại thời điểm này. Vui lòng thử lại hoặc liên hệ Anh Minh Store.',
+    );
     setDetailMessage('Dữ liệu sản phẩm đang được cập nhật', 'Dữ liệu sản phẩm đang được cập nhật.');
   };
 
   const loadProductDetail = async () => {
-    if (!productId) {
+    if (!productId || !PRODUCT_ID_PATTERN.test(productId)) {
       renderMissingProduct();
       return;
     }
@@ -1212,6 +1359,8 @@
         }
       } catch (error) {
         console.warn('Không thể tải chi tiết sản phẩm từ Supabase. Website công khai sẽ không dùng dữ liệu demo products.js.', error);
+        renderProductsUpdating();
+        return;
       }
     }
 

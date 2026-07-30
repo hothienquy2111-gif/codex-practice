@@ -35,6 +35,12 @@
   const gridElement = document.querySelector('[data-other-products-grid]');
   const emptyElement = document.querySelector('[data-other-products-empty]');
   const countElement = document.querySelector('[data-other-products-count]');
+  const SITE_ORIGIN = 'https://www.anhminhstore.io.vn';
+
+  const updateMeta = (selector, value) => {
+    const element = document.head.querySelector(selector);
+    if (element) element.setAttribute('content', value);
+  };
 
   const escapeHtml = (value = '') =>
     String(value).replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
@@ -159,10 +165,21 @@
   };
 
   if (titleElement) titleElement.textContent = config.title;
-  document.title = `${config.title} - Anh Minh Store`;
+  const pageTitle = `${config.title} - Anh Minh Store`;
+  const pageDescription = config.subtitle || 'Danh mục này đang được Anh Minh Store cập nhật. Vui lòng quay lại sau hoặc liên hệ cửa hàng để được tư vấn nhanh.';
+  document.title = pageTitle;
+  updateMeta('meta[name="description"]', pageDescription);
+  updateMeta('meta[name="robots"]', 'noindex,follow');
+  updateMeta('meta[property="og:title"]', pageTitle);
+  updateMeta('meta[property="og:description"]', pageDescription);
+  updateMeta('meta[property="og:url"]', `${SITE_ORIGIN}/other-products.html`);
+  updateMeta('meta[name="twitter:title"]', pageTitle);
+  updateMeta('meta[name="twitter:description"]', pageDescription);
+  const categoryBreadcrumb = document.querySelector('[data-category-breadcrumb]');
+  if (categoryBreadcrumb) categoryBreadcrumb.textContent = config.title;
 
   if (subtitleElement) {
-    subtitleElement.textContent = config.subtitle || 'Danh mục này đang được Anh Minh Store cập nhật. Vui lòng quay lại sau hoặc liên hệ cửa hàng để được tư vấn nhanh.';
+    subtitleElement.textContent = pageDescription;
   }
 
   if (familyPlaceholder) {

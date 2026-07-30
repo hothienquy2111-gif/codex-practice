@@ -2336,8 +2336,10 @@ const loadSupabaseHeroBanners = async (track) => {
     track.innerHTML = banners.map((banner, index) => {
       const label = banner.title || banner.alt_text || `Banner trang chủ ${index + 1}`;
       const altText = banner.alt_text || banner.title || 'Banner trang chủ Anh Minh Store';
+      const sourceAttribute = index === 0 ? 'src' : 'data-src';
+      const priorityAttributes = index === 0 ? 'fetchpriority="high"' : '';
       return `<article class="carousel-slide" aria-label="${escapeAttribute(label)}">
-        <img src="${escapeAttribute(banner.image_url)}" alt="${escapeAttribute(altText)}" draggable="false" />
+        <img ${sourceAttribute}="${escapeAttribute(banner.image_url)}" alt="${escapeAttribute(altText)}" decoding="async" ${priorityAttributes} draggable="false" />
       </article>`;
     }).join('');
     return true;
@@ -2445,6 +2447,24 @@ const initCarousel = async () => {
   let isDragging = false;
   let rafId = 0;
   let autoplayId = 0;
+  let preloadId = 0;
+
+  const ensureSlideImageLoaded = (index) => {
+    const normalizedIndex = (index + slides.length) % slides.length;
+    const image = slides[normalizedIndex]?.querySelector('img[data-src]');
+    if (!image?.dataset.src) return;
+    image.src = image.dataset.src;
+    image.removeAttribute('data-src');
+  };
+
+  const scheduleNextSlidePreload = () => {
+    if (preloadId) window.clearTimeout(preloadId);
+    if (slides.length < 2) return;
+    preloadId = window.setTimeout(() => {
+      ensureSlideImageLoaded(currentIndex + 1);
+      preloadId = 0;
+    }, 3000);
+  };
 
   const dots = slides.map((_, index) => {
     const dot = document.createElement('button');
@@ -2498,8 +2518,10 @@ const initCarousel = async () => {
   const goToSlide = (index, animate = true) => {
     currentIndex = (index + slides.length) % slides.length;
     dragOffset = 0;
+    ensureSlideImageLoaded(currentIndex);
     syncHeroCarouselHeightToActiveImage();
     requestUpdate(animate);
+    scheduleNextSlidePreload();
   };
 
   const stopAutoplay = () => {
@@ -2588,8 +2610,10 @@ const initCarousel = async () => {
     image?.addEventListener('load', syncHeroCarouselHeightToActiveImage);
   });
 
+  ensureSlideImageLoaded(0);
   applyTransform(false);
   syncHeroCarouselHeightToActiveImage();
+  scheduleNextSlidePreload();
   startAutoplay();
 };
 
