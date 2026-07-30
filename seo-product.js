@@ -208,5 +208,8 @@
   });
 
   if (root) observer.observe(root, { childList: true, subtree: true });
-  window.setTimeout(() => observer.disconnect(), 15000);
+  window.setTimeout(() => {
+    observer.disconnect();
+    if (!root?.querySelector('#product-detail-title')) setNoIndex();
+  }, 15000);
 })();
