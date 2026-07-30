@@ -17,6 +17,7 @@ Chuẩn hóa entity URL về domain chính thức, kiểm soát indexation theo 
 - Bổ sung Open Graph/Twitter metadata còn thiếu, `og:locale`, `og:site_name` và image alt.
 - `404.html` không có canonical và dùng `noindex,follow`.
 - `compare.html`, `san-pham-gia-dinh.html`, `other-products.html` dùng `noindex,follow`.
+- `other-products.html` hiện noindex toàn trang cho đến khi category có nội dung/inventory đủ chất lượng; trang không được thêm vào `sitemap-static.xml`.
 - `sua-tivi-da-nang.html` dùng `noindex,follow` và canonical về `sua-tivi.html`.
 
 ### Product SEO lifecycle
@@ -34,6 +35,14 @@ Product JSON-LD:
 - Có `Offer` chỉ khi giá parse được thành số dương.
 - Không có `availability`, rating, review, aggregateRating, condition hoặc stock được suy diễn.
 - Chỉ có Brand khi dữ liệu nguồn thật sự chứa brand.
+
+### Giới hạn runtime của Product SEO
+
+- Product title, description, canonical, Open Graph và Product JSON-LD được cập nhật client-side sau khi JavaScript tải dữ liệu sản phẩm thành công.
+- Google có thể render JavaScript, nhưng tốc độ và khả năng xử lý không tương đương HTML pre-rendered có sẵn metadata ngay trong response.
+- Một số social crawler như Facebook/Zalo có thể không thực thi đầy đủ JavaScript, nên có thể không nhận metadata riêng của từng sản phẩm.
+- Đây là giới hạn kiến trúc hiện tại. PR này không tuyên bố dynamic social preview đã được giải quyết hoàn toàn.
+- Pre-render/static generation hoặc edge rendering là đề xuất tương lai; không triển khai trong PR này.
 
 ### Structured data trang tĩnh
 
