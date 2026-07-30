@@ -108,9 +108,7 @@
     const imageUrl = absoluteUrl(imageNode?.currentSrc || imageNode?.src || '');
     const title = trimText(`${fullName} | Anh Minh Store Đà Nẵng`, 62);
     const currentPriceText = root.querySelector('.product-detail__price strong')?.textContent.trim() || '';
-    const oldPriceText = root.querySelector('.product-detail__old-price del')?.textContent.trim() || '';
     const currentPrice = parsePrice(currentPriceText);
-    const oldPrice = parsePrice(oldPriceText);
     const size = getSpecValue('Kích thước');
     const productType = getSpecValue('Loại sản phẩm');
     const conditionText = getSpecValue('Tình trạng');
@@ -149,7 +147,10 @@
       name: 'Anh Minh Store',
       url: `${BASE_URL}/`,
       logo: `${BASE_URL}/Use_the_uploaded_image_as_202605051008.jpeg`,
-      telephone: ['0905111223', '0774111223', '0702386544', '0389660779'],
+      contactPoint: [
+        { '@type': 'ContactPoint', telephone: '+84-905-111-223', contactType: 'customer service' },
+        { '@type': 'ContactPoint', telephone: '+84-702-386-544', contactType: 'sales' },
+      ],
     };
 
     const product = {
@@ -177,7 +178,6 @@
             price: currentPrice,
             availability: getAvailability(),
             seller: { '@id': `${BASE_URL}/#organization` },
-            ...(oldPrice && oldPrice > currentPrice ? { highPrice: oldPrice } : {}),
           }
         : undefined,
     };
