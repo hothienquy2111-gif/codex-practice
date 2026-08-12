@@ -25,7 +25,6 @@ const noindexPages = new Set([
   '404.html',
   'compare.html',
   'other-products.html',
-  'product-detail.html',
   'san-pham-gia-dinh.html',
   'sua-tivi-da-nang.html',
 ]);
@@ -48,7 +47,7 @@ for (const page of publicPages) {
   if (!/<meta\s+name=["']viewport["']/i.test(source)) errors.push(`${page}: thiếu viewport.`);
   if (!title) errors.push(`${page}: thiếu title.`);
   if (!description) errors.push(`${page}: thiếu meta description.`);
-  if (page !== 'product-detail.html' && h1Count !== 1) errors.push(`${page}: cần đúng một H1 tĩnh, hiện có ${h1Count}.`);
+  if (h1Count !== 1) errors.push(`${page}: cần đúng một H1 tĩnh, hiện có ${h1Count}.`);
   if (!canonicalOptional.has(page) && !canonical.startsWith(SITE_ORIGIN)) errors.push(`${page}: canonical sai hoặc thiếu.`);
   if (canonical.includes('github.io')) errors.push(`${page}: canonical còn dùng GitHub Pages.`);
   if (noindexPages.has(page) && !robots.toLowerCase().includes('noindex')) errors.push(`${page}: thiếu noindex.`);
@@ -74,6 +73,41 @@ for (const page of publicPages) {
     }
   }
 }
+
+const productTemplate = await read('product-detail.html');
+const rawProductRobots = capture(productTemplate, /<meta\s+name=["']robots["']\s+content=["']([^"']+)["']/i);
+const productBootstrap = capture(
+  productTemplate,
+  /<script\s+data-product-indexation-bootstrap>([\s\S]*?)<\/script>/i,
+);
+
+if (rawProductRobots.toLowerCase().includes('noindex')) {
+  errors.push('product-detail.html: raw HTML lại noindex mọi URL sản phẩm trước khi kiểm tra ID.');
+}
+if (!productBootstrap) {
+  errors.push('product-detail.html: thiếu product indexation bootstrap.');
+} else {
+  const bootstrapChecks = [
+    [/URLSearchParams\(window\.location\.search\)/, 'không đọc product ID từ URL'],
+    [/\^\[A-Za-z0-9\]/, 'không kiểm tra định dạng product ID'],
+    [/robots\.content\s*=\s*["']noindex,follow["']/, 'không fail closed bằng noindex'],
+    [/\.test\(productId\)\)\s*return/, 'không cho ID hợp lệ về hình thức tiếp tục render'],
+  ];
+  bootstrapChecks.forEach(([pattern, message]) => {
+    if (!pattern.test(productBootstrap)) errors.push(`product-detail.html: bootstrap ${message}.`);
+  });
+}
+
+const productRuntime = await read('product-detail.js');
+const runtimeChecks = [
+  [/setCanonicalUrl\(["']{2}\)/, 'không xóa canonical ở trạng thái non-index'],
+  [/setMetaContent\(["']meta\[name="robots"\]["'],\s*["']content["'],\s*["']noindex,follow["']\)/, 'không đặt noindex cho invalid/error'],
+  [/setJsonLd\(null\)/, 'không xóa Product JSON-LD cho invalid/error'],
+  [/renderProductsUpdating\(\)/, 'không có fail-closed network/error state'],
+];
+runtimeChecks.forEach(([pattern, message]) => {
+  if (!pattern.test(productRuntime)) errors.push(`product-detail.js: ${message}.`);
+});
 
 for (const file of ['robots.txt', 'sitemap.xml']) {
   const source = await read(file);

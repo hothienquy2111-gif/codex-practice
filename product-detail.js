@@ -43,7 +43,7 @@
   };
 
   const setJsonLd = (data = null) => {
-    document.head.querySelector('script[data-product-schema]')?.remove();
+    document.head.querySelectorAll('script[data-product-schema]').forEach((script) => script.remove());
     if (!data) return;
     const script = document.createElement('script');
     script.type = 'application/ld+json';
