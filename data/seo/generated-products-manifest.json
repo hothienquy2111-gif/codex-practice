@@ -1,0 +1,647 @@
+{
+  "version": 1,
+  "products": [
+    {
+      "id": "coocaa-32s3u-32-inch",
+      "slug": "coocaa-32s3u",
+      "url": "/san-pham/coocaa-32s3u.html",
+      "sourceHash": "f3879768f68f5544f7e9304d3d2ee99c6d537cac5576502106ab134d7c1266f1"
+    },
+    {
+      "id": "coocaa-32z85-32-inch",
+      "slug": "coocaa-32z85",
+      "url": "/san-pham/coocaa-32z85.html",
+      "sourceHash": "725168de898bbc3fc73dc49abdad31f6a4cb2a7740a037e0b17fac263875b5a5"
+    },
+    {
+      "id": "coocaa-43s3u-43-inch",
+      "slug": "coocaa-43s3u",
+      "url": "/san-pham/coocaa-43s3u.html",
+      "sourceHash": "577c712cfd89679dd6ada6b117e9d8fe2d3f22be169a67b7fbebc60e95eba27f"
+    },
+    {
+      "id": "coocaa-43z85-43-inch",
+      "slug": "coocaa-43z85",
+      "url": "/san-pham/coocaa-43z85.html",
+      "sourceHash": "58f6987f1e9cfa2b0317c5d10705d38ac4eabf7fc00b7321587a14eff075e9a5"
+    },
+    {
+      "id": "hisense-32a4q-32-inch",
+      "slug": "hisense-32a4q",
+      "url": "/san-pham/hisense-32a4q.html",
+      "sourceHash": "30f04997bdc7b3b5824c566b897aa0eaa91d33379a35c152b2021954910ade7c"
+    },
+    {
+      "id": "hisense-32q5s-32-inch",
+      "slug": "hisense-32q5s",
+      "url": "/san-pham/hisense-32q5s.html",
+      "sourceHash": "a353574561657b8725a849a529d404fab67b0480376033fa30b04519141ca9bf"
+    },
+    {
+      "id": "hisense-40a4q-40-inch",
+      "slug": "hisense-40a4q",
+      "url": "/san-pham/hisense-40a4q.html",
+      "sourceHash": "031fa23d5041ea954cf3855ed6c0e73af048750c15e4edc65ff3948a2fbfadcd"
+    },
+    {
+      "id": "hisense-40q5s-40-inch",
+      "slug": "hisense-40q5s",
+      "url": "/san-pham/hisense-40q5s.html",
+      "sourceHash": "1dd8e1d36ae5817082bcff43e52543085be02b5dec78e3fc8daf40aad94ba6ed"
+    },
+    {
+      "id": "hisense-43a4q-43-inch",
+      "slug": "hisense-43a4q",
+      "url": "/san-pham/hisense-43a4q.html",
+      "sourceHash": "ef874880023e784331700dde4188ef98d93057200f20a01c6f174b40b38cb819"
+    },
+    {
+      "id": "hisense-43a5s-43-inch",
+      "slug": "hisense-43a5s",
+      "url": "/san-pham/hisense-43a5s.html",
+      "sourceHash": "9aa4cd1345891bf0c92ff6e52bb92584b56558787756dc4a9157156b42ac3bf4"
+    },
+    {
+      "id": "lg-43lm5750ptc-43-inch",
+      "slug": "lg-43lm5750ptc",
+      "url": "/san-pham/lg-43lm5750ptc.html",
+      "sourceHash": "388c1267dda77b60db3dcd7546ea654ec0ba9b7a23f8288db9a13341db3cbdb4"
+    },
+    {
+      "id": "lg-43nu805bpsb-43-inch",
+      "slug": "lg-43nu805bpsb",
+      "url": "/san-pham/lg-43nu805bpsb.html",
+      "sourceHash": "e84682a9dca53c6fd07eb0105662bcd5b90a338cab6ec4e3eb4eb0e273a0ed98"
+    },
+    {
+      "id": "lg-43ua7350psb-43-inch",
+      "slug": "lg-43ua7350psb",
+      "url": "/san-pham/lg-43ua7350psb.html",
+      "sourceHash": "c6171eb2a7e92b90f71e5c4735b38ac6ab9d6256e3c3bf48dd2e2b99162178e2"
+    },
+    {
+      "id": "lg-43ua8055psa-43-inch",
+      "slug": "lg-43ua8055psa",
+      "url": "/san-pham/lg-43ua8055psa.html",
+      "sourceHash": "00128ebc4d06e5afa6a87ec3e1fed10cdc1fc7ae8127143779c49da1faaec2cb"
+    },
+    {
+      "id": "lg-50nano86tpa-50-inch",
+      "slug": "lg-50nano86tpa",
+      "url": "/san-pham/lg-50nano86tpa.html",
+      "sourceHash": "605d73bd9d59d97ecd8902c18f652168c0dc08f2a41169093ece528c2aba4f00"
+    },
+    {
+      "id": "lg-50nu805bpsb-50-inch",
+      "slug": "lg-50nu805bpsb",
+      "url": "/san-pham/lg-50nu805bpsb.html",
+      "sourceHash": "988960eb9c5cc86296957f90b4970390146717e35b5ea6a0d37e257ead9d2755"
+    },
+    {
+      "id": "lg-50ua7350psb-50-inch",
+      "slug": "lg-50ua7350psb",
+      "url": "/san-pham/lg-50ua7350psb.html",
+      "sourceHash": "2b328f5edf98a193ff06620478775c4e20357ce9245a7c78bec115d75243ffd3"
+    },
+    {
+      "id": "lg-50ua8055psa-50-inch",
+      "slug": "lg-50ua8055psa",
+      "url": "/san-pham/lg-50ua8055psa.html",
+      "sourceHash": "7c7409e8bcf9f6ff4c5b7e1d482a29e8eea696af5b1e926906540600bd1e4dc3"
+    },
+    {
+      "id": "lg-50uq8000psc-50-inch",
+      "slug": "lg-50uq8000psc",
+      "url": "/san-pham/lg-50uq8000psc.html",
+      "sourceHash": "bafe8a05f0085d1153a70c799f375acc08ef1856287ad20b38492880017dbdfe"
+    },
+    {
+      "id": "lg-55nu805bpsb-55-inch",
+      "slug": "lg-55nu805bpsb",
+      "url": "/san-pham/lg-55nu805bpsb.html",
+      "sourceHash": "ab483ebf1efecd86aa710fcffceec6dc23e4d189f7e161bf52b1417fd2ac9fc1"
+    },
+    {
+      "id": "lg-55nu855bpsa-55-inch",
+      "slug": "lg-55nu855bpsa",
+      "url": "/san-pham/lg-55nu855bpsa.html",
+      "sourceHash": "d85145e279bd002cd491f3758aa76d496f53b7dc6d6f23176f9c46e850d74f1f"
+    },
+    {
+      "id": "lg-55ua7350psb-55-inch",
+      "slug": "lg-55ua7350psb",
+      "url": "/san-pham/lg-55ua7350psb.html",
+      "sourceHash": "7eabd00074c771f10c91a9d870e9be08e5497bb310c30fb6aa02a7d1673abda9"
+    },
+    {
+      "id": "lg-55ua8055psa-55-inch",
+      "slug": "lg-55ua8055psa",
+      "url": "/san-pham/lg-55ua8055psa.html",
+      "sourceHash": "a1e2c296fabcfd6ed9d60dc8c3ace3ba8395294a0860d6621af87fdfff738c17"
+    },
+    {
+      "id": "lg-65nu805bpsb-65-inch",
+      "slug": "lg-65nu805bpsb",
+      "url": "/san-pham/lg-65nu805bpsb.html",
+      "sourceHash": "81e15d5cb717022fce570a62ebbd703954b584f907a0604400d5b31706724b67"
+    },
+    {
+      "id": "lg-65nu855bpsa-65-inch",
+      "slug": "lg-65nu855bpsa",
+      "url": "/san-pham/lg-65nu855bpsa.html",
+      "sourceHash": "fd886e9ab3215541529038ed18ca6d4f0f28bc87ae03f4e5bc65c8de5144cdbd"
+    },
+    {
+      "id": "lg-65ua7350psb-65-inch",
+      "slug": "lg-65ua7350psb",
+      "url": "/san-pham/lg-65ua7350psb.html",
+      "sourceHash": "c99747bbc3883c63a93b3eee6167460cdcb952c1baccc7e9f0e30694f8f1a625"
+    },
+    {
+      "id": "lg-75nu805bpsb-75-inch",
+      "slug": "lg-75nu805bpsb",
+      "url": "/san-pham/lg-75nu805bpsb.html",
+      "sourceHash": "121f9a2ff6ade2db4bdd07fa8200e4e062a95a579112bcaefb71e811a7e769fe"
+    },
+    {
+      "id": "lg-75um6970-75-inch",
+      "slug": "lg-75um6970",
+      "url": "/san-pham/lg-75um6970.html",
+      "sourceHash": "aebd55219dd9870907020669a6e76aaf5d4caa7db1250c5aae98db69734e2d3b"
+    },
+    {
+      "id": "lg-85nu805bpsb-85-inch",
+      "slug": "lg-85nu805bpsb",
+      "url": "/san-pham/lg-85nu805bpsb.html",
+      "sourceHash": "622879453c8f8e29e6ce850de9a6747b69c22a744cce7cdfbe46d47b4e60962e"
+    },
+    {
+      "id": "samsung-49q65rak-49-inch",
+      "slug": "samsung-49q65rak",
+      "url": "/san-pham/samsung-49q65rak.html",
+      "sourceHash": "4e1a480cebf4eef2937d553ed7784144c95f9c7f307ef520df2328a959405247"
+    },
+    {
+      "id": "samsung-50au7002k-50-inch",
+      "slug": "samsung-50au7002k",
+      "url": "/san-pham/samsung-50au7002k.html",
+      "sourceHash": "aafb7d4f6346c007e909c213faf0a7a489a21a704413b4d41eb609988f3061d6"
+    },
+    {
+      "id": "samsung-50nu7400k-50-inch-copy",
+      "slug": "samsung-50nu7400k",
+      "url": "/san-pham/samsung-50nu7400k.html",
+      "sourceHash": "2ff666437de13aa237687f81a677270cd1f82aa306b265095da1481bb5b0ad91"
+    },
+    {
+      "id": "samsung-55q65rak-55-inch",
+      "slug": "samsung-55q65rak",
+      "url": "/san-pham/samsung-55q65rak.html",
+      "sourceHash": "bedf32b0303f252c110b535dabdafab2b838064fff4f380817d1c3869c803f31"
+    },
+    {
+      "id": "samsung-65ru7100k-65-inch",
+      "slug": "samsung-65ru7100k",
+      "url": "/san-pham/samsung-65ru7100k.html",
+      "sourceHash": "8ce0334357a53f52798d5a78649c410811950ac28c56492dcd8ae5fa5f9d2ee3"
+    },
+    {
+      "id": "samsung-ls32h5000f-32-inch",
+      "slug": "samsung-ls32h5000f",
+      "url": "/san-pham/samsung-ls32h5000f.html",
+      "sourceHash": "dde73842230a4234c87216ea5d4afc1209eb0b21219e85ee23e4efb9c3939f5d"
+    },
+    {
+      "id": "samsung-qa43q7fa-43-inch",
+      "slug": "samsung-qa43q7fa",
+      "url": "/san-pham/samsung-qa43q7fa.html",
+      "sourceHash": "396996365ad86ea0c4d1338ff89ccb17d6ede20499666ffe9c91f00e2ac92b4d"
+    },
+    {
+      "id": "samsung-qa50q7fa-50-inch",
+      "slug": "samsung-qa50q7fa",
+      "url": "/san-pham/samsung-qa50q7fa.html",
+      "sourceHash": "9ec5d2ba1156ddcbc80139b6d348082678eb873923aa1fdcc654b9dbf1579a35"
+    },
+    {
+      "id": "samsung-qa55q6fa-55-inch",
+      "slug": "samsung-qa55q6fa",
+      "url": "/san-pham/samsung-qa55q6fa.html",
+      "sourceHash": "07d9d669f459f55c1f0b6c0b1b4cd2abd225645b5f34af099528216187ebf4d0"
+    },
+    {
+      "id": "samsung-qa55q7fa-55-inch",
+      "slug": "samsung-qa55q7fa",
+      "url": "/san-pham/samsung-qa55q7fa.html",
+      "sourceHash": "5342c29a2018aad4153bc9844b07de5d2f00084d8d0f8cf6dbc73cbe280df532"
+    },
+    {
+      "id": "samsung-qa65q6fa-65-inch",
+      "slug": "samsung-qa65q6fa",
+      "url": "/san-pham/samsung-qa65q6fa.html",
+      "sourceHash": "5481af9fa64756bc332f2c66ddd0607b60aba219c5b66e0505b152091e79a9ce"
+    },
+    {
+      "id": "samsung-qa65q7fa-65-inch",
+      "slug": "samsung-qa65q7fa",
+      "url": "/san-pham/samsung-qa65q7fa.html",
+      "sourceHash": "abf058fb129784582c034ee8f82209a41e44eb6d76f25373db9bbd57ed3a6b08"
+    },
+    {
+      "id": "samsung-qa65q8fa-65-inch",
+      "slug": "samsung-qa65q8fa",
+      "url": "/san-pham/samsung-qa65q8fa.html",
+      "sourceHash": "335a3aeb733167620a34b77146a06dcc50e44d131a140e562cb8bfb433860e5b"
+    },
+    {
+      "id": "samsung-qa65qn70f-65-inch",
+      "slug": "samsung-qa65qn70f",
+      "url": "/san-pham/samsung-qa65qn70f.html",
+      "sourceHash": "ac71ea61df3a2c596e0838bfa017b0b3e1790f7a47b862b0ade8cddc7494d44c"
+    },
+    {
+      "id": "samsung-qa75q7fa-75-inch",
+      "slug": "samsung-qa75q7fa",
+      "url": "/san-pham/samsung-qa75q7fa.html",
+      "sourceHash": "96690e1fd98e2c41286782502b2177db9ce61bb98a7ef6da1022c01216a1b9a6"
+    },
+    {
+      "id": "samsung-qa85q7fa-85-inch",
+      "slug": "samsung-qa85q7fa",
+      "url": "/san-pham/samsung-qa85q7fa.html",
+      "sourceHash": "d0c9992a1630c7be093e08e4a4644b8633ae3be6957914a70062bd7bab6b66c5"
+    },
+    {
+      "id": "samsung-ua43m77ha-43-inch",
+      "slug": "samsung-ua43m77ha",
+      "url": "/san-pham/samsung-ua43m77ha.html",
+      "sourceHash": "0d56ca68740ed0e959709f79c241a5d488e0441251d68cf2dafe3358cebd94fb"
+    },
+    {
+      "id": "samsung-ua43u8500f-43-inch",
+      "slug": "samsung-ua43u8500f",
+      "url": "/san-pham/samsung-ua43u8500f.html",
+      "sourceHash": "aadea869eee388e644abcf4628c24b48f3efe792e8ed6f4ce3fafe83427512f2"
+    },
+    {
+      "id": "samsung-ua50u8500f-50-inch",
+      "slug": "samsung-ua50u8500f",
+      "url": "/san-pham/samsung-ua50u8500f.html",
+      "sourceHash": "11f493a350e3682f68a289f42bdb0a4bc7cd445f86674848d45362f0bb5c62bf"
+    },
+    {
+      "id": "samsung-ua55m77ha-55-inch",
+      "slug": "samsung-ua55m77ha",
+      "url": "/san-pham/samsung-ua55m77ha.html",
+      "sourceHash": "f44d30dba7536f91f3dca3581198cf725b1d1a7b4e0e33390c8e5326eca5b844"
+    },
+    {
+      "id": "samsung-ua55u8500f-55-inch",
+      "slug": "samsung-ua55u8500f",
+      "url": "/san-pham/samsung-ua55u8500f.html",
+      "sourceHash": "a988d5516a9683ee5770a216d4c8023b005e41a00db379f647d9694a9c354a16"
+    },
+    {
+      "id": "samsung-ua65u8500f-65-inch",
+      "slug": "samsung-ua65u8500f",
+      "url": "/san-pham/samsung-ua65u8500f.html",
+      "sourceHash": "f8ab9309166e2f26ae0238fb59ae16ea4f2a27af9f1789e7340028a2bed8e04c"
+    },
+    {
+      "id": "samsung-ua85bu8000-85-inch",
+      "slug": "samsung-ua85bu8000",
+      "url": "/san-pham/samsung-ua85bu8000.html",
+      "sourceHash": "7deebbc1d20119d21916a6db3d6e9e5b448994e36d9fa931b0d5b5d56656620f"
+    },
+    {
+      "id": "sony-32w830k-32-inch",
+      "slug": "sony-32w830k",
+      "url": "/san-pham/sony-32w830k.html",
+      "sourceHash": "4dcf508d1365c2b34b85b40d7d7530a9b3c44cba1dcb454f7135d409cc9df014"
+    },
+    {
+      "id": "sony-43s25-43-inch",
+      "slug": "sony-43s25",
+      "url": "/san-pham/sony-43s25.html",
+      "sourceHash": "cf303b6234a4a22778b248941d5c32254476335f9102feb0ddf2fcb7aa840416"
+    },
+    {
+      "id": "sony-43s30-43-inch",
+      "slug": "sony-43s30",
+      "url": "/san-pham/sony-43s30.html",
+      "sourceHash": "34968364a8585d2987b721f3e1827ed18e95f0222f1c3fb7c4f4e8f5c6d90841"
+    },
+    {
+      "id": "sony-43w800f-43-inch",
+      "slug": "sony-43w800f",
+      "url": "/san-pham/sony-43w800f.html",
+      "sourceHash": "6e7d9484724c7d4da8798d4dfca2975adebbeaeaf48f203f571965b50d4edb64"
+    },
+    {
+      "id": "sony-43w800g-43-inch",
+      "slug": "sony-43w800g",
+      "url": "/san-pham/sony-43w800g.html",
+      "sourceHash": "3a150dc26bb32a8228ec90a9a4f5c98303e57927b491e9e7b73aacd8f70f8d65"
+    },
+    {
+      "id": "sony-49x8500f-49-inch",
+      "slug": "sony-49x8500f",
+      "url": "/san-pham/sony-49x8500f.html",
+      "sourceHash": "6634eccab74c85db5de55abe3ad4176401f9d311c7f243c85e4619709d6e5531"
+    },
+    {
+      "id": "sony-50s25-50-inch",
+      "slug": "sony-50s25",
+      "url": "/san-pham/sony-50s25.html",
+      "sourceHash": "aa6e82c80ac6e135fb5237fe5acb52b87e89f29abc504d129e6cb235138c2926"
+    },
+    {
+      "id": "sony-55s25-55-inch",
+      "slug": "sony-55s25",
+      "url": "/san-pham/sony-55s25.html",
+      "sourceHash": "883a16b37066844adc729c8f2c5d18a054bf588b54b0fc18784a07775adcadc4"
+    },
+    {
+      "id": "sony-55x7500h-55-inch",
+      "slug": "sony-55x7500h",
+      "url": "/san-pham/sony-55x7500h.html",
+      "sourceHash": "9f50eaff4bf8c8ad1843a7470716f1ff82383e5b702a7bf594c4209ceaffe324"
+    },
+    {
+      "id": "sony-65s25-65-inch",
+      "slug": "sony-65s25",
+      "url": "/san-pham/sony-65s25.html",
+      "sourceHash": "94cc6ef442e23189bebc9e40b10aeb98df25c1066da5cb273a775a4158aa9e54"
+    },
+    {
+      "id": "sony-65x7500h-65-inch",
+      "slug": "sony-65x7500h",
+      "url": "/san-pham/sony-65x7500h.html",
+      "sourceHash": "4ce181e3a63e129958e3b765e4de4c6ad6d38f6e1af48f25c4c4da36c1d2fcb9"
+    },
+    {
+      "id": "sony-k-55s30-55-inch",
+      "slug": "sony-k-55s30",
+      "url": "/san-pham/sony-k-55s30.html",
+      "sourceHash": "c4f9dd4d638b7437dafe4390efda48f13d6ae8e8de2ed9789f4d30eb080cac02"
+    },
+    {
+      "id": "sony-kd-50x75k-50-inch",
+      "slug": "sony-kd-50x75k",
+      "url": "/san-pham/sony-kd-50x75k.html",
+      "sourceHash": "86e3f6dc6362b92c6ba9082288a853d68af5f7e9e49b92abcd95e86ed007c72a"
+    },
+    {
+      "id": "tcl-32s5k-32-inch",
+      "slug": "tcl-32s5k",
+      "url": "/san-pham/tcl-32s5k.html",
+      "sourceHash": "2cc9a8aaaa3ba96205a75720d54db3fe531a44e41ee834027b309e600602fad8"
+    },
+    {
+      "id": "tcl-40s5k-40-inch",
+      "slug": "tcl-40s5k",
+      "url": "/san-pham/tcl-40s5k.html",
+      "sourceHash": "02493aa7602455d4d48544b9113dd5f60456bbca5c4d8c36532b81fe2af4fe30"
+    },
+    {
+      "id": "tcl-43c69b-43-inch",
+      "slug": "tcl-43c69b",
+      "url": "/san-pham/tcl-43c69b.html",
+      "sourceHash": "727483b786cc8de8116e0bf2a665e27b0f78d61a236cddbe6969594b887fb311"
+    },
+    {
+      "id": "tcl-43p7k-43-inch",
+      "slug": "tcl-43p7k",
+      "url": "/san-pham/tcl-43p7k.html",
+      "sourceHash": "2d2ff11ec3fefe9431e3b1b5089bac8aba8064a02e68fdedf4b0e5e2efc88a8f"
+    },
+    {
+      "id": "tcl-43s5k-43-inch",
+      "slug": "tcl-43s5k",
+      "url": "/san-pham/tcl-43s5k.html",
+      "sourceHash": "4d5a3cf0907e5b32afb52ecbfbe08c832e54310c33885e82a1963ee503c9ff3f"
+    },
+    {
+      "id": "tcl-55a400m-55-inch",
+      "slug": "tcl-55a400m",
+      "url": "/san-pham/tcl-55a400m.html",
+      "sourceHash": "01c468f1ec35063d51199393190e7e596c6787536bab512ac708d1860665d60b"
+    },
+    {
+      "id": "tcl-55p638-55-inch",
+      "slug": "tcl-55p638",
+      "url": "/san-pham/tcl-55p638.html",
+      "sourceHash": "6a89e9e88099bc1816c844c5bf454ea7ad322789e14c1db1aa5c9f3b11748372"
+    },
+    {
+      "id": "tcl-55p7k-55-inch",
+      "slug": "tcl-55p7k",
+      "url": "/san-pham/tcl-55p7k.html",
+      "sourceHash": "c873415effdfea1414f1a3e31fb53889370bf5f1d1b6b4837e2ed3bdb101565b"
+    },
+    {
+      "id": "tcl-65a400-pro-65-inch",
+      "slug": "tcl-65a400-pro",
+      "url": "/san-pham/tcl-65a400-pro.html",
+      "sourceHash": "fae7d71b52b70855501aa115efa86a112a9b532a69cc2348b037290d6c010ef1"
+    },
+    {
+      "id": "tcl-65a400m-65-inch",
+      "slug": "tcl-65a400m",
+      "url": "/san-pham/tcl-65a400m.html",
+      "sourceHash": "65060e5fce79eda50e90a55da8de383b68800ee504d5744ec0d37453476a08a5"
+    },
+    {
+      "id": "tcl-65c69b-65-inch",
+      "slug": "tcl-65c69b",
+      "url": "/san-pham/tcl-65c69b.html",
+      "sourceHash": "79e63fb108b45acf2e41b9dc1e12c6a7893408a4ea478225732088bd8990bcd6"
+    },
+    {
+      "id": "tcl-65c6k-65-inch",
+      "slug": "tcl-65c6k",
+      "url": "/san-pham/tcl-65c6k.html",
+      "sourceHash": "ccc57ed6934b36ff830f1a6626221d8354b6947d552a64b2a3b05e598f57ed7e"
+    },
+    {
+      "id": "tcl-65p6k-65-inch",
+      "slug": "tcl-65p6k",
+      "url": "/san-pham/tcl-65p6k.html",
+      "sourceHash": "4b6430dfae86cc43e27ee62e344ad8242819941944668963ddc3bc7ae53ec529"
+    },
+    {
+      "id": "tcl-65p7l-65-inch",
+      "slug": "tcl-65p7l",
+      "url": "/san-pham/tcl-65p7l.html",
+      "sourceHash": "7bf33609d5885addfeaf05c4ac26c00c5cfde25424650972527a4cf890ec9da3"
+    },
+    {
+      "id": "tcl-75a400-pro-75-inch",
+      "slug": "tcl-75a400-pro",
+      "url": "/san-pham/tcl-75a400-pro.html",
+      "sourceHash": "f5dea7e223caa097d0356ceef25e636e8483b92e1cc77d76910227aaa7caf494"
+    },
+    {
+      "id": "tcl-75a400m-75-inch",
+      "slug": "tcl-75a400m",
+      "url": "/san-pham/tcl-75a400m.html",
+      "sourceHash": "51f131b09dced5fe68cac2a41f40e26468d4ad2129005421679de871654abffd"
+    },
+    {
+      "id": "tcl-75c6k-75-inch",
+      "slug": "tcl-75c6k",
+      "url": "/san-pham/tcl-75c6k.html",
+      "sourceHash": "5be3e733400b7f217d1ddd936c0bedbf62eec48a973905241a99dc4340a6eead"
+    },
+    {
+      "id": "tcl-75p6k-75-inch",
+      "slug": "tcl-75p6k",
+      "url": "/san-pham/tcl-75p6k.html",
+      "sourceHash": "2497e67e682b01efbe2029011880d14e02cf2b2a4d3c974d4dbe3394e7e5b3c8"
+    },
+    {
+      "id": "tcl-75p7l-75-inch",
+      "slug": "tcl-75p7l",
+      "url": "/san-pham/tcl-75p7l.html",
+      "sourceHash": "685ec4db9d8b4c3c00b937b7bb10fb6d9db1fafda0b646da7f33d168c6239145"
+    },
+    {
+      "id": "tcl-98p8k-98-inch",
+      "slug": "tcl-98p8k",
+      "url": "/san-pham/tcl-98p8k.html",
+      "sourceHash": "917c9482b72894310698ffcb6bb812d41a6b8f9ad38746ef334ca05fe37873a3"
+    },
+    {
+      "id": "tcl-98p8ls-98-inch",
+      "slug": "tcl-98p8ls",
+      "url": "/san-pham/tcl-98p8ls.html",
+      "sourceHash": "3298900fa7bd8b0a749421d3946034a3433001a4c9d2849269a022f8025f9875"
+    },
+    {
+      "id": "toshiba-32v35rp-32-inch",
+      "slug": "toshiba-32v35rp",
+      "url": "/san-pham/toshiba-32v35rp.html",
+      "sourceHash": "a7bee3dbc878eea71afbb16f0fc73275c41c775aea2b60788b796875c18f5476"
+    },
+    {
+      "id": "toshiba-32v35rp-43-inch",
+      "slug": "toshiba-43v35rp",
+      "url": "/san-pham/toshiba-43v35rp.html",
+      "sourceHash": "42da0e0b48e3bdb45aa80acdc8c227224758b03992937edd8452324dc88136bf"
+    },
+    {
+      "id": "toshiba-50c350lp-50",
+      "slug": "toshiba-50c350lp",
+      "url": "/san-pham/toshiba-50c350lp.html",
+      "sourceHash": "ec9654a7b3f429632d85e3b69a4cea2c2883c1937d3a3603ed0cbc3b7b5d4535"
+    },
+    {
+      "id": "toshiba-50c350lp-55-inch",
+      "slug": "toshiba-55c350lp",
+      "url": "/san-pham/toshiba-55c350lp.html",
+      "sourceHash": "f416bcc9911fc51c96dfce24c544a7974564ebeacd449fe4167cb728c83096db"
+    },
+    {
+      "id": "toshiba-65c350lp-65-inch",
+      "slug": "toshiba-65c350lp",
+      "url": "/san-pham/toshiba-65c350lp.html",
+      "sourceHash": "f86e221df4399f43f2969101fc1b4785b74f84228719b4d77d03c37e41b6dbda"
+    },
+    {
+      "id": "toshiba-75c350lp-75-inch",
+      "slug": "toshiba-75c350lp",
+      "url": "/san-pham/toshiba-75c350lp.html",
+      "sourceHash": "58c746b27c709f3cd121e182456d7fd5ef92d382cf1bfb233d6728c4fb2626c8"
+    },
+    {
+      "id": "xioami-l32mb-apsea-32-inch",
+      "slug": "xiaomi-l32mb-apsea",
+      "url": "/san-pham/xiaomi-l32mb-apsea.html",
+      "sourceHash": "b252c8006b23b67073036e500e6492265f885802f9ac228dd20880ae36cefdb6"
+    },
+    {
+      "id": "xioami-l43mb-afsea-43-inch",
+      "slug": "xiaomi-l43mb-afsea",
+      "url": "/san-pham/xiaomi-l43mb-afsea.html",
+      "sourceHash": "8ffdd89a122c2a912d1ac22309267b41e5a6ac0e618c7c66c46c9409a48c9f22"
+    },
+    {
+      "id": "xioami-l43mb-apsea-43-inch",
+      "slug": "xiaomi-l43mb-apsea",
+      "url": "/san-pham/xiaomi-l43mb-apsea.html",
+      "sourceHash": "60428356912d2502e73862681dc71ecd590420f03f165b8e0443140645105c4c"
+    },
+    {
+      "id": "xioami-l43mb-ausea-43-inch",
+      "slug": "xiaomi-l43mb-ausea",
+      "url": "/san-pham/xiaomi-l43mb-ausea.html",
+      "sourceHash": "3e4d5be44468b5af956a589a2f6769628c0a1e9911d8c09af7172f236843d5fb"
+    },
+    {
+      "id": "xioami-l55mb-apsea-55-inch",
+      "slug": "xiaomi-l55mb-apsea",
+      "url": "/san-pham/xiaomi-l55mb-apsea.html",
+      "sourceHash": "affc2b9f290eb50ef51c404efc410830141c5ced16e24e391b8aaac4eabbcbd0"
+    },
+    {
+      "id": "xioami-l55mb-asea-55-inch",
+      "slug": "xiaomi-l55mb-asea",
+      "url": "/san-pham/xiaomi-l55mb-asea.html",
+      "sourceHash": "838f34fda4c33fa48cf576f8b3e46b820df23a2579776cc0e954f07c0d77ab72"
+    },
+    {
+      "id": "xioami-l55mb-ssea-55-inch",
+      "slug": "xiaomi-l55mb-ssea",
+      "url": "/san-pham/xiaomi-l55mb-ssea.html",
+      "sourceHash": "c071970cdea4f7abb39244e42f49e482a25ec66d0f9b1904d334faa9e8e20e81"
+    },
+    {
+      "id": "xioami-l55mc-ssea-55-inch",
+      "slug": "xiaomi-l55mc-ssea",
+      "url": "/san-pham/xiaomi-l55mc-ssea.html",
+      "sourceHash": "eaec411fb6708b8ac185e38fd8ba9e818061533c8bf999fd39df4458060f4a8c"
+    },
+    {
+      "id": "xioami-l65mb-apsea-65-inch",
+      "slug": "xiaomi-l65mb-apsea",
+      "url": "/san-pham/xiaomi-l65mb-apsea.html",
+      "sourceHash": "5660ddd5afc74b2fa23753206f2581611df3d45f849436fb7f4e61134bf06207"
+    },
+    {
+      "id": "xioami-l65mb-asea-65-inch",
+      "slug": "xiaomi-l65mb-asea",
+      "url": "/san-pham/xiaomi-l65mb-asea.html",
+      "sourceHash": "9fb36217f8f6419df526c6406d08e98f55a49d2cdd3d11b1772c475031fa73e9"
+    },
+    {
+      "id": "xioami-l65mb-ssea-65-inch",
+      "slug": "xiaomi-l65mb-ssea",
+      "url": "/san-pham/xiaomi-l65mb-ssea.html",
+      "sourceHash": "de98da4d541b7373df95f566f035b9cdee8ea9b3c24c304f845e4af8260bd536"
+    },
+    {
+      "id": "xioami-l65mc-ssea-65-inch",
+      "slug": "xiaomi-l65mc-ssea",
+      "url": "/san-pham/xiaomi-l65mc-ssea.html",
+      "sourceHash": "10c16511160f500fef110245b908fb1979d7dbd85aec538ccfecd8f85665dd33"
+    },
+    {
+      "id": "xioami-l75mb-ssea-75-inch",
+      "slug": "xiaomi-l75mb-ssea",
+      "url": "/san-pham/xiaomi-l75mb-ssea.html",
+      "sourceHash": "69c944b387d29153a38e9e782f3718070167543b6fbc2f21f05928363698856c"
+    },
+    {
+      "id": "xioami-l75mc-ssea-75-inch",
+      "slug": "xiaomi-l75mc-ssea",
+      "url": "/san-pham/xiaomi-l75mc-ssea.html",
+      "sourceHash": "d4824f5141b8bb5acae31699c1723d66715d851a720215fabfed3101f722c8e2"
+    },
+    {
+      "id": "xoami-l98mc-stwn-98-inch",
+      "slug": "xiaomi-l98mc-stwn",
+      "url": "/san-pham/xiaomi-l98mc-stwn.html",
+      "sourceHash": "902a2f77126d4bc47879cf3efd3d279a2042ecc2b05602fa0bfdd45752f06896"
+    }
+  ]
+}
