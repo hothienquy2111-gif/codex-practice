@@ -521,7 +521,7 @@ const getProductImageForStorage = (product = {}) => {
 const buildComparableProduct = (product = {}) => {
   const id = getCompareProductId(product);
   const fullName = product.fullName || product.full_name || product.name || product.model || 'Tivi đang cập nhật';
-  const detailUrl = product.detail_url || product.detailUrl || (id ? `product-detail.html?id=${encodeURIComponent(id)}` : 'index.html#san-pham');
+  const detailUrl = product.detail_url || product.detailUrl || (id ? getProductCardDetailUrl({ id }) : 'index.html#san-pham');
   return {
     id,
     full_name: fullName,
@@ -1906,7 +1906,13 @@ if ('IntersectionObserver' in window && dom.sections.length) {
   dom.sections.forEach((section) => observer.observe(section));
 }
 
-const createProductDetailUrl = (product) => `product-detail.html?id=${encodeURIComponent(product.id)}`;
+const createProductDetailUrl = (product = {}) => {
+  const id = String(product?.id || '').trim();
+  if (!id) return '';
+  const mappedUrl = window.AnhMinhProductUrlMap?.[id]?.url;
+  if (typeof mappedUrl === 'string' && /^\/san-pham\/[a-z0-9-]+\.html$/.test(mappedUrl)) return mappedUrl;
+  return `product-detail.html?id=${encodeURIComponent(id)}`;
+};
 
 const getProductCardDetailUrl = (product = {}) => {
   if (!product?.id) return '';

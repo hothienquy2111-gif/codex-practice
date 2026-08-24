@@ -1,6 +1,8 @@
 import { access, readFile } from 'node:fs/promises';
 import { dirname, extname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { validateProductSeo } from './seo/validate-product-seo.mjs';
+import { validateProductSeoWorkflow } from './seo/validate-product-seo-workflow.mjs';
 
 const SITE_ORIGIN = 'https://www.anhminhstore.io.vn';
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
@@ -108,6 +110,9 @@ const runtimeChecks = [
 runtimeChecks.forEach(([pattern, message]) => {
   if (!pattern.test(productRuntime)) errors.push(`product-detail.js: ${message}.`);
 });
+
+errors.push(...await validateProductSeo());
+errors.push(...await validateProductSeoWorkflow());
 
 for (const file of ['robots.txt', 'sitemap.xml']) {
   const source = await read(file);

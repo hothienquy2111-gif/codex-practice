@@ -98,7 +98,10 @@
 
   const renderProductCard = (product = {}) => {
     const id = String(product.id || '').trim();
-    const detailUrl = id ? `product-detail.html?id=${encodeURIComponent(id)}` : '#';
+    const mappedUrl = window.AnhMinhProductUrlMap?.[id]?.url;
+    const detailUrl = typeof mappedUrl === 'string' && /^\/san-pham\/[a-z0-9-]+\.html$/.test(mappedUrl)
+      ? mappedUrl
+      : (id ? `product-detail.html?id=${encodeURIComponent(id)}` : '#');
     const title = product.full_name || product.fullName || product.model || 'Sản phẩm đang cập nhật';
     const image = product.image || (Array.isArray(product.images) ? product.images[0] : '');
     const size = product.capacity_or_size || product.capacityOrSize || product.size || 'Liên hệ tư vấn';

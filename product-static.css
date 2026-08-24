@@ -1,0 +1,59 @@
+/* Shared presentation for generated canonical product and collection pages. */
+:root { color-scheme: light; }
+.product-seo-page { margin: 0; overflow-x: hidden; background: #f6faff; color: #102a4c; }
+.product-seo-header { border-bottom: 1px solid #d7e6f7; background: #ffffff; }
+.product-seo-header > div, .product-seo-main, .product-seo-footer { width: min(1160px, calc(100% - 32px)); margin-inline: auto; }
+.product-seo-header > div { display: flex; align-items: center; justify-content: space-between; gap: 20px; min-height: 70px; }
+.product-seo-brand { color: #073a74; font-size: 1.2rem; font-weight: 800; text-decoration: none; }
+.product-seo-header nav { display: flex; flex-wrap: wrap; justify-content: end; gap: 18px; }
+.product-seo-header nav a { color: #23496f; font-weight: 650; text-decoration: none; }
+.product-seo-header nav a:hover, .product-seo-brand:hover { color: #0b78e3; }
+.product-seo-main { padding: 36px 0 54px; }
+.product-seo-product, .product-seo-hub { border: 1px solid #d7e6f7; border-radius: 16px; padding: clamp(20px, 4vw, 40px); background: #ffffff; box-shadow: 0 14px 36px rgba(19, 72, 121, 0.08); }
+.product-seo-breadcrumb { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; color: #5d7490; font-size: 0.92rem; }
+.product-seo-breadcrumb a { color: #1269bd; }
+.product-seo-layout { display: grid; grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr); gap: clamp(24px, 4vw, 52px); align-items: start; }
+.product-seo-layout > * { min-width: 0; }
+.product-seo-gallery-column { min-width: 0; max-width: 100%; }
+.product-seo-gallery { box-sizing: border-box; width: 100%; max-width: 100%; min-width: 0; margin: 0; overflow: hidden; border: 1px solid #d7e6f7; border-radius: 14px; background: linear-gradient(180deg, #ffffff, #f1f8ff); }
+.product-seo-gallery__main { display: block; box-sizing: border-box; inline-size: 100% !important; max-inline-size: 100% !important; min-inline-size: 0 !important; min-height: 280px; max-height: 460px; block-size: auto !important; object-fit: contain; }
+.product-seo-gallery figcaption { padding: 12px; border-top: 1px solid #d7e6f7; }
+.product-seo-gallery ul { display: flex; gap: 10px; padding: 0; margin: 0; overflow-x: auto; list-style: none; }
+.product-seo-gallery li { flex: 0 0 82px; }
+.product-seo-gallery button { display: block; box-sizing: border-box; width: 100%; border: 1px solid #d7e6f7; border-radius: 8px; padding: 3px; background: #fff; cursor: pointer; }
+.product-seo-gallery button[aria-current="true"] { border-color: #0d6fca; box-shadow: 0 0 0 2px rgba(13, 111, 202, 0.15); }
+.product-seo-gallery button:focus-visible { outline: 3px solid #f29a3d; outline-offset: 2px; }
+.product-seo-gallery li img { display: block; width: 100%; height: 58px; object-fit: contain; }
+.product-seo-image-placeholder { display: grid; min-height: 300px; place-items: center; border: 1px solid #d7e6f7; border-radius: 14px; background: #f1f8ff; color: #59728f; text-align: center; }
+.product-seo-brand-label { margin: 0; color: #0e70c8; font-size: 0.9rem; font-weight: 800; text-transform: uppercase; }
+.product-seo-model { margin: 6px 0 0; color: #54708f; font-weight: 700; }
+.product-seo-identity h1, .product-seo-hub h1 { margin: 12px 0 18px; color: #082e5a; font-size: clamp(1.8rem, 4vw, 2.65rem); line-height: 1.13; }
+.product-seo-description, .product-seo-hub > p { color: #3e5d7c; line-height: 1.7; }
+.product-seo-price { display: grid; gap: 3px; width: fit-content; margin: 18px 0; border-left: 4px solid #e46b21; padding: 8px 0 8px 14px; }
+.product-seo-price span, .product-seo-price del { color: #647a92; font-weight: 650; }
+.product-seo-price strong { color: #d45513; font-size: 1.62rem; }
+.product-seo-price del { font-size: 0.92rem; }
+.product-seo-contact-note { margin: 18px 0; color: #3e5d7c; line-height: 1.6; }
+.product-seo-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px; }
+.product-seo-actions a { border-radius: 8px; padding: 12px 16px; background: #0d6fca; color: #fff; font-weight: 750; text-decoration: none; }
+.product-seo-actions a + a { border: 1px solid #0d6fca; background: #fff; color: #0d6fca; }
+.product-seo-specs, .product-seo-highlights, .product-seo-related { margin-top: 42px; padding-top: 30px; border-top: 1px solid #d7e6f7; }
+.product-seo-specs h2, .product-seo-highlights h2, .product-seo-related h2 { margin: 0 0 16px; color: #082e5a; font-size: 1.32rem; }
+.product-seo-specs dl { display: grid; gap: 0; margin: 0; }
+.product-seo-specs dl > div { display: grid; grid-template-columns: minmax(150px, 0.42fr) minmax(0, 1fr); gap: 16px; padding: 11px 0; border-bottom: 1px solid #e6eff8; }
+.product-seo-specs dt { color: #58718d; font-weight: 700; }
+.product-seo-specs dd { margin: 0; color: #153b63; line-height: 1.6; }
+.product-seo-spec-group { margin-top: 26px; }
+.product-seo-spec-group h2 { font-size: 1.08rem; }
+.product-seo-highlights ul { display: grid; gap: 10px; padding-left: 20px; color: #335574; line-height: 1.6; }
+.product-seo-related ul, .product-seo-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; padding: 0; margin: 0; list-style: none; }
+.product-seo-related li, .product-seo-list li { display: grid; gap: 6px; border: 1px solid #d7e6f7; border-radius: 10px; padding: 15px; background: #fbfdff; }
+.product-seo-related a, .product-seo-list a { color: #0a58a5; font-weight: 750; line-height: 1.45; text-decoration: none; }
+.product-seo-related span, .product-seo-list small { color: #617b95; }
+.product-seo-list li strong { color: #d45513; }
+.product-seo-pagination { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 28px; }
+.product-seo-pagination a { min-width: 36px; padding: 8px 11px; border: 1px solid #b9d6f1; border-radius: 8px; color: #0d64b7; text-align: center; text-decoration: none; }
+.product-seo-pagination a[aria-current="page"] { background: #0d6fca; color: #fff; }
+.product-seo-footer { padding: 28px 0 48px; color: #4b6683; font-size: 0.94rem; }
+.product-seo-footer a { margin-right: 14px; color: #0d64b7; }
+@media (max-width: 760px) { .product-seo-header > div { align-items: start; flex-direction: column; padding: 16px 0; } .product-seo-header nav { justify-content: start; gap: 12px; } .product-seo-layout { grid-template-columns: minmax(0, 1fr); } .product-seo-specs dl > div { grid-template-columns: 1fr; gap: 4px; } .product-seo-related ul, .product-seo-list { grid-template-columns: 1fr; } .product-seo-gallery__main { min-height: 220px; max-height: none; } }

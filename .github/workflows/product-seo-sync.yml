@@ -1,0 +1,58 @@
+name: Product SEO sync
+
+on:
+  workflow_dispatch:
+    inputs:
+      allow_catalog_collapse:
+        description: 'Allow an intentional catalog collapse after continuity checks'
+        required: false
+        type: boolean
+        default: false
+      catalog_override_reason:
+        description: 'Required audit reason when catalog collapse override is enabled'
+        required: false
+        type: string
+  schedule:
+    - cron: '17 */6 * * *'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: product-seo-sync
+  cancel-in-progress: false
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: main
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+      - name: Generate static product SEO
+        env:
+          SEO_ALLOW_CATALOG_COLLAPSE: ${{ github.event_name == 'workflow_dispatch' && inputs.allow_catalog_collapse && 'true' || 'false' }}
+          SEO_CATALOG_OVERRIDE_REASON: ${{ github.event_name == 'workflow_dispatch' && inputs.catalog_override_reason || '' }}
+        run: node scripts/seo/run-product-seo.mjs
+      - name: Validate generated SEO
+        run: node scripts/validate-seo.mjs
+      - name: Create or update draft SEO PR
+        uses: peter-evans/create-pull-request@22a9089034f40e5a961c8808d113e2c98fb63676 # v7.0.11
+        with:
+          token: ${{ github.token }}
+          branch: seo/automated-product-sync
+          delete-branch: false
+          draft: true
+          title: 'SEO products: sync catalog'
+          commit-message: 'chore(seo): sync generated product catalog'
+          body: |
+            Automated product SEO sync from the public storefront catalog.
+
+            - Runs static product generation and validation first.
+            - Uses public/anon catalog reads only; no database write, SQL, service role, or deployment.
+            - This PR remains Draft for owner review. It never auto-merges or deploys.

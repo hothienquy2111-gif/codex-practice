@@ -1,0 +1,24 @@
+{
+  "discovered": 107,
+  "eligible": 107,
+  "generated": 107,
+  "continuity": {
+    "previousCount": 107,
+    "currentCount": 107,
+    "retainedCount": 107,
+    "removedCount": 0,
+    "addedCount": 0,
+    "retentionRatio": 1,
+    "removalRatio": 0,
+    "countDropRatio": 0,
+    "status": "pass",
+    "triggeredRules": [],
+    "overrideUsed": false
+  },
+  "retired": [],
+  "missingBrand": [],
+  "missingModel": [],
+  "missingImage": [],
+  "missingPrice": [],
+  "skipped": []
+}
