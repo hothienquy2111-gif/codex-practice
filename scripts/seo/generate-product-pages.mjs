@@ -201,7 +201,7 @@ const staticShell = ({ title, description, canonical, body, schema, payload = nu
   ${payload ? `<script id="product-static-data" type="application/json">${safeJson(payload)}</script><script src="/product-url-map.js" defer></script><script src="/product-detail.js" defer></script><script src="/product-static.js" defer></script>` : ''}
 </body>
 </html>
-`;
+`.replace(/^[ \t]+$/gm, '');
 
 const buildProductPage = (product, products, map) => {
   const relativeUrl = map[product.id].url;

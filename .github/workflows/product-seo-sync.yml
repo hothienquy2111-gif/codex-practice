@@ -1,0 +1,43 @@
+name: Product SEO sync
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 */6 * * *'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: product-seo-sync
+  cancel-in-progress: false
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Generate static product SEO
+        run: node scripts/seo/run-product-seo.mjs
+      - name: Validate generated SEO
+        run: node scripts/validate-seo.mjs
+      - name: Create or update draft SEO PR
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: seo/automated-product-sync
+          delete-branch: false
+          draft: true
+          title: 'SEO products: sync catalog'
+          commit-message: 'chore(seo): sync generated product catalog'
+          body: |
+            Automated product SEO sync from the public storefront catalog.
+
+            - Runs static product generation and validation first.
+            - Uses public/anon catalog reads only; no database write, SQL, service role, or deployment.
+            - This PR remains Draft for owner review. It never auto-merges or deploys.
