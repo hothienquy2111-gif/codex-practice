@@ -1,4 +1,15 @@
 (() => {
+  const staticPayloadElement = document.querySelector('#product-static-data');
+  if (staticPayloadElement) {
+    try {
+      JSON.parse(staticPayloadElement.textContent || '{}');
+      document.documentElement.dataset.productStaticPage = 'true';
+      return;
+    } catch (error) {
+      console.warn('Dữ liệu static product không hợp lệ.', error);
+    }
+  }
+
   const productDetailRoot = document.querySelector('#product-detail-root');
   const params = new URLSearchParams(window.location.search);
   const productId = params.get('id');
@@ -20,6 +31,13 @@
       .toLowerCase()
       .replace(/\s+/g, ' ')
       .trim();
+
+  const getProductDetailUrl = (product = {}) => {
+    const id = String(product.id || '').trim();
+    const mappedUrl = window.AnhMinhProductUrlMap?.[id]?.url;
+    if (typeof mappedUrl === 'string' && /^\/san-pham\/[a-z0-9-]+\.html$/.test(mappedUrl)) return mappedUrl;
+    return id ? `product-detail.html?id=${encodeURIComponent(id)}` : 'index.html#san-pham';
+  };
 
   const setMetaContent = (selector, attribute, value) => {
     let element = document.head.querySelector(selector);
@@ -73,7 +91,7 @@
     const canonicalId = String(product.id || '').trim();
     if (!PRODUCT_ID_PATTERN.test(canonicalId)) return false;
 
-    const canonicalUrl = `${SITE_ORIGIN}${PRODUCT_PAGE_PATH}?id=${encodeURIComponent(canonicalId)}`;
+    const canonicalUrl = new URL(getProductDetailUrl(product), SITE_ORIGIN).href;
     const title = `${product.fullName} - Anh Minh Store`;
     const description = buildProductDescription(product);
     const images = product.images.map(toAbsoluteHttpUrl).filter(Boolean);
@@ -904,7 +922,7 @@
   };
 
   const buildReferenceCard = (product) => {
-    const detailUrl = `product-detail.html?id=${encodeURIComponent(product.id)}`;
+    const detailUrl = getProductDetailUrl(product);
     const placeholder = renderTvPlaceholder(product.fullName);
     const imageMarkup = product.image
       ? `<img class="product-card__image" src="${escapeDetailHtml(product.image)}" alt="${escapeDetailHtml(product.fullName)}" loading="lazy" decoding="async" /><div class="product-card__fallback" aria-hidden="true">${placeholder}</div>`
@@ -1095,7 +1113,7 @@
     ...product,
     full_name: product.fullName,
     image_url: product.image,
-    detail_url: `product-detail.html?id=${encodeURIComponent(product.id)}`,
+    detail_url: getProductDetailUrl(product),
     original_price: product.oldPrice,
     operating_system: product.operating_system || findSpecificationValue(product, ['hệ điều hành', 'he dieu hanh', 'operating system']),
     production_year: product.production_year || findSpecificationValue(product, ['năm sản xuất', 'nam san xuat', 'model year', 'year']),
@@ -1112,7 +1130,7 @@
     type: product.type,
     price: product.price,
     image_url: product.image,
-    detail_url: `product-detail.html?id=${encodeURIComponent(product.id)}`,
+    detail_url: getProductDetailUrl(product),
     viewed_at: new Date().toISOString(),
   });
 
