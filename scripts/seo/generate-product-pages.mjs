@@ -1,6 +1,7 @@
 import { mkdir, rename, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fetchPublicProducts, isIndexableProduct, parsePrice } from './product-source.mjs';
+import { assertCatalogContinuity, logCatalogContinuity } from './product-catalog-guard.mjs';
 import {
   SITE_ORIGIN, buildDescription, buildSlugBase, buildTitle, dataDirectory, escapeHtml,
   getBrandSlug, getSizeSlug, productDirectory, readJson, repositoryRoot, safeJson,
@@ -295,9 +296,14 @@ const writeAtomically = async (path, content) => {
 export const runGeneration = async () => {
   const allProducts = await fetchPublicProducts({ configPath });
   const eligible = assignUniqueDescriptions(assignUniqueTitles(allProducts.filter(isIndexableProduct)));
-  if (!eligible.length) throw new Error('Không có product eligible; dừng để giữ output cũ.');
-  const previousMap = await readJson(mapPath, {});
   const previousManifest = await readJson(manifestPath, { products: [] });
+  const continuity = assertCatalogContinuity({
+    previousProducts: previousManifest.products,
+    currentProducts: eligible,
+    env: process.env,
+  });
+  logCatalogContinuity(continuity);
+  const previousMap = await readJson(mapPath, {});
   const overrides = await readJson(overridesPath, {});
   const map = buildMap(eligible, previousMap, overrides);
   const urls = new Set(eligible.map((product) => map[product.id]?.url));
@@ -321,14 +327,14 @@ export const runGeneration = async () => {
     [snapshotPath, `${JSON.stringify({ version: 1, products: eligible }, null, 2)}\n`],
     [mapPath, `${JSON.stringify(runtimeMap, null, 2)}\n`],
     [manifestPath, `${JSON.stringify(manifest, null, 2)}\n`],
-    [reportPath, `${JSON.stringify({ discovered: allProducts.length, eligible: eligible.length, generated: eligible.length, retired: retired.map(({ id, slug, url }) => ({ id, slug, url })), ...dataWarnings }, null, 2)}\n`],
+    [reportPath, `${JSON.stringify({ discovered: allProducts.length, eligible: eligible.length, generated: eligible.length, continuity, retired: retired.map(({ id, slug, url }) => ({ id, slug, url })), ...dataWarnings }, null, 2)}\n`],
     [join(repositoryRoot, 'product-url-map.js'), `${GENERATED_HEADER}\nwindow.AnhMinhProductUrlMap = Object.freeze(${safeJson(runtimeMap)});\n`],
     [join(repositoryRoot, 'sitemap-products.xml'), buildProductSitemap(eligible, map)],
     [join(repositoryRoot, 'sitemap-product-hubs.xml'), buildHubSitemap(files)],
   ]);
   if (!(await readJson(overridesPath, null))) artifacts.set(overridesPath, '{\n}\n');
   for (const [path, content] of [...files, ...artifacts]) await writeAtomically(path, content);
-  console.log(JSON.stringify({ discovered: allProducts.length, eligible: eligible.length, generated: eligible.length, retired: retired.length, skipped: dataWarnings.skipped.length, sitemapUrls: eligible.length, productIndexPages: pageCount, brandHubs: brandHubCount, sizeHubs: sizeHubCount, merchantFeedEligible: 0, warnings: Object.fromEntries(Object.entries(dataWarnings).filter(([key]) => key !== 'skipped').map(([key, value]) => [key, value.length])) }, null, 2));
+  console.log(JSON.stringify({ discovered: allProducts.length, eligible: eligible.length, generated: eligible.length, continuity, retired: retired.length, skipped: dataWarnings.skipped.length, sitemapUrls: eligible.length, productIndexPages: pageCount, brandHubs: brandHubCount, sizeHubs: sizeHubCount, merchantFeedEligible: 0, warnings: Object.fromEntries(Object.entries(dataWarnings).filter(([key]) => key !== 'skipped').map(([key, value]) => [key, value.length])) }, null, 2));
 };
 
 if (import.meta.url === `file://${process.argv[1]?.replace(/\\/g, '/')}`) {

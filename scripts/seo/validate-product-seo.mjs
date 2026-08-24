@@ -27,6 +27,14 @@ export const validateProductSeo = async () => {
   if (urls.length !== products.length) errors.push('Không phải mọi product eligible đều có URL map.');
   if (new Set(urls).size !== urls.length) errors.push('Phát hiện canonical URL trùng.');
   if (manifest.products.length !== products.length) errors.push('Manifest không khớp catalog eligible.');
+  if (!report?.continuity) {
+    errors.push('Báo cáo data quality thiếu catalog continuity evidence.');
+  } else {
+    if (report.continuity.currentCount !== products.length) errors.push('Continuity currentCount không khớp catalog eligible.');
+    if (report.continuity.previousCount < 0 || report.continuity.removedCount < 0 || report.continuity.addedCount < 0) errors.push('Continuity metrics không hợp lệ.');
+    if (report.continuity.overrideUsed && !report.continuity.overrideReason) errors.push('Continuity override thiếu lý do audit.');
+    if (!report.continuity.overrideUsed && Object.hasOwn(report.continuity, 'overrideReason')) errors.push('Continuity report không được giữ override reason khi override không dùng.');
+  }
 
   const titles = new Set();
   const descriptions = new Set();
