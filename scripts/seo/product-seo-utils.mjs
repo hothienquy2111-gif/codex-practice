@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
-import { dirname, join, resolve } from 'node:path';
+import path, { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { normalizeText } from './product-source.mjs';
 
@@ -9,6 +9,54 @@ export const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 export const repositoryRoot = resolve(scriptDirectory, '..', '..');
 export const dataDirectory = join(repositoryRoot, 'data', 'seo');
 export const productDirectory = join(repositoryRoot, 'san-pham');
+
+export const urlPathSegments = (urlPath) => {
+  const source = String(urlPath || '').trim();
+  if (!source || source.includes('\0')) throw new Error('URL path không hợp lệ.');
+
+  let decoded;
+  try {
+    decoded = decodeURIComponent(source);
+  } catch {
+    throw new Error('URL path có encoding không hợp lệ.');
+  }
+  if (decoded.includes('\\') || decoded.includes('?') || decoded.includes('#')) {
+    throw new Error('URL path chứa ký tự không hợp lệ.');
+  }
+
+  const withoutLeadingSlash = decoded.replace(/^\/+/, '');
+  if (/^[A-Za-z]:/.test(withoutLeadingSlash)) throw new Error('URL path không được là drive path.');
+  const segments = withoutLeadingSlash.split('/').filter(Boolean);
+  if (!segments.length || segments.some((segment) => segment === '.' || segment === '..')) {
+    throw new Error('URL path không được chứa traversal segment.');
+  }
+  return segments;
+};
+
+export const urlPathToFilesystemPath = (urlPath, { root = repositoryRoot, pathApi = path } = {}) => {
+  const rootPath = pathApi.resolve(root);
+  const resolvedPath = pathApi.resolve(rootPath, ...urlPathSegments(urlPath));
+  const relativePath = pathApi.relative(rootPath, resolvedPath);
+  if (relativePath === '..' || relativePath.startsWith(`..${pathApi.sep}`) || pathApi.isAbsolute(relativePath)) {
+    throw new Error('URL path nằm ngoài repository root.');
+  }
+  return resolvedPath;
+};
+
+export const isFilesystemPathWithin = (directory, filePath, { pathApi = path } = {}) => {
+  const relativePath = pathApi.relative(pathApi.resolve(directory), pathApi.resolve(filePath));
+  return Boolean(relativePath)
+    && relativePath !== '..'
+    && !relativePath.startsWith(`..${pathApi.sep}`)
+    && !pathApi.isAbsolute(relativePath);
+};
+
+export const filesystemPathToUrlPath = (filePath, { root = repositoryRoot, pathApi = path } = {}) => {
+  if (!isFilesystemPathWithin(root, filePath, { pathApi })) {
+    throw new Error('Filesystem path nằm ngoài repository root.');
+  }
+  return `/${pathApi.relative(pathApi.resolve(root), pathApi.resolve(filePath)).split(pathApi.sep).join('/')}`;
+};
 
 export const escapeHtml = (value = '') => String(value).replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
 export const safeJson = (data) => JSON.stringify(data).replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026');
