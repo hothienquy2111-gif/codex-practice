@@ -1,10 +1,12 @@
 import { mkdir, rename, writeFile } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { fetchPublicProducts, isIndexableProduct, parsePrice } from './product-source.mjs';
 import { assertCatalogContinuity, logCatalogContinuity } from './product-catalog-guard.mjs';
 import {
   SITE_ORIGIN, buildDescription, buildSlugBase, buildTitle, dataDirectory, escapeHtml,
-  getBrandSlug, getSizeSlug, productDirectory, readJson, repositoryRoot, safeJson,
+  filesystemPathToUrlPath, getBrandSlug, getSizeSlug, isFilesystemPathWithin,
+  productDirectory, readJson, repositoryRoot, safeJson,
   stableHash, toAbsoluteProductUrl, toRelativeProductUrl,
 } from './product-seo-utils.mjs';
 
@@ -281,9 +283,9 @@ const createWritePlan = (products, map) => {
 };
 
 const buildProductSitemap = (products, map) => ['<?xml version="1.0" encoding="UTF-8"?>', '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">', ...products.map((product) => ['  <url>', `    <loc>${xmlEscape(toAbsoluteProductUrl(map[product.id].slug))}</loc>`, product.updatedAt ? `    <lastmod>${xmlEscape(product.updatedAt)}</lastmod>` : '', '  </url>'].filter(Boolean).join('\n')), '</urlset>', ''].join('\n');
-const buildHubSitemap = (files) => ['<?xml version="1.0" encoding="UTF-8"?>', '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">', ...[...files.keys()].filter((path) => !path.startsWith(productDirectory + '\\') || /(?:index|trang-\d+)\.html$/i.test(path)).map((path) => {
-  const relative = path.slice(repositoryRoot.length).replace(/\\/g, '/');
-  return `  <url>\n    <loc>${xmlEscape(`${SITE_ORIGIN}${relative.endsWith('/index.html') ? relative.slice(0, -10) : relative}`)}</loc>\n  </url>`;
+const buildHubSitemap = (files) => ['<?xml version="1.0" encoding="UTF-8"?>', '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">', ...[...files.keys()].filter((filePath) => !isFilesystemPathWithin(productDirectory, filePath) || /(?:index|trang-\d+)\.html$/i.test(filePath)).map((filePath) => {
+  const relativeUrl = filesystemPathToUrlPath(filePath);
+  return `  <url>\n    <loc>${xmlEscape(`${SITE_ORIGIN}${relativeUrl.endsWith('/index.html') ? relativeUrl.slice(0, -10) : relativeUrl}`)}</loc>\n  </url>`;
 }), '</urlset>', ''].join('\n');
 
 const writeAtomically = async (path, content) => {
@@ -337,6 +339,6 @@ export const runGeneration = async () => {
   console.log(JSON.stringify({ discovered: allProducts.length, eligible: eligible.length, generated: eligible.length, continuity, retired: retired.length, skipped: dataWarnings.skipped.length, sitemapUrls: eligible.length, productIndexPages: pageCount, brandHubs: brandHubCount, sizeHubs: sizeHubCount, merchantFeedEligible: 0, warnings: Object.fromEntries(Object.entries(dataWarnings).filter(([key]) => key !== 'skipped').map(([key, value]) => [key, value.length])) }, null, 2));
 };
 
-if (import.meta.url === `file://${process.argv[1]?.replace(/\\/g, '/')}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
   runGeneration().catch((error) => { console.error(`SEO product generation FAIL: ${error.message}`); process.exitCode = 1; });
 }

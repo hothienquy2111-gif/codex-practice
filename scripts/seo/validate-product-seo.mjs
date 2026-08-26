@@ -1,6 +1,7 @@
 import { access, readFile } from 'node:fs/promises';
-import { join } from 'node:path';
-import { dataDirectory, productDirectory, readJson, repositoryRoot, SITE_ORIGIN, toAbsoluteProductUrl } from './product-seo-utils.mjs';
+import { join, resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
+import { dataDirectory, productDirectory, readJson, repositoryRoot, SITE_ORIGIN, toAbsoluteProductUrl, urlPathToFilesystemPath } from './product-seo-utils.mjs';
 import { parsePrice } from './product-source.mjs';
 
 const mapPath = join(dataDirectory, 'product-url-map.generated.json');
@@ -11,7 +12,6 @@ const errors = [];
 const warnings = [];
 
 const extract = (source, pattern) => source.match(pattern)?.[1]?.trim() || '';
-const htmlPathFor = (relativeUrl) => join(repositoryRoot, relativeUrl.replace(/^\//, '').replaceAll('/', '\\'));
 const getJsonLd = (source) => [...source.matchAll(/<script\s+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)].map((match) => JSON.parse(match[1]));
 
 export const validateProductSeo = async () => {
@@ -44,7 +44,7 @@ export const validateProductSeo = async () => {
       errors.push(`${product.id}: slug hoặc canonical path không hợp lệ.`);
       continue;
     }
-    const pagePath = htmlPathFor(entry.url);
+    const pagePath = urlPathToFilesystemPath(entry.url);
     try { await access(pagePath); } catch { errors.push(`${product.id}: thiếu file static ${entry.url}.`); continue; }
     const source = await readFile(pagePath, 'utf8');
     const title = extract(source, /<title>([\s\S]*?)<\/title>/i);
@@ -90,7 +90,7 @@ export const validateProductSeo = async () => {
   if (productLocs.some((loc) => loc.includes('product-detail.html') || loc.includes('github.io'))) errors.push('sitemap-products.xml còn legacy/GitHub Pages URL.');
   for (const retired of report?.retired || []) {
     if (!retired?.slug || !retired?.url) { errors.push('Báo cáo retirement thiếu slug hoặc URL.'); continue; }
-    const retiredPath = htmlPathFor(retired.url);
+    const retiredPath = urlPathToFilesystemPath(retired.url);
     try {
       const source = await readFile(retiredPath, 'utf8');
       if (!source.includes('name="robots" content="noindex,follow"')) errors.push(`${retired.url}: archive product phải noindex,follow.`);
@@ -120,7 +120,7 @@ export const validateProductSeo = async () => {
 
 const escapeForSearch = (value = '') => String(value).replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
 
-if (import.meta.url === `file://${process.argv[1]?.replace(/\\/g, '/')}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
   const result = await validateProductSeo();
   if (result.length) {
     console.error(`SEO V4 validation FAIL (${result.length} lỗi):\n${result.map((error) => `- ${error}`).join('\n')}`);

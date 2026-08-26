@@ -1,5 +1,13 @@
 # SEO V4 QA Evidence
 
+## Linux validator incident hotfix
+
+Scheduled run `32920929347` generated 107/107 products on Ubuntu but failed validation because the validator converted URL `/` separators into Windows `\` characters before filesystem access. Product URL semantics were correct; only URL-to-filesystem resolution was faulty.
+
+The validator now parses internal URL paths into forward-slash segments and resolves them with platform-native `node:path`. The same helper rejects traversal, encoded traversal, drive/UNC paths and null bytes. A related Windows-only directory-prefix check in hub sitemap generation was replaced with platform-native containment and relative-path helpers.
+
+Windows generation and validation pass with 107/107 products. The portability suite passes against both `path.win32` and `path.posix`, verifies all 107 current product files and representative hubs, and confirms a truly missing file still fails. No WSL, Docker or PR-triggered test workflow is available locally, so an actual Ubuntu workflow result remains pending owner merge; this limitation is not reported as a Linux PASS.
+
 ## Catalog and generation
 
 - Public catalog discovered: 107 active products.
