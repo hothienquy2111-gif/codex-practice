@@ -2799,6 +2799,77 @@ const normalizeOptionalBannerUrl = (value = '') => {
   }
 };
 
+const renderHomeRightBannerPlaceholder = (card) => {
+  if (!card) return;
+  card.classList.remove('is-loaded');
+  card.replaceChildren();
+  const title = document.createElement('span');
+  title.textContent = 'Banner 9:16';
+  const detail = document.createElement('small');
+  detail.textContent = 'Chưa có ảnh';
+  card.append(title, detail);
+};
+
+const loadSupabaseHomeRightBanner = async () => {
+  const slot = document.querySelector('[data-home-right-banner]');
+  const card = slot?.querySelector('.home-hero-right-banner-card');
+  if (!slot || !card) return;
+
+  const storeSupabase = window.AnhMinhSupabase || window.anhMinhSupabase;
+  if (!storeSupabase?.isConfigured || !storeSupabase.client) {
+    renderHomeRightBannerPlaceholder(card);
+    return;
+  }
+
+  try {
+    const { data: banner, error } = await storeSupabase.client
+      .from('hero_banners')
+      .select('title,image_url,alt_text,link_url,placement')
+      .eq('is_active', true)
+      .eq('placement', 'home_right_9_16')
+      .maybeSingle();
+    if (error) throw error;
+
+    const imageUrl = normalizeOptionalBannerUrl(banner?.image_url);
+    if (!imageUrl) {
+      renderHomeRightBannerPlaceholder(card);
+      return;
+    }
+
+    const image = document.createElement('img');
+    image.src = imageUrl;
+    image.alt = String(banner.alt_text || banner.title || 'Banner ưu đãi Anh Minh Store').trim();
+    image.decoding = 'async';
+    image.draggable = false;
+    image.addEventListener('error', () => renderHomeRightBannerPlaceholder(card), { once: true });
+
+    const linkUrl = normalizeOptionalBannerUrl(banner.link_url);
+    card.replaceChildren();
+    card.classList.add('is-loaded');
+    if (linkUrl) {
+      const link = document.createElement('a');
+      link.href = linkUrl;
+      link.setAttribute('aria-label', image.alt || 'Xem nội dung banner');
+      if (/^https?:/i.test(linkUrl)) {
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+      }
+      link.appendChild(image);
+      card.appendChild(link);
+    } else {
+      card.appendChild(image);
+    }
+  } catch (error) {
+    console.error('HOME_RIGHT_BANNER_LOAD_FAILED', {
+      code: error?.code || error?.status || 'UNKNOWN',
+      message: error?.message || 'Unknown banner load error',
+      details: error?.details || null,
+      hint: error?.hint || null,
+    });
+    renderHomeRightBannerPlaceholder(card);
+  }
+};
+
 const clearMiniBannerSlots = (strip, slots) => {
   slots.forEach((slot) => {
     slot.replaceChildren();
@@ -3151,6 +3222,7 @@ const initCarousel = async () => {
 
 initCarousel();
 loadSupabaseMiniBanners();
+loadSupabaseHomeRightBanner();
 
 let ticking = false;
 let lastScrollY = Math.max(0, window.scrollY || 0);

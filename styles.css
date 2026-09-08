@@ -252,6 +252,20 @@ p { line-height: 1.65; }
   font-weight: 600;
 }
 .home-hero-right-banner-card small { font-size: 0.78rem; color: #94a3b8; }
+.home-hero-right-banner-card.is-loaded { display: block; }
+.home-hero-right-banner-card > a,
+.home-hero-right-banner-card > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+}
+.home-hero-right-banner-card img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
 .carousel-frame,
 .carousel-shell,
 .hero-banner-carousel { position: relative; }
