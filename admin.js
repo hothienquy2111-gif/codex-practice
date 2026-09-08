@@ -1,9 +1,34 @@
 (() => {
+  // Production Admin never enables the local preview path; all dashboard data is
+  // loaded through the authenticated Supabase client below.
+  const isLocalAdminPreview = false;
+  const previewData = {};
+  const boxRegistry = window.AnhMinhBoxRegistry || {};
+  const registeredBoxes = Object.values(boxRegistry);
   const supabaseState = window.anhMinhSupabase || window.AnhMinhSupabase || {};
   const client = supabaseState.isReady ? supabaseState.client : null;
   const bucketName = supabaseState.bucketName || 'product-images';
   const bannerBucketName = 'site-banners';
   const maxBannerFileSize = 10 * 1024 * 1024;
+  const bannerTargetBytes = 95 * 1024;
+  const bannerHardLimitBytes = 100 * 1024;
+  const productTargetBytes = 185 * 1024;
+  const productHardLimitBytes = 200 * 1024;
+  const bannerQualityMax = 0.92;
+  const bannerQualityMin = 0.5;
+  const bannerQualityIterations = 7;
+  const bannerDimensionScale = 0.9;
+  const bannerMinDimension = 320;
+  const bannerConfigs = {
+    main: { maxWidth: 1920, maxHeight: 1080 },
+    vertical: { maxWidth: 1080, maxHeight: 1920, expectedRatio: 9 / 16, ratioTolerance: 0.035 },
+    // Mini slots are stable production placements; keep the editor ratio-neutral.
+    mini: { maxWidth: 1600, maxHeight: 900 },
+  };
+  const productImageConfigs = {
+    main: { maxWidth: 1600, maxHeight: 1600, targetBytes: productTargetBytes, hardLimitBytes: productHardLimitBytes, qualityMax: 0.94, qualityMin: 0.64, errorPrefix: 'PRODUCT' },
+    gallery: { maxWidth: 1600, maxHeight: 1600, targetBytes: productTargetBytes, hardLimitBytes: productHardLimitBytes, qualityMax: 0.92, qualityMin: 0.6, errorPrefix: 'PRODUCT' },
+  };
   const allowedBannerTypes = new Set(['image/jpeg', 'image/png', 'image/webp']);
   const ADMIN_IDLE_TIMEOUT_MS = 15 * 60 * 1000;
   const ADMIN_IDLE_WARNING_MS = 12 * 60 * 1000;
@@ -47,6 +72,9 @@
     formTitle: document.querySelector('[data-form-title]'),
     formMessage: document.querySelector('[data-form-message]'),
     existingImages: document.querySelector('[data-existing-images]'),
+    productMainPreview: document.querySelector('[data-product-main-preview]'),
+    productMainOptimization: document.querySelector('[data-product-main-optimization]'),
+    productGalleryEditor: document.querySelector('[data-product-gallery-editor]'),
     saveButton: document.querySelector('[data-save-product]'),
     formatSpecificationsButton: document.querySelector('[data-format-specifications]'),
     previewSpecificationsButton: document.querySelector('[data-preview-specifications]'),
@@ -61,21 +89,54 @@
     openBannerFormButton: document.querySelector('[data-open-banner-form]'),
     bannerForm: document.querySelector('[data-banner-form]'),
     bannerMessage: document.querySelector('[data-banner-message]'),
+    bannerPreview: document.querySelector('[data-banner-preview]'),
+    bannerOptimization: document.querySelector('[data-banner-optimization]'),
     banners: document.querySelector('[data-admin-banners]'),
     saveBannerButton: document.querySelector('[data-save-banner]'),
     cancelBannerFormButton: document.querySelector('[data-cancel-banner-form]'),
     rightBannerForm: document.querySelector('[data-right-banner-form]'),
     rightBannerMessage: document.querySelector('[data-right-banner-message]'),
     rightBannerPreview: document.querySelector('[data-right-banner-preview]'),
+    rightBannerOptimization: document.querySelector('[data-right-banner-optimization]'),
     rightBannerCurrent: document.querySelector('[data-admin-right-banner-current]'),
     saveRightBannerButton: document.querySelector('[data-save-right-banner]'),
     deleteRightBannerButton: document.querySelector('[data-delete-right-banner]'),
+    miniBannerSlots: document.querySelectorAll('[data-mini-banner-slot]'),
     stickerLibraryOptions: document.querySelector('[data-sticker-library-options]'),
     uploadStickerAssetButton: document.querySelector('[data-upload-sticker-asset]'),
     stickerLibraryMessage: document.querySelector('[data-sticker-library-message]'),
+    campaignSearch: document.querySelector('[data-campaign-search]'),
+    campaignCount: document.querySelector('[data-campaign-count]'),
+    campaignList: document.querySelector('[data-campaign-list]'),
+    campaignMessage: document.querySelector('[data-campaign-message]'),
+    openCampaignPicker: document.querySelector('[data-open-campaign-picker]'),
+    campaignPickerModal: document.querySelector('[data-campaign-picker-modal]'),
+    campaignPickerSearch: document.querySelector('[data-campaign-picker-search]'),
+    campaignPickerFilters: document.querySelectorAll('[data-campaign-picker-filter]'),
+    campaignPickerSelectAll: document.querySelector('[data-campaign-picker-select-all]'),
+    campaignPickerList: document.querySelector('[data-campaign-picker-list]'),
+    campaignPickerCount: document.querySelector('[data-campaign-picker-count]'),
+    campaignPickerAdd: document.querySelector('[data-campaign-picker-add]'),
+    boxSelectorList: document.querySelector('[data-box-selector-list]'),
+    managedBoxTitle: document.querySelector('[data-managed-box-title]'),
+    managedBoxStatus: document.querySelector('[data-managed-box-status]'),
   };
 
   let products = [];
+  const DEFAULT_BOX_KEY = 'tet_2027';
+  let managedBoxKey = DEFAULT_BOX_KEY;
+  let bulkTargetBoxKey = DEFAULT_BOX_KEY;
+  let activeFeaturedBoxKey = null;
+  let isBoxSwitchPending = false;
+  let campaign = { id: '', key: managedBoxKey, name: 'Tết 2027', is_active: false };
+  let campaignItems = [];
+  let campaignSearchTerm = '';
+  let selectedProductIds = new Set();
+  let selectedCampaignProductIds = new Set();
+  let campaignPickerSelectedIds = new Set();
+  let campaignPickerSearchTerm = '';
+  let campaignPickerFilter = 'all';
+  let isCampaignOperationPending = false;
 
   const getNextProductSortOrder = (type = '') => {
     const normalizedType = normalizeText(type);
@@ -94,14 +155,26 @@
   let activeAdminTab = 'tv-products';
   let currentProductArea = 'tv';
   let activeProductTypeFilter = 'all-tv';
+  const productTypeFiltersByArea = { tv: 'all-tv', home: 'all-home' };
   let productSearchTerm = '';
+  const productSearchTermsByArea = { tv: '', home: '' };
   let productSearchTimer = null;
+  const createBannerFileState = () => ({ sourceFile: null, optimizedFile: null, result: null, previewUrl: '', processing: false, error: null, token: 0 });
   let removedProductImages = new Set();
   let currentProductImages = [];
+  let currentMainImage = '';
+  let galleryItems = [];
+  let galleryDragId = '';
+  const productMainImageState = createBannerFileState();
+  const productGalleryProcessing = new Map();
   let banners = [];
   let stickerAssets = [];
   let editingBanner = null;
   let rightBanner = null;
+  const mainBannerFileState = createBannerFileState();
+  const rightBannerFileState = createBannerFileState();
+  const miniBannerFileStates = new Map(Array.from(dom.miniBannerSlots || []).map((slot) => [slot.dataset.miniBannerSlot, createBannerFileState()]));
+  let miniBannerRecords = new Map();
   let orders = [];
   let orderViewFilter = 'active';
   let isAdminVerified = false;
@@ -339,6 +412,397 @@
     const extension = parts.length > 1 ? `.${slugify(parts.pop())}` : '';
     const base = slugify(parts.join('.') || 'anh-minh-store-banner') || 'anh-minh-store-banner';
     return `${Date.now()}-${base}${extension}`;
+  };
+  const formatBannerBytes = (bytes = 0) => {
+    const value = Number(bytes) || 0;
+    if (value < 1024) return `${value} B`;
+    if (value < 1024 * 1024) return `${(value / 1024).toFixed(value < 10 * 1024 ? 1 : 0)} KB`;
+    return `${(value / (1024 * 1024)).toFixed(2)} MB`;
+  };
+  const formatBannerDimensions = (width, height) => `${Math.round(width)}×${Math.round(height)}px`;
+  const getBannerExtension = (mimeType = '') => ({
+    'image/jpeg': '.jpg',
+    'image/png': '.png',
+    'image/webp': '.webp',
+  }[mimeType] || '.img');
+  const replaceBannerFileExtension = (name = '', mimeType = '') => {
+    const base = String(name || 'anh-minh-store-banner').replace(/\.[^.]*$/, '') || 'anh-minh-store-banner';
+    return `${base}${getBannerExtension(mimeType)}`;
+  };
+  const createFileFromBannerBlob = (blob, name, lastModified = Date.now()) => {
+    try {
+      return new File([blob], name, { type: blob.type, lastModified });
+    } catch {
+      blob.name = name;
+      blob.lastModified = lastModified;
+      return blob;
+    }
+  };
+  const canvasToBannerBlob = (canvas, mimeType, quality) => new Promise((resolve, reject) => {
+    if (typeof canvas.toBlob !== 'function') {
+      reject(new Error('BANNER_CANVAS_UNSUPPORTED'));
+      return;
+    }
+    canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error('BANNER_ENCODE_FAILED')), mimeType, quality);
+  });
+  const loadBannerImage = async (file) => {
+    if (typeof window.createImageBitmap === 'function') {
+      try {
+        const bitmap = await window.createImageBitmap(file, { imageOrientation: 'from-image' });
+        return { source: bitmap, width: bitmap.width, height: bitmap.height, close: () => bitmap.close?.() };
+      } catch {
+        // Fall through to HTMLImageElement for browsers with partial createImageBitmap support.
+      }
+    }
+    const objectUrl = URL.createObjectURL(file);
+    try {
+      const image = await new Promise((resolve, reject) => {
+        const element = new Image();
+        element.decoding = 'async';
+        element.onload = () => resolve(element);
+        element.onerror = () => reject(new Error('BANNER_DECODE_FAILED'));
+        element.src = objectUrl;
+      });
+      return { source: image, width: image.naturalWidth, height: image.naturalHeight, close: () => {} };
+    } finally {
+      URL.revokeObjectURL(objectUrl);
+    }
+  };
+  const getBannerDimensions = (width, height, config, scale = 1) => {
+    const boundedScale = Math.min(1, config.maxWidth / width, config.maxHeight / height) * scale;
+    return {
+      width: Math.max(1, Math.round(width * boundedScale)),
+      height: Math.max(1, Math.round(height * boundedScale)),
+    };
+  };
+  const drawBannerCanvas = (source, dimensions) => {
+    const canvas = document.createElement('canvas');
+    canvas.width = dimensions.width;
+    canvas.height = dimensions.height;
+    const context = canvas.getContext('2d', { alpha: true });
+    if (!context) throw new Error('BANNER_CANVAS_UNSUPPORTED');
+    context.imageSmoothingEnabled = true;
+    context.imageSmoothingQuality = 'high';
+    context.drawImage(source, 0, 0, dimensions.width, dimensions.height);
+    return canvas;
+  };
+  const findBannerOutputMime = async (canvas, inputType, qualityMax = bannerQualityMax) => {
+    try {
+      const webpProbe = await canvasToBannerBlob(canvas, 'image/webp', qualityMax);
+      if (webpProbe.type === 'image/webp') return { mimeType: 'image/webp', initialBlob: webpProbe };
+    } catch {
+      // Use a native fallback below when WebP encoding is unavailable.
+    }
+    const fallbackType = inputType === 'image/png' ? 'image/png' : 'image/jpeg';
+    return { mimeType: fallbackType, initialBlob: null };
+  };
+  const findBestBannerEncode = async (canvas, mimeType, initialBlob = null, options = {}) => {
+    const targetBytes = options.targetBytes || bannerTargetBytes;
+    const qualityMax = options.qualityMax || bannerQualityMax;
+    const qualityMin = options.qualityMin || bannerQualityMin;
+    const iterations = options.qualityIterations || bannerQualityIterations;
+    const encode = (quality) => canvasToBannerBlob(canvas, mimeType, quality);
+    const maximum = initialBlob || await encode(qualityMax);
+    if (maximum.size <= targetBytes) return { blob: maximum, quality: qualityMax };
+    const minimum = await encode(qualityMin);
+    if (minimum.size > targetBytes) return null;
+    let best = { blob: minimum, quality: qualityMin };
+    let low = qualityMin;
+    let high = qualityMax;
+    for (let iteration = 0; iteration < iterations; iteration += 1) {
+      const quality = (low + high) / 2;
+      const candidate = await encode(quality);
+      if (candidate.size <= targetBytes) {
+        best = { blob: candidate, quality };
+        low = quality;
+      } else {
+        high = quality;
+      }
+    }
+    return best;
+  };
+  const optimizeImage = async (file, options = {}) => {
+    if (!file || !allowedBannerTypes.has(file.type)) throw new Error('BANNER_UNSUPPORTED_TYPE');
+    if (file.size > maxBannerFileSize) throw new Error('BANNER_INPUT_TOO_LARGE');
+    const config = { ...bannerConfigs.main, targetBytes: bannerTargetBytes, hardLimitBytes: bannerHardLimitBytes, qualityMax: bannerQualityMax, qualityMin: bannerQualityMin, errorPrefix: 'BANNER', ...options };
+    const errorPrefix = config.errorPrefix || 'BANNER';
+    const image = await loadBannerImage(file);
+    try {
+      if (!image.width || !image.height) throw new Error(`${errorPrefix}_DECODE_FAILED`);
+      if (config.expectedRatio && Math.abs((image.width / image.height) - config.expectedRatio) > (config.ratioTolerance || 0.035)) {
+        throw new Error(`BANNER_WRONG_RATIO:${image.width}:${image.height}`);
+      }
+      const originalDimensions = { width: image.width, height: image.height };
+      const firstDimensions = getBannerDimensions(image.width, image.height, config);
+      const needsResize = firstDimensions.width !== image.width || firstDimensions.height !== image.height;
+      if (file.size < config.hardLimitBytes && !needsResize) {
+        return {
+          file,
+          originalSize: file.size,
+          optimizedSize: file.size,
+          originalWidth: image.width,
+          originalHeight: image.height,
+          finalWidth: image.width,
+          finalHeight: image.height,
+          inputType: file.type,
+          outputType: file.type,
+          quality: null,
+          resized: false,
+          reusedOriginal: true,
+        };
+      }
+      let scale = 1;
+      let bestResult = null;
+      const maxDimensionPasses = 10;
+      for (let pass = 0; pass < maxDimensionPasses; pass += 1) {
+        const dimensions = getBannerDimensions(image.width, image.height, config, scale);
+        if (dimensions.width < bannerMinDimension && dimensions.height < bannerMinDimension) break;
+        const canvas = drawBannerCanvas(image.source, dimensions);
+        try {
+          const output = await findBannerOutputMime(canvas, file.type, config.qualityMax);
+          const encoded = await findBestBannerEncode(canvas, output.mimeType, output.initialBlob, config);
+          if (encoded) {
+            const outputName = replaceBannerFileExtension(file.name, output.mimeType);
+            const optimizedFile = createFileFromBannerBlob(encoded.blob, outputName, file.lastModified);
+            if (optimizedFile.size < config.hardLimitBytes) {
+              bestResult = {
+                file: optimizedFile,
+                originalSize: file.size,
+                optimizedSize: optimizedFile.size,
+                originalWidth: originalDimensions.width,
+                originalHeight: originalDimensions.height,
+                finalWidth: dimensions.width,
+                finalHeight: dimensions.height,
+                inputType: file.type,
+                outputType: optimizedFile.type || output.mimeType,
+                quality: encoded.quality,
+                resized: dimensions.width !== originalDimensions.width || dimensions.height !== originalDimensions.height,
+                reusedOriginal: false,
+              };
+              break;
+            }
+          }
+        } finally {
+          canvas.width = 1;
+          canvas.height = 1;
+        }
+        scale *= bannerDimensionScale;
+        await new Promise((resolve) => window.requestAnimationFrame ? window.requestAnimationFrame(resolve) : window.setTimeout(resolve, 0));
+      }
+      if (!bestResult) throw new Error(`${errorPrefix}_TARGET_UNREACHABLE`);
+      return bestResult;
+    } finally {
+      image.close();
+    }
+  };
+  const optimizeBannerImage = (file, options = {}) => optimizeImage(file, { ...bannerConfigs.main, targetBytes: bannerTargetBytes, hardLimitBytes: bannerHardLimitBytes, qualityMax: bannerQualityMax, qualityMin: bannerQualityMin, errorPrefix: 'BANNER', ...options });
+  const optimizeProductImage = async (file, options = {}) => {
+    if (!file || !allowedBannerTypes.has(file.type)) throw new Error('PRODUCT_UNSUPPORTED_TYPE');
+    if (file.size > maxBannerFileSize) throw new Error('PRODUCT_INPUT_TOO_LARGE');
+    const config = { ...productImageConfigs.gallery, ...options, outputType: 'image/webp' };
+    const image = await loadBannerImage(file);
+    try {
+      if (!image.width || !image.height) throw new Error('PRODUCT_DECODE_FAILED');
+      const originalDimensions = { width: image.width, height: image.height };
+      let scale = 1;
+      let bestResult = null;
+      const maxDimensionPasses = 12;
+      for (let pass = 0; pass < maxDimensionPasses; pass += 1) {
+        const dimensions = getBannerDimensions(image.width, image.height, config, scale);
+        const canvas = drawBannerCanvas(image.source, dimensions);
+        try {
+          const encoded = await findBestProductEncode(canvas, config);
+          if (encoded) {
+            const outputName = replaceBannerFileExtension(file.name, 'image/webp');
+            const optimizedFile = createFileFromBannerBlob(encoded.blob, outputName, file.lastModified);
+            if (optimizedFile.type === 'image/webp' && optimizedFile.size < config.hardLimitBytes) {
+              bestResult = {
+                file: optimizedFile,
+                originalSize: file.size,
+                optimizedSize: optimizedFile.size,
+                originalWidth: originalDimensions.width,
+                originalHeight: originalDimensions.height,
+                finalWidth: dimensions.width,
+                finalHeight: dimensions.height,
+                inputType: file.type,
+                outputType: 'image/webp',
+                quality: encoded.quality,
+                resized: dimensions.width !== originalDimensions.width || dimensions.height !== originalDimensions.height,
+                reusedOriginal: false,
+              };
+              break;
+            }
+          }
+        } finally {
+          canvas.width = 1;
+          canvas.height = 1;
+        }
+        scale *= bannerDimensionScale;
+        await new Promise((resolve) => window.requestAnimationFrame ? window.requestAnimationFrame(resolve) : window.setTimeout(resolve, 0));
+      }
+      if (!bestResult) throw new Error('PRODUCT_TARGET_UNREACHABLE');
+      return bestResult;
+    } finally {
+      image.close();
+    }
+  };
+  const findBestProductEncode = async (canvas, options = {}) => {
+    const targetBytes = options.targetBytes || productTargetBytes;
+    const hardLimitBytes = options.hardLimitBytes || productHardLimitBytes;
+    const qualityMax = options.qualityMax || 0.94;
+    const qualityMin = options.qualityMin || 0.6;
+    const iterations = options.qualityIterations || 8;
+    const encode = (quality) => canvasToBannerBlob(canvas, 'image/webp', quality);
+    let maximum;
+    try {
+      maximum = await encode(qualityMax);
+    } catch {
+      throw new Error('PRODUCT_ENCODE_FAILED');
+    }
+    if (maximum.type !== 'image/webp') throw new Error('PRODUCT_ENCODE_FAILED');
+    if (maximum.size < hardLimitBytes && maximum.size <= targetBytes) return { blob: maximum, quality: qualityMax };
+    let minimum;
+    try {
+      minimum = await encode(qualityMin);
+    } catch {
+      throw new Error('PRODUCT_ENCODE_FAILED');
+    }
+    if (minimum.type !== 'image/webp' || minimum.size > targetBytes) return null;
+    let best = { blob: minimum, quality: qualityMin };
+    let low = qualityMin;
+    let high = qualityMax;
+    for (let iteration = 0; iteration < iterations; iteration += 1) {
+      const quality = (low + high) / 2;
+      const candidate = await encode(quality);
+      if (candidate.size <= targetBytes) {
+        best = { blob: candidate, quality };
+        low = quality;
+      } else {
+        high = quality;
+      }
+    }
+    return best;
+  };
+  const releaseBannerFileState = (state) => {
+    if (state.previewUrl) URL.revokeObjectURL(state.previewUrl);
+    state.sourceFile = null;
+    state.optimizedFile = null;
+    state.result = null;
+    state.previewUrl = '';
+    state.processing = false;
+    state.error = null;
+    state.token += 1;
+  };
+  const renderBannerOptimization = (node, result = null, error = '') => {
+    if (!node) return;
+    if (error) {
+      node.className = 'admin-banner-optimization admin-banner-optimization--error';
+      node.innerHTML = `<strong>Không thể tối ưu ảnh</strong><span>${escapeHtml(error)}</span>`;
+      return;
+    }
+    if (!result) {
+      node.className = 'admin-banner-optimization';
+      node.replaceChildren();
+      return;
+    }
+    const reduction = result.originalSize ? Math.max(0, (1 - result.optimizedSize / result.originalSize) * 100) : 0;
+    const dimensionText = result.resized
+      ? `${formatBannerDimensions(result.originalWidth, result.originalHeight)} → ${formatBannerDimensions(result.finalWidth, result.finalHeight)}`
+      : formatBannerDimensions(result.finalWidth, result.finalHeight);
+    const formatText = result.inputType === result.outputType
+      ? result.outputType.replace('image/', '').toUpperCase()
+      : `${result.inputType.replace('image/', '').toUpperCase()} → ${result.outputType.replace('image/', '').toUpperCase()}`;
+    node.className = `admin-banner-optimization${result.reusedOriginal ? ' admin-banner-optimization--unchanged' : ' admin-banner-optimization--success'}`;
+    node.innerHTML = `<strong>${result.reusedOriginal ? 'Ảnh đã đạt chuẩn' : 'Ảnh đã được tối ưu'}</strong><span>${formatBannerBytes(result.originalSize)} → ${formatBannerBytes(result.optimizedSize)}${result.reusedOriginal ? ' · không cần nén lại' : ` · giảm ${reduction.toFixed(1)}%`}</span><span>${dimensionText} · ${escapeHtml(formatText)}</span>`;
+  };
+  const renderBannerPreview = (node, imageUrl = '', alt = 'Xem trước ảnh banner') => {
+    if (!node) return;
+    if (imageUrl) {
+      node.innerHTML = `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(alt)}" />`;
+      return;
+    }
+    node.innerHTML = '<div class="admin-banner-preview__placeholder">Chưa có ảnh tối ưu để xem trước</div>';
+  };
+  const renderMiniBannerPreview = (node, imageUrl = '', slotLabel = 'banner mini') => {
+    if (!node) return;
+    if (imageUrl) {
+      node.innerHTML = `<img src="${escapeHtml(imageUrl)}" alt="Xem trước ${escapeHtml(slotLabel)}" />`;
+      return;
+    }
+    node.innerHTML = `<div class="admin-banner-preview__placeholder">Chưa có ${escapeHtml(slotLabel)}</div>`;
+  };
+  const resetMiniBannerSlot = (slot) => {
+    const slotName = slot?.dataset.miniBannerSlot;
+    const state = miniBannerFileStates.get(slotName);
+    if (!slot || !state) return;
+    releaseBannerFileState(state);
+    const input = slot.querySelector('[data-mini-banner-input]');
+    if (input) input.value = '';
+    renderMiniBannerPreview(slot.querySelector('[data-mini-banner-preview]'), '', `banner mini ${slotName.replace('mini-', '')}`);
+    renderBannerOptimization(slot.querySelector('[data-mini-banner-optimization]'));
+    showMessage(slot.querySelector('[data-mini-banner-message]'), 'Chưa chọn ảnh.');
+  };
+  const validateMiniBannerFile = (file, messageNode) => {
+    if (!file) return true;
+    if (!allowedBannerTypes.has(file.type) || file.size > maxBannerFileSize) {
+      showMessage(messageNode, 'Ảnh mini phải là JPG, PNG hoặc WebP và dung lượng tối đa khoảng 10MB.', 'error');
+      return false;
+    }
+    return true;
+  };
+  const getBannerProcessingError = (error, vertical = false) => {
+    const code = String(error?.message || error || '');
+    if (code === 'BANNER_UNSUPPORTED_TYPE') return 'Ảnh phải là JPG, PNG hoặc WebP.';
+    if (code === 'BANNER_INPUT_TOO_LARGE') return 'Ảnh đầu vào vượt quá giới hạn 10 MB.';
+    if (code === 'BANNER_DECODE_FAILED') return 'Không đọc được ảnh. Vui lòng thử một file ảnh khác.';
+    if (code === 'BANNER_CANVAS_UNSUPPORTED' || code === 'BANNER_ENCODE_FAILED') return 'Trình duyệt không thể xử lý ảnh này.';
+    if (code === 'BANNER_TARGET_UNREACHABLE') return 'Không thể đưa ảnh xuống dưới 100 KB mà vẫn giữ kích thước hữu ích. Hãy thử ảnh đơn giản hơn.';
+    if (code.startsWith('BANNER_WRONG_RATIO:') && vertical) {
+      const [, width, height] = code.split(':');
+      return `Ảnh banner dọc cần gần tỉ lệ 9:16. File hiện tại là ${width}×${height}px.`;
+    }
+    return 'Không thể tối ưu ảnh. Hãy thử ảnh khác.';
+  };
+  const processBannerSelection = async ({ file, state, messageNode, previewNode, optimizationNode, saveButton, config, vertical = false, readyMessage = 'Đã tối ưu ảnh, file sẵn sàng để lưu.', reusedMessage = 'Ảnh đã đạt chuẩn, có thể lưu.' }) => {
+    const formNode = messageNode?.closest('form');
+    releaseBannerFileState(state);
+    renderBannerOptimization(optimizationNode);
+    if (!file) {
+      renderBannerPreview(previewNode);
+      formNode?.removeAttribute('aria-busy');
+      if (saveButton) saveButton.disabled = false;
+      return;
+    }
+    const token = state.token;
+    state.sourceFile = file;
+    state.processing = true;
+    formNode?.setAttribute('aria-busy', 'true');
+    if (saveButton) saveButton.disabled = true;
+    showMessage(messageNode, 'Đang tối ưu ảnh...', 'info');
+    await new Promise((resolve) => window.requestAnimationFrame ? window.requestAnimationFrame(resolve) : window.setTimeout(resolve, 0));
+    try {
+      const result = await optimizeBannerImage(file, config);
+      if (state.token !== token) return;
+      state.optimizedFile = result.file;
+      state.result = result;
+      state.previewUrl = URL.createObjectURL(result.file);
+      state.processing = false;
+      formNode?.removeAttribute('aria-busy');
+      renderBannerPreview(previewNode, state.previewUrl, vertical ? 'Xem trước banner dọc đã tối ưu' : 'Xem trước banner đã tối ưu');
+      renderBannerOptimization(optimizationNode, result);
+      showMessage(messageNode, result.reusedOriginal ? reusedMessage : readyMessage, 'success');
+      if (saveButton) saveButton.disabled = false;
+    } catch (error) {
+      if (state.token !== token) return;
+      state.processing = false;
+      formNode?.removeAttribute('aria-busy');
+      state.optimizedFile = null;
+      state.result = null;
+      renderBannerPreview(previewNode);
+      renderBannerOptimization(optimizationNode, null, getBannerProcessingError(error, vertical));
+      showMessage(messageNode, getBannerProcessingError(error, vertical), 'error');
+      if (saveButton) saveButton.disabled = true;
+    }
   };
   const getBannerStorageObjectPath = (storagePath = '') => normalizeText(storagePath).replace(/^site-banners\//, '');
   const getFormField = (name) => dom.form?.elements?.[name] || dom.form?.[name] || null;
@@ -605,8 +1069,19 @@
   };
 
   const closeAdminUi = () => {
+    releaseBannerFileState(mainBannerFileState);
+    releaseBannerFileState(rightBannerFileState);
+    releaseProductImageStates();
+    miniBannerFileStates.forEach((state, slotName) => {
+      releaseBannerFileState(state);
+      const slot = document.querySelector(`[data-mini-banner-slot="${slotName}"]`);
+      renderMiniBannerPreview(slot?.querySelector('[data-mini-banner-preview]'), '', `banner mini ${slotName.replace('mini-', '')}`);
+      showMessage(slot?.querySelector('[data-mini-banner-message]'), 'Chưa chọn ảnh.');
+      renderBannerOptimization(slot?.querySelector('[data-mini-banner-optimization]'));
+    });
     if (dom.modal) dom.modal.hidden = true;
     if (dom.duplicateModal) dom.duplicateModal.hidden = true;
+    if (dom.campaignPickerModal) dom.campaignPickerModal.hidden = true;
     if (dom.bannerForm) dom.bannerForm.hidden = true;
     document.body.classList.remove('admin-modal-open');
     editingProduct = null;
@@ -618,6 +1093,10 @@
     dom.duplicateForm?.reset();
     dom.bannerForm?.reset();
     dom.rightBannerForm?.reset();
+    renderBannerOptimization(dom.bannerOptimization);
+    renderBannerOptimization(dom.rightBannerOptimization);
+    renderBannerPreview(dom.bannerPreview);
+    renderRightBannerPreview();
     clearOverviewPreview();
     clearSpecificationPreview();
   };
@@ -633,6 +1112,10 @@
     stickerAssets = [];
     rightBanner = null;
     productSearchTerm = '';
+    productSearchTermsByArea.tv = '';
+    productSearchTermsByArea.home = '';
+    productTypeFiltersByArea.tv = 'all-tv';
+    productTypeFiltersByArea.home = 'all-home';
     orderViewFilter = 'active';
     if (dom.productSearchInput) dom.productSearchInput.value = '';
     if (dom.products) dom.products.replaceChildren();
@@ -656,6 +1139,15 @@
   };
 
   const requireAdminVerified = () => isAdminVerified || denyAdminAction();
+
+  const requireAdminWriteAccess = () => {
+    if (isLocalAdminPreview) {
+      showMessage(dom.adminMessage, 'Chế độ xem trước — chưa ghi dữ liệu.', 'info');
+      showMessage(dom.formMessage, 'Chế độ xem trước — chưa ghi dữ liệu.', 'info');
+      return false;
+    }
+    return requireAdminVerified();
+  };
 
   const handleSignedOut = (message = '') => {
     clearAdminState();
@@ -752,11 +1244,38 @@
 
   const loadAdminData = async () => {
     if (!isAdminVerified) return;
+    if (isLocalAdminPreview) {
+      products = Array.isArray(previewData.products) ? previewData.products.map((product) => ({ ...product })) : [];
+      orders = Array.isArray(previewData.orders) ? previewData.orders.map((order) => ({ ...order })) : [];
+      banners = Array.isArray(previewData.banners) ? previewData.banners.map((banner) => ({ ...banner })) : [];
+      stickerAssets = Array.isArray(previewData.stickerAssets) ? previewData.stickerAssets.map((asset) => ({ ...asset })) : [];
+      campaign = { ...campaign, ...(previewData.campaign || {}) };
+      campaignItems = Array.isArray(previewData.campaignItems) ? previewData.campaignItems.map((item) => ({ ...item })) : [];
+      try {
+        const storedCampaign = JSON.parse(window.localStorage.getItem('anhMinhTet2027CampaignPreview') || 'null');
+        if (storedCampaign?.campaign) campaign = { ...campaign, ...storedCampaign.campaign };
+        if (Array.isArray(storedCampaign?.campaignItems)) campaignItems = storedCampaign.campaignItems.map((item) => ({ ...item }));
+      } catch (error) { console.warn('CAMPAIGN_PREVIEW_STORAGE_READ_FAILED', error); }
+      rightBanner = previewData.rightBanner ? { ...previewData.rightBanner } : null;
+      renderStickerAssetOptions();
+      renderProducts();
+      renderOrders();
+      renderBanners();
+      renderRightBannerCurrent();
+      fillRightBannerForm(rightBanner);
+      await loadBoxSettings();
+      renderCampaign();
+      showMessage(dom.adminMessage, 'Chế độ xem trước — dữ liệu mẫu, chưa ghi dữ liệu.', 'info');
+      return;
+    }
     await loadStickerAssets({ silent: true });
     await loadProducts();
+    await loadCampaign();
+    await loadBoxSettings();
     await loadOrders();
     await loadBanners();
     await loadRightBanner();
+    await loadMiniBanners();
   };
 
   const activateDashboardAfterPasswordSignIn = async () => {
@@ -868,11 +1387,290 @@
     }).length;
   };
 
-  const updateProductSearchCount = (count) => {
-    const total = getProductTypeFilterTotal();
+  const updateProductSearchCount = (count, total = getProductTypeFilterTotal()) => {
     const typeLabel = getHomeProductFilterLabel(activeProductTypeFilter);
-    if (dom.productSearchCount) dom.productSearchCount.textContent = `Đang hiển thị ${count}/${total} sản phẩm trong ${typeLabel}`;
+    if (dom.productSearchCount) dom.productSearchCount.textContent = `Hiển thị ${count} / ${total} · ${typeLabel}`;
     if (dom.productSearchClear) dom.productSearchClear.disabled = !normalizeText(productSearchTerm);
+  };
+
+  const pruneProductSelection = () => {
+    const knownIds = new Set(products.map((product) => product.id));
+    selectedProductIds = new Set([...selectedProductIds].filter((id) => knownIds.has(id)));
+  };
+  const getSelectedProducts = () => products.filter((product) => selectedProductIds.has(product.id));
+  const getSelectedCampaignProducts = () => campaignItems.map(getCampaignProduct).filter((product) => product && selectedCampaignProductIds.has(product.id));
+  const getCampaignCategoryLabel = (product = {}) => isTvProduct(product) ? 'Tivi' : 'Sản phẩm gia đình';
+  const getCampaignPickerProducts = () => {
+    const term = normalizeSearchText(campaignPickerSearchTerm);
+    return products.filter((product) => {
+      const matchesType = campaignPickerFilter === 'all'
+        || (campaignPickerFilter === 'tv' && isTvProduct(product))
+        || (campaignPickerFilter === 'home' && isHomeProduct(product));
+      const text = normalizeSearchText([product.brand, product.model, product.full_name || product.fullName, product.type, product.category, product.subcategory].join(' '));
+      return matchesType && (!term || text.includes(term));
+    });
+  };
+  const syncIndeterminateCheckbox = (checkbox, selectedCount, total) => {
+    if (!checkbox) return;
+    checkbox.checked = total > 0 && selectedCount === total;
+    checkbox.indeterminate = selectedCount > 0 && selectedCount < total;
+    checkbox.setAttribute('aria-label', checkbox.checked ? 'Bỏ chọn tất cả kết quả hiện tại' : 'Chọn tất cả kết quả hiện tại');
+  };
+
+  const getCampaignProductIds = () => new Set(campaignItems.filter((item) => item.is_active !== false).map((item) => item.product_id));
+  const getCampaignProduct = (item) => products.find((product) => product.id === item.product_id);
+  const getManagedBoxLabel = () => boxRegistry[managedBoxKey]?.label || campaign.name || managedBoxKey;
+  const getBoxTargetOptions = () => registeredBoxes.map((box) => `<option value="${escapeHtml(box.key)}" ${bulkTargetBoxKey === box.key ? 'selected' : ''}>${escapeHtml(box.label)}</option>`).join('');
+  const renderBoxSelector = () => {
+    if (!dom.boxSelectorList) return;
+    const choices = [{ key: '', label: 'Không hiển thị Box chủ đề', count: 0 }, ...registeredBoxes.map((box) => ({
+      key: box.key,
+      label: box.label,
+      count: box.key === managedBoxKey ? campaignItems.length : 0,
+    }))];
+    dom.boxSelectorList.innerHTML = choices.map((box) => {
+      const selected = (activeFeaturedBoxKey || '') === box.key;
+      const isManaged = box.key && box.key === managedBoxKey;
+      return `<label class="admin-box-choice${selected ? ' is-selected' : ''}"><input type="radio" name="active-featured-box" data-active-box-key="${escapeHtml(box.key)}" ${selected ? 'checked' : ''} ${isBoxSwitchPending ? 'disabled' : ''}><span class="admin-box-choice__copy"><strong>${escapeHtml(box.label)}</strong>${box.key ? `<small>${box.count} sản phẩm · ${selected ? 'ĐANG HIỂN THỊ' : 'ĐANG TẮT'}</small>` : '<small>Homepage không hiển thị Box nào</small>'}</span>${box.key ? `<button class="btn btn--ghost admin-box-choice__manage" type="button" data-manage-box="${escapeHtml(box.key)}" ${isBoxSwitchPending ? 'disabled' : ''}>${isManaged ? 'Đang quản lý' : 'Quản lý'}</button>` : ''}</label>`;
+    }).join('');
+  };
+  const renderManagedBoxState = () => {
+    const box = boxRegistry[managedBoxKey];
+    if (dom.managedBoxTitle) dom.managedBoxTitle.textContent = box?.label || managedBoxKey;
+    if (dom.managedBoxStatus) {
+      const visible = activeFeaturedBoxKey === managedBoxKey;
+      dom.managedBoxStatus.textContent = visible ? 'ĐANG HIỂN THỊ' : 'ĐANG TẮT';
+      dom.managedBoxStatus.classList.toggle('is-active', visible);
+      dom.managedBoxStatus.classList.toggle('is-hidden', !visible);
+    }
+  };
+  const loadBoxSettings = async () => {
+    if (isLocalAdminPreview) {
+      activeFeaturedBoxKey = previewData.activeFeaturedBoxKey || null;
+      try {
+        const stored = JSON.parse(window.localStorage.getItem('anhMinhTet2027CampaignPreview') || 'null');
+        if (Object.prototype.hasOwnProperty.call(stored || {}, 'activeFeaturedBoxKey')) activeFeaturedBoxKey = stored.activeFeaturedBoxKey || null;
+      } catch (error) { console.warn('BOX_PREVIEW_SETTINGS_READ_FAILED', error); }
+      renderBoxSelector(); renderManagedBoxState();
+      return;
+    }
+    try {
+      const { data, error } = await client.from('storefront_settings').select('active_featured_box_key').eq('id', 'homepage').maybeSingle();
+      if (error) throw error;
+      activeFeaturedBoxKey = data?.active_featured_box_key || null;
+      renderBoxSelector(); renderManagedBoxState();
+    } catch (error) {
+      console.warn('BOX_SETTINGS_LOAD_FAILED', error);
+      activeFeaturedBoxKey = null;
+      renderBoxSelector(); renderManagedBoxState();
+      showMessage(dom.campaignMessage, 'Chưa tải được Box đang hiển thị. Cần chạy migration storefront_settings và kiểm tra RLS.', 'error');
+    }
+  };
+  const setActiveFeaturedBoxKey = async (key = '') => {
+    const nextKey = key && boxRegistry[key] ? key : null;
+    if (isBoxSwitchPending || nextKey === activeFeaturedBoxKey) return;
+    const previousKey = activeFeaturedBoxKey;
+    isBoxSwitchPending = true;
+    renderBoxSelector();
+    try {
+      if (isLocalAdminPreview) {
+        activeFeaturedBoxKey = nextKey;
+        previewData.activeFeaturedBoxKey = nextKey;
+        saveCampaignPreview();
+      } else {
+        const { data, error } = await client.from('storefront_settings')
+          .upsert({ id: 'homepage', active_featured_box_key: nextKey, updated_at: new Date().toISOString() })
+          .select('active_featured_box_key').single();
+        if (error) throw error;
+        activeFeaturedBoxKey = data?.active_featured_box_key || null;
+      }
+      showMessage(dom.campaignMessage, nextKey ? `Đã chuyển Box hiển thị sang ${boxRegistry[nextKey].label}.` : 'Đã ẩn Box chủ đề trên homepage.', 'success');
+    } catch (error) {
+      console.warn('BOX_SWITCH_FAILED', error);
+      activeFeaturedBoxKey = previousKey;
+      showMessage(dom.campaignMessage, 'Không thể đổi Box hiển thị. Trạng thái trước đó được giữ nguyên.', 'error');
+    } finally {
+      isBoxSwitchPending = false;
+      renderBoxSelector(); renderManagedBoxState();
+    }
+  };
+  const setManagedBoxKey = async (key = '') => {
+    if (!boxRegistry[key] || key === managedBoxKey) return;
+    managedBoxKey = key;
+    campaign = { id: '', key, name: boxRegistry[key].label, is_active: false };
+    campaignItems = [];
+    selectedCampaignProductIds.clear();
+    await loadCampaign();
+  };
+  const renderCampaign = () => {
+    if (!dom.campaignList) return;
+    if (dom.openCampaignPicker) dom.openCampaignPicker.disabled = isCampaignOperationPending;
+    renderBoxSelector();
+    renderManagedBoxState();
+    const term = normalizeSearchText(campaignSearchTerm);
+    const ordered = campaignItems.map((item, index) => ({ item, product: getCampaignProduct(item), index }))
+      .filter(({ product }) => product && (!term || normalizeSearchText([product.brand, product.model, product.full_name || product.fullName].join(' ')).includes(term)));
+    const orderedIds = new Set(campaignItems.map((item) => item.product_id));
+    selectedCampaignProductIds = new Set([...selectedCampaignProductIds].filter((id) => orderedIds.has(id)));
+    const selectedCount = selectedCampaignProductIds.size;
+    if (dom.campaignCount) dom.campaignCount.textContent = `${campaignItems.length} sản phẩm trong Box`;
+    if (!campaignItems.length) {
+      dom.campaignList.innerHTML = '<p class="admin-empty">Chưa có sản phẩm trong Box. Bấm “Thêm sản phẩm” để chọn từ toàn bộ catalog.</p>';
+      return;
+    }
+    dom.campaignList.innerHTML = `
+      ${selectedCount ? `<div class="admin-bulk-toolbar" role="status"><strong>Đã chọn ${selectedCount} sản phẩm</strong><div><button class="btn btn--secondary" type="button" data-bulk-campaign-current-remove ${isCampaignOperationPending ? 'disabled' : ''}>Bỏ khỏi Box</button><button class="btn btn--ghost" type="button" data-clear-campaign-selection ${isCampaignOperationPending ? 'disabled' : ''}>Bỏ chọn</button></div></div>` : ''}
+      <div class="admin-campaign-current"><h3>Sản phẩm trong Box · kéo để đổi thứ tự</h3>
+        <label class="admin-campaign-select-all"><input type="checkbox" data-campaign-select-all ${isCampaignOperationPending ? 'disabled' : ''} /> <span>Chọn tất cả kết quả hiện tại</span></label>
+        ${ordered.length ? ordered.map(({ item, product, index }) => `<article class="admin-campaign-row" draggable="true" data-campaign-item-id="${escapeHtml(item.id || item.product_id)}" data-campaign-product-id="${escapeHtml(product.id)}"><input type="checkbox" data-campaign-select="${escapeHtml(product.id)}" aria-label="Chọn ${escapeHtml(product.full_name || product.fullName || product.model)}" ${selectedCampaignProductIds.has(product.id) ? 'checked' : ''} ${isCampaignOperationPending ? 'disabled' : ''}><span class="admin-campaign-row__order">${index + 1}</span><div><strong>${escapeHtml(product.full_name || product.fullName || product.model)}</strong><small>${escapeHtml([getCampaignCategoryLabel(product), product.brand, product.type, product.size || product.capacity_or_size].filter(Boolean).join(' · '))}</small></div><button type="button" class="btn btn--ghost" data-campaign-remove="${escapeHtml(product.id)}" ${isCampaignOperationPending ? 'disabled' : ''}>Bỏ</button></article>`).join('') : '<p class="admin-empty">Không có sản phẩm trùng với tìm kiếm.</p>'}
+      </div>`;
+    syncIndeterminateCheckbox(dom.campaignList.querySelector('[data-campaign-select-all]'), ordered.filter(({ product }) => selectedCampaignProductIds.has(product.id)).length, ordered.length);
+    dom.campaignList.querySelectorAll('[data-campaign-select]').forEach((checkbox) => checkbox.closest('.admin-campaign-row')?.classList.toggle('is-selected', checkbox.checked));
+  };
+  const saveCampaignPreview = () => {
+    if (!isLocalAdminPreview) return;
+    previewData.campaign = { ...campaign };
+    previewData.campaignItems = campaignItems.map((item) => ({ ...item }));
+    try { window.localStorage.setItem('anhMinhTet2027CampaignPreview', JSON.stringify({ campaign, campaignItems, activeFeaturedBoxKey })); } catch (error) { console.warn('CAMPAIGN_PREVIEW_STORAGE_FAILED', error); }
+  };
+  const loadCampaign = async () => {
+    if (!isAdminVerified || !client) return;
+    try {
+      const { data: campaignData, error: campaignError } = await client.from('campaigns').select('*').eq('key', managedBoxKey).maybeSingle();
+      if (campaignError) throw campaignError;
+      campaign = campaignData || { key: managedBoxKey, name: boxRegistry[managedBoxKey]?.label || managedBoxKey, is_active: false };
+      if (campaign.id) {
+        const { data, error } = await client.from('campaign_items').select('*').eq('campaign_id', campaign.id).order('sort_order', { ascending: true });
+        if (error) throw error;
+        campaignItems = Array.isArray(data) ? data : [];
+      } else campaignItems = [];
+      renderCampaign();
+    } catch (error) {
+      console.warn('CAMPAIGN_LOAD_FAILED', error);
+      campaignItems = [];
+      renderCampaign();
+      showMessage(dom.campaignMessage, 'Chưa tải được dữ liệu Box. Cần chạy migration campaigns/campaign_items và kiểm tra RLS.', 'error');
+    }
+  };
+  const saveCampaign = async () => {
+    if (isLocalAdminPreview) { saveCampaignPreview(); renderCampaign(); return; }
+    if (!requireAdminWriteAccess()) return;
+    const payload = { key: managedBoxKey, name: campaign.name || boxRegistry[managedBoxKey]?.label || managedBoxKey, is_active: false };
+    if (campaign.id) payload.id = campaign.id;
+    const { data, error } = await client.from('campaigns').upsert(payload, { onConflict: 'key' }).select('*').single();
+    if (error) throw error;
+    campaign = data;
+  };
+  const saveCampaignItems = async () => {
+    if (isLocalAdminPreview) { saveCampaignPreview(); renderCampaign(); return; }
+    if (!requireAdminWriteAccess() || !campaign.id) return;
+    const payload = campaignItems.map((item, index) => ({ campaign_id: campaign.id, product_id: item.product_id, sort_order: index + 1, is_active: item.is_active !== false }));
+    const { error } = await client.from('campaign_items').upsert(payload, { onConflict: 'campaign_id,product_id' });
+    if (error) throw error;
+    await loadCampaign();
+  };
+  const runCampaignOperation = async (operation) => {
+    if (isCampaignOperationPending) return;
+    isCampaignOperationPending = true;
+    renderProducts(); renderCampaign(); renderCampaignPicker();
+    try { return await operation(); }
+    finally { isCampaignOperationPending = false; renderProducts(); renderCampaign(); renderCampaignPicker(); }
+  };
+  const addCampaignProducts = async (productIds = []) => runCampaignOperation(async () => {
+    const requestedIds = [...new Set(productIds)].filter((id) => products.some((product) => product.id === id));
+    const existingIds = getCampaignProductIds();
+    const missingIds = requestedIds.filter((id) => !existingIds.has(id));
+    if (!missingIds.length) { showMessage(dom.campaignMessage, `Các sản phẩm đã có trong Box ${getManagedBoxLabel()}.`, 'info'); return { added: 0, skipped: requestedIds.length }; }
+    let addedCount = missingIds.length;
+    if (isLocalAdminPreview) {
+      const start = campaignItems.reduce((max, item) => Math.max(max, Number(item.sort_order) || 0), 0);
+      missingIds.forEach((product_id, index) => campaignItems.push({ id: `preview-${product_id}`, product_id, sort_order: start + index + 1, is_active: true }));
+      saveCampaignPreview();
+    } else {
+      await saveCampaign();
+      const { data, error } = await client.rpc('append_campaign_items', { p_campaign_id: campaign.id, p_product_ids: missingIds });
+      if (error) {
+        const missingRpc = ['PGRST202', '42883'].includes(error.code) || /append_campaign_items|function .* does not exist/i.test(error.message || '');
+        if (!missingRpc) throw error;
+        const start = campaignItems.reduce((max, item) => Math.max(max, Number(item.sort_order) || 0), 0);
+        const payload = missingIds.map((product_id, index) => ({ campaign_id: campaign.id, product_id, sort_order: start + index + 1, is_active: true }));
+        const { data: fallbackData, error: fallbackError } = await client.from('campaign_items').upsert(payload, { onConflict: 'campaign_id,product_id' }).select('product_id');
+        if (fallbackError) throw fallbackError;
+        addedCount = Array.isArray(fallbackData) ? fallbackData.length : missingIds.length;
+      } else addedCount = Array.isArray(data) ? data.length : missingIds.length;
+      await loadCampaign();
+    }
+    const skippedCount = requestedIds.length - addedCount;
+    showMessage(dom.campaignMessage, `Đã thêm ${addedCount} sản phẩm vào Box ${getManagedBoxLabel()}.${skippedCount ? ` Đã có sẵn: ${skippedCount}.` : ''}`, 'success');
+    return { added: addedCount, skipped: skippedCount };
+  });
+  const removeCampaignProducts = async (productIds = []) => runCampaignOperation(async () => {
+    const requestedIds = [...new Set(productIds)];
+    const existingIds = getCampaignProductIds();
+    const removableIds = requestedIds.filter((id) => existingIds.has(id));
+    if (!removableIds.length) { showMessage(dom.campaignMessage, `Các sản phẩm đã không còn trong Box ${getManagedBoxLabel()}.`, 'info'); return { removed: 0, absent: requestedIds.length }; }
+    if (isLocalAdminPreview) {
+      campaignItems = campaignItems.filter((item) => !removableIds.includes(item.product_id));
+      saveCampaignPreview();
+    } else {
+      const { error } = await client.from('campaign_items').delete().eq('campaign_id', campaign.id).in('product_id', removableIds);
+      if (error) throw error;
+      await loadCampaign();
+    }
+    selectedCampaignProductIds = new Set([...selectedCampaignProductIds].filter((id) => !removableIds.includes(id)));
+    showMessage(dom.campaignMessage, `Đã bỏ ${removableIds.length} sản phẩm khỏi Box ${getManagedBoxLabel()}.${requestedIds.length > removableIds.length ? ` Đã không có: ${requestedIds.length - removableIds.length}.` : ''}`, 'success');
+    return { removed: removableIds.length, absent: requestedIds.length - removableIds.length };
+  });
+  const addCampaignProduct = async (productId) => addCampaignProducts([productId]);
+  const removeCampaignProduct = async (productId) => removeCampaignProducts([productId]);
+  const syncProductCampaignMembership = async (productId, shouldInclude) => {
+    const hasItem = campaignItems.some((item) => item.product_id === productId);
+    if (shouldInclude && !hasItem) {
+      await addCampaignProducts([productId]);
+    } else if (!shouldInclude && hasItem) {
+      await removeCampaignProduct(productId);
+    }
+  };
+  const reportCampaignBatchFailure = (error, actionLabel = 'cập nhật') => {
+    console.warn('CAMPAIGN_BATCH_FAILED', error);
+    showMessage(dom.campaignMessage, `Không thể ${actionLabel} Box. Thành công: 0 · Thất bại: 1. Vui lòng kiểm tra quyền hoặc migration Box.`, 'error');
+  };
+  const renderCampaignPicker = () => {
+    if (!dom.campaignPickerList) return;
+    const campaignIds = getCampaignProductIds();
+    const visible = getCampaignPickerProducts();
+    const selectable = visible.filter((product) => !campaignIds.has(product.id));
+    campaignPickerSelectedIds = new Set([...campaignPickerSelectedIds].filter((id) => products.some((product) => product.id === id) && !campaignIds.has(id)));
+    dom.campaignPickerFilters?.forEach((button) => {
+      const active = button.dataset.campaignPickerFilter === campaignPickerFilter;
+      button.classList.toggle('is-active', active);
+      button.setAttribute('aria-pressed', String(active));
+    });
+    if (dom.campaignPickerCount) dom.campaignPickerCount.textContent = `Đã chọn: ${campaignPickerSelectedIds.size}`;
+    if (dom.campaignPickerAdd) {
+      dom.campaignPickerAdd.textContent = `Thêm ${campaignPickerSelectedIds.size} sản phẩm`;
+      dom.campaignPickerAdd.disabled = !campaignPickerSelectedIds.size || isCampaignOperationPending;
+    }
+    dom.campaignPickerList.innerHTML = visible.length ? visible.map((product) => {
+      const included = campaignIds.has(product.id);
+      const name = product.full_name || product.fullName || product.model || 'Sản phẩm chưa cập nhật';
+      return `<label class="admin-campaign-picker__item${included ? ' is-included' : ''}"><input type="checkbox" data-campaign-picker-select="${escapeHtml(product.id)}" ${included ? 'disabled' : ''} ${campaignPickerSelectedIds.has(product.id) ? 'checked' : ''} ${isCampaignOperationPending ? 'disabled' : ''}><span class="admin-campaign-picker__item-copy"><strong>${escapeHtml(name)}</strong><small>${escapeHtml([getCampaignCategoryLabel(product), product.brand, product.model, product.price].filter(Boolean).join(' · '))}</small></span>${included ? '<span class="admin-table-status is-active">Đã có trong Box</span>' : ''}</label>`;
+    }).join('') : '<p class="admin-empty">Không tìm thấy sản phẩm phù hợp.</p>';
+    syncIndeterminateCheckbox(dom.campaignPickerSelectAll, selectable.filter((product) => campaignPickerSelectedIds.has(product.id)).length, selectable.length);
+  };
+  const openCampaignPicker = () => {
+    campaignPickerSelectedIds = new Set();
+    campaignPickerSearchTerm = '';
+    campaignPickerFilter = 'all';
+    if (dom.campaignPickerSearch) dom.campaignPickerSearch.value = '';
+    if (dom.campaignPickerModal) dom.campaignPickerModal.hidden = false;
+    document.body.classList.add('admin-modal-open');
+    renderCampaignPicker();
+    window.setTimeout(() => dom.campaignPickerSearch?.focus(), 0);
+  };
+  const closeCampaignPicker = () => {
+    if (dom.campaignPickerModal) dom.campaignPickerModal.hidden = true;
+    document.body.classList.remove('admin-modal-open');
   };
 
   const updateProductTypeFilterButtons = () => {
@@ -913,22 +1711,30 @@
 
   const setProductTypeFilter = (filter = 'all') => {
     activeProductTypeFilter = filter || getDefaultFilterForArea();
+    productTypeFiltersByArea[currentProductArea] = activeProductTypeFilter;
     syncProductAreaUi();
     renderProducts();
   };
 
   const setProductArea = (area = 'tv', { resetFilter = true } = {}) => {
     currentProductArea = area === 'home' ? 'home' : 'tv';
-    if (resetFilter) activeProductTypeFilter = getDefaultFilterForArea();
+    productSearchTerm = productSearchTermsByArea[currentProductArea] || '';
+    if (dom.productSearchInput) dom.productSearchInput.value = productSearchTerm;
+    activeProductTypeFilter = resetFilter
+      ? getDefaultFilterForArea()
+      : (productTypeFiltersByArea[currentProductArea] || getDefaultFilterForArea());
+    productTypeFiltersByArea[currentProductArea] = activeProductTypeFilter;
     syncProductAreaUi();
     renderProducts();
   };
 
   const renderProducts = () => {
     if (!dom.products) return;
+    pruneProductSelection();
     updateProductTypeFilterButtons();
     const filteredProducts = getFilteredProducts();
-    updateProductSearchCount(filteredProducts.length);
+    const filteredTotal = normalizeText(productSearchTerm) ? filteredProducts.length : getProductTypeFilterTotal();
+    updateProductSearchCount(filteredProducts.length, filteredTotal);
     if (!products.length) {
       dom.products.innerHTML = '<p class="admin-empty">Chưa có sản phẩm nào.</p>';
       return;
@@ -940,32 +1746,83 @@
       dom.products.innerHTML = `<p class="admin-empty">${emptyText}</p>`;
       return;
     }
-    dom.products.innerHTML = filteredProducts.map((product) => `
-      <article class="admin-product-card" data-product-id="${escapeHtml(product.id)}">
-        <div>
-          <p class="admin-product-card__brand">${escapeHtml(product.brand)} · ${escapeHtml(product.model)}</p>
-          <h2>${escapeHtml(product.full_name || product.fullName || product.model)}</h2>
-          <p>${escapeHtml(product.capacity_or_size || product.capacityOrSize || product.size)} · ${escapeHtml(product.price)}</p>
-          <p>Thứ tự: ${escapeHtml(product.sort_order ?? 0)} · Loại: ${escapeHtml(product.type || 'Chưa chọn')}${product.subcategory ? ` · Danh mục: ${escapeHtml(HOME_PRODUCT_SUBCATEGORIES[normalizeKey(product.subcategory)] || product.subcategory)}` : ''}</p>
-          <span class="admin-status admin-status--stock admin-status--${escapeHtml(getProductStockStatus(product.stock_status || product.stockStatus))}">${escapeHtml(getProductStockStatusLabel(product.stock_status || product.stockStatus))}</span>
-          <span class="admin-status ${product.is_active ? 'is-active' : 'is-hidden'}">${product.is_active ? 'Hiển thị' : 'Ẩn'}</span>
-          <span class="admin-status ${product.is_featured ? 'is-active' : 'is-hidden'}">${product.is_featured ? 'Nổi bật' : 'Không nổi bật'}</span>
-        </div>
-        <div class="admin-product-card__actions">
-          <button type="button" class="btn btn--secondary" data-edit-product="${escapeHtml(product.id)}">Sửa</button>
-          ${isTvProduct(product) ? `<button type="button" class="btn btn--secondary admin-duplicate-button" data-duplicate-product="${escapeHtml(product.id)}">Nhân bản</button>` : ''}
-          <button type="button" class="btn btn--ghost" data-toggle-product="${escapeHtml(product.id)}">${product.is_active ? 'Ẩn' : 'Hiện'}</button>
-          <button type="button" class="btn btn--danger" data-delete-product="${escapeHtml(product.id)}">Xoá</button>
-        </div>
-      </article>`).join('');
+    const visibleIds = filteredProducts.map((product) => product.id);
+    const selectedVisibleCount = visibleIds.filter((id) => selectedProductIds.has(id)).length;
+    const selectedCount = selectedProductIds.size;
+    dom.products.innerHTML = `
+      ${selectedCount ? `<div class="admin-bulk-toolbar" role="status"><strong>Đã chọn ${selectedCount} sản phẩm</strong><div><label class="admin-visually-hidden" for="bulk-box-target">Chọn Box</label><select id="bulk-box-target" data-bulk-box-target ${isCampaignOperationPending ? 'disabled' : ''}>${getBoxTargetOptions()}</select><button class="btn btn--primary" type="button" data-bulk-campaign-add ${isCampaignOperationPending ? 'disabled' : ''}>+ Thêm vào Box</button><button class="btn btn--secondary" type="button" data-bulk-campaign-remove ${isCampaignOperationPending ? 'disabled' : ''}>Bỏ khỏi Box</button><button class="btn btn--ghost" type="button" data-clear-product-selection ${isCampaignOperationPending ? 'disabled' : ''}>Bỏ chọn</button></div></div>` : ''}
+      <div class="admin-table-wrap">
+        <table class="admin-product-table">
+          <caption class="admin-visually-hidden">Danh sách sản phẩm quản trị</caption>
+          <thead>
+            <tr>
+              <th scope="col" class="admin-product-table__select"><input type="checkbox" data-product-select-all aria-label="Chọn tất cả kết quả hiện tại" ${isCampaignOperationPending ? 'disabled' : ''}></th>
+              <th scope="col">Ảnh</th>
+              <th scope="col">Sản phẩm</th>
+              <th scope="col">Hãng</th>
+              <th scope="col">Quy cách</th>
+              <th scope="col">Loại</th>
+              <th scope="col">Giá</th>
+              <th scope="col">Trạng thái</th>
+              <th scope="col" class="admin-product-table__actions-heading">Thao tác</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${filteredProducts.map((product) => {
+              const productImage = product.image || (Array.isArray(product.images) ? product.images[0] : '');
+              const productName = product.full_name || product.fullName || product.model || 'Chưa có tên';
+              const productSpec = product.capacity_or_size || product.capacityOrSize || product.size || 'Chưa có quy cách';
+              const categoryLabel = product.subcategory
+                ? HOME_PRODUCT_SUBCATEGORIES[normalizeKey(product.subcategory)] || product.subcategory
+                : product.type || 'Chưa chọn';
+              return `
+                <tr data-product-id="${escapeHtml(product.id)}">
+                  <td class="admin-product-table__select"><input type="checkbox" data-product-select="${escapeHtml(product.id)}" aria-label="Chọn ${escapeHtml(productName)}" ${selectedProductIds.has(product.id) ? 'checked' : ''} ${isCampaignOperationPending ? 'disabled' : ''}></td>
+                  <td>
+                    ${productImage
+                      ? `<img class="admin-product-thumb" src="${escapeHtml(productImage)}" alt="${escapeHtml(productName)}" loading="eager" />`
+                      : '<span class="admin-product-thumb admin-product-thumb--empty" aria-label="Chưa có ảnh">—</span>'}
+                  </td>
+                  <td class="admin-product-table__product">
+                    <strong>${escapeHtml(product.model || 'Chưa có model')}</strong>
+                    <span>${escapeHtml(productName)}</span>
+                  </td>
+                  <td>${escapeHtml(product.brand || 'Chưa có hãng')}</td>
+                  <td>${escapeHtml(productSpec)}</td>
+                  <td>${escapeHtml(categoryLabel)}</td>
+                  <td class="admin-product-table__price">${escapeHtml(product.price || 'Chưa có giá')}</td>
+                  <td>
+                    <span class="admin-table-status ${product.is_active ? 'is-active' : 'is-hidden'}">${product.is_active ? 'Hiển thị' : 'Ẩn'}</span>
+                    <span class="admin-table-status admin-table-status--stock admin-status--${escapeHtml(getProductStockStatus(product.stock_status || product.stockStatus))}">${escapeHtml(getProductStockStatusLabel(product.stock_status || product.stockStatus))}</span>
+                  </td>
+                  <td>
+                    <div class="admin-product-table__actions">
+                      <button type="button" class="admin-table-action" data-edit-product="${escapeHtml(product.id)}">Sửa</button>
+                      ${isTvProduct(product) ? `<button type="button" class="admin-table-action" data-duplicate-product="${escapeHtml(product.id)}">Nhân bản</button>` : ''}
+                      <button type="button" class="admin-table-action" data-toggle-product="${escapeHtml(product.id)}">${product.is_active ? 'Ẩn' : 'Hiện'}</button>
+                      <button type="button" class="admin-table-action" data-toggle-campaign="${escapeHtml(product.id)}">${getCampaignProductIds().has(product.id) ? 'Bỏ Box' : 'Thêm Box'}</button>
+                      <button type="button" class="admin-table-action admin-table-action--danger" data-delete-product="${escapeHtml(product.id)}">Xoá</button>
+                    </div>
+                  </td>
+                </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>`;
+    syncIndeterminateCheckbox(dom.products.querySelector('[data-product-select-all]'), selectedVisibleCount, visibleIds.length);
+    dom.products.querySelectorAll('[data-product-select]').forEach((checkbox) => checkbox.closest('tr')?.classList.toggle('is-selected', checkbox.checked));
   };
 
 
   const setAdminTab = (tab = 'tv-products') => {
-    activeAdminTab = ['tv-products', 'home-products', 'orders', 'banners'].includes(tab) ? tab : 'tv-products';
+    activeAdminTab = ['tv-products', 'home-products', 'orders', 'campaigns', 'banners'].includes(tab) ? tab : 'tv-products';
     if (activeAdminTab === 'tv-products') currentProductArea = 'tv';
     if (activeAdminTab === 'home-products') currentProductArea = 'home';
-    if (['tv-products', 'home-products'].includes(activeAdminTab)) activeProductTypeFilter = getDefaultFilterForArea();
+    if (['tv-products', 'home-products'].includes(activeAdminTab)) {
+      productSearchTerm = productSearchTermsByArea[currentProductArea] || '';
+      activeProductTypeFilter = productTypeFiltersByArea[currentProductArea] || getDefaultFilterForArea();
+      if (dom.productSearchInput) dom.productSearchInput.value = productSearchTerm;
+    }
     dom.adminTabs?.forEach((button) => {
       const isActive = button.dataset.adminTab === activeAdminTab;
       button.classList.toggle('is-active', isActive);
@@ -980,6 +1837,7 @@
     });
     syncProductAreaUi();
     if (['tv-products', 'home-products'].includes(activeAdminTab)) renderProducts();
+    if (activeAdminTab === 'campaigns') renderCampaign();
   };
 
   const formatDateTime = (value = '') => {
@@ -1092,7 +1950,7 @@
   };
 
   const updateOrderStatus = async (orderId, status) => {
-    if (!requireAdminVerified()) return;
+    if (!requireAdminWriteAccess()) return;
     try {
       const { error } = await client.from('orders').update({ status }).eq('id', orderId);
       if (error) throw error;
@@ -1108,7 +1966,7 @@
   };
 
   const archiveOrder = async (orderId) => {
-    if (!requireAdminVerified()) return;
+    if (!requireAdminWriteAccess()) return;
     if (!window.confirm('Bạn có chắc muốn lưu trữ đơn hàng này không?')) return;
     try {
       const archivedAt = new Date().toISOString();
@@ -1129,7 +1987,7 @@
   };
 
   const restoreOrder = async (orderId) => {
-    if (!requireAdminVerified()) return;
+    if (!requireAdminWriteAccess()) return;
     if (!window.confirm('Bạn có chắc muốn khôi phục đơn hàng này không?')) return;
     try {
       const { error } = await client.from('orders').update({ is_archived: false, archived_at: null }).eq('id', orderId);
@@ -1149,7 +2007,7 @@
   };
 
   const deleteOrder = async (orderId) => {
-    if (!requireAdminVerified()) return;
+    if (!requireAdminWriteAccess()) return;
     if (!window.confirm('Bạn có chắc muốn xoá vĩnh viễn đơn hàng này không? Hành động này không thể hoàn tác.')) return;
     try {
       const { error } = await client.from('orders').delete().eq('id', orderId);
@@ -1208,11 +2066,15 @@
   };
 
   const openBannerForm = (banner = null) => {
+    releaseBannerFileState(mainBannerFileState);
     editingBanner = banner;
     dom.bannerForm?.reset();
     showMessage(dom.bannerMessage, '');
+    renderBannerOptimization(dom.bannerOptimization);
+    renderBannerPreview(dom.bannerPreview, banner?.image_url || '', banner?.alt_text || 'Ảnh banner trang chủ');
     if (dom.bannerForm) {
       dom.bannerForm.hidden = false;
+      if (dom.saveBannerButton) dom.saveBannerButton.disabled = false;
       dom.bannerForm.bannerId.value = banner?.id || '';
       dom.bannerForm.existingImageUrl.value = banner?.image_url || '';
       dom.bannerForm.existingStoragePath.value = banner?.storage_path || '';
@@ -1225,9 +2087,12 @@
   };
 
   const closeBannerForm = () => {
+    releaseBannerFileState(mainBannerFileState);
     if (dom.bannerForm) dom.bannerForm.hidden = true;
     editingBanner = null;
     showMessage(dom.bannerMessage, '');
+    renderBannerOptimization(dom.bannerOptimization);
+    renderBannerPreview(dom.bannerPreview);
   };
 
   const validateBannerFile = (file) => {
@@ -1239,8 +2104,10 @@
     return true;
   };
 
-  const uploadBannerFile = async (file) => {
-    const objectPath = sanitizeBannerFileName(file.name);
+  const uploadBannerFile = async (file, namespace = 'general') => {
+    const safeNamespace = sanitizeBannerFileName(namespace).replace(/\.[^.]+$/, '') || 'general';
+    const uniqueId = globalThis.crypto?.randomUUID?.() || Math.random().toString(36).slice(2);
+    const objectPath = `${safeNamespace}/${Date.now()}-${uniqueId}-${sanitizeBannerFileName(file.name)}`;
     const { error } = await client.storage.from(bannerBucketName).upload(objectPath, file, { cacheControl: '3600', upsert: false });
     if (error) throw error;
     const { data } = client.storage.from(bannerBucketName).getPublicUrl(objectPath);
@@ -1249,22 +2116,31 @@
 
   const handleBannerSave = async (event) => {
     event.preventDefault();
-    if (!requireAdminVerified()) return;
+    if (!requireAdminWriteAccess()) return;
     const form = dom.bannerForm;
     if (!form) return;
-    const file = form.bannerImage.files?.[0];
+    const selectedFile = form.bannerImage.files?.[0];
+    const file = selectedFile ? (mainBannerFileState.sourceFile === selectedFile ? mainBannerFileState.optimizedFile : null) : null;
     if (!editingBanner && !file) {
       showMessage(dom.bannerMessage, 'Vui lòng chọn ảnh banner.', 'error');
       form.bannerImage.focus();
       return;
     }
-    if (!validateBannerFile(file)) return;
+    if (selectedFile && (!file || mainBannerFileState.processing)) {
+      showMessage(dom.bannerMessage, 'Ảnh vẫn đang được tối ưu hoặc chưa tối ưu thành công. Vui lòng chờ xử lý hoàn tất.', 'error');
+      return;
+    }
+    if (!validateBannerFile(selectedFile)) return;
+    if (file && file.size >= bannerHardLimitBytes) {
+      showMessage(dom.bannerMessage, 'File banner sau tối ưu vẫn phải nhỏ hơn 100 KB.', 'error');
+      return;
+    }
     dom.saveBannerButton.disabled = true;
     try {
       let imageUrl = form.existingImageUrl.value;
       let storagePath = form.existingStoragePath.value;
       if (file) {
-        showMessage(dom.bannerMessage, 'Đang tải ảnh banner lên...', 'info');
+        showMessage(dom.bannerMessage, 'Đang tải ảnh banner đã tối ưu lên...', 'info');
         const uploaded = await uploadBannerFile(file);
         imageUrl = uploaded.imageUrl;
         storagePath = uploaded.storagePath;
@@ -1296,7 +2172,7 @@
   };
 
   const toggleBanner = async (banner) => {
-    if (!requireAdminVerified()) return;
+    if (!requireAdminWriteAccess()) return;
     try {
       const { error } = await client.from('hero_banners').update({ is_active: !banner.is_active, updated_at: new Date().toISOString() }).eq('id', banner.id);
       if (error) throw error;
@@ -1309,7 +2185,7 @@
   };
 
   const deleteBanner = async (banner) => {
-    if (!requireAdminVerified()) return;
+    if (!requireAdminWriteAccess()) return;
     if (!window.confirm('Bạn có chắc muốn xoá banner này không?')) return;
     try {
       const { error } = await client.from('hero_banners').delete().eq('id', banner.id);
@@ -1339,6 +2215,7 @@
   };
 
   const fillRightBannerForm = (banner = null) => {
+    releaseBannerFileState(rightBannerFileState);
     const form = dom.rightBannerForm;
     rightBanner = banner;
     if (!form) return;
@@ -1351,7 +2228,9 @@
     form.sortOrder.value = banner?.sort_order ?? 0;
     form.isActive.value = String(banner ? Boolean(banner.is_active) : true);
     dom.deleteRightBannerButton.hidden = !banner?.id;
+    if (dom.saveRightBannerButton) dom.saveRightBannerButton.disabled = false;
     renderRightBannerPreview(banner?.image_url || '');
+    renderBannerOptimization(dom.rightBannerOptimization);
   };
 
   const renderRightBannerCurrent = () => {
@@ -1397,6 +2276,103 @@
     }
   };
 
+  const miniBannerPlacementBySlot = {
+    'mini-01': 'home_mini_banner_01',
+    'mini-02': 'home_mini_banner_02',
+    'mini-03': 'home_mini_banner_03',
+  };
+
+  const loadMiniBanners = async () => {
+    if (!isAdminVerified || !dom.miniBannerSlots?.length) return;
+    try {
+      const { data, error } = await client
+        .from('hero_banners')
+        .select('id,title,image_url,storage_path,alt_text,sort_order,is_active,placement,created_at')
+        .in('placement', Object.values(miniBannerPlacementBySlot))
+        .order('sort_order', { ascending: true })
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      miniBannerRecords = new Map((Array.isArray(data) ? data : []).map((banner) => [banner.placement, banner]));
+      dom.miniBannerSlots.forEach((slot) => {
+        const banner = miniBannerRecords.get(miniBannerPlacementBySlot[slot.dataset.miniBannerSlot]);
+        renderMiniBannerPreview(slot.querySelector('[data-mini-banner-preview]'), banner?.image_url || '', `banner mini ${slot.dataset.miniBannerSlot.replace('mini-', '')}`);
+        showMessage(slot.querySelector('[data-mini-banner-message]'), banner ? 'Đã tải banner đang hiển thị.' : 'Chưa có banner trên storefront.', banner ? 'success' : 'info');
+      });
+    } catch (error) {
+      console.warn(error);
+      showMessage(dom.adminMessage, 'Không thể tải các banner mini. Vui lòng kiểm tra placement/RLS banner.', 'error');
+    }
+  };
+
+  const handleMiniBannerSave = async (slot) => {
+    if (!requireAdminWriteAccess()) return;
+    const slotName = slot?.dataset.miniBannerSlot;
+    const placement = miniBannerPlacementBySlot[slotName];
+    const state = miniBannerFileStates.get(slotName);
+    const saveButton = slot?.querySelector('[data-save-mini-banner]');
+    const messageNode = slot?.querySelector('[data-mini-banner-message]');
+    const input = slot?.querySelector('[data-mini-banner-input]');
+    if (!placement || !state || !saveButton) return;
+    const file = state.optimizedFile;
+    if (!file || state.processing) {
+      showMessage(messageNode, 'Vui lòng chọn và chờ tối ưu ảnh mini hoàn tất.', 'error');
+      input?.focus();
+      return;
+    }
+    if (file.size >= bannerHardLimitBytes) {
+      showMessage(messageNode, 'File sau tối ưu vẫn phải nhỏ hơn 100 KB.', 'error');
+      return;
+    }
+    saveButton.disabled = true;
+    try {
+      showMessage(messageNode, 'Đang upload ảnh mini đã tối ưu...', 'info');
+      const uploaded = await uploadBannerFile(file, `home-${slotName}`);
+      if (!uploaded.imageUrl) throw new Error('MINI_BANNER_PUBLIC_URL_MISSING');
+      const current = miniBannerRecords.get(placement);
+      const label = slotName === 'mini-01' ? 'Tivi mới nhiều mẫu hot' : slotName === 'mini-02' ? 'Tivi cũ chọn lọc' : 'Thu cũ đổi mới';
+      const payload = {
+        placement,
+        title: label,
+        image_url: uploaded.imageUrl,
+        storage_path: uploaded.storagePath,
+        alt_text: label,
+        sort_order: Number(slotName.slice(-2)),
+        is_active: true,
+        updated_at: new Date().toISOString(),
+      };
+      let data;
+      let error;
+      if (current?.id) {
+        ({ data, error } = await client.from('hero_banners').update(payload).eq('id', current.id).select().single());
+      } else {
+        // Recover by placement before inserting so a missing/late list response
+        // cannot create duplicate rows for the three fixed mini slots.
+        const { data: existing, error: lookupError } = await client
+          .from('hero_banners')
+          .select('id')
+          .eq('placement', placement)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (lookupError) throw lookupError;
+        if (existing?.id) {
+          ({ data, error } = await client.from('hero_banners').update(payload).eq('id', existing.id).select().single());
+        } else {
+          ({ data, error } = await client.from('hero_banners').insert(payload).select().single());
+        }
+      }
+      if (error) throw error;
+      miniBannerRecords.set(placement, data || payload);
+      renderMiniBannerPreview(slot.querySelector('[data-mini-banner-preview]'), uploaded.imageUrl, `banner mini ${slotName.replace('mini-', '')}`);
+      showMessage(messageNode, 'Đã lưu banner mini và cập nhật dữ liệu storefront.', 'success');
+    } catch (error) {
+      console.warn(error);
+      showMessage(messageNode, 'Không thể lưu banner mini. Banner cũ vẫn được giữ nguyên.', 'error');
+    } finally {
+      saveButton.disabled = false;
+    }
+  };
+
   const validateRightBannerFile = (file) => {
     if (!file) return true;
     if (!allowedBannerTypes.has(file.type) || file.size > maxBannerFileSize) {
@@ -1408,22 +2384,31 @@
 
   const handleRightBannerSave = async (event) => {
     event.preventDefault();
-    if (!requireAdminVerified()) return;
+    if (!requireAdminWriteAccess()) return;
     const form = dom.rightBannerForm;
     if (!form) return;
-    const file = form.bannerImage.files?.[0];
+    const selectedFile = form.bannerImage.files?.[0];
+    const file = selectedFile ? (rightBannerFileState.sourceFile === selectedFile ? rightBannerFileState.optimizedFile : null) : null;
     if (!rightBanner && !file) {
       showMessage(dom.rightBannerMessage, 'Vui lòng chọn ảnh banner dọc trước khi lưu.', 'error');
       form.bannerImage.focus();
       return;
     }
-    if (!validateRightBannerFile(file)) return;
+    if (selectedFile && (!file || rightBannerFileState.processing)) {
+      showMessage(dom.rightBannerMessage, 'Ảnh vẫn đang được tối ưu hoặc chưa tối ưu thành công. Vui lòng chờ xử lý hoàn tất.', 'error');
+      return;
+    }
+    if (!validateRightBannerFile(selectedFile)) return;
+    if (file && file.size >= bannerHardLimitBytes) {
+      showMessage(dom.rightBannerMessage, 'File banner sau tối ưu vẫn phải nhỏ hơn 100 KB.', 'error');
+      return;
+    }
     dom.saveRightBannerButton.disabled = true;
     try {
       let imageUrl = form.existingImageUrl.value;
       let storagePath = form.existingStoragePath.value;
       if (file) {
-        showMessage(dom.rightBannerMessage, 'Đang tải ảnh banner dọc lên Supabase Storage...', 'info');
+        showMessage(dom.rightBannerMessage, 'Đang tải ảnh banner dọc đã tối ưu lên Supabase Storage...', 'info');
         const uploaded = await uploadBannerFile(file);
         imageUrl = uploaded.imageUrl;
         storagePath = uploaded.storagePath;
@@ -1453,7 +2438,7 @@
   };
 
   const deleteRightBanner = async () => {
-    if (!requireAdminVerified()) return;
+    if (!requireAdminWriteAccess()) return;
     if (!rightBanner?.id) return;
     if (!window.confirm('Bạn có chắc muốn xoá banner này không?')) return;
     try {
@@ -1596,6 +2581,26 @@
   };
 
   const getUniqueProductImages = (product = {}) => Array.from(new Set([product?.image, ...(Array.isArray(product?.images) ? product.images : [])].filter(Boolean)));
+  const makeGalleryItem = ({ url = '', file = null, result = null, status = 'ready' } = {}) => ({
+    id: `gallery-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+    existingUrl: url,
+    sourceFile: file,
+    optimizedFile: result?.file || null,
+    previewUrl: result?.file ? URL.createObjectURL(result.file) : url,
+    result,
+    status,
+    token: 0,
+  });
+  const releaseGalleryItem = (item) => {
+    if (item?.previewUrl && !item.existingUrl) URL.revokeObjectURL(item.previewUrl);
+    item.token += 1;
+  };
+  const releaseProductImageStates = () => {
+    releaseBannerFileState(productMainImageState);
+    galleryItems.forEach(releaseGalleryItem);
+    galleryItems = [];
+    productGalleryProcessing.clear();
+  };
 
   const getPromoStickerSelectValue = (product = {}) => {
     const mode = getPromoStickerMode(product.promo_sticker_mode || product.promoStickerMode);
@@ -1606,7 +2611,7 @@
   };
 
   const syncCustomStickerField = () => {
-    const form = dom.form;
+  const form = dom.form;
     if (!form?.customStickerUrl || !form?.promoStickerMode) return;
     const selectedAsset = getStickerAssetByPromoValue(form.promoStickerMode.value);
     if (selectedAsset) {
@@ -1658,7 +2663,11 @@
     productIdManuallyEdited = Boolean(product);
     sortOrderManuallyEdited = Boolean(product);
     removedProductImages = new Set();
-    currentProductImages = product ? getUniqueProductImages(product) : [];
+    releaseProductImageStates();
+    const sourceImages = product ? getUniqueProductImages(product) : [];
+    currentMainImage = product?.image || sourceImages[0] || '';
+    currentProductImages = sourceImages.filter((image) => image !== currentMainImage);
+    galleryItems = currentProductImages.map((url) => makeGalleryItem({ url }));
     dom.form?.reset();
     showMessage(dom.formMessage, '');
     clearOverviewPreview();
@@ -1679,6 +2688,7 @@
       form.type.value = selectedType;
       form.capacityOrSize.value = '';
       form.isFeatured.value = 'false';
+      if (form.boxMembership) form.boxMembership.checked = false;
       form.isActive.value = 'true';
       form.stockStatus.value = 'available';
       form.categoryStickerMode.value = formArea === 'home' ? 'none' : 'auto';
@@ -1704,6 +2714,7 @@
       form.badge.value = product.badge || '';
       form.sortOrder.value = product.sort_order ?? getNextProductSortOrder(product.type);
       form.isFeatured.value = product.is_featured === true ? 'true' : 'false';
+      if (form.boxMembership) form.boxMembership.checked = getCampaignProductIds().has(product.id);
       form.description.value = product.description || '';
       form.features.value = Array.isArray(product.features) ? product.features.join('\n') : '';
       form.overview.value = stringifyOverviewForAdmin(product.overview || []);
@@ -1719,10 +2730,13 @@
     updateProductFormMode(formArea, { isNew: !product });
     syncCustomStickerField();
     renderExistingImages();
+    renderProductMainPreview();
+    renderGalleryEditor();
     setTimeout(() => form?.brand?.focus(), 0);
   };
 
   const closeForm = () => {
+    releaseProductImageStates();
     if (dom.modal) dom.modal.hidden = true;
     document.body.classList.remove('admin-modal-open');
     editingProduct = null;
@@ -1732,12 +2746,36 @@
 
   const renderExistingImages = () => {
     if (!dom.existingImages) return;
-    const unique = Array.from(new Set(currentProductImages.filter(Boolean)));
-    dom.existingImages.innerHTML = unique.length ? unique.map((src) => `
-      <div class="admin-existing-image-item">
-        <img src="${escapeHtml(src)}" alt="Ảnh sản phẩm hiện có" loading="lazy" />
-        <button class="admin-existing-image-remove" type="button" data-remove-existing-image="${escapeHtml(src)}" aria-label="Xoá ảnh sản phẩm hiện có">Xoá</button>
-      </div>`).join('') : 'Chưa có ảnh.';
+    dom.existingImages.innerHTML = currentMainImage ? `<div class="admin-existing-image-item admin-existing-image-item--main"><strong>Ảnh chính hiện tại</strong><img src="${escapeHtml(currentMainImage)}" alt="Ảnh chính sản phẩm hiện có" loading="lazy" /></div>` : 'Chưa có ảnh chính.';
+  };
+
+  const renderProductMainPreview = () => {
+    const result = productMainImageState.result;
+    const imageUrl = productMainImageState.previewUrl || currentMainImage;
+    renderBannerPreview(dom.productMainPreview, imageUrl, 'Xem trước ảnh chính đã tối ưu');
+    if (dom.productMainOptimization) renderBannerOptimization(dom.productMainOptimization, result);
+  };
+
+  const renderGalleryEditor = () => {
+    if (!dom.productGalleryEditor) return;
+    if (!galleryItems.length) {
+      dom.productGalleryEditor.innerHTML = '<p class="admin-gallery-empty">Chưa có ảnh gallery.</p>';
+      return;
+    }
+    dom.productGalleryEditor.innerHTML = galleryItems.map((item, index) => {
+      const label = `Ảnh gallery ${index + 1}`;
+      const status = item.status === 'processing' ? 'Đang tối ưu...' : item.status === 'error' ? 'Không thể đọc ảnh này.' : item.result ? `${formatBannerBytes(item.result.optimizedSize)} · đã tối ưu` : 'Ảnh hiện có';
+      return `<article class="admin-gallery-item${item.status === 'processing' ? ' is-processing' : ''}" draggable="${item.status !== 'processing'}" data-gallery-item-id="${escapeHtml(item.id)}">
+        <div class="admin-gallery-item__top"><strong>${String(index + 1).padStart(2, '0')}</strong><span>${escapeHtml(label)}</span></div>
+        <div class="admin-gallery-item__thumb">${item.previewUrl ? `<img src="${escapeHtml(item.previewUrl)}" alt="${escapeHtml(label)}" loading="lazy" />` : '<span>Chưa có preview</span>'}</div>
+        <p class="admin-gallery-item__status">${escapeHtml(status)}</p>
+        <div class="admin-gallery-item__actions">
+          <button type="button" class="btn btn--ghost" data-gallery-up ${index === 0 ? 'disabled' : ''} aria-label="Đưa ảnh gallery ${index + 1} lên trước" title="Đưa lên trước">←</button>
+          <button type="button" class="btn btn--ghost" data-gallery-down ${index === galleryItems.length - 1 ? 'disabled' : ''} aria-label="Đưa ảnh gallery ${index + 1} xuống sau" title="Đưa xuống sau">→</button>
+          <button type="button" class="btn btn--danger" data-gallery-remove aria-label="Xóa ảnh gallery ${index + 1}">Xóa</button>
+        </div>
+      </article>`;
+    }).join('');
   };
 
   const removeExistingImage = (imageUrl = '') => {
@@ -1746,8 +2784,12 @@
     if (!url) return;
     if (!window.confirm('Bạn có chắc muốn xoá ảnh này khỏi sản phẩm không?')) return;
     currentProductImages = currentProductImages.filter((image) => image !== url);
+    const removedItem = galleryItems.find((item) => item.existingUrl === url);
+    if (removedItem) releaseGalleryItem(removedItem);
+    galleryItems = galleryItems.filter((item) => item.existingUrl !== url);
     removedProductImages.add(url);
     renderExistingImages();
+    renderGalleryEditor();
     showMessage(dom.formMessage, 'Đã bỏ ảnh khỏi sản phẩm. Bấm Lưu sản phẩm để lưu thay đổi.', 'info');
   };
 
@@ -1776,6 +2818,101 @@
     if (error) throw error;
     const { data } = client.storage.from(bucketName).getPublicUrl(path);
     return data?.publicUrl || '';
+  };
+  const uploadOptimizedProductFile = async (file, productId) => {
+    if (!file || file.type !== 'image/webp' || file.size >= productHardLimitBytes) throw new Error('PRODUCT_NOT_READY');
+    return uploadFile(file, productId);
+  };
+
+  const getProductImageProcessingError = (error) => {
+    const code = String(error?.message || error || '');
+    if (code === 'PRODUCT_UNSUPPORTED_TYPE' || code === 'BANNER_UNSUPPORTED_TYPE') return 'Ảnh phải là JPG, PNG hoặc WebP.';
+    if (code === 'PRODUCT_INPUT_TOO_LARGE' || code === 'BANNER_INPUT_TOO_LARGE') return 'Ảnh đầu vào vượt quá giới hạn 10 MB.';
+    if (code === 'PRODUCT_NOT_READY') return 'Vui lòng chờ ảnh sản phẩm tối ưu xong hoặc bỏ file lỗi trước khi lưu.';
+    if (code.includes('DECODE_FAILED')) return 'Không thể đọc ảnh này. Vui lòng chọn file khác.';
+    if (code.includes('TARGET_UNREACHABLE')) return 'Không thể tối ưu ảnh xuống dưới 200 KB mà vẫn giữ chất lượng hữu ích.';
+    return 'Không thể tối ưu ảnh này. Vui lòng thử file khác.';
+  };
+  const canSaveProductImages = () => {
+    if (productMainImageState.processing || productMainImageState.error) return false;
+    if (productMainImageState.sourceFile && !productMainImageState.optimizedFile) return false;
+    return !Array.from(productGalleryProcessing.values()).some((item) => item.status === 'processing')
+      && !galleryItems.some((item) => item.sourceFile && (item.status === 'error' || !item.optimizedFile));
+  };
+  const syncProductSaveButton = () => {
+    if (dom.saveButton) dom.saveButton.disabled = !canSaveProductImages();
+  };
+
+  const processProductMainSelection = async (file) => {
+    releaseBannerFileState(productMainImageState);
+    renderBannerOptimization(dom.productMainOptimization);
+    renderProductMainPreview();
+    if (!file) return;
+    const token = productMainImageState.token;
+    productMainImageState.sourceFile = file;
+    productMainImageState.processing = true;
+    productMainImageState.error = null;
+    syncProductSaveButton();
+    showMessage(dom.formMessage, 'Đang tối ưu ảnh chính...', 'info');
+    try {
+      const result = await optimizeProductImage(file, productImageConfigs.main);
+      if (productMainImageState.token !== token) return;
+      productMainImageState.result = result;
+      productMainImageState.optimizedFile = result.file;
+      productMainImageState.previewUrl = URL.createObjectURL(result.file);
+      productMainImageState.processing = false;
+      renderProductMainPreview();
+      renderBannerOptimization(dom.productMainOptimization, result);
+      showMessage(dom.formMessage, result.reusedOriginal ? 'Ảnh chính đã đạt chuẩn.' : 'Ảnh chính đã được tối ưu dưới 200 KB.', 'success');
+    } catch (error) {
+      if (productMainImageState.token !== token) return;
+      productMainImageState.processing = false;
+      productMainImageState.result = null;
+      productMainImageState.optimizedFile = null;
+      productMainImageState.error = getProductImageProcessingError(error);
+      renderProductMainPreview();
+      renderBannerOptimization(dom.productMainOptimization, null, productMainImageState.error);
+      showMessage(dom.formMessage, productMainImageState.error, 'error');
+    } finally {
+      if (productMainImageState.token === token) syncProductSaveButton();
+    }
+  };
+
+  const processProductGallerySelection = async (files) => {
+    const validFiles = files.filter((file) => allowedBannerTypes.has(file.type) && file.size <= maxBannerFileSize);
+    const invalidCount = files.length - validFiles.length;
+    const newItems = validFiles.map((file) => {
+      const item = makeGalleryItem({ file, status: 'processing' });
+      item.sourceFile = file;
+      item.error = null;
+      galleryItems.push(item);
+      productGalleryProcessing.set(item.id, item);
+      return item;
+    });
+    syncProductSaveButton();
+    renderGalleryEditor();
+    if (invalidCount) showMessage(dom.formMessage, `${invalidCount} ảnh gallery không hợp lệ đã được bỏ qua.`, 'error');
+    await Promise.all(newItems.map(async (item) => {
+      const token = item.token;
+      try {
+        const result = await optimizeProductImage(item.sourceFile, productImageConfigs.gallery);
+        if (!galleryItems.includes(item) || item.token !== token) return;
+        item.result = result;
+        item.optimizedFile = result.file;
+        item.previewUrl = URL.createObjectURL(result.file);
+        item.status = 'ready';
+      } catch (error) {
+        if (!galleryItems.includes(item) || item.token !== token) return;
+        item.status = 'error';
+        item.result = null;
+        item.optimizedFile = null;
+        item.error = getProductImageProcessingError(error);
+      } finally {
+        productGalleryProcessing.delete(item.id);
+        renderGalleryEditor();
+      }
+    }));
+    syncProductSaveButton();
   };
 
   const validateStickerAssetFile = (file) => {
@@ -1807,7 +2944,7 @@
   };
 
   const handleStickerAssetUpload = async () => {
-    if (!requireAdminVerified()) return;
+    if (!requireAdminWriteAccess()) return;
     const form = dom.form;
     if (!form) return;
     const file = form.stickerAssetFile?.files?.[0];
@@ -1860,24 +2997,59 @@
 
   const uploadImages = async (form, productId) => {
     if (!isAdminVerified) throw new Error('Bạn không có quyền thực hiện thao tác này.');
-    const mainFile = form.mainImage.files?.[0];
-    const galleryFiles = Array.from(form.galleryImages.files || []);
+    if (form.dataset.productArea === 'home') {
+      const mainFile = form.mainImage.files?.[0];
+      const galleryFiles = Array.from(form.galleryImages.files || []);
+      const removedImages = removedProductImages;
+      let images = Array.from(new Set(currentProductImages.filter((url) => url && !removedImages.has(url))));
+      if (mainFile || galleryFiles.length) showMessage(dom.formMessage, 'Đang tải ảnh lên...', 'info');
+      try {
+        if (mainFile) {
+          const image = await uploadFile(mainFile, productId);
+          images = [image, ...images.filter((url) => url !== image)];
+        }
+        for (const file of galleryFiles) {
+          const url = await uploadFile(file, productId);
+          if (url && !images.includes(url)) images.push(url);
+        }
+        images = Array.from(new Set(images.filter((url) => url && !removedImages.has(url))));
+        return { image: images[0] || '', images };
+      } catch (error) {
+        console.warn(error);
+        throw new Error('Không thể tải ảnh lên. Vui lòng thử lại.');
+      }
+    }
+    const selectedMainFile = form.mainImage.files?.[0] || null;
+    if (!canSaveProductImages()) throw new Error('PRODUCT_NOT_READY');
+    if (selectedMainFile && (productMainImageState.sourceFile !== selectedMainFile || !productMainImageState.optimizedFile)) {
+      throw new Error('PRODUCT_NOT_READY');
+    }
+    const mainFile = selectedMainFile ? productMainImageState.optimizedFile : null;
+    const galleryEntries = galleryItems.map((item) => {
+      if (item.sourceFile) {
+        if (!item.optimizedFile || item.status !== 'ready') throw new Error('PRODUCT_NOT_READY');
+        return { file: item.optimizedFile };
+      }
+      return { url: item.existingUrl };
+    }).filter((entry) => entry.file || entry.url);
     const removedImages = removedProductImages;
-    let images = Array.from(new Set(currentProductImages.filter((url) => url && !removedImages.has(url))));
-    if (mainFile || galleryFiles.length) showMessage(dom.formMessage, 'Đang tải ảnh lên...', 'info');
+    let images = [];
+    if (!mainFile && currentMainImage && !removedImages.has(currentMainImage)) images.push(currentMainImage);
+    if (mainFile || galleryEntries.some((entry) => entry.file)) showMessage(dom.formMessage, 'Đang tải ảnh lên...', 'info');
     try {
       if (mainFile) {
-        const image = await uploadFile(mainFile, productId);
+        const image = await uploadOptimizedProductFile(mainFile, productId);
         images = [image, ...images.filter((url) => url !== image)];
       }
-      for (const file of galleryFiles) {
-        const url = await uploadFile(file, productId);
-        if (url && !images.includes(url)) images.push(url);
-      }
+      const galleryUrls = await Promise.all(galleryEntries.map((entry) => entry.file ? uploadOptimizedProductFile(entry.file, productId) : entry.url));
+      galleryUrls.forEach((url) => {
+        if (url && !images.includes(url) && !removedImages.has(url)) images.push(url);
+      });
       images = Array.from(new Set(images.filter((url) => url && !removedImages.has(url))));
       return { image: images[0] || '', images };
     } catch (error) {
       console.warn(error);
+      if (error?.message === 'PRODUCT_NOT_READY') throw error;
       throw new Error('Không thể tải ảnh lên. Vui lòng thử lại.');
     }
   };
@@ -2027,7 +3199,7 @@
   };
   const handleDuplicateSave = async (event) => {
     event.preventDefault();
-    if (!requireAdminVerified()) return;
+    if (!requireAdminWriteAccess()) return;
     if (!duplicatingProduct || !dom.duplicateForm) return;
     const form = dom.duplicateForm;
     const newSize = normalizeDuplicateSizeText(getDuplicateSize(form));
@@ -2155,7 +3327,7 @@
 
   const handleSave = async (event) => {
     event.preventDefault();
-    if (!requireAdminVerified()) return;
+    if (!requireAdminWriteAccess()) return;
     const form = dom.form;
     if (!form || !validateForm(form)) return;
     const productId = normalizeText(form.id.value) || generateProductId(form.brand.value, form.model.value, form.size.value);
@@ -2173,19 +3345,22 @@
       const imageData = await uploadImages(form, productId);
       const product = buildProduct(form, imageData);
       const result = await saveProductRecord(product, editingProduct?.id || '');
+      await syncProductCampaignMembership(product.id, Boolean(form.boxMembership?.checked));
       showMessage(dom.adminMessage, result.missingHomeProductFields ? 'Đã lưu sản phẩm bằng chế độ tương thích. Cần chạy SQL draft cột Sản phẩm gia đình để lưu nhóm/danh mục con đầy đủ.' : (result.usedFallback ? 'Đã lưu sản phẩm thành công. Cột trạng thái kho chưa có trên Supabase nên hệ thống đã lưu chế độ tương thích.' : 'Đã lưu sản phẩm thành công.'), 'success');
       await loadProducts();
       closeForm();
     } catch (error) {
       console.warn(error);
-      showMessage(dom.formMessage, 'Không thể lưu thay đổi. Vui lòng kiểm tra quyền quản trị hoặc cấu trúc dữ liệu.', 'error');
+      showMessage(dom.formMessage, error?.message === 'PRODUCT_NOT_READY'
+        ? getProductImageProcessingError(error)
+        : 'Không thể lưu thay đổi. Vui lòng kiểm tra quyền quản trị hoặc cấu trúc dữ liệu.', 'error');
     } finally {
-      dom.saveButton.disabled = false;
+      syncProductSaveButton();
     }
   };
 
   const toggleProduct = async (product) => {
-    if (!requireAdminVerified()) return;
+    if (!requireAdminWriteAccess()) return;
     try {
       const { error } = await client.from('products').update({ is_active: !product.is_active, updated_at: new Date().toISOString() }).eq('id', product.id);
       if (error) throw error;
@@ -2197,7 +3372,7 @@
   };
 
   const deleteProduct = async (product) => {
-    if (!requireAdminVerified()) return;
+    if (!requireAdminWriteAccess()) return;
     const productName = [product.full_name || product.fullName, product.model].filter(Boolean).join(' / ') || product.id || 'sản phẩm này';
     if (!window.confirm(`Bạn có chắc muốn xoá sản phẩm "${productName}" không?`)) return;
     try {
@@ -2276,9 +3451,26 @@
   const init = () => {
     clearAdminState();
     showMessage(dom.loginMessage, '');
+    if (isLocalAdminPreview) {
+      isAdminVerified = true;
+      showDashboard({ email: 'Chế độ thiết kế' });
+      resetIdleTimer();
+      void loadAdminData();
+      return;
+    }
     showLoginOnly();
     if (!requireSupabase()) return;
     attachAuthStateListener();
+  };
+  const toggleCampaignProduct = async (product) => {
+    try {
+      await syncProductCampaignMembership(product.id, !getCampaignProductIds().has(product.id));
+      renderProducts();
+      renderCampaign();
+    } catch (error) {
+      console.warn(error);
+      showMessage(dom.adminMessage, 'Không thể cập nhật membership Box.', 'error');
+    }
   };
 
   dom.loginForm?.addEventListener('submit', async (event) => {
@@ -2316,6 +3508,76 @@
   });
   dom.openFormButton?.addEventListener('click', () => openForm());
   dom.adminTabs?.forEach((button) => button.addEventListener('click', () => setAdminTab(button.dataset.adminTab || 'tv-products')));
+  dom.openCampaignPicker?.addEventListener('click', openCampaignPicker);
+  document.querySelectorAll('[data-close-campaign-picker]').forEach((button) => button.addEventListener('click', closeCampaignPicker));
+  dom.boxSelectorList?.addEventListener('change', (event) => {
+    const selector = event.target.closest('[data-active-box-key]');
+    if (selector) void setActiveFeaturedBoxKey(selector.dataset.activeBoxKey || '');
+  });
+  dom.boxSelectorList?.addEventListener('click', (event) => {
+    const manage = event.target.closest('[data-manage-box]');
+    if (manage) { event.preventDefault(); event.stopPropagation(); void setManagedBoxKey(manage.dataset.manageBox || ''); }
+  });
+  dom.campaignSearch?.addEventListener('input', (event) => { campaignSearchTerm = event.target.value || ''; renderCampaign(); });
+  dom.campaignList?.addEventListener('click', (event) => {
+    const add = event.target.closest('[data-campaign-add]');
+    const remove = event.target.closest('[data-campaign-remove]');
+    if (add) void addCampaignProduct(add.dataset.campaignAdd).catch((error) => reportCampaignBatchFailure(error, 'thêm sản phẩm vào'));
+    if (remove) void removeCampaignProduct(remove.dataset.campaignRemove).catch((error) => reportCampaignBatchFailure(error, 'bỏ sản phẩm khỏi'));
+    if (event.target.closest('[data-bulk-campaign-current-remove]')) void removeCampaignProducts([...selectedCampaignProductIds]).catch((error) => reportCampaignBatchFailure(error, 'bỏ sản phẩm khỏi'));
+    if (event.target.closest('[data-clear-campaign-selection]')) { selectedCampaignProductIds.clear(); renderCampaign(); }
+  });
+  dom.campaignList?.addEventListener('change', (event) => {
+    const checkbox = event.target.closest('[data-campaign-select]');
+    const selectAll = event.target.closest('[data-campaign-select-all]');
+    if (checkbox) {
+      checkbox.checked ? selectedCampaignProductIds.add(checkbox.dataset.campaignSelect) : selectedCampaignProductIds.delete(checkbox.dataset.campaignSelect);
+      renderCampaign();
+    }
+    if (selectAll) {
+      const term = normalizeSearchText(campaignSearchTerm);
+      const visibleIds = campaignItems.map(getCampaignProduct).filter((product) => product && (!term || normalizeSearchText([product.brand, product.model, product.full_name || product.fullName].join(' ')).includes(term))).map((product) => product.id);
+      visibleIds.forEach((id) => selectAll.checked ? selectedCampaignProductIds.add(id) : selectedCampaignProductIds.delete(id));
+      renderCampaign();
+    }
+  });
+  dom.campaignList?.addEventListener('pointerdown', (event) => { if (event.target.closest('[data-campaign-select], [data-campaign-select-all]')) event.stopPropagation(); });
+  dom.campaignList?.addEventListener('dragstart', (event) => {
+    if (isCampaignOperationPending) return;
+    const row = event.target.closest('[data-campaign-product-id]');
+    if (row) event.dataTransfer.setData('text/plain', row.dataset.campaignProductId);
+  });
+  dom.campaignList?.addEventListener('dragover', (event) => { if (event.target.closest('[data-campaign-product-id]')) event.preventDefault(); });
+  dom.campaignList?.addEventListener('drop', async (event) => {
+    const target = event.target.closest('[data-campaign-product-id]');
+    const fromId = event.dataTransfer.getData('text/plain');
+    if (!target || !fromId || fromId === target.dataset.campaignProductId) return;
+    const from = campaignItems.findIndex((item) => item.product_id === fromId);
+    const to = campaignItems.findIndex((item) => item.product_id === target.dataset.campaignProductId);
+    if (from < 0 || to < 0) return;
+    const [item] = campaignItems.splice(from, 1); campaignItems.splice(to, 0, item);
+    try { await runCampaignOperation(async () => { await saveCampaignItems(); showMessage(dom.campaignMessage, 'Đã cập nhật thứ tự Box.', 'success'); }); } catch (error) { console.warn(error); showMessage(dom.campaignMessage, 'Không thể cập nhật thứ tự Box.', 'error'); }
+  });
+  dom.campaignPickerSearch?.addEventListener('input', (event) => { campaignPickerSearchTerm = event.target.value || ''; renderCampaignPicker(); });
+  dom.campaignPickerFilters?.forEach((button) => button.addEventListener('click', () => { campaignPickerFilter = button.dataset.campaignPickerFilter || 'all'; renderCampaignPicker(); }));
+  dom.campaignPickerList?.addEventListener('change', (event) => {
+    const checkbox = event.target.closest('[data-campaign-picker-select]');
+    if (!checkbox) return;
+    checkbox.checked ? campaignPickerSelectedIds.add(checkbox.dataset.campaignPickerSelect) : campaignPickerSelectedIds.delete(checkbox.dataset.campaignPickerSelect);
+    renderCampaignPicker();
+  });
+  dom.campaignPickerSelectAll?.addEventListener('change', () => {
+    const campaignIds = getCampaignProductIds();
+    const visibleIds = getCampaignPickerProducts().filter((product) => !campaignIds.has(product.id)).map((product) => product.id);
+    visibleIds.forEach((id) => dom.campaignPickerSelectAll.checked ? campaignPickerSelectedIds.add(id) : campaignPickerSelectedIds.delete(id));
+    renderCampaignPicker();
+  });
+  dom.campaignPickerAdd?.addEventListener('click', async () => {
+    try {
+      const result = await addCampaignProducts([...campaignPickerSelectedIds]);
+      if (result?.added || result?.skipped) closeCampaignPicker();
+    } catch (error) { reportCampaignBatchFailure(error, 'thêm sản phẩm vào'); }
+  });
   dom.productAreaTabs?.forEach((button) => button.addEventListener('click', () => {
     const area = button.dataset.productArea === 'home' ? 'home' : 'tv';
     setAdminTab(area === 'home' ? 'home-products' : 'tv-products');
@@ -2326,11 +3588,153 @@
   dom.bannerForm?.addEventListener('submit', handleBannerSave);
   dom.rightBannerForm?.addEventListener('submit', handleRightBannerSave);
   dom.deleteRightBannerButton?.addEventListener('click', deleteRightBanner);
+  dom.bannerForm?.bannerImage?.addEventListener('change', () => {
+    const file = dom.bannerForm.bannerImage.files?.[0];
+    if (file && !validateBannerFile(file)) {
+      dom.bannerForm.bannerImage.value = '';
+      releaseBannerFileState(mainBannerFileState);
+      renderBannerPreview(dom.bannerPreview);
+      renderBannerOptimization(dom.bannerOptimization);
+      if (dom.saveBannerButton) dom.saveBannerButton.disabled = false;
+      return;
+    }
+    void processBannerSelection({
+      file,
+      state: mainBannerFileState,
+      messageNode: dom.bannerMessage,
+      previewNode: dom.bannerPreview,
+      optimizationNode: dom.bannerOptimization,
+      saveButton: dom.saveBannerButton,
+      config: bannerConfigs.main,
+    });
+  });
   dom.rightBannerForm?.bannerImage?.addEventListener('change', () => {
     const file = dom.rightBannerForm.bannerImage.files?.[0];
-    if (!file) { renderRightBannerPreview(dom.rightBannerForm.existingImageUrl.value); return; }
-    if (!validateRightBannerFile(file)) { dom.rightBannerForm.bannerImage.value = ''; return; }
-    renderRightBannerPreview(URL.createObjectURL(file));
+    if (file && !validateRightBannerFile(file)) {
+      dom.rightBannerForm.bannerImage.value = '';
+      releaseBannerFileState(rightBannerFileState);
+      renderRightBannerPreview(dom.rightBannerForm.existingImageUrl.value);
+      renderBannerOptimization(dom.rightBannerOptimization);
+      if (dom.saveRightBannerButton) dom.saveRightBannerButton.disabled = false;
+      return;
+    }
+    if (!file) {
+      releaseBannerFileState(rightBannerFileState);
+      renderRightBannerPreview(dom.rightBannerForm.existingImageUrl.value);
+      renderBannerOptimization(dom.rightBannerOptimization);
+      if (dom.saveRightBannerButton) dom.saveRightBannerButton.disabled = false;
+      return;
+    }
+    void processBannerSelection({
+      file,
+      state: rightBannerFileState,
+      messageNode: dom.rightBannerMessage,
+      previewNode: dom.rightBannerPreview,
+      optimizationNode: dom.rightBannerOptimization,
+      saveButton: dom.saveRightBannerButton,
+      config: bannerConfigs.vertical,
+      vertical: true,
+    });
+  });
+  dom.miniBannerSlots?.forEach((slot) => {
+    const slotName = slot.dataset.miniBannerSlot;
+    const state = miniBannerFileStates.get(slotName);
+    const input = slot.querySelector('[data-mini-banner-input]');
+    const messageNode = slot.querySelector('[data-mini-banner-message]');
+    const previewNode = slot.querySelector('[data-mini-banner-preview]');
+    const optimizationNode = slot.querySelector('[data-mini-banner-optimization]');
+    const clearButton = slot.querySelector('[data-clear-mini-banner]');
+    input?.addEventListener('change', () => {
+      const file = input.files?.[0];
+      if (file && !validateMiniBannerFile(file, messageNode)) {
+        resetMiniBannerSlot(slot);
+        showMessage(messageNode, 'File không hợp lệ. Vui lòng chọn JPG, PNG hoặc WebP dưới 10MB.', 'error');
+        return;
+      }
+      if (!file) {
+        resetMiniBannerSlot(slot);
+        return;
+      }
+      void processBannerSelection({
+        file,
+        state,
+        messageNode,
+        previewNode,
+        optimizationNode,
+        config: bannerConfigs.mini,
+        readyMessage: 'Đã tối ưu ảnh mini, file sẵn sàng để upload lên Supabase.',
+        reusedMessage: 'Ảnh mini đã đạt chuẩn, sẵn sàng để lưu lên Supabase.',
+      });
+    });
+    clearButton?.addEventListener('click', () => resetMiniBannerSlot(slot));
+    slot.querySelector('[data-save-mini-banner]')?.addEventListener('click', () => handleMiniBannerSave(slot));
+  });
+  dom.form?.mainImage?.addEventListener('change', () => {
+    if (dom.form.dataset.productArea === 'home') return;
+    const file = dom.form.mainImage.files?.[0];
+    if (!file || !allowedBannerTypes.has(file.type) || file.size > maxBannerFileSize) {
+      dom.form.mainImage.value = '';
+      releaseBannerFileState(productMainImageState);
+      renderProductMainPreview();
+      syncProductSaveButton();
+      if (file) showMessage(dom.formMessage, 'Ảnh chính phải là JPG, PNG hoặc WebP và dung lượng tối đa khoảng 10MB.', 'error');
+      return;
+    }
+    void processProductMainSelection(file);
+  });
+  dom.form?.galleryImages?.addEventListener('change', () => {
+    if (dom.form.dataset.productArea === 'home') return;
+    const files = Array.from(dom.form.galleryImages.files || []);
+    if (!files.length) return;
+    void processProductGallerySelection(files);
+  });
+  dom.productGalleryEditor?.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-gallery-up], [data-gallery-down], [data-gallery-remove]');
+    if (!button) return;
+    const itemNode = button.closest('[data-gallery-item-id]');
+    const index = galleryItems.findIndex((item) => item.id === itemNode?.dataset.galleryItemId);
+    if (index < 0) return;
+    if (button.hasAttribute('data-gallery-remove')) {
+      releaseGalleryItem(galleryItems[index]);
+      galleryItems.splice(index, 1);
+    } else {
+      const direction = button.hasAttribute('data-gallery-up') ? -1 : 1;
+      const nextIndex = index + direction;
+      if (nextIndex < 0 || nextIndex >= galleryItems.length) return;
+      [galleryItems[index], galleryItems[nextIndex]] = [galleryItems[nextIndex], galleryItems[index]];
+    }
+    renderGalleryEditor();
+  });
+  dom.productGalleryEditor?.addEventListener('dragstart', (event) => {
+    const itemNode = event.target.closest('[data-gallery-item-id]');
+    if (!itemNode) return;
+    galleryDragId = itemNode.dataset.galleryItemId || '';
+    itemNode.classList.add('is-dragging');
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('text/plain', galleryDragId);
+  });
+  dom.productGalleryEditor?.addEventListener('dragover', (event) => {
+    if (!galleryDragId) return;
+    event.preventDefault();
+    const target = event.target.closest('[data-gallery-item-id]');
+    if (target) target.classList.add('is-drop-target');
+  });
+  dom.productGalleryEditor?.addEventListener('dragleave', (event) => event.target.closest('[data-gallery-item-id]')?.classList.remove('is-drop-target'));
+  dom.productGalleryEditor?.addEventListener('drop', (event) => {
+    event.preventDefault();
+    const target = event.target.closest('[data-gallery-item-id]');
+    const from = galleryItems.findIndex((item) => item.id === galleryDragId);
+    const to = galleryItems.findIndex((item) => item.id === target?.dataset.galleryItemId);
+    if (from >= 0 && to >= 0 && from !== to) {
+      const [item] = galleryItems.splice(from, 1);
+      galleryItems.splice(to, 0, item);
+    }
+    galleryDragId = '';
+    renderGalleryEditor();
+  });
+  dom.productGalleryEditor?.addEventListener('dragend', () => {
+    galleryDragId = '';
+    dom.productGalleryEditor.querySelectorAll('.is-dragging, .is-drop-target').forEach((node) => node.classList.remove('is-dragging', 'is-drop-target'));
   });
   dom.formatOverviewButton?.addEventListener('click', handleAutoFormatOverview);
   dom.previewOverviewButton?.addEventListener('click', handlePreviewOverview);
@@ -2376,11 +3780,13 @@
     window.clearTimeout(productSearchTimer);
     productSearchTimer = window.setTimeout(() => {
       productSearchTerm = event.target.value;
+      productSearchTermsByArea[currentProductArea] = productSearchTerm;
       renderProducts();
     }, 150);
   });
   dom.productSearchClear?.addEventListener('click', () => {
     productSearchTerm = '';
+    productSearchTermsByArea[currentProductArea] = '';
     if (dom.productSearchInput) dom.productSearchInput.value = '';
     renderProducts();
     dom.productSearchInput?.focus();
@@ -2389,7 +3795,8 @@
   document.querySelectorAll('[data-close-duplicate-modal]').forEach((button) => button.addEventListener('click', closeDuplicateModal));
   document.addEventListener('keydown', (event) => {
     if (event.key !== 'Escape') return;
-    if (!dom.duplicateModal?.hidden) closeDuplicateModal();
+    if (!dom.campaignPickerModal?.hidden) closeCampaignPicker();
+    else if (!dom.duplicateModal?.hidden) closeDuplicateModal();
     else if (!dom.modal?.hidden) closeForm();
   });
   dom.modal?.addEventListener('click', (event) => { if (event.target.matches('.admin-modal__backdrop')) closeForm(); });
@@ -2417,16 +3824,39 @@
     form.id.value = generateProductId(form.brand.value, form.model.value, form.size.value);
   });
   dom.products?.addEventListener('click', (event) => {
-    const actionButton = event.target.closest('[data-edit-product], [data-duplicate-product], [data-toggle-product], [data-delete-product]');
+    if (event.target.closest('[data-bulk-campaign-add]')) { void (async () => { await setManagedBoxKey(bulkTargetBoxKey); return addCampaignProducts([...selectedProductIds]); })().catch((error) => reportCampaignBatchFailure(error, 'thêm sản phẩm vào')); return; }
+    if (event.target.closest('[data-bulk-campaign-remove]')) { void (async () => { await setManagedBoxKey(bulkTargetBoxKey); return removeCampaignProducts([...selectedProductIds]); })().catch((error) => reportCampaignBatchFailure(error, 'bỏ sản phẩm khỏi')); return; }
+    if (event.target.closest('[data-clear-product-selection]')) { selectedProductIds.clear(); renderProducts(); return; }
+    const actionButton = event.target.closest('[data-edit-product], [data-duplicate-product], [data-toggle-product], [data-toggle-campaign], [data-delete-product]');
     if (!actionButton) return;
-    const id = actionButton.dataset.editProduct || actionButton.dataset.duplicateProduct || actionButton.dataset.toggleProduct || actionButton.dataset.deleteProduct;
+    const id = actionButton.dataset.editProduct || actionButton.dataset.duplicateProduct || actionButton.dataset.toggleProduct || actionButton.dataset.toggleCampaign || actionButton.dataset.deleteProduct;
     if (!id) return;
     const product = products.find((item) => item.id === id);
     if (!product) return;
     if (actionButton.dataset.editProduct) openForm(product);
     if (actionButton.dataset.duplicateProduct) openDuplicateModal(product);
     if (actionButton.dataset.toggleProduct) toggleProduct(product);
+    if (actionButton.dataset.toggleCampaign) toggleCampaignProduct(product);
     if (actionButton.dataset.deleteProduct) deleteProduct(product);
+  });
+  dom.products?.addEventListener('change', (event) => {
+    const boxTarget = event.target.closest('[data-bulk-box-target]');
+    if (boxTarget) {
+      bulkTargetBoxKey = boxTarget.value || DEFAULT_BOX_KEY;
+      void setManagedBoxKey(bulkTargetBoxKey).then(renderProducts);
+      return;
+    }
+    const checkbox = event.target.closest('[data-product-select]');
+    const selectAll = event.target.closest('[data-product-select-all]');
+    if (checkbox) {
+      checkbox.checked ? selectedProductIds.add(checkbox.dataset.productSelect) : selectedProductIds.delete(checkbox.dataset.productSelect);
+      renderProducts();
+      return;
+    }
+    if (selectAll) {
+      getFilteredProducts().forEach((product) => selectAll.checked ? selectedProductIds.add(product.id) : selectedProductIds.delete(product.id));
+      renderProducts();
+    }
   });
   dom.orders?.addEventListener('change', (event) => {
     const orderId = event.target?.dataset?.orderStatus;

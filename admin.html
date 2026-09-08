@@ -8,6 +8,9 @@
     <meta name="googlebot" content="noindex, nofollow, noarchive" />
     <meta name="referrer" content="no-referrer" />
     <title>Quản trị sản phẩm - ANH MINH STORE</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <!-- Google Analytics placeholder: replace G-XXXXXXXXXX before public tracking -->
     <!-- Google Search Console placeholder: add verification meta tag here after verifying the site. -->
     <link rel="stylesheet" href="styles.css" />
@@ -36,69 +39,75 @@
       </section>
 
       <section class="admin-dashboard" data-admin-dashboard hidden aria-labelledby="admin-dashboard-title">
-        <header class="admin-dashboard__header">
-          <div>
+        <aside class="admin-sidebar" aria-label="Điều hướng quản trị">
+          <div class="admin-sidebar__brand">
             <p class="admin-eyebrow">ANH MINH STORE</p>
-            <h1 id="admin-dashboard-title">Quản trị cửa hàng</h1>
-            <p class="admin-status-line" data-admin-status hidden>Đang đăng nhập quyền quản trị</p>
+            <h1 id="admin-dashboard-title">ADMIN</h1>
+            <p>Trung tâm quản trị</p>
           </div>
-          <div class="admin-actions">
+          <nav class="admin-sidebar__nav" aria-labelledby="admin-nav-title">
+            <p class="admin-sidebar__label" id="admin-nav-title">QUẢN TRỊ</p>
+            <div class="admin-main-tabs" role="tablist" aria-label="Module quản trị">
+              <button class="admin-main-tab is-active" type="button" data-admin-tab="tv-products" role="tab" aria-selected="true">Tivi</button>
+              <button class="admin-main-tab" type="button" data-admin-tab="home-products" role="tab" aria-selected="false">Sản phẩm gia đình</button>
+              <button class="admin-main-tab" type="button" data-admin-tab="orders" role="tab" aria-selected="false">Đơn hàng</button>
+              <button class="admin-main-tab" type="button" data-admin-tab="campaigns" role="tab" aria-selected="false">BOX</button>
+              <button class="admin-main-tab" type="button" data-admin-tab="banners" role="tab" aria-selected="false">Banner</button>
+            </div>
+          </nav>
+          <div class="admin-sidebar__footer">
+            <p class="admin-status-line" data-admin-status hidden>Đang đăng nhập quyền quản trị</p>
             <a class="btn btn--secondary" href="index.html">Xem website</a>
-            <button class="btn btn--primary" type="button" data-open-product-form>+ Thêm tivi</button>
             <button class="btn btn--ghost" type="button" data-logout-button>Đăng xuất</button>
           </div>
-        </header>
-        <p class="admin-message" data-admin-message aria-live="polite"></p>
-        <nav class="admin-tabs-section" aria-labelledby="admin-tabs-title">
-          <div class="admin-tabs-section__copy">
-            <h2 id="admin-tabs-title">Khu vực quản lý</h2>
-            <p class="admin-muted">Chọn mục cần quản lý để thao tác nhanh hơn.</p>
-          </div>
-          <div class="admin-main-tabs" role="tablist" aria-label="Khu vực quản lý admin">
-            <button class="admin-main-tab is-active" type="button" data-admin-tab="tv-products" role="tab" aria-selected="true">Quản lý Tivi</button>
-            <button class="admin-main-tab" type="button" data-admin-tab="home-products" role="tab" aria-selected="false">Quản lý Sản phẩm gia đình</button>
-            <button class="admin-main-tab" type="button" data-admin-tab="orders" role="tab" aria-selected="false">Quản lý đơn hàng</button>
-            <button class="admin-main-tab" type="button" data-admin-tab="banners" role="tab" aria-selected="false">Quản lý banner</button>
-          </div>
-        </nav>
-        <section class="admin-management-section admin-panel is-active" data-admin-panel="products" aria-labelledby="admin-products-title">
-          <div class="admin-section-header">
-            <div>
-              <h2 id="admin-products-title" data-product-area-title>Quản lý Tivi</h2>
-              <p class="admin-muted" data-product-area-description>Quản lý Tivi mới và Tivi cũ đang bán trên website.</p>
-            </div>
-            <div class="admin-section-header__actions">
-              <button class="btn btn--secondary" type="button" data-export-products-csv>Xuất CSV sản phẩm</button>
-            </div>
-          </div>
-          <div class="admin-product-area-tabs" role="tablist" aria-label="Khu vực sản phẩm">
-            <button class="admin-product-area-tab is-active" type="button" data-product-area="tv" aria-pressed="true">Tivi</button>
-            <button class="admin-product-area-tab" type="button" data-product-area="home" aria-pressed="false">Sản phẩm gia đình</button>
-          </div>
-          <div class="admin-product-search" role="search" aria-label="Tìm kiếm sản phẩm trong admin">
-            <label class="admin-product-search__label" for="admin-product-search-input">Tìm kiếm sản phẩm</label>
-            <div class="admin-product-search__controls">
-              <input class="admin-product-search__input" id="admin-product-search-input" type="search" placeholder="Tìm theo model, tên tivi, hãng, kích thước, giá..." data-product-search />
-              <button class="btn btn--ghost admin-product-search__clear" type="button" data-product-search-clear>Xoá tìm kiếm</button>
-            </div>
-            <div class="admin-product-type-tabs is-active" role="tablist" aria-label="Lọc tivi theo loại" data-product-filter-group="tv">
-              <button class="admin-product-type-tab is-active" type="button" data-admin-product-type-filter="all-tv" aria-pressed="true">Tất cả tivi</button>
-              <button class="admin-product-type-tab" type="button" data-admin-product-type-filter="Tivi mới" aria-pressed="false">Tivi mới</button>
-              <button class="admin-product-type-tab" type="button" data-admin-product-type-filter="Tivi cũ" aria-pressed="false">Tivi cũ</button>
-            </div>
-            <div class="admin-product-type-tabs" role="tablist" aria-label="Lọc sản phẩm gia đình theo danh mục" data-product-filter-group="home" hidden>
-              <button class="admin-product-type-tab is-active" type="button" data-admin-product-type-filter="all-home" aria-pressed="true">Tất cả gia dụng</button>
-              <button class="admin-product-type-tab" type="button" data-admin-product-type-filter="may-giat" aria-pressed="false">Máy giặt</button>
-              <button class="admin-product-type-tab" type="button" data-admin-product-type-filter="tu-lanh" aria-pressed="false">Tủ lạnh</button>
-              <button class="admin-product-type-tab" type="button" data-admin-product-type-filter="dieu-hoa" aria-pressed="false">Điều hoà</button>
-              <button class="admin-product-type-tab" type="button" data-admin-product-type-filter="do-gia-dung" aria-pressed="false">Đồ gia dụng</button>
-            </div>
-            <p class="admin-product-count" data-product-search-count aria-live="polite">Đang hiển thị 0/0 sản phẩm</p>
-          </div>
-          <div class="admin-products" data-admin-products aria-live="polite"></div>
-        </section>
+        </aside>
 
-        <section class="admin-management-section admin-panel" data-admin-panel="orders" aria-labelledby="admin-orders-title" hidden>
+        <div class="admin-workspace">
+          <header class="admin-dashboard__header">
+            <div>
+              <p class="admin-dashboard__kicker">WORKSPACE QUẢN TRỊ</p>
+              <p class="admin-dashboard__hint">Quản lý nội dung và sản phẩm trên website.</p>
+            </div>
+          </header>
+          <p class="admin-message" data-admin-message aria-live="polite"></p>
+
+          <section class="admin-management-section admin-panel is-active" data-admin-panel="products" aria-labelledby="admin-products-title">
+            <div class="admin-section-header">
+              <div>
+                <h2 id="admin-products-title" data-product-area-title>Quản lý Tivi</h2>
+                <p class="admin-muted" data-product-area-description>Quản lý Tivi mới và Tivi cũ đang bán trên website.</p>
+              </div>
+              <div class="admin-section-header__actions">
+                <button class="btn btn--secondary" type="button" data-export-products-csv>Xuất CSV sản phẩm</button>
+                <button class="btn btn--primary" type="button" data-open-product-form>+ Thêm tivi</button>
+              </div>
+            </div>
+            <div class="admin-product-toolbar" role="search" aria-label="Tìm kiếm và lọc sản phẩm trong admin">
+              <div class="admin-product-search__controls">
+                <label class="admin-visually-hidden" for="admin-product-search-input">Tìm kiếm sản phẩm</label>
+                <input class="admin-product-search__input" id="admin-product-search-input" type="search" placeholder="Tìm model, tên tivi, hãng, kích thước, giá..." data-product-search />
+                <button class="btn btn--ghost admin-product-search__clear" type="button" data-product-search-clear>Xoá tìm kiếm</button>
+              </div>
+              <div class="admin-product-filter-zone">
+                <div class="admin-product-type-tabs is-active" role="tablist" aria-label="Lọc tivi theo loại" data-product-filter-group="tv">
+                  <button class="admin-product-type-tab is-active" type="button" data-admin-product-type-filter="all-tv" aria-pressed="true">Tất cả</button>
+                  <button class="admin-product-type-tab" type="button" data-admin-product-type-filter="Tivi mới" aria-pressed="false">Mới</button>
+                  <button class="admin-product-type-tab" type="button" data-admin-product-type-filter="Tivi cũ" aria-pressed="false">Cũ</button>
+                </div>
+                <div class="admin-product-type-tabs" role="tablist" aria-label="Lọc sản phẩm gia đình theo danh mục" data-product-filter-group="home" hidden>
+                  <button class="admin-product-type-tab is-active" type="button" data-admin-product-type-filter="all-home" aria-pressed="true">Tất cả</button>
+                  <button class="admin-product-type-tab" type="button" data-admin-product-type-filter="may-giat" aria-pressed="false">Máy giặt</button>
+                  <button class="admin-product-type-tab" type="button" data-admin-product-type-filter="tu-lanh" aria-pressed="false">Tủ lạnh</button>
+                  <button class="admin-product-type-tab" type="button" data-admin-product-type-filter="dieu-hoa" aria-pressed="false">Điều hoà</button>
+                  <button class="admin-product-type-tab" type="button" data-admin-product-type-filter="do-gia-dung" aria-pressed="false">Đồ gia dụng</button>
+                </div>
+                <p class="admin-product-count" data-product-search-count aria-live="polite">Hiển thị 0 / 0</p>
+              </div>
+            </div>
+            <div class="admin-products" data-admin-products aria-live="polite"></div>
+          </section>
+
+          <section class="admin-management-section admin-panel" data-admin-panel="orders" aria-labelledby="admin-orders-title" hidden>
           <div class="admin-section-header">
             <div>
               <h2 id="admin-orders-title">Quản lý đơn hàng</h2>
@@ -117,7 +126,27 @@
           <div class="admin-orders" data-admin-orders aria-live="polite"></div>
         </section>
 
-        <section class="admin-panel admin-banner-panel" data-admin-panel="banners" aria-labelledby="admin-banners-panel-title" hidden>
+          <section class="admin-management-section admin-panel" data-admin-panel="campaigns" aria-labelledby="admin-campaign-title" hidden>
+            <div class="admin-section-header">
+              <div>
+                <p class="admin-dashboard__kicker">BOX</p>
+                <h2 id="admin-campaign-title">BOX</h2>
+                <p class="admin-muted">Quản lý Box chủ đề và sản phẩm hiển thị trên website. Box được developer đăng ký sẵn; Admin không tự tạo thiết kế Box.</p>
+              </div>
+              <div class="admin-section-header__actions"><button class="btn btn--primary" type="button" data-open-campaign-picker>+ Thêm sản phẩm</button></div>
+            </div>
+            <section class="admin-box-selector" aria-labelledby="admin-box-selector-title"><h3 id="admin-box-selector-title">BOX ĐANG HIỂN THỊ</h3><div data-box-selector-list></div></section>
+            <section class="admin-box-manager" aria-labelledby="admin-box-manager-title"><div class="admin-box-manager__heading"><div><p class="admin-eyebrow">QUẢN LÝ BOX</p><h3 id="admin-box-manager-title" data-managed-box-title>Tết 2027</h3></div><span class="admin-table-status" data-managed-box-status>ĐANG TẮT</span></div>
+            <div class="admin-campaign-toolbar">
+              <input class="admin-product-search__input" type="search" placeholder="Tìm sản phẩm trong Box..." data-campaign-search />
+              <span class="admin-product-count" data-campaign-count aria-live="polite"></span>
+            </div>
+            <div class="admin-campaign-list" data-campaign-list aria-live="polite"></div>
+            <p class="admin-message" data-campaign-message aria-live="polite"></p>
+            </section>
+          </section>
+
+          <section class="admin-panel admin-banner-panel" data-admin-panel="banners" aria-labelledby="admin-banners-panel-title" hidden>
           <h2 class="admin-panel__sr-title" id="admin-banners-panel-title">Quản lý banner</h2>
           <section class="admin-management-section" aria-labelledby="admin-banners-title">
           <div class="admin-section-header">
@@ -139,7 +168,7 @@
               <div class="admin-field"><label for="banner-alt-text">Alt text</label><input id="banner-alt-text" name="altText" placeholder="Ảnh banner trang chủ Anh Minh Store" /></div>
               <div class="admin-field"><label for="banner-sort-order">Thứ tự hiển thị</label><input id="banner-sort-order" name="sortOrder" type="number" value="0" /></div>
               <div class="admin-field"><label for="banner-active">Trạng thái</label><select id="banner-active" name="isActive"><option value="true">Hiển thị</option><option value="false">Ẩn</option></select></div>
-              <div class="admin-field admin-field--full"><label for="banner-image">Upload ảnh banner</label><input id="banner-image" name="bannerImage" type="file" accept="image/jpeg,image/png,image/webp" /><small class="admin-help-text">Hỗ trợ JPG, PNG, WebP. Dung lượng tối đa khoảng 10MB.</small></div>
+              <div class="admin-field admin-field--full"><label for="banner-image">Upload ảnh banner</label><input id="banner-image" name="bannerImage" type="file" accept="image/jpeg,image/png,image/webp" /><small class="admin-help-text">Hỗ trợ JPG, PNG, WebP. Tự động tối ưu file thực tế xuống dưới 100 KB trước khi lưu.</small><div class="admin-banner-upload-preview" data-banner-preview><div class="admin-banner-preview__placeholder">Chưa có ảnh tối ưu để xem trước</div></div><div class="admin-banner-optimization" data-banner-optimization aria-live="polite"></div></div>
             </div>
             <p class="admin-message" data-banner-message aria-live="polite"></p>
             <div class="admin-form-actions">
@@ -169,7 +198,8 @@
                 <div class="admin-field admin-field--full">
                   <label for="right-banner-image">Upload ảnh banner dọc</label>
                   <input id="right-banner-image" name="bannerImage" type="file" accept="image/jpeg,image/png,image/webp" />
-                  <small class="admin-help-text">Khuyến nghị ảnh dọc tỉ lệ 9:16, ví dụ 900x1600px hoặc 1080x1920px. Hỗ trợ JPG, PNG, WebP.</small>
+                  <small class="admin-help-text">Khuyến nghị ảnh dọc tỉ lệ 9:16, ví dụ 900x1600px hoặc 1080x1920px. Tự động tối ưu file thực tế xuống dưới 100 KB.</small>
+                  <div class="admin-banner-optimization" data-right-banner-optimization aria-live="polite"></div>
                 </div>
                 <div class="admin-field"><label for="right-banner-title">Tiêu đề</label><input id="right-banner-title" name="title" placeholder="Ưu đãi nổi bật" /></div>
                 <div class="admin-field"><label for="right-banner-link">Link URL (không bắt buộc)</label><input id="right-banner-link" name="linkUrl" type="url" placeholder="https://..." /></div>
@@ -185,7 +215,82 @@
           </form>
           <div class="admin-banner-list" data-admin-right-banner-current aria-live="polite"></div>
           </section>
-        </section>
+
+          <section class="admin-management-section admin-mini-banner-section" aria-labelledby="admin-mini-banner-title">
+            <div class="admin-section-header">
+              <div>
+                <h2 id="admin-mini-banner-title">Bộ banner mini trang chủ</h2>
+                <p class="admin-muted">Ba slot mini độc lập dùng các placement Supabase ổn định trên storefront. Admin có thể thay ảnh từng slot; bản ghi hiện tại sẽ được cập nhật, không tạo thêm slot trùng.</p>
+              </div>
+              <span class="admin-local-badge">Banner thật · Supabase</span>
+            </div>
+            <div class="admin-mini-banner-grid">
+              <article class="admin-mini-banner-slot" data-mini-banner-slot="mini-01">
+                <header class="admin-mini-banner-slot__header">
+                  <div>
+                    <p class="admin-eyebrow">Mini 01</p>
+                    <h3>Banner mini 01</h3>
+                  </div>
+                  <span class="admin-mini-banner-slot__position">Supabase · home_mini_banner_01</span>
+                </header>
+                <div class="admin-mini-banner-preview" data-mini-banner-preview>
+                  <div class="admin-banner-preview__placeholder">Chưa có banner mini 01</div>
+                </div>
+                <div class="admin-field">
+                  <label for="mini-banner-01-image">Chọn ảnh Mini 01</label>
+                  <input id="mini-banner-01-image" name="miniBanner01Image" type="file" accept="image/jpeg,image/png,image/webp" data-mini-banner-input />
+                  <small class="admin-help-text">Tự động tối ưu dưới 100 KB trước khi upload Storage.</small>
+                </div>
+                <div class="admin-banner-optimization" data-mini-banner-optimization aria-live="polite"></div>
+                <p class="admin-message" data-mini-banner-message aria-live="polite">Chưa chọn ảnh.</p>
+                <div class="admin-form-actions"><button class="btn btn--ghost admin-mini-banner-clear" type="button" data-clear-mini-banner>Đặt lại</button><button class="btn btn--primary" type="button" data-save-mini-banner>Lưu Mini 01</button></div>
+              </article>
+
+              <article class="admin-mini-banner-slot" data-mini-banner-slot="mini-02">
+                <header class="admin-mini-banner-slot__header">
+                  <div>
+                    <p class="admin-eyebrow">Mini 02</p>
+                    <h3>Banner mini 02</h3>
+                  </div>
+                  <span class="admin-mini-banner-slot__position">Supabase · home_mini_banner_02</span>
+                </header>
+                <div class="admin-mini-banner-preview" data-mini-banner-preview>
+                  <div class="admin-banner-preview__placeholder">Chưa có banner mini 02</div>
+                </div>
+                <div class="admin-field">
+                  <label for="mini-banner-02-image">Chọn ảnh Mini 02</label>
+                  <input id="mini-banner-02-image" name="miniBanner02Image" type="file" accept="image/jpeg,image/png,image/webp" data-mini-banner-input />
+                  <small class="admin-help-text">Tự động tối ưu dưới 100 KB trước khi upload Storage.</small>
+                </div>
+                <div class="admin-banner-optimization" data-mini-banner-optimization aria-live="polite"></div>
+                <p class="admin-message" data-mini-banner-message aria-live="polite">Chưa chọn ảnh.</p>
+                <div class="admin-form-actions"><button class="btn btn--ghost admin-mini-banner-clear" type="button" data-clear-mini-banner>Đặt lại</button><button class="btn btn--primary" type="button" data-save-mini-banner>Lưu Mini 02</button></div>
+              </article>
+
+              <article class="admin-mini-banner-slot" data-mini-banner-slot="mini-03">
+                <header class="admin-mini-banner-slot__header">
+                  <div>
+                    <p class="admin-eyebrow">Mini 03</p>
+                    <h3>Banner mini 03</h3>
+                  </div>
+                  <span class="admin-mini-banner-slot__position">Supabase · home_mini_banner_03</span>
+                </header>
+                <div class="admin-mini-banner-preview" data-mini-banner-preview>
+                  <div class="admin-banner-preview__placeholder">Chưa có banner mini 03</div>
+                </div>
+                <div class="admin-field">
+                  <label for="mini-banner-03-image">Chọn ảnh Mini 03</label>
+                  <input id="mini-banner-03-image" name="miniBanner03Image" type="file" accept="image/jpeg,image/png,image/webp" data-mini-banner-input />
+                  <small class="admin-help-text">Tự động tối ưu dưới 100 KB trước khi upload Storage.</small>
+                </div>
+                <div class="admin-banner-optimization" data-mini-banner-optimization aria-live="polite"></div>
+                <p class="admin-message" data-mini-banner-message aria-live="polite">Chưa chọn ảnh.</p>
+                <div class="admin-form-actions"><button class="btn btn--ghost admin-mini-banner-clear" type="button" data-clear-mini-banner>Đặt lại</button><button class="btn btn--primary" type="button" data-save-mini-banner>Lưu Mini 03</button></div>
+              </article>
+            </div>
+          </section>
+          </section>
+        </div>
       </section>
     </main>
 
@@ -221,6 +326,7 @@
             <div class="admin-field admin-field--full"><button class="btn btn--secondary" type="button" data-upload-sticker-asset>Upload và lưu vào thư viện sticker</button><p class="admin-help-text" data-sticker-library-message aria-live="polite"></p></div>
             <div class="admin-field"><label for="product-sort-order">Thứ tự hiển thị</label><input id="product-sort-order" name="sortOrder" type="number" value="0" /></div>
             <div class="admin-field"><label for="product-featured">Hiện lên sản phẩm nổi bật</label><select id="product-featured" name="isFeatured"><option value="true">Có</option><option value="false">Không</option></select></div>
+            <div class="admin-field admin-field--full"><label class="admin-checkbox-field"><input type="checkbox" name="boxMembership" /> <span>Tham gia Box đang quản lý</span></label><small class="admin-help-text">Membership được lưu theo Box, không làm thay đổi dữ liệu sản phẩm.</small></div>
             <div class="admin-field admin-field--full"><label for="product-description">Mô tả ngắn</label><textarea id="product-description" name="description" rows="3"></textarea></div>
             <div class="admin-field admin-field--full"><label for="product-features">Đặc điểm nổi bật</label><textarea id="product-features" name="features" rows="5" placeholder="Mỗi dòng một đặc điểm"></textarea></div>
             <div class="admin-field admin-field--full admin-overview-field">
@@ -249,11 +355,22 @@
               <p class="admin-spec-count" data-specifications-count aria-live="polite"></p>
               <div class="admin-spec-preview" data-specifications-preview hidden></div>
             </div>
-            <div class="admin-field"><label for="product-main-image">Ảnh chính</label><input id="product-main-image" name="mainImage" type="file" accept="image/*" /></div>
-            <div class="admin-field"><label for="product-gallery-images">Ảnh gallery nhiều ảnh</label><input id="product-gallery-images" name="galleryImages" type="file" accept="image/*" multiple /></div>
+            <div class="admin-field admin-product-image-field">
+              <label for="product-main-image">Ảnh chính</label>
+              <input id="product-main-image" name="mainImage" type="file" accept="image/jpeg,image/png,image/webp" />
+              <small class="admin-help-text">Tự động tối ưu tại máy xuống dưới 200 KB. Ảnh nhỏ và hợp lệ được giữ nguyên.</small>
+              <div class="admin-product-main-preview" data-product-main-preview><div class="admin-banner-preview__placeholder">Chưa chọn ảnh chính mới</div></div>
+              <div class="admin-product-image-optimization" data-product-main-optimization aria-live="polite"></div>
+            </div>
+            <div class="admin-field admin-product-image-field admin-field--full">
+              <label for="product-gallery-images">Ảnh gallery nhiều ảnh</label>
+              <input id="product-gallery-images" name="galleryImages" type="file" accept="image/jpeg,image/png,image/webp" multiple />
+              <small class="admin-help-text">Mỗi ảnh được tối ưu độc lập dưới 200 KB. Kéo thumbnail hoặc dùng nút lên/xuống để sắp xếp.</small>
+              <div class="admin-gallery-editor" data-product-gallery-editor aria-live="polite">Chưa có ảnh gallery.</div>
+            </div>
             <div class="admin-field"><label for="product-stock-status">Trạng thái bán hàng</label><select id="product-stock-status" name="stockStatus"><option value="available">Đang bán</option><option value="sold">Đã bán</option><option value="coming_soon">Hàng sắp về</option><option value="hidden">Tạm ẩn</option></select></div>
             <div class="admin-field"><label for="product-active">Hiển thị công khai</label><select id="product-active" name="isActive"><option value="true">Hiển thị</option><option value="false">Ẩn</option></select></div>
-            <div class="admin-field admin-field--full"><p class="admin-muted">Ảnh hiện có</p><div class="admin-image-preview" data-existing-images>Chưa có ảnh.</div></div>
+            <div class="admin-field admin-field--full"><p class="admin-muted">Ảnh gallery hiện có</p><div class="admin-image-preview" data-existing-images>Chưa có ảnh.</div></div>
           </div>
           <p class="admin-message" data-form-message aria-live="polite"></p>
           <div class="admin-form-actions">
@@ -261,6 +378,20 @@
             <button class="btn btn--primary" type="submit" data-save-product> Lưu sản phẩm</button>
           </div>
         </form>
+      </section>
+    </div>
+
+    <div class="admin-modal admin-campaign-picker-modal" data-campaign-picker-modal hidden>
+      <div class="admin-modal__backdrop" data-close-campaign-picker></div>
+      <section class="admin-modal__card admin-campaign-picker" role="dialog" aria-modal="true" aria-labelledby="campaign-picker-title">
+        <header class="admin-modal__header"><div><p class="admin-eyebrow">BOX</p><h2 id="campaign-picker-title">Thêm sản phẩm vào Box</h2></div><button class="admin-modal__close" type="button" aria-label="Đóng bộ chọn sản phẩm" data-close-campaign-picker>×</button></header>
+        <div class="admin-campaign-picker__controls">
+          <input class="admin-product-search__input" type="search" placeholder="Tìm theo tên, model, hãng..." data-campaign-picker-search />
+          <div class="admin-product-type-tabs" role="group" aria-label="Lọc loại sản phẩm"><button class="admin-product-type-tab is-active" type="button" data-campaign-picker-filter="all" aria-pressed="true">Tất cả</button><button class="admin-product-type-tab" type="button" data-campaign-picker-filter="tv" aria-pressed="false">Tivi</button><button class="admin-product-type-tab" type="button" data-campaign-picker-filter="home" aria-pressed="false">Sản phẩm gia đình</button></div>
+        </div>
+        <label class="admin-campaign-select-all"><input type="checkbox" data-campaign-picker-select-all /> <span>Chọn tất cả kết quả hiện tại</span></label>
+        <div class="admin-campaign-picker__list" data-campaign-picker-list aria-live="polite"></div>
+        <footer class="admin-form-actions admin-campaign-picker__footer"><span data-campaign-picker-count aria-live="polite">Đã chọn: 0</span><button class="btn btn--secondary" type="button" data-close-campaign-picker>Huỷ</button><button class="btn btn--primary" type="button" data-campaign-picker-add>Thêm 0 sản phẩm</button></footer>
       </section>
     </div>
 
@@ -316,6 +447,7 @@
     </div>
 
 
+    <script src="box-registry.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase-config.js"></script>
     <script src="admin-supabase-client.js"></script>
