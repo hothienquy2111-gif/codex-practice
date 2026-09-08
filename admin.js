@@ -1576,6 +1576,23 @@
     try { return await operation(); }
     finally { isCampaignOperationPending = false; renderProducts(); renderCampaign(); renderCampaignPicker(); }
   };
+  const withCampaignFailureStage = (error, stage) => ({
+    ...(error && typeof error === 'object' ? error : {}),
+    campaignStage: stage,
+    message: error?.message || String(error || 'Unknown campaign error'),
+  });
+  const getCampaignFailureMessage = (error, actionLabel) => {
+    const code = String(error?.code || error?.status || '');
+    const message = String(error?.message || '');
+    const details = String(error?.details || '');
+    if (/session|jwt|not authenticated|auth session/i.test(message)) return 'Phiên quản trị đã hết hạn. Vui lòng đăng nhập lại rồi thử lại.';
+    if (code === '42501' || /row-level security|permission denied|not authorized/i.test(`${message} ${details}`)) return 'Không có quyền ghi Box. Vui lòng kiểm tra quyền quản trị của tài khoản.';
+    if (code === '23503') return /product/i.test(`${message} ${details}`)
+      ? 'Sản phẩm không còn tồn tại hoặc không còn hợp lệ để thêm vào Box.'
+      : 'Box không còn tồn tại hoặc dữ liệu Box không hợp lệ.';
+    if (/campaign|box/i.test(`${message} ${details}`) || ['42702', '22P02', '23505', '23514'].includes(code)) return 'Lỗi dữ liệu Box. Vui lòng tải lại trang rồi thử lại.';
+    return `Không thể ${actionLabel} Box. Vui lòng thử lại.`;
+  };
   const addCampaignProducts = async (productIds = []) => runCampaignOperation(async () => {
     const requestedIds = [...new Set(productIds)].filter((id) => products.some((product) => product.id === id));
     const existingIds = getCampaignProductIds();
@@ -1587,15 +1604,19 @@
       missingIds.forEach((product_id, index) => campaignItems.push({ id: `preview-${product_id}`, product_id, sort_order: start + index + 1, is_active: true }));
       saveCampaignPreview();
     } else {
-      await saveCampaign();
+      try {
+        await saveCampaign();
+      } catch (error) {
+        throw withCampaignFailureStage(error, 'campaign_upsert');
+      }
       const { data, error } = await client.rpc('append_campaign_items', { p_campaign_id: campaign.id, p_product_ids: missingIds });
       if (error) {
         const missingRpc = ['PGRST202', '42883'].includes(error.code) || /append_campaign_items|function .* does not exist/i.test(error.message || '');
-        if (!missingRpc) throw error;
+        if (!missingRpc) throw withCampaignFailureStage(error, 'append_campaign_items');
         const start = campaignItems.reduce((max, item) => Math.max(max, Number(item.sort_order) || 0), 0);
         const payload = missingIds.map((product_id, index) => ({ campaign_id: campaign.id, product_id, sort_order: start + index + 1, is_active: true }));
         const { data: fallbackData, error: fallbackError } = await client.from('campaign_items').upsert(payload, { onConflict: 'campaign_id,product_id' }).select('product_id');
-        if (fallbackError) throw fallbackError;
+        if (fallbackError) throw withCampaignFailureStage(fallbackError, 'campaign_items_fallback_upsert');
         addedCount = Array.isArray(fallbackData) ? fallbackData.length : missingIds.length;
       } else addedCount = Array.isArray(data) ? data.length : missingIds.length;
       await loadCampaign();
@@ -1614,7 +1635,7 @@
       saveCampaignPreview();
     } else {
       const { error } = await client.from('campaign_items').delete().eq('campaign_id', campaign.id).in('product_id', removableIds);
-      if (error) throw error;
+      if (error) throw withCampaignFailureStage(error, 'campaign_items_delete');
       await loadCampaign();
     }
     selectedCampaignProductIds = new Set([...selectedCampaignProductIds].filter((id) => !removableIds.includes(id)));
@@ -1632,8 +1653,15 @@
     }
   };
   const reportCampaignBatchFailure = (error, actionLabel = 'cập nhật') => {
-    console.warn('CAMPAIGN_BATCH_FAILED', error);
-    showMessage(dom.campaignMessage, `Không thể ${actionLabel} Box. Thành công: 0 · Thất bại: 1. Vui lòng kiểm tra quyền hoặc migration Box.`, 'error');
+    const diagnostic = {
+      stage: error?.campaignStage || 'unknown',
+      code: error?.code || error?.status || 'UNKNOWN',
+      message: error?.message || 'Unknown campaign error',
+      details: error?.details || null,
+      hint: error?.hint || null,
+    };
+    console.error('CAMPAIGN_ADD_FAILED', diagnostic);
+    showMessage(dom.campaignMessage, getCampaignFailureMessage(error, actionLabel), 'error');
   };
   const renderCampaignPicker = () => {
     if (!dom.campaignPickerList) return;
