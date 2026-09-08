@@ -150,6 +150,7 @@ document.addEventListener('keydown', (event) => {
 });
 
 const dom = {
+  siteHeader: document.querySelector('.site-header'),
   menuWrap: document.querySelector('.menu-wrap'),
   hamburger: document.querySelector('.hamburger'),
   dropdownLinks: document.querySelectorAll('[data-menu-link]'),
@@ -157,8 +158,6 @@ const dom = {
   hashLinks: document.querySelectorAll('a[href^="#"]'),
   sections: document.querySelectorAll('.section-anchor[id]'),
   carousel: document.querySelector('[data-carousel]'),
-  homeRightBanner: document.querySelector('[data-home-right-banner]'),
-  homeRightBannerCard: document.querySelector('[data-home-right-banner-card]'),
   productGrid: document.querySelector('[data-product-grid]'),
   featuredLoadMoreButton: document.querySelector('[data-load-more="featured"]'),
   sizeOptions: document.querySelector('.size-options'),
@@ -211,19 +210,82 @@ let searchSuggestionsState = [];
 let searchSuggestionsIndex = -1;
 let searchSuggestionsTimer = null;
 
+const mobileSearchMedia = window.matchMedia('(max-width: 767px)');
+const MOBILE_SEARCH_TOP_THRESHOLD = 40;
+const MOBILE_SEARCH_HIDE_THRESHOLD = 12;
+const MOBILE_SEARCH_SHOW_THRESHOLD = 8;
+let mobileSearchInputFocused = false;
+let mobileSearchScrollIntent = 0;
+let mobileSearchIgnoreScrollUntil = 0;
+
+const isMobileSearchViewport = () => mobileSearchMedia.matches;
+
+const setMobileSearchVisibility = (isVisible) => {
+  if (!dom.siteHeader) return;
+  if (!isMobileSearchViewport()) {
+    dom.siteHeader.classList.remove('mobile-search-hidden');
+    mobileSearchScrollIntent = 0;
+    return;
+  }
+
+  const shouldShow = Boolean(
+    isVisible
+    || mobileSearchInputFocused
+    || dom.menuWrap?.classList.contains('is-open')
+    || Math.max(0, window.scrollY || 0) <= MOBILE_SEARCH_TOP_THRESHOLD,
+  );
+  const nextHidden = !shouldShow;
+  const wasHidden = dom.siteHeader.classList.contains('mobile-search-hidden');
+  dom.siteHeader.classList.toggle('mobile-search-hidden', nextHidden);
+  if (wasHidden !== nextHidden) {
+    mobileSearchIgnoreScrollUntil = performance.now() + 240;
+  }
+};
+
+const syncMobileSearchForViewport = () => {
+  mobileSearchScrollIntent = 0;
+  setMobileSearchVisibility(true);
+};
+
+if (dom.searchInput) {
+  dom.searchInput.addEventListener('focus', () => {
+    mobileSearchInputFocused = true;
+    mobileSearchScrollIntent = 0;
+    setMobileSearchVisibility(true);
+  });
+
+  dom.searchInput.addEventListener('blur', () => {
+    mobileSearchInputFocused = false;
+    mobileSearchScrollIntent = 0;
+  });
+}
+
+dom.searchForm?.addEventListener('pointerdown', () => {
+  mobileSearchScrollIntent = 0;
+  setMobileSearchVisibility(true);
+}, { passive: true });
+
+if (typeof mobileSearchMedia.addEventListener === 'function') {
+  mobileSearchMedia.addEventListener('change', syncMobileSearchForViewport);
+} else if (typeof mobileSearchMedia.addListener === 'function') {
+  mobileSearchMedia.addListener(syncMobileSearchForViewport);
+}
+
+setMobileSearchVisibility(true);
+
 
 const BRAND_LOGO_WIDTH = 48;
 const BRAND_LOGO_HEIGHT = 48;
 const BRAND_DATA = [
-  { name: 'Samsung', logo: 'samsung.jpeg', wide: true },
-  { name: 'LG', logo: 'LG.jpeg', wide: true },
-  { name: 'Sony', logo: 'sony.jpeg', wide: true },
-  { name: 'Toshiba', logo: 'toshiba.jpeg', wide: true },
-  { name: 'Hisense', logo: 'Hisense.svg', wide: true },
-  { name: 'TCL', logo: 'TCL.jpeg', wide: true },
-  { name: 'Panasonic', logo: 'panasonic.jpeg', wide: true },
-  { name: 'Sharp', logo: 'sharp.jpeg', wide: true },
-  { name: 'Xiaomi', logo: 'xiaomi.jpeg', wide: true },
+  { name: 'Samsung', logo: 'assets/brands/samsung.png', wide: true },
+  { name: 'LG', logo: 'assets/brands/lg.png', wide: true },
+  { name: 'Sony', logo: 'assets/brands/sony.png', wide: true },
+  { name: 'Toshiba', logo: 'assets/brands/toshiba.png', wide: true },
+  { name: 'Hisense', logo: 'assets/brands/hisense.svg', wide: true },
+  { name: 'TCL', logo: 'assets/brands/tcl.png', wide: true },
+  { name: 'Panasonic', logo: 'assets/brands/panasonic.png', wide: true },
+  { name: 'Sharp', logo: 'assets/brands/sharp.png', wide: true },
+  { name: 'Xiaomi', logo: 'assets/brands/xiaomi.png', wide: true },
   { name: 'Casper', logo: 'casper.jpeg', wide: true },
   { name: 'Coocaa', logo: 'coocaa.jpeg', wide: true },
   { name: 'Skyworth', logo: 'skyworth.png', wide: true },
@@ -396,11 +458,15 @@ const FILTER_ALL_VALUE = 'all';
 const FILTER_ALL_LABEL = 'Tất cả';
 const TV_SERIES_ALL_LABEL = 'Tất cả dòng';
 const BRAND_ALL_LABEL = 'Tất cả hãng';
-const PRODUCTS_BATCH_SIZE = 12;
+const PRODUCTS_BATCH_SIZES = Object.freeze({
+  featured: 12,
+  newTv: 20,
+  oldTv: 20,
+});
 const visibleCounts = {
-  featured: PRODUCTS_BATCH_SIZE,
-  newTv: PRODUCTS_BATCH_SIZE,
-  oldTv: PRODUCTS_BATCH_SIZE,
+  featured: PRODUCTS_BATCH_SIZES.featured,
+  newTv: PRODUCTS_BATCH_SIZES.newTv,
+  oldTv: PRODUCTS_BATCH_SIZES.oldTv,
 };
 
 const FILTER_EMPTY_MESSAGE = 'Chưa có sản phẩm thuộc hãng này. Vui lòng chọn hãng khác hoặc liên hệ Anh Minh Store.';
@@ -790,6 +856,10 @@ const normalizeSourceProducts = (sourceProducts = []) => {
   productIds = new Set();
   return sourceProducts.map(normalizeProduct).sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
 };
+
+if (Array.isArray(window.V2Products) || Array.isArray(window.demoProducts)) {
+  products = normalizeSourceProducts(window.V2Products || window.demoProducts);
+}
 
 publishProductsForChatbot();
 
@@ -1398,7 +1468,8 @@ const isPublicProduct = (product = {}) => Boolean(product?.isActive !== false &&
 const getFeaturedProducts = (sourceProducts = products) => sourceProducts.filter((product) => isPublicProduct(product) && product.isFeatured === true);
 const getNewTvProducts = (sourceProducts = products) => sourceProducts.filter((product) => isPublicProduct(product) && normalizeProductType(product) === 'Tivi mới');
 const getOldTvProducts = (sourceProducts = products) => sourceProducts.filter((product) => isPublicProduct(product) && normalizeProductType(product) === 'Tivi cũ');
-const resetVisibleCount = (sectionKey) => { visibleCounts[sectionKey] = PRODUCTS_BATCH_SIZE; };
+const getProductsBatchSize = (sectionKey) => PRODUCTS_BATCH_SIZES[sectionKey] || PRODUCTS_BATCH_SIZES.featured;
+const resetVisibleCount = (sectionKey) => { visibleCounts[sectionKey] = getProductsBatchSize(sectionKey); };
 const resetAllVisibleCounts = () => Object.keys(visibleCounts).forEach(resetVisibleCount);
 
 
@@ -1480,6 +1551,255 @@ const renderBrandPanel = () => {
   initBrandLogoFallbacks(dom.brandList);
 };
 
+const brandScrollIndicatorControllers = new WeakMap();
+
+const initBrandScrollIndicator = (brandRow) => {
+  if (!brandRow) return;
+
+  const existingController = brandScrollIndicatorControllers.get(brandRow);
+  if (existingController) {
+    existingController.requestSync();
+    return;
+  }
+
+  const isUsedRail = brandRow.hasAttribute('data-old-tv-brand-row');
+  const railLabel = isUsedRail ? 'hãng Tivi cũ' : 'hãng Tivi mới';
+  const railId = brandRow.id || `brand-filter-rail-${isUsedRail ? 'used' : 'new'}`;
+  brandRow.id = railId;
+
+  const indicator = document.createElement('div');
+  indicator.className = 'brand-scroll-indicator';
+  indicator.dataset.brandScrollIndicator = isUsedRail ? 'used' : 'new';
+  indicator.hidden = true;
+  indicator.innerHTML = `
+    <button class="brand-scroll-indicator__arrow" type="button" data-brand-scroll-prev aria-label="Cuộn sang trái danh sách ${railLabel}" aria-controls="${railId}">←</button>
+    <div class="brand-scroll-indicator__track" data-brand-scroll-track role="scrollbar" tabindex="0" aria-label="Vị trí cuộn danh sách ${railLabel}" aria-controls="${railId}" aria-orientation="horizontal" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+      <span class="brand-scroll-indicator__thumb" data-brand-scroll-thumb></span>
+    </div>
+    <button class="brand-scroll-indicator__arrow" type="button" data-brand-scroll-next aria-label="Cuộn sang phải danh sách ${railLabel}" aria-controls="${railId}">→</button>
+  `;
+  brandRow.insertAdjacentElement('afterend', indicator);
+
+  const previousButton = indicator.querySelector('[data-brand-scroll-prev]');
+  const nextButton = indicator.querySelector('[data-brand-scroll-next]');
+  const track = indicator.querySelector('[data-brand-scroll-track]');
+  const thumb = indicator.querySelector('[data-brand-scroll-thumb]');
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  let syncFrame = 0;
+  let dragState = null;
+
+  const getMetrics = () => {
+    const maxScroll = Math.max(0, brandRow.scrollWidth - brandRow.clientWidth);
+    const trackWidth = track.clientWidth;
+    const visibleRatio = brandRow.scrollWidth ? brandRow.clientWidth / brandRow.scrollWidth : 1;
+    const thumbWidth = Math.min(trackWidth, Math.max(28, trackWidth * visibleRatio));
+    return {
+      maxScroll,
+      thumbWidth,
+      thumbTravel: Math.max(0, trackWidth - thumbWidth),
+    };
+  };
+
+  const sync = () => {
+    syncFrame = 0;
+    const hasOverflow = brandRow.scrollWidth - brandRow.clientWidth > 2;
+    indicator.hidden = !hasOverflow;
+    if (!hasOverflow) return;
+
+    const { maxScroll, thumbWidth, thumbTravel } = getMetrics();
+    const progress = maxScroll ? Math.min(1, Math.max(0, brandRow.scrollLeft / maxScroll)) : 0;
+    thumb.style.width = `${thumbWidth}px`;
+    thumb.style.transform = `translate3d(${progress * thumbTravel}px, 0, 0)`;
+    track.setAttribute('aria-valuenow', String(Math.round(progress * 100)));
+    previousButton.disabled = brandRow.scrollLeft <= 1;
+    nextButton.disabled = brandRow.scrollLeft >= maxScroll - 1;
+  };
+
+  const requestSync = () => {
+    if (syncFrame) return;
+    syncFrame = window.requestAnimationFrame(sync);
+  };
+
+  const scrollRailBy = (distance) => {
+    brandRow.scrollBy({
+      left: distance,
+      behavior: reducedMotion.matches ? 'auto' : 'smooth',
+    });
+  };
+
+  previousButton.addEventListener('click', () => scrollRailBy(-Math.max(180, brandRow.clientWidth * .72)));
+  nextButton.addEventListener('click', () => scrollRailBy(Math.max(180, brandRow.clientWidth * .72)));
+  brandRow.addEventListener('scroll', requestSync, { passive: true });
+  brandRow.addEventListener('load', requestSync, true);
+
+  track.addEventListener('keydown', (event) => {
+    const keyDistances = {
+      ArrowLeft: -80,
+      ArrowRight: 80,
+      PageUp: -brandRow.clientWidth * .72,
+      PageDown: brandRow.clientWidth * .72,
+    };
+    if (event.key === 'Home' || event.key === 'End') {
+      event.preventDefault();
+      brandRow.scrollTo({ left: event.key === 'Home' ? 0 : brandRow.scrollWidth, behavior: reducedMotion.matches ? 'auto' : 'smooth' });
+      return;
+    }
+    if (!(event.key in keyDistances)) return;
+    event.preventDefault();
+    scrollRailBy(keyDistances[event.key]);
+  });
+
+  track.addEventListener('pointerdown', (event) => {
+    if (event.button !== 0) return;
+    const metrics = getMetrics();
+    if (!metrics.maxScroll || !metrics.thumbTravel) return;
+    event.preventDefault();
+
+    if (event.target === track) {
+      const trackRect = track.getBoundingClientRect();
+      const targetOffset = Math.min(metrics.thumbTravel, Math.max(0, event.clientX - trackRect.left - metrics.thumbWidth / 2));
+      brandRow.scrollLeft = (targetOffset / metrics.thumbTravel) * metrics.maxScroll;
+    }
+
+    dragState = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startScrollLeft: brandRow.scrollLeft,
+    };
+    track.setPointerCapture(event.pointerId);
+    indicator.classList.add('is-dragging');
+  });
+
+  track.addEventListener('pointermove', (event) => {
+    if (!dragState || dragState.pointerId !== event.pointerId) return;
+    const { maxScroll, thumbTravel } = getMetrics();
+    if (!thumbTravel) return;
+    brandRow.scrollLeft = dragState.startScrollLeft + ((event.clientX - dragState.startX) / thumbTravel) * maxScroll;
+  });
+
+  const endDrag = (event) => {
+    if (!dragState || dragState.pointerId !== event.pointerId) return;
+    dragState = null;
+    indicator.classList.remove('is-dragging');
+    if (track.hasPointerCapture(event.pointerId)) track.releasePointerCapture(event.pointerId);
+  };
+  track.addEventListener('pointerup', endDrag);
+  track.addEventListener('pointercancel', endDrag);
+
+  if ('ResizeObserver' in window) {
+    const resizeObserver = new ResizeObserver(requestSync);
+    resizeObserver.observe(brandRow);
+    resizeObserver.observe(track);
+  } else {
+    window.addEventListener('resize', requestSync, { passive: true });
+  }
+
+  brandScrollIndicatorControllers.set(brandRow, { requestSync });
+  requestSync();
+};
+
+const brandSelectionMotionControllers = new WeakMap();
+
+const initBrandSelectionMotion = (brandRow) => {
+  if (!brandRow) return;
+
+  const existingController = brandSelectionMotionControllers.get(brandRow);
+  if (existingController) {
+    existingController.refresh();
+    return;
+  }
+
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  let indicator = null;
+  let syncFrame = 0;
+  let readyFrame = 0;
+  let pendingAnimation = false;
+  let hasPosition = false;
+  let resizeObserver = null;
+
+  const ensureIndicator = () => {
+    if (indicator?.isConnected) return indicator;
+
+    indicator = brandRow.querySelector(':scope > .brand-selection-indicator');
+    if (!indicator) {
+      indicator = document.createElement('span');
+      indicator.className = 'brand-selection-indicator';
+      indicator.setAttribute('aria-hidden', 'true');
+      indicator.hidden = true;
+      brandRow.prepend(indicator);
+    }
+
+    hasPosition = false;
+    brandRow.classList.add('has-brand-selection-motion');
+    return indicator;
+  };
+
+  const observeButtons = () => {
+    if (!resizeObserver) return;
+    brandRow.querySelectorAll(':scope > button[aria-pressed]').forEach((button) => resizeObserver.observe(button));
+  };
+
+  const sync = () => {
+    syncFrame = 0;
+    const selectionLayer = ensureIndicator();
+    const activeButton = brandRow.querySelector(':scope > button.is-active[aria-pressed="true"]:not(:disabled)');
+    if (!activeButton) {
+      selectionLayer.hidden = true;
+      pendingAnimation = false;
+      return;
+    }
+
+    const shouldAnimate = pendingAnimation && hasPosition && !reducedMotion.matches;
+    pendingAnimation = false;
+
+    if (!shouldAnimate) selectionLayer.classList.remove('is-ready');
+    selectionLayer.hidden = false;
+    selectionLayer.classList.toggle('is-all-selection', activeButton.classList.contains('old-tv-brand-card--all'));
+    selectionLayer.style.width = `${activeButton.offsetWidth}px`;
+    selectionLayer.style.height = `${activeButton.offsetHeight}px`;
+    selectionLayer.style.transform = `translate3d(${activeButton.offsetLeft}px, ${activeButton.offsetTop}px, 0)`;
+    selectionLayer.classList.add('is-positioned');
+    hasPosition = true;
+
+    if (!selectionLayer.classList.contains('is-ready') && !reducedMotion.matches) {
+      window.cancelAnimationFrame(readyFrame);
+      readyFrame = window.requestAnimationFrame(() => selectionLayer?.classList.add('is-ready'));
+    }
+  };
+
+  const requestSync = (animate = false) => {
+    pendingAnimation = pendingAnimation || animate;
+    if (syncFrame) return;
+    syncFrame = window.requestAnimationFrame(sync);
+  };
+
+  const refresh = () => {
+    ensureIndicator();
+    observeButtons();
+    pendingAnimation = false;
+    if (syncFrame) window.cancelAnimationFrame(syncFrame);
+    syncFrame = 0;
+    sync();
+  };
+
+  if ('ResizeObserver' in window) {
+    resizeObserver = new ResizeObserver(() => requestSync(false));
+    resizeObserver.observe(brandRow);
+  } else {
+    window.addEventListener('resize', () => requestSync(false), { passive: true });
+  }
+
+  document.fonts?.ready?.then(() => requestSync(false));
+  brandSelectionMotionControllers.set(brandRow, { refresh, requestSync });
+  refresh();
+};
+
+const syncBrandSelectionMotion = (brandRow, animate = false) => {
+  const controller = brandSelectionMotionControllers.get(brandRow);
+  if (controller) controller.requestSync(animate);
+  else initBrandSelectionMotion(brandRow);
+};
+
 const renderBrandFilterRow = ({ container, sectionType }) => {
   if (!container) return;
   const isUsed = sectionType === 'used';
@@ -1492,25 +1812,25 @@ const renderBrandFilterRow = ({ container, sectionType }) => {
       ? sectionProducts.length
       : sectionProducts.filter((product) => productMatchesBrand(product, brandName)).length
   );
-  const renderBrandCount = (count) => `<span class="filter-count-badge old-tv-brand-card__count" aria-label="${count} sản phẩm">${count}</span>`;
+  const renderBrandCount = (count) => `<span class="filter-count-badge old-tv-brand-card__count" aria-hidden="true">${count}</span>`;
   const totalCount = getBrandProductCount(FILTER_ALL_VALUE);
-  const allCard = `<button class="${cardClass} is-active" type="button" ${dataAttr}="all" aria-pressed="true">
-    ${createBrandLogoElement(null, logoClass)}
+  const allCard = `<button class="${cardClass} old-tv-brand-card--all is-active" type="button" ${dataAttr}="all" aria-pressed="true" aria-label="Tất cả, ${totalCount} sản phẩm">
     <span class="old-tv-brand-card__name">Tất cả</span>
     ${renderBrandCount(totalCount)}
   </button>`;
   const brandCards = BRAND_DATA.map((brand) => {
     const count = getBrandProductCount(brand.name);
     const disabledAttrs = count ? '' : ' disabled aria-disabled="true"';
-    return `<button class="${cardClass}${count ? '' : ' is-disabled'}" type="button" ${dataAttr}="${escapeHtml(brand.name)}" aria-pressed="false"${disabledAttrs}>
+    return `<button class="${cardClass}${count ? '' : ' is-disabled'}" type="button" ${dataAttr}="${escapeHtml(brand.name)}" aria-pressed="false" aria-label="${escapeHtml(brand.name)}, ${count} sản phẩm"${disabledAttrs}>
       ${createBrandLogoElement(brand, logoClass)}
-      <span class="old-tv-brand-card__name">${escapeHtml(brand.name)}</span>
       ${renderBrandCount(count)}
     </button>`;
   }).join('');
 
   container.innerHTML = `${allCard}${brandCards}`;
   initBrandLogoFallbacks(container);
+  initBrandScrollIndicator(container);
+  initBrandSelectionMotion(container);
 };
 
 const showServiceIconImage = (image) => {
@@ -1578,6 +1898,7 @@ const syncSectionSizeRow = (sectionKey) => {
     button.dataset.filterLabel = label;
     button.innerHTML = `${escapeHtml(label)} <span class="filter-count-badge">${count}</span>`;
     const isDisabled = !isActive && !isAllFilter(buttonSize) && count === 0;
+    button.hidden = false;
     button.disabled = isDisabled;
     button.classList.toggle('is-active', isActive);
     button.classList.toggle('is-disabled', isDisabled);
@@ -1624,9 +1945,16 @@ const updateLoadMoreButton = (button, sectionKey, totalProducts) => {
 
 const bindProductImageFallbacks = (root) => {
   root?.querySelectorAll('.product-card__image').forEach((image) => {
+    const syncImageShape = () => {
+      if (!image.naturalWidth || !image.naturalHeight) return;
+      const ratio = image.naturalWidth / image.naturalHeight;
+      image.classList.toggle('is-square-source', ratio >= 0.82 && ratio <= 1.18);
+    };
+    image.addEventListener('load', syncImageShape);
     image.addEventListener('error', () => {
       image.closest('.product-card__media')?.classList.add('is-image-error');
     }, { once: true });
+    if (image.complete && image.naturalWidth) syncImageShape();
   });
 };
 
@@ -1666,14 +1994,67 @@ const renderProductListingCard = (product, { classes = 'product-card', dataset =
 
 const renderFeaturedProductCard = (product) => renderProductListingCard(product, { classes: 'product-card' });
 
+const formatCatalogPrice = (value = '') => {
+  const price = String(value || '').trim();
+  if (!price) return '';
+  return /\d$/.test(price) ? `${price}đ` : price;
+};
+
+const renderTvCatalogProductCard = (product, dataset, isUsed) => {
+  const brand = product.brand || '';
+  const model = product.model || '';
+  const fullName = product.fullName || product.full_name || '';
+  const title = fullName || model;
+  const size = formatProductCardSize(product.size);
+  const condition = product.condition || getProductStockStatusLabel(product.stockStatus);
+  const typeLabel = isUsed ? 'Tivi cũ' : 'Tivi mới';
+  const oldPrice = formatCatalogPrice(product.oldPrice || product.old_price || '');
+  const price = formatCatalogPrice(product.price || '');
+  const detailUrl = getProductCardDetailUrl(product);
+  const clickableClass = detailUrl ? ' product-card--clickable' : '';
+  const placeholder = renderTvPlaceholder(title);
+  const media = product.image
+    ? `<div class="product-card__media tv-catalog-card__media">
+        <span class="tv-catalog-card__type-badge">${escapeHtml(typeLabel)}</span>
+        <img class="product-card__image tv-catalog-card__image" src="${escapeHtml(product.image)}" alt="${escapeHtml(title)}" loading="lazy" decoding="async" />
+        <div class="product-card__fallback" aria-hidden="true">${placeholder}</div>
+      </div>`
+    : `<div class="product-card__media product-card__media--placeholder tv-catalog-card__media">
+        <span class="tv-catalog-card__type-badge">${escapeHtml(typeLabel)}</span>
+        ${placeholder}
+      </div>`;
+  const oldPriceMarkup = oldPrice ? `<del>${escapeHtml(oldPrice)}</del>` : '';
+  const cardTag = detailUrl ? 'a' : 'article';
+  const linkAttributes = detailUrl
+    ? ` href="${escapeHtml(detailUrl)}" aria-label="Xem chi tiết ${escapeHtml(title)}"${renderProductCardLinkAttributes(detailUrl)}`
+    : '';
+  const typeClass = isUsed ? 'tv-catalog-card--used' : 'tv-catalog-card--new new-tv-card';
+
+  return `
+    <${cardTag} class="used-tv-card used-tv-card--catalog tv-catalog-card ${typeClass}${clickableClass}"${linkAttributes} ${dataset}>
+      ${media}
+      <div class="tv-catalog-card__body">
+        <div class="tv-catalog-card__identity">
+          <span class="tv-catalog-card__brand">${escapeHtml(brand)}</span>
+          <span class="tv-catalog-card__model">${escapeHtml(model)}</span>
+        </div>
+        <h3 class="tv-catalog-card__name">${escapeHtml(title)}</h3>
+        <p class="tv-catalog-card__summary">${escapeHtml([size, condition].filter(Boolean).join(' · '))}</p>
+        <div class="tv-catalog-card__price">
+          <strong>${escapeHtml(price)}</strong>
+          ${oldPriceMarkup}
+        </div>
+      </div>
+    </${cardTag}>`;
+};
+
 const renderSectionProductCard = (product, sectionType) => {
   const brand = product.brand || '';
   const isUsed = sectionType === 'used';
   const dataset = isUsed
     ? `data-used-tv-card data-used-size="${escapeHtml(product.size)}" data-used-brand="${escapeHtml(brand)}"`
     : `data-new-tv-card data-new-size="${escapeHtml(product.size)}" data-new-brand="${escapeHtml(brand)}"`;
-  const classes = isUsed ? 'used-tv-card' : 'used-tv-card new-tv-card';
-  return renderProductListingCard(product, { classes, dataset });
+  return renderTvCatalogProductCard(product, dataset, isUsed);
 };
 
 const renderTvSection = ({ grid, empty, count, sectionKey, filterState, sectionType, loadMoreButton }) => {
@@ -1683,7 +2064,7 @@ const renderTvSection = ({ grid, empty, count, sectionKey, filterState, sectionT
   const cards = visibleProducts.map((product) => renderSectionProductCard(product, sectionType)).join('');
   const emptyMarkup = `<p class="empty-state used-tv-empty${sectionType === 'new' ? ' new-tv-empty' : ''}" ${sectionType === 'new' ? 'data-new-tv-empty' : 'data-used-tv-empty'}${filteredProducts.length ? ' hidden' : ''}>${PUBLIC_PRODUCTS_EMPTY_MESSAGE}</p>`;
   grid.innerHTML = `${cards}${emptyMarkup}`;
-  if (count) count.textContent = `Đang hiển thị: ${visibleProducts.length} sản phẩm`;
+  if (count) count.textContent = `Đang hiển thị: ${visibleProducts.length} / ${filteredProducts.length} sản phẩm`;
   if (empty) empty.hidden = filteredProducts.length > 0;
   updateLoadMoreButton(loadMoreButton, sectionKey, filteredProducts.length);
   bindProductImageFallbacks(grid);
@@ -1708,6 +2089,8 @@ const syncSectionBrandRows = () => {
     button.classList.toggle('is-active', isActive);
     button.setAttribute('aria-pressed', String(isActive));
   });
+  syncBrandSelectionMotion(dom.usedTvBrandRow, true);
+  syncBrandSelectionMotion(dom.newTvBrandRow, true);
 };
 
 const applyBrandFilter = (brand = '') => {
@@ -1835,6 +2218,10 @@ const setMenuState = (isOpen) => {
   document.body.classList.toggle('menu-open', isOpen);
   dom.hamburger.setAttribute('aria-expanded', String(isOpen));
   dom.hamburger.setAttribute('aria-label', isOpen ? 'Đóng danh mục' : 'Mở danh mục');
+  if (isOpen) {
+    mobileSearchScrollIntent = 0;
+    setMobileSearchVisibility(true);
+  }
 };
 
 const scrollToHash = (hash) => {
@@ -2115,7 +2502,7 @@ const renderProductSection = (sectionKey) => {
 
 const showMoreProducts = (sectionKey) => {
   if (!Object.prototype.hasOwnProperty.call(visibleCounts, sectionKey)) return;
-  visibleCounts[sectionKey] += PRODUCTS_BATCH_SIZE;
+  visibleCounts[sectionKey] += getProductsBatchSize(sectionKey);
   renderProductSection(sectionKey);
 };
 
@@ -2318,7 +2705,182 @@ const refreshPublicProductsFromSupabase = async () => {
   }
 };
 
+const publishTet2027CampaignProducts = (items = []) => {
+  window.Tet2027CampaignProducts = items.map((item, index) => ({ ...normalizeProduct(item, index), sortOrder: index }));
+  window.dispatchEvent(new CustomEvent('tet2027campaignchange', { detail: { products: window.Tet2027CampaignProducts } }));
+};
+
+const featuredBoxRegistry = window.AnhMinhBoxRegistry || {};
+const featuredBoxSlot = document.querySelector('[data-featured-box-slot]');
+let activeFeaturedBoxKey = null;
+const setFeaturedBoxSlot = (key = null) => {
+  const box = key ? featuredBoxRegistry[key] : null;
+  if (key && !box) {
+    console.warn(`Featured Box key is not registered: ${key}`);
+    activeFeaturedBoxKey = null;
+    if (featuredBoxSlot) featuredBoxSlot.hidden = true;
+    return null;
+  }
+  activeFeaturedBoxKey = key || null;
+  const canRenderHere = box?.renderer === featuredBoxSlot?.dataset.boxRenderer;
+  if (featuredBoxSlot) featuredBoxSlot.hidden = !canRenderHere;
+  return activeFeaturedBoxKey;
+};
+const refreshFeaturedBoxSlot = async () => {
+  const storeSupabase = window.AnhMinhSupabase;
+  if (!storeSupabase?.isConfigured || !storeSupabase.client) {
+    return setFeaturedBoxSlot(window.FEATURED_BOX_PREVIEW_KEY || null);
+  }
+  try {
+    const { data, error } = await storeSupabase.client
+      .from('storefront_settings')
+      .select('active_featured_box_key')
+      .eq('id', 'homepage')
+      .maybeSingle();
+    if (error) throw error;
+    return setFeaturedBoxSlot(data?.active_featured_box_key || null);
+  } catch (error) {
+    console.warn('Không thể tải Featured Box setting; storefront sẽ không render Box.', error);
+    return setFeaturedBoxSlot(null);
+  }
+};
+
+const refreshTet2027CampaignFromSupabase = async () => {
+  const storeSupabase = window.AnhMinhSupabase;
+  if (!storeSupabase?.isConfigured || !storeSupabase.client) return;
+  try {
+    const { data: campaign, error: campaignError } = await storeSupabase.client
+      .from('campaigns')
+      .select('id,key')
+      .eq('key', 'tet_2027')
+      .maybeSingle();
+    if (campaignError) throw campaignError;
+    if (!campaign?.id) {
+      publishTet2027CampaignProducts([]);
+      return;
+    }
+    const { data, error } = await storeSupabase.client
+      .from('campaign_items')
+      .select('sort_order, product:products(*)')
+      .eq('campaign_id', campaign.id)
+      .eq('is_active', true)
+      .order('sort_order', { ascending: true });
+    if (error) throw error;
+    const seen = new Set();
+    const campaignProducts = (Array.isArray(data) ? data : [])
+      .map((item) => item.product)
+      .filter((product) => product?.id && product.is_active !== false && isPublicStockStatus(product.stock_status ?? product.stockStatus))
+      .filter((product) => !seen.has(product.id) && seen.add(product.id));
+    publishTet2027CampaignProducts(campaignProducts);
+  } catch (error) {
+    console.warn('Không thể tải campaign Tết 2027 từ Supabase.', error);
+    publishTet2027CampaignProducts([]);
+  }
+};
+
+/* Mini banners are optional content. Each production slot is identified by
+   its existing hero_banners placement value; an empty image_url means the
+   slot is intentionally unpublished and must not render a broken image. */
+const MINI_BANNER_PLACEMENTS = Object.freeze([
+  'home_mini_banner_01',
+  'home_mini_banner_02',
+  'home_mini_banner_03',
+]);
+
+const normalizeOptionalBannerUrl = (value = '') => {
+  const candidate = String(value || '').trim();
+  if (!candidate) return '';
+  try {
+    const parsed = new URL(candidate, document.baseURI);
+    if (!['http:', 'https:'].includes(parsed.protocol)) return '';
+    return candidate;
+  } catch {
+    return '';
+  }
+};
+
+const clearMiniBannerSlots = (strip, slots) => {
+  slots.forEach((slot) => {
+    slot.replaceChildren();
+    slot.hidden = true;
+    slot.removeAttribute('aria-label');
+  });
+  strip.hidden = true;
+};
+
+const loadSupabaseMiniBanners = async () => {
+  const strip = document.querySelector('[data-mini-banner-strip]');
+  const slots = Array.from(document.querySelectorAll('[data-mini-banner-slot]'));
+  if (!strip || !slots.length) return;
+
+  const storeSupabase = window.AnhMinhSupabase || window.anhMinhSupabase;
+  if (!storeSupabase?.isConfigured || !storeSupabase.client) {
+    clearMiniBannerSlots(strip, slots);
+    return;
+  }
+
+  try {
+    const { data, error } = await storeSupabase.client
+      .from('hero_banners')
+      .select('title,image_url,alt_text,sort_order,placement,link_url')
+      .eq('is_active', true)
+      .in('placement', MINI_BANNER_PLACEMENTS)
+      .order('sort_order', { ascending: true })
+      .order('placement', { ascending: true });
+    if (error) throw error;
+
+    const byPlacement = new Map(
+      (Array.isArray(data) ? data : [])
+        .filter((banner) => MINI_BANNER_PLACEMENTS.includes(banner?.placement))
+        .map((banner) => [banner.placement, banner]),
+    );
+    let visibleCount = 0;
+
+    slots.forEach((slot) => {
+      const banner = byPlacement.get(slot.dataset.miniBannerKey || '');
+      const imageUrl = normalizeOptionalBannerUrl(banner?.image_url);
+      slot.replaceChildren();
+      slot.hidden = !imageUrl;
+      if (!imageUrl) {
+        slot.removeAttribute('aria-label');
+        return;
+      }
+
+      const image = document.createElement('img');
+      image.src = imageUrl;
+      image.alt = String(banner.alt_text || banner.title || '').trim();
+      image.loading = 'lazy';
+      image.decoding = 'async';
+      image.draggable = false;
+      const linkUrl = normalizeOptionalBannerUrl(banner.link_url);
+      if (linkUrl) {
+        const link = document.createElement('a');
+        link.href = linkUrl;
+        link.setAttribute('aria-label', image.alt || 'Xem nội dung banner');
+        link.target = /^https?:/i.test(linkUrl) ? '_blank' : '';
+        if (link.target) link.rel = 'noopener noreferrer';
+        link.appendChild(image);
+        slot.appendChild(link);
+      } else {
+        slot.appendChild(image);
+      }
+      slot.setAttribute('aria-label', image.alt || banner.title || 'Banner mini');
+      visibleCount += 1;
+    });
+
+    strip.hidden = visibleCount === 0;
+  } catch (error) {
+    console.warn('Không thể tải mini banner trang chủ; bỏ qua các slot mini.', error);
+    clearMiniBannerSlots(strip, slots);
+  }
+};
+
 refreshPublicProductsFromSupabase();
+refreshFeaturedBoxSlot().then((boxKey) => {
+  if (boxKey === 'tet_2027') return refreshTet2027CampaignFromSupabase();
+  publishTet2027CampaignProducts([]);
+  return null;
+});
 
 const escapeAttribute = (value = '') => String(value).replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
 
@@ -2355,84 +2917,6 @@ const loadSupabaseHeroBanners = async (track) => {
   }
 };
 
-const renderHomeRightBannerFallback = () => {
-  const card = dom.homeRightBannerCard;
-  if (!card) return;
-  card.removeAttribute('role');
-  card.removeAttribute('tabindex');
-  card.removeAttribute('aria-label');
-  card.classList.remove('is-clickable');
-  card.onclick = null;
-  card.onkeydown = null;
-  card.innerHTML = `<div class="home-hero-right-banner-placeholder" data-home-right-banner-placeholder>
-    <strong>Ưu đãi nổi bật</strong>
-    <span>Cập nhật banner trong trang quản trị</span>
-  </div>`;
-};
-
-const normalizeUrl = (value = '') => String(value).trim();
-
-const renderHomeRightBanner = (banner) => {
-  const card = dom.homeRightBannerCard;
-  if (!card) return;
-  if (!banner?.image_url) {
-    renderHomeRightBannerFallback();
-    return;
-  }
-
-  const title = banner.title || 'Ưu đãi nổi bật Anh Minh Store';
-  const linkUrl = normalizeUrl(banner.link_url);
-  card.classList.toggle('is-clickable', Boolean(linkUrl));
-  card.innerHTML = `<img class="home-hero-right-banner-image" src="${escapeAttribute(banner.image_url)}" alt="${escapeAttribute(title)}" loading="lazy" />`;
-
-  if (linkUrl) {
-    card.setAttribute('role', 'link');
-    card.setAttribute('tabindex', '0');
-    card.setAttribute('aria-label', title);
-    const openBannerLink = () => { window.location.href = linkUrl; };
-    card.onclick = openBannerLink;
-    card.onkeydown = (event) => {
-      if (event.key === 'Enter' || event.key === ' ') {
-        event.preventDefault();
-        openBannerLink();
-      }
-    };
-  } else {
-    card.removeAttribute('role');
-    card.removeAttribute('tabindex');
-    card.removeAttribute('aria-label');
-    card.onclick = null;
-    card.onkeydown = null;
-  }
-};
-
-const loadHomeRightBanner = async () => {
-  if (!dom.homeRightBannerCard) return;
-  const storeSupabase = window.AnhMinhSupabase || window.anhMinhSupabase;
-  if (!storeSupabase?.isConfigured || !storeSupabase.client) {
-    renderHomeRightBannerFallback();
-    return;
-  }
-
-  try {
-    const { data, error } = await storeSupabase.client
-      .from('hero_banners')
-      .select('title,image_url,link_url,sort_order,created_at,placement')
-      .eq('placement', 'home_right_9_16')
-      .eq('is_active', true)
-      .order('sort_order', { ascending: true })
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    if (error) throw error;
-    renderHomeRightBanner(data);
-  } catch (error) {
-    console.warn('Không thể tải banner dọc trang chủ từ Supabase, dùng khung mặc định.', error);
-    renderHomeRightBannerFallback();
-  }
-};
-
 const initCarousel = async () => {
   const carousel = dom.carousel;
   if (!carousel) return;
@@ -2445,6 +2929,36 @@ const initCarousel = async () => {
   const slides = Array.from(carousel.querySelectorAll('.carousel-slide'));
   if (!slides.length) return;
   dotsWrap.innerHTML = '';
+
+  const thumbnailsWrap = carousel.parentElement?.querySelector('[data-banner-thumbnails]');
+  const renderBannerThumbnails = () => {
+    if (!thumbnailsWrap) return [];
+    thumbnailsWrap.innerHTML = '';
+
+    return slides.slice(0, 3).map((slide, index) => {
+      const sourceImage = slide.querySelector('img');
+      const source = sourceImage?.getAttribute('src') || sourceImage?.dataset.src;
+      if (!source) return null;
+
+      const label = slide.getAttribute('aria-label') || `Banner ${index + 1}`;
+      const button = document.createElement('button');
+      const image = document.createElement('img');
+      button.type = 'button';
+      button.className = 'hero-banner-thumbnail';
+      button.setAttribute('aria-label', `Hiển thị ${label}`);
+      button.dataset.bannerThumbnailIndex = String(index);
+      image.src = source;
+      image.alt = '';
+      image.loading = 'lazy';
+      image.decoding = 'async';
+      image.draggable = false;
+      button.appendChild(image);
+      thumbnailsWrap.appendChild(button);
+      return button;
+    }).filter(Boolean);
+  };
+
+  const thumbnailButtons = renderBannerThumbnails();
 
   let currentIndex = 0;
   let slideWidth = viewport.clientWidth;
@@ -2513,6 +3027,11 @@ const initCarousel = async () => {
     dots.forEach((dot, index) => {
       dot.classList.toggle('is-active', index === currentIndex);
       dot.setAttribute('aria-current', index === currentIndex ? 'true' : 'false');
+    });
+    thumbnailButtons.forEach((button, index) => {
+      const isActive = index === currentIndex;
+      button.classList.toggle('is-active', isActive);
+      button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
     });
   };
 
@@ -2584,6 +3103,13 @@ const initCarousel = async () => {
     });
   });
 
+  thumbnailButtons.forEach((button, index) => {
+    button.addEventListener('click', () => {
+      goToSlide(index);
+      restartAutoplay();
+    });
+  });
+
   viewport.addEventListener('pointerdown', startDrag);
   viewport.addEventListener('pointermove', moveDrag);
   viewport.addEventListener('pointerup', endDrag);
@@ -2624,16 +3150,51 @@ const initCarousel = async () => {
 };
 
 initCarousel();
-loadHomeRightBanner();
+loadSupabaseMiniBanners();
 
 let ticking = false;
+let lastScrollY = Math.max(0, window.scrollY || 0);
 window.addEventListener(
   'scroll',
   () => {
     if (ticking) return;
     ticking = true;
     requestAnimationFrame(() => {
-      dom.backToTop?.classList.toggle('is-visible', window.scrollY > 520);
+      const currentScrollY = Math.max(0, window.scrollY || 0);
+      const scrollDelta = currentScrollY - lastScrollY;
+
+      if (isMobileSearchViewport()) {
+        if (performance.now() < mobileSearchIgnoreScrollUntil) {
+          mobileSearchScrollIntent = 0;
+        } else if (currentScrollY <= MOBILE_SEARCH_TOP_THRESHOLD
+          || mobileSearchInputFocused
+          || dom.menuWrap?.classList.contains('is-open')) {
+          mobileSearchScrollIntent = 0;
+          setMobileSearchVisibility(true);
+        } else if (scrollDelta > 0) {
+          mobileSearchScrollIntent = mobileSearchScrollIntent >= 0
+            ? mobileSearchScrollIntent + scrollDelta
+            : scrollDelta;
+          if (mobileSearchScrollIntent >= MOBILE_SEARCH_HIDE_THRESHOLD) {
+            mobileSearchScrollIntent = 0;
+            setMobileSearchVisibility(false);
+          }
+        } else if (scrollDelta < 0) {
+          mobileSearchScrollIntent = mobileSearchScrollIntent <= 0
+            ? mobileSearchScrollIntent + scrollDelta
+            : scrollDelta;
+          if (mobileSearchScrollIntent <= -MOBILE_SEARCH_SHOW_THRESHOLD) {
+            mobileSearchScrollIntent = 0;
+            setMobileSearchVisibility(true);
+          }
+        }
+      } else {
+        mobileSearchScrollIntent = 0;
+        setMobileSearchVisibility(true);
+      }
+
+      lastScrollY = currentScrollY;
+      dom.backToTop?.classList.toggle('is-visible', currentScrollY > 520);
       ticking = false;
     });
   },
@@ -2643,3 +3204,4 @@ window.addEventListener(
 dom.backToTop?.addEventListener('click', () => {
   window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
 });
+

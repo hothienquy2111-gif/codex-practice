@@ -4,7 +4,7 @@
   --am-chatbot-cyan: #8ee8ff;
   --am-chatbot-accent: #f05a28;
   --am-chatbot-shadow: 0 22px 60px rgba(1, 52, 108, 0.24);
-  font-family: var(--font-family-base, Aptos, "Segoe UI", "Noto Sans", Arial, Helvetica, sans-serif);
+  font-family: var(--font-family-storefront, "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
 }
 
 .am-chatbot-button-wrap {
@@ -25,7 +25,7 @@
   background: rgba(255, 255, 255, 0.94);
   color: var(--am-chatbot-blue);
   font-size: 0.86rem;
-  font-weight: 800;
+  font-weight: 700;
   box-shadow: 0 10px 24px rgba(1, 52, 108, 0.16);
   pointer-events: none;
 }
@@ -144,7 +144,7 @@
   display: block;
   color: #ffffff;
   font-size: 1.05rem;
-  font-weight: 850;
+  font-weight: 700;
   line-height: 1.2;
 }
 
@@ -244,7 +244,7 @@
   background: #ffffff;
   color: var(--am-chatbot-blue);
   font-size: 0.84rem;
-  font-weight: 750;
+  font-weight: 700;
   line-height: 1.2;
   padding: 8px 10px;
   transition: transform 160ms ease, background 160ms ease, color 160ms ease, border-color 160ms ease;
@@ -330,7 +330,7 @@
   border-radius: 8px;
   color: var(--am-chatbot-blue);
   font-size: 0.8rem;
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .am-chatbot-product-info {
@@ -356,7 +356,7 @@
 .am-chatbot-product-card .am-chatbot-product-price {
   color: var(--am-chatbot-accent);
   font-size: 0.88rem;
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .am-chatbot-product-card .am-chatbot-product-old-price {
@@ -381,7 +381,7 @@
   background: var(--am-chatbot-accent);
   color: #ffffff;
   font-size: 0.8rem;
-  font-weight: 800;
+  font-weight: 700;
   line-height: 1;
   padding: 7px 10px;
   text-decoration: none;
@@ -446,7 +446,7 @@
   border-radius: 999px;
   background: linear-gradient(135deg, #f05a28, #ff824f);
   color: #ffffff;
-  font-weight: 850;
+  font-weight: 700;
   padding: 0 16px;
   box-shadow: 0 10px 22px rgba(240, 90, 40, 0.2);
 }
@@ -639,3 +639,4 @@
     max-height: calc(100vh - 110px) !important;
   }
 }
+

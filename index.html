@@ -92,6 +92,7 @@
     <!-- Google Search Console placeholder: add verification meta tag here after verifying the site. -->
     <link rel="stylesheet" href="styles.css?v=contact-modal-1" />
     <link rel="stylesheet" href="chatbot.css" />
+    <link rel="stylesheet" href="v2-overrides.css?v=production-v2-cutover-20260908" />
   </head>
   <body>
     <a class="skip-link" href="#noi-dung-chinh">Chuyển đến nội dung chính</a>
@@ -243,23 +244,24 @@
           </aside>
 
           <div class="hero__main">
-            <div class="hero-intro">
-              <h1 class="home-hero-title" id="hero-title"><span class="hero-title-keep">Anh Minh Store - Tivi cũ,</span> tivi mới, thu hư đổi mới tại Đà Nẵng</h1>
-              <div class="hero-cta" aria-label="Hành động chính">
-                <a class="btn btn--primary" href="#san-pham">Xem sản phẩm</a>
-                <a class="btn btn--hotline" href="tel:0905111223">Gọi tư vấn</a>
-                <a class="btn btn--outline-light" href="#" data-zalo-choice>Nhắn Zalo</a>
+            <div class="home-hero-center">
+              <div class="hero-intro">
+                <h1 class="home-hero-title" id="hero-title"><span class="hero-title-keep">Anh Minh Store - Tivi cũ,</span> tivi mới, thu hư đổi mới tại Đà Nẵng</h1>
+                <div class="hero-cta" aria-label="Hành động chính">
+                  <a class="btn btn--primary" href="#san-pham">Xem sản phẩm</a>
+                  <a class="btn btn--hotline" href="tel:0905111223">Gọi tư vấn</a>
+                  <a class="btn btn--outline-light" href="#" data-zalo-choice>Nhắn Zalo</a>
+                </div>
               </div>
-            </div>
-            <section class="hero-carousel home-hero-banner-compact home-hero-banner-wide-left" aria-label="Banner khuyến mại nổi bật" data-carousel>
+              <section class="hero-carousel home-hero-banner-compact home-hero-banner-wide-left" aria-label="Banner khuyến mại nổi bật" data-carousel>
               <div class="carousel-viewport">
                 <div class="carousel-track">
                   <article class="carousel-slide" aria-label="Banner World Cup 2026 cao cấp">
                     <img
-                      src="Create_an_ultra-realistic_premium_World_202606042116.jpeg"
+                      src="assets/banners/home-hero-optimized.webp"
                       alt="Banner World Cup 2026 cao cấp của Anh Minh Store"
-                      width="5504"
-                      height="3072"
+                      width="1920"
+                      height="1072"
                       fetchpriority="high"
                       decoding="async"
                       draggable="false"
@@ -307,17 +309,63 @@
                   </article>
                 </div>
               </div>
-              <div class="carousel-dots" aria-label="Chọn banner"></div>
-            </section>
-
-            <aside class="home-hero-right-banner" aria-label="Banner dọc ưu đãi nổi bật" data-home-right-banner>
-              <div class="home-hero-right-banner-card" data-home-right-banner-card>
-                <div class="home-hero-right-banner-placeholder" data-home-right-banner-placeholder>
-                  <strong>Ưu đãi nổi bật</strong>
-                  <span>Cập nhật banner trong trang quản trị</span>
+                <div class="carousel-dots" aria-label="Chọn banner"></div>
+              </section>
+              <section class="home-mini-banner-strip" aria-label="Khám phá sản phẩm và dịch vụ nổi bật" data-mini-banner-strip hidden>
+                <div class="home-mini-banner-strip__grid">
+                  <div class="home-mini-banner-slot" data-mini-banner-slot="01" data-mini-banner-key="home_mini_banner_01" hidden></div>
+                  <div class="home-mini-banner-slot" data-mini-banner-slot="02" data-mini-banner-key="home_mini_banner_02" hidden></div>
+                  <div class="home-mini-banner-slot" data-mini-banner-slot="03" data-mini-banner-key="home_mini_banner_03" hidden></div>
                 </div>
-              </div>
-            </aside>
+              </section>
+            </div>
+
+            <div class="home-hero-right-rail">
+              <nav class="hero-category-panel" aria-labelledby="hero-category-title">
+                <h2 id="hero-category-title">Bạn muốn mua gì?</h2>
+                <ul class="hero-category-list">
+                  <li>
+                    <a class="hero-category-link" href="#san-pham" data-shop-category="tivi">
+                      <span class="hero-category-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" focusable="false"><rect x="3" y="5" width="18" height="12" rx="2"></rect><path d="M8 21h8M12 17v4"></path></svg>
+                      </span>
+                      <span>Tivi</span>
+                    </a>
+                  </li>
+                  <li>
+                    <a class="hero-category-link" href="other-products.html?category=tu-lanh" data-shop-category="tu-lanh">
+                      <span class="hero-category-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" focusable="false"><rect x="5" y="2" width="14" height="20" rx="2"></rect><path d="M5 10h14M9 6v2M9 13v3"></path></svg>
+                      </span>
+                      <span>Tủ lạnh</span>
+                    </a>
+                  </li>
+                  <li>
+                    <a class="hero-category-link" href="other-products.html?category=dieu-hoa" data-shop-category="dieu-hoa">
+                      <span class="hero-category-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" focusable="false"><rect x="3" y="4" width="18" height="8" rx="2"></rect><path d="M7 8h10M8 16c0 1.1-.9 2-2 2M13 15v2.5a2.5 2.5 0 0 1-2.5 2.5M18 16c0 1.1.9 2 2 2"></path></svg>
+                      </span>
+                      <span>Điều hòa</span>
+                    </a>
+                  </li>
+                  <li>
+                    <a class="hero-category-link" href="other-products.html?category=may-giat" data-shop-category="may-giat">
+                      <span class="hero-category-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" focusable="false"><rect x="4" y="2" width="16" height="20" rx="2"></rect><path d="M4 7h16M8 4.5h.01M11 4.5h.01"></path><circle cx="12" cy="14" r="5"></circle></svg>
+                      </span>
+                      <span>Máy giặt</span>
+                    </a>
+                  </li>
+                </ul>
+              </nav>
+
+              <aside class="home-hero-right-banner" aria-label="Khung banner dọc 9:16">
+                <div class="home-hero-right-banner-card">
+                  <span>Banner 9:16</span>
+                  <small>Chưa có ảnh</small>
+                </div>
+              </aside>
+            </div>
 
           </div>
 
@@ -347,25 +395,85 @@
         </div>
       </section>
 
-      <section class="section products section-anchor" id="san-pham" aria-labelledby="featured-title">
-        <div class="container">
-          <div class="section-heading section-intro-card">
-            <span class="section-intro-eyebrow">Danh mục tư vấn</span>
-            <h2 class="section-intro-title" id="featured-title">Sản phẩm nổi bật</h2>
-            <p class="section-intro-description">Các mẫu tham khảo giúp khách hàng chọn nhanh theo kích thước, thương hiệu và nhu cầu sử dụng.</p>
+      <section class="v2-showcase tet-2027-tv-picker section-anchor" id="san-pham" aria-labelledby="featured-title" data-v2-showcase data-featured-box-slot data-box-renderer="tet2027" hidden>
+        <div class="container v2-showcase__shell">
+          <div class="v2-showcase__topline" aria-hidden="true"><span></span></div>
+          <div class="v2-showcase__tabs" aria-label="Nhóm sản phẩm campaign">
+            <span class="v2-showcase__tab is-active">Bộ sưu tập Tết</span>
           </div>
-          <div class="product-grid" data-product-grid aria-live="polite"></div>
-          <div class="load-more-wrap"><button class="load-more-button" type="button" data-load-more="featured">Xem thêm sản phẩm</button></div>
+          <div class="v2-showcase__body">
+            <header class="v2-showcase__heading tet-campaign-header">
+              <img class="tet-decor tet-decor--mai" src="assets/decor/tet-2027/tet-2027-mai-corner-left.webp" alt="" aria-hidden="true" width="960" height="525" />
+              <img class="tet-decor tet-decor--peach-lantern" src="assets/decor/tet-2027/tet-2027-peach-lantern-right.webp" alt="" aria-hidden="true" width="840" height="766" />
+              <img class="tet-decor tet-decor--cloud-line" src="assets/decor/tet-2027/tet-2027-cloud-line.webp" alt="" aria-hidden="true" width="920" height="191" />
+              <img class="tet-decor tet-decor--firework-small" src="assets/decor/tet-2027/tet-2027-firework-small.webp" alt="" aria-hidden="true" width="267" height="300" />
+              <div class="tet-campaign-copy">
+                <span class="tet-campaign-brand">
+                  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <path d="M5 8.5h14l-1 11H6l-1-11Z"></path>
+                    <path d="M8.5 9V7a3.5 3.5 0 0 1 7 0v2"></path>
+                    <path d="M9 13h6M12 10v6"></path>
+                  </svg>
+                  Anh Minh Store
+                </span>
+                <h2 class="section-intro-title" id="featured-title">Sắm đồ điện tử đón Tết 2027</h2>
+                <p class="tet-campaign-subtitle">Sản phẩm chọn lọc · Mua sắm an tâm · Tết sum vầy trọn vẹn</p>
+              </div>
+              <div class="tet-campaign-callout" aria-label="Thông điệp Tết 2027">
+                <strong>Ưu đãi Tết 2027</strong>
+                <span>Rộn ràng mua sắm</span>
+                <span>Ngập tràn may mắn</span>
+                <img class="tet-decor tet-decor--border-flourish" src="assets/decor/tet-2027/tet-2027-border-flourish.webp" alt="" aria-hidden="true" width="920" height="299" />
+              </div>
+            </header>
+            <div class="v2-showcase__toolbar">
+              <div class="v2-showcase__filters" role="group" aria-label="Lọc danh mục và kích thước" data-v2-filters></div>
+              <div class="v2-showcase__meta">
+                <span data-v2-status aria-live="off">Đang tải sản phẩm</span>
+                <button type="button" data-v2-prev aria-label="Nhóm sản phẩm trước">←</button>
+                <button type="button" data-v2-next aria-label="Nhóm sản phẩm tiếp theo">→</button>
+              </div>
+            </div>
+            <div class="v2-showcase__viewport" role="region" aria-label="Danh sách sản phẩm campaign Tết 2027" tabindex="0">
+              <div class="v2-showcase__grid" data-v2-grid></div>
+            </div>
+          </div>
+          <footer class="tet-benefits" aria-label="Thông tin hỗ trợ chọn tivi">
+            <img class="tet-decor tet-decor--footer-flourish" src="assets/decor/tet-2027/tet-2027-footer-flourish.webp" alt="" aria-hidden="true" width="1000" height="197" />
+            <div class="tet-benefit">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 3.4 5.4 5.8v5.3c0 4.2 2.7 7.8 6.6 9.4 3.9-1.6 6.6-5.2 6.6-9.4V5.8L12 3.4Z"></path><path d="m8.8 12 2.1 2.1 4.4-4.6"></path></svg>
+              <span>Tư vấn theo nhu cầu</span>
+            </div>
+            <div class="tet-benefit">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3.5" y="5" width="17" height="12" rx="1.5"></rect><path d="M8 20h8M12 17v3"></path><path d="m8.2 10.8 2.3 2.2 4.8-5"></path></svg>
+              <span>Hình ảnh &amp; tình trạng rõ</span>
+            </div>
+            <div class="tet-benefit">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="4" y="6" width="16" height="12" rx="1.5"></rect><path d="M8 18v2M16 18v2M8 10h8M8 14h5"></path></svg>
+              <span>Nhiều kích thước lựa chọn</span>
+            </div>
+            <div class="tet-benefit">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7.4 4.5h2.7l1.2 4-2 1.4a14 14 0 0 0 4.8 4.8l1.4-2 4 1.2v2.7a3 3 0 0 1-3.2 3A13.2 13.2 0 0 1 4.4 7.7a3 3 0 0 1 3-3.2Z"></path></svg>
+              <span>Liên hệ để được tư vấn</span>
+            </div>
+          </footer>
+          <img class="tet-decor tet-decor--lucky-corner" src="assets/decor/tet-2027/tet-2027-lucky-envelope-corner.webp" alt="" aria-hidden="true" width="560" height="733" />
         </div>
       </section>
 
-      <section class="section info-section old-tv-section section-anchor" id="tivi-cu" aria-labelledby="old-tv-title">
+      <section class="section info-section old-tv-section tv-catalog-section section-anchor" id="tivi-cu" aria-labelledby="old-tv-title">
         <div class="container old-tv-section__inner">
           <div class="old-tv-section__top section-intro-card section-intro-card--with-benefits">
-            <div class="info-copy">
-              <span class="section-kicker section-intro-eyebrow">Tivi đã qua sử dụng</span>
+            <div class="info-copy old-tv-section__copy">
+              <span class="section-kicker section-intro-eyebrow old-tv-section__eyebrow">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path d="M12 3.2 5.2 5.7v5.4c0 4.4 2.8 8.2 6.8 9.7 4-1.5 6.8-5.3 6.8-9.7V5.7L12 3.2Z"></path>
+                  <path d="m8.8 12 2.2 2.2 4.4-4.7"></path>
+                </svg>
+                Tivi đã qua sử dụng
+              </span>
               <h2 class="section-intro-title" id="old-tv-title">Tivi cũ đã kiểm tra</h2>
-              <p class="section-intro-description">Các mẫu tivi đã qua sử dụng được kiểm tra hình ảnh, âm thanh và độ ổn định trước khi tư vấn.</p>
+              <p class="section-intro-description">Tất cả tivi cũ tại Anh Minh Store đều được kiểm tra hình ảnh, âm thanh và độ ổn định trước khi tư vấn đến anh/chị.</p>
             </div>
             <div class="benefit-list old-tv-benefits">
               <article class="feature-card">
@@ -376,6 +484,7 @@
                   </svg>
                 </span>
                 <strong>Kiểm tra kỹ tình trạng</strong>
+                <p>Kiểm tra hình ảnh, âm thanh và kết nối trước khi tư vấn.</p>
               </article>
               <article class="feature-card">
                 <span class="feature-card__icon" aria-hidden="true">
@@ -389,6 +498,7 @@
                   </svg>
                 </span>
                 <strong>Tư vấn đúng nhu cầu</strong>
+                <p>Đề xuất theo nhu cầu, không gian và ngân sách thực tế.</p>
               </article>
               <article class="feature-card">
                 <span class="feature-card__icon" aria-hidden="true">
@@ -400,6 +510,7 @@
                   </svg>
                 </span>
                 <strong>Giá phù hợp ngân sách</strong>
+                <p>Mức giá rõ ràng, nhiều lựa chọn phù hợp để cân nhắc.</p>
               </article>
             </div>
           </div>
@@ -410,33 +521,37 @@
             </div>
           </div>
 
-          <div class="old-tv-filter-block tv-series-filter tv-series-filter--section tv-section-filter-group" aria-labelledby="old-tv-series-title" data-old-tv-series-block>
-            <div class="tv-series-filter__heading">
-              <p class="old-tv-filter-label" id="old-tv-series-title" data-old-tv-series-title>Dòng tivi</p>
-              <p data-old-tv-series-status>Đang chọn: Tất cả dòng</p>
+          <div class="old-tv-secondary-filters">
+            <div class="old-tv-filter-block tv-series-filter tv-series-filter--section tv-section-filter-group" aria-labelledby="old-tv-series-title" data-old-tv-series-block>
+              <div class="tv-series-filter__heading">
+                <p class="old-tv-filter-label" id="old-tv-series-title" data-old-tv-series-title>Dòng tivi</p>
+                <p data-old-tv-series-status>Đang chọn: Tất cả dòng</p>
+              </div>
+              <div class="tv-series-options" role="group" aria-label="Chọn dòng tivi cũ" data-old-tv-series-options></div>
             </div>
-            <div class="tv-series-options" role="group" aria-label="Chọn dòng tivi cũ" data-old-tv-series-options></div>
+
+            <div class="old-tv-filter-block tv-section-size-filter" aria-labelledby="old-tv-size-label">
+              <p class="old-tv-filter-label" id="old-tv-size-label">Kích thước</p>
+              <div class="old-tv-size-row" role="group" aria-label="Chọn kích thước tivi cũ" data-old-tv-size-row>
+                <button class="old-tv-size-pill is-active" type="button" data-used-size="" aria-pressed="true">Tất cả</button>
+                <button class="old-tv-size-pill" type="button" data-used-size="32 inch" aria-pressed="false">32 inch</button>
+                <button class="old-tv-size-pill" type="button" data-used-size="40 inch" aria-pressed="false">40 inch</button>
+                <button class="old-tv-size-pill" type="button" data-used-size="43 inch" aria-pressed="false">43 inch</button>
+                <button class="old-tv-size-pill" type="button" data-used-size="49 inch" aria-pressed="false">49 inch</button>
+                <button class="old-tv-size-pill" type="button" data-used-size="50 inch" aria-pressed="false">50 inch</button>
+                <button class="old-tv-size-pill" type="button" data-used-size="55 inch" aria-pressed="false">55 inch</button>
+                <button class="old-tv-size-pill" type="button" data-used-size="65 inch" aria-pressed="false">65 inch</button>
+                <button class="old-tv-size-pill" type="button" data-used-size="75 inch" aria-pressed="false">75 inch</button>
+                <button class="old-tv-size-pill" type="button" data-used-size="85 inch" aria-pressed="false">85 inch</button>
+                <button class="old-tv-size-pill" type="button" data-used-size="98 inch" aria-pressed="false">98 inch</button>
+                <button class="old-tv-size-pill" type="button" data-used-size="100 inch" aria-pressed="false">100 inch</button>
+              </div>
+            </div>
           </div>
 
-          <div class="old-tv-filter-block tv-section-size-filter" aria-labelledby="old-tv-size-label">
-            <p class="old-tv-filter-label" id="old-tv-size-label">Chọn kích thước tivi cũ</p>
-            <div class="old-tv-size-row" role="group" aria-label="Chọn kích thước tivi cũ" data-old-tv-size-row>
-              <button class="old-tv-size-pill is-active" type="button" data-used-size="" aria-pressed="true">Tất cả</button>
-              <button class="old-tv-size-pill" type="button" data-used-size="32 inch" aria-pressed="false">32 inch</button>
-              <button class="old-tv-size-pill" type="button" data-used-size="40 inch" aria-pressed="false">40 inch</button>
-              <button class="old-tv-size-pill" type="button" data-used-size="43 inch" aria-pressed="false">43 inch</button>
-              <button class="old-tv-size-pill" type="button" data-used-size="49 inch" aria-pressed="false">49 inch</button>
-              <button class="old-tv-size-pill" type="button" data-used-size="50 inch" aria-pressed="false">50 inch</button>
-              <button class="old-tv-size-pill" type="button" data-used-size="55 inch" aria-pressed="false">55 inch</button>
-              <button class="old-tv-size-pill" type="button" data-used-size="65 inch" aria-pressed="false">65 inch</button>
-              <button class="old-tv-size-pill" type="button" data-used-size="75 inch" aria-pressed="false">75 inch</button>
-              <button class="old-tv-size-pill" type="button" data-used-size="85 inch" aria-pressed="false">85 inch</button>
-              <button class="old-tv-size-pill" type="button" data-used-size="98 inch" aria-pressed="false">98 inch</button>
-              <button class="old-tv-size-pill" type="button" data-used-size="100 inch" aria-pressed="false">100 inch</button>
-            </div>
+          <div class="old-tv-results-bar">
+            <p class="section-product-count" data-used-tv-count aria-live="polite">Đang hiển thị: 0 sản phẩm</p>
           </div>
-
-          <p class="section-product-count" data-used-tv-count aria-live="polite">Đang hiển thị: 0 sản phẩm</p>
           <div class="used-tv-grid" data-used-tv-grid aria-live="polite">
             <p class="empty-state used-tv-empty" data-used-tv-empty hidden>Chưa có sản phẩm phù hợp. Vui lòng liên hệ Anh Minh Store để được tư vấn.</p>
           </div>
@@ -444,10 +559,17 @@
         </div>
       </section>
 
-      <section class="section info-section info-section--light new-tv-section section-anchor" id="tivi-moi" aria-labelledby="new-tv-title">
+      <section class="section info-section info-section--light new-tv-section tv-catalog-section section-anchor" id="tivi-moi" aria-labelledby="new-tv-title">
         <div class="container old-tv-section__inner new-tv-section__inner">
-          <div class="info-copy section-intro-card">
-            <span class="section-kicker section-intro-eyebrow">Tivi mới</span>
+          <div class="info-copy section-intro-card new-tv-section__header">
+            <span class="section-kicker section-intro-eyebrow new-tv-section__eyebrow">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M4 5.5h16v11H4z"></path>
+                <path d="M9 20h6"></path>
+                <path d="M12 16.5V20"></path>
+              </svg>
+              Tivi mới
+            </span>
             <h2 class="section-intro-title" id="new-tv-title">Tivi mới chính hãng</h2>
             <p class="section-intro-description">Cập nhật nhiều dòng tivi mới từ các thương hiệu phổ biến, hỗ trợ tư vấn theo diện tích phòng và nhu cầu sử dụng.</p>
           </div>
@@ -458,33 +580,37 @@
             </div>
           </div>
 
-          <div class="old-tv-filter-block new-tv-filter-block tv-series-filter tv-series-filter--section tv-section-filter-group" aria-labelledby="new-tv-series-title" data-new-tv-series-block>
-            <div class="tv-series-filter__heading">
-              <p class="old-tv-filter-label" id="new-tv-series-title" data-new-tv-series-title>Dòng tivi</p>
-              <p data-new-tv-series-status>Đang chọn: Tất cả dòng</p>
+          <div class="new-tv-secondary-filters">
+            <div class="old-tv-filter-block new-tv-filter-block tv-series-filter tv-series-filter--section tv-section-filter-group" aria-labelledby="new-tv-series-title" data-new-tv-series-block>
+              <div class="tv-series-filter__heading">
+                <p class="old-tv-filter-label" id="new-tv-series-title" data-new-tv-series-title>Dòng tivi</p>
+                <p data-new-tv-series-status>Đang chọn: Tất cả dòng</p>
+              </div>
+              <div class="tv-series-options" role="group" aria-label="Chọn dòng tivi mới" data-new-tv-series-options></div>
             </div>
-            <div class="tv-series-options" role="group" aria-label="Chọn dòng tivi mới" data-new-tv-series-options></div>
+
+            <div class="old-tv-filter-block new-tv-filter-block tv-section-size-filter" aria-labelledby="new-tv-size-label">
+              <p class="old-tv-filter-label" id="new-tv-size-label">Kích thước</p>
+              <div class="old-tv-size-row new-tv-size-row" role="group" aria-label="Chọn kích thước tivi mới" data-new-tv-size-row>
+                <button class="old-tv-size-pill new-tv-size-pill is-active" type="button" data-new-size="" aria-pressed="true">Tất cả</button>
+                <button class="old-tv-size-pill new-tv-size-pill" type="button" data-new-size="32 inch" aria-pressed="false">32 inch</button>
+                <button class="old-tv-size-pill new-tv-size-pill" type="button" data-new-size="40 inch" aria-pressed="false">40 inch</button>
+                <button class="old-tv-size-pill new-tv-size-pill" type="button" data-new-size="43 inch" aria-pressed="false">43 inch</button>
+                <button class="old-tv-size-pill new-tv-size-pill" type="button" data-new-size="49 inch" aria-pressed="false">49 inch</button>
+                <button class="old-tv-size-pill new-tv-size-pill" type="button" data-new-size="50 inch" aria-pressed="false">50 inch</button>
+                <button class="old-tv-size-pill new-tv-size-pill" type="button" data-new-size="55 inch" aria-pressed="false">55 inch</button>
+                <button class="old-tv-size-pill new-tv-size-pill" type="button" data-new-size="65 inch" aria-pressed="false">65 inch</button>
+                <button class="old-tv-size-pill new-tv-size-pill" type="button" data-new-size="75 inch" aria-pressed="false">75 inch</button>
+                <button class="old-tv-size-pill new-tv-size-pill" type="button" data-new-size="85 inch" aria-pressed="false">85 inch</button>
+                <button class="old-tv-size-pill new-tv-size-pill" type="button" data-new-size="98 inch" aria-pressed="false">98 inch</button>
+                <button class="old-tv-size-pill new-tv-size-pill" type="button" data-new-size="100 inch" aria-pressed="false">100 inch</button>
+              </div>
+            </div>
           </div>
 
-          <div class="old-tv-filter-block new-tv-filter-block tv-section-size-filter" aria-labelledby="new-tv-size-label">
-            <p class="old-tv-filter-label" id="new-tv-size-label">Chọn kích thước tivi mới</p>
-            <div class="old-tv-size-row new-tv-size-row" role="group" aria-label="Chọn kích thước tivi mới" data-new-tv-size-row>
-              <button class="old-tv-size-pill new-tv-size-pill is-active" type="button" data-new-size="" aria-pressed="true">Tất cả</button>
-              <button class="old-tv-size-pill new-tv-size-pill" type="button" data-new-size="32 inch" aria-pressed="false">32 inch</button>
-              <button class="old-tv-size-pill new-tv-size-pill" type="button" data-new-size="40 inch" aria-pressed="false">40 inch</button>
-              <button class="old-tv-size-pill new-tv-size-pill" type="button" data-new-size="43 inch" aria-pressed="false">43 inch</button>
-              <button class="old-tv-size-pill new-tv-size-pill" type="button" data-new-size="49 inch" aria-pressed="false">49 inch</button>
-              <button class="old-tv-size-pill new-tv-size-pill" type="button" data-new-size="50 inch" aria-pressed="false">50 inch</button>
-              <button class="old-tv-size-pill new-tv-size-pill" type="button" data-new-size="55 inch" aria-pressed="false">55 inch</button>
-              <button class="old-tv-size-pill new-tv-size-pill" type="button" data-new-size="65 inch" aria-pressed="false">65 inch</button>
-              <button class="old-tv-size-pill new-tv-size-pill" type="button" data-new-size="75 inch" aria-pressed="false">75 inch</button>
-              <button class="old-tv-size-pill new-tv-size-pill" type="button" data-new-size="85 inch" aria-pressed="false">85 inch</button>
-              <button class="old-tv-size-pill new-tv-size-pill" type="button" data-new-size="98 inch" aria-pressed="false">98 inch</button>
-              <button class="old-tv-size-pill new-tv-size-pill" type="button" data-new-size="100 inch" aria-pressed="false">100 inch</button>
-            </div>
+          <div class="new-tv-results-bar">
+            <p class="section-product-count" data-new-tv-count aria-live="polite">Đang hiển thị: 0 sản phẩm</p>
           </div>
-
-          <p class="section-product-count" data-new-tv-count aria-live="polite">Đang hiển thị: 0 sản phẩm</p>
           <div class="used-tv-grid new-tv-grid" data-new-tv-grid aria-live="polite">
             <p class="empty-state used-tv-empty new-tv-empty" data-new-tv-empty hidden>Chưa có sản phẩm phù hợp. Vui lòng liên hệ Anh Minh Store để được tư vấn.</p>
           </div>
@@ -593,8 +719,11 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase-config.js"></script>
     <script src="supabase-client.js"></script>
+    <script src="box-registry.js"></script>
     <script src="product-url-map.js"></script>
-    <script src="script.js?v=contact-modal-1"></script>
+    <script src="script.js?v=production-v2-cutover-20260908"></script>
+    <script src="v2-showcase.js?v=production-v2-cutover-20260908"></script>
     <script src="chatbot.js"></script>
   </body>
 </html>
+
