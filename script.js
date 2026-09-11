@@ -209,6 +209,7 @@ let productsReady = false;
 let searchSuggestionsState = [];
 let searchSuggestionsIndex = -1;
 let searchSuggestionsTimer = null;
+let searchSuggestionsRequestId = 0;
 
 const mobileSearchMedia = window.matchMedia('(max-width: 767px)');
 const MOBILE_SEARCH_TOP_THRESHOLD = 40;
@@ -919,6 +920,158 @@ const normalizeSearchText = (value = '') => normalizeText(value)
   .replace(/\s+/g, ' ')
   .trim();
 
+const normalizeModelCode = (value = '') => normalizeText(value)
+  .replace(/[\s\-_.\/]+/g, '')
+  .replace(/[^a-z0-9]/g, '');
+
+const SEARCH_KNOWN_BRANDS = [
+  'samsung',
+  'lg',
+  'sony',
+  'tcl',
+  'toshiba',
+  'hisense',
+  'xiaomi',
+  'coocaa',
+  'casper',
+  'sharp',
+  'panasonic',
+  'aqua',
+  'skyworth',
+  'ffalcon',
+  'philips',
+];
+
+const SEARCH_MODEL_STOP_TOKENS = new Set([
+  '4k', '8k', 'uhd', 'fhd', 'hd', 'qled', 'oled', 'miniled', 'led',
+  'tivi', 'tv', 'television', 'smart', 'google', 'android', 'ai', 'inch',
+]);
+
+const SEARCH_MODEL_CONTEXT_TOKENS = new Set([
+  'tim', 'mua', 'gia', 're', 'san', 'pham', 'model', 'ma', 'mau', 'dong', 'hang',
+  'tivi', 'tv', 'television', 'smart', 'inch',
+]);
+
+const SEARCH_TV_SIZE_TOKENS = new Set([
+  '24', '27', '28', '32', '40', '42', '43', '48', '49', '50', '55', '58',
+  '60', '65', '70', '75', '77', '82', '83', '85', '86', '98', '100', '110', '115',
+]);
+
+const canonicalizeSearchText = (value = '') => normalizeSearchText(value)
+  .replace(/\bmini\s+led\b/g, 'miniled')
+  .replace(/\bfull\s+hd\b/g, 'fhd')
+  .replace(/\bultra\s+hd\b/g, '4k')
+  .replace(/\b(?:uhd|4k)\b/g, '4k')
+  .replace(/\b(?:television|tv)\b/g, 'tivi')
+  .replace(/\s+/g, ' ')
+  .trim();
+
+const getEditDistance = (left = '', right = '') => {
+  const a = String(left);
+  const b = String(right);
+  if (a === b) return 0;
+  if (!a.length) return b.length;
+  if (!b.length) return a.length;
+
+  let previous = Array.from({ length: b.length + 1 }, (_, index) => index);
+  for (let row = 1; row <= a.length; row += 1) {
+    const current = [row];
+    for (let column = 1; column <= b.length; column += 1) {
+      const substitutionCost = a[row - 1] === b[column - 1] ? 0 : 1;
+      current[column] = Math.min(
+        current[column - 1] + 1,
+        previous[column] + 1,
+        previous[column - 1] + substitutionCost,
+      );
+    }
+    previous = current;
+  }
+  return previous[b.length];
+};
+
+const getAllowedTypoDistance = (token = '') => {
+  if (token.length >= 9) return 2;
+  if (token.length >= 5) return 1;
+  return 0;
+};
+
+const getKnownBrandIntent = (tokens = []) => {
+  for (const token of tokens) {
+    if (!/^[a-z]+$/.test(token)) continue;
+    const exactBrand = SEARCH_KNOWN_BRANDS.find((brand) => brand === token);
+    if (exactBrand) return { token, brand: exactBrand, exact: true };
+  }
+
+  for (const token of tokens) {
+    const allowedDistance = getAllowedTypoDistance(token);
+    if (!allowedDistance || !/^[a-z]+$/.test(token)) continue;
+    const fuzzyBrand = SEARCH_KNOWN_BRANDS.find((brand) => (
+      Math.abs(brand.length - token.length) <= allowedDistance
+      && getEditDistance(token, brand) <= allowedDistance
+    ));
+    if (fuzzyBrand) return { token, brand: fuzzyBrand, exact: false };
+  }
+
+  return null;
+};
+
+const getSearchIntent = (query = '') => {
+  const normalizedQuery = normalizeSearchText(query);
+  const rawTokens = normalizedQuery.split(' ').filter(Boolean);
+  const canonicalQuery = canonicalizeSearchText(normalizedQuery);
+  const tokens = canonicalQuery.split(' ').filter(Boolean);
+  const brandIntent = getKnownBrandIntent(rawTokens);
+  const modelTriggerIndexes = rawTokens
+    .map((token, index) => ({ token, index }))
+    .filter(({ token }) => (
+      /[a-z]/.test(token)
+      && /\d/.test(token)
+      && !SEARCH_MODEL_STOP_TOKENS.has(token)
+    ))
+    .map(({ index }) => index);
+
+  const inferredSizeTokens = rawTokens
+    .map((token) => token.match(/^(\d{2,3})[a-z]/)?.[1] || '')
+    .filter((token) => SEARCH_TV_SIZE_TOKENS.has(token));
+  const sizeTokens = [...new Set([
+    ...tokens.filter((token) => SEARCH_TV_SIZE_TOKENS.has(token)),
+    ...inferredSizeTokens,
+  ])];
+
+  const modelCodes = [];
+  if (modelTriggerIndexes.length) {
+    const searchableModelTokens = rawTokens.filter((token) => (
+      token !== brandIntent?.token
+      && !SEARCH_MODEL_CONTEXT_TOKENS.has(token)
+      && !SEARCH_MODEL_STOP_TOKENS.has(token)
+    ));
+    const fullCode = normalizeModelCode(searchableModelTokens.join(''));
+    if (fullCode) modelCodes.push(fullCode);
+
+    modelTriggerIndexes.forEach((triggerIndex) => {
+      const prefixTokens = rawTokens.slice(0, triggerIndex + 1).filter((token) => (
+        token !== brandIntent?.token
+        && !SEARCH_MODEL_CONTEXT_TOKENS.has(token)
+        && !SEARCH_MODEL_STOP_TOKENS.has(token)
+      ));
+      const prefixCode = normalizeModelCode(prefixTokens.join(''));
+      const triggerCode = normalizeModelCode(rawTokens[triggerIndex]);
+      if (prefixCode) modelCodes.push(prefixCode);
+      if (triggerCode) modelCodes.push(triggerCode);
+    });
+  }
+
+  return {
+    normalizedQuery,
+    canonicalQuery,
+    tokens,
+    brandIntent,
+    sizeTokens,
+    isModelQuery: modelCodes.length > 0,
+    modelCodes: [...new Set(modelCodes)].sort((a, b) => b.length - a.length),
+  };
+};
+
 const getProductSearchFields = (product = {}) => {
   const brand = normalizeSearchText(product.brand);
   const model = normalizeSearchText(product.model);
@@ -939,6 +1092,7 @@ const getProductSearchFields = (product = {}) => {
   return {
     brand,
     model,
+    modelCode: normalizeModelCode(product.model),
     fullName,
     size,
     type,
@@ -946,72 +1100,121 @@ const getProductSearchFields = (product = {}) => {
     badge,
     price,
     detail,
+    canonicalBrand: canonicalizeSearchText(product.brand),
+    canonicalFullName: canonicalizeSearchText([product.fullName, product.full_name, product.name].map(stringifySearchPart).join(' ')),
+    canonicalSize: canonicalizeSearchText(product.size),
+    canonicalDocument: canonicalizeSearchText([
+      product.brand,
+      product.model,
+      product.fullName,
+      product.full_name,
+      product.name,
+      product.size,
+      product.type,
+      product.series,
+      product.line,
+      product.tv_line,
+      product.product_line,
+      product.badge,
+      product.features,
+      product.description,
+      product.overview,
+      product.specifications,
+      product.searchableText,
+    ].map(stringifySearchPart).join(' ')),
     image: Boolean(product.image || (Array.isArray(product.images) && product.images.length)),
   };
 };
 
 const getSearchTokens = (query = '') => normalizeSearchText(query).split(' ').filter(Boolean);
 
-const scoreSearchProduct = (product = {}, query = '') => {
-  const normalizedQuery = normalizeSearchText(query);
-  if (!normalizedQuery) return 0;
+const scoreModelSearchProduct = (product = {}, fields = {}, intent = {}) => {
+  if (!fields.modelCode || !intent.modelCodes?.length) return 0;
 
-  const fields = getProductSearchFields(product);
-  const queryTokens = getSearchTokens(normalizedQuery);
-  const seriesTokens = getSearchTokens(fields.series);
-  const detailText = `${fields.detail} ${fields.price} ${fields.badge}`.trim();
+  if (intent.brandIntent && fields.canonicalBrand !== intent.brandIntent.brand) return 0;
+  const productSizeTokens = new Set(getSearchTokens(fields.canonicalSize));
+  if (intent.sizeTokens.some((size) => !productSizeTokens.has(size))) return 0;
 
-  const includesAllTokens = (text, tokens) => tokens.length > 0 && tokens.every((token) => text.includes(token));
-  const hasAnyToken = (text, tokens) => tokens.some((token) => text.includes(token));
-  const firstToken = queryTokens[0] || '';
+  let bestScore = 0;
+  intent.modelCodes.forEach((modelCode) => {
+    let tierScore = 0;
+    if (fields.modelCode === modelCode) tierScore = 60000;
+    else if (fields.modelCode.startsWith(modelCode)) tierScore = 50000;
+    else if (fields.modelCode.includes(modelCode)) tierScore = 40000;
+    if (tierScore) bestScore = Math.max(bestScore, tierScore + Math.min(modelCode.length, 24) * 20);
+  });
 
-  if (![
-    fields.brand,
-    fields.model,
-    fields.fullName,
-    fields.size,
-    fields.type,
-    fields.series,
-    fields.badge,
-    fields.price,
-    detailText,
-  ].some((text) => text.includes(normalizedQuery) || includesAllTokens(text, queryTokens))) {
-    return 0;
+  if (!bestScore) return 0;
+  if (intent.brandIntent) bestScore += intent.brandIntent.exact ? 3000 : 2200;
+  if (intent.sizeTokens.length) bestScore += 1400;
+  if (fields.image) bestScore += 18;
+  if (product.isFeatured) bestScore += 12;
+  bestScore += Math.max(0, 10 - Math.min(Number(product.sortOrder) || 0, 10));
+  return bestScore;
+};
+
+const getNaturalTokenMatch = (token = '', fields = {}) => {
+  const brandTokens = getSearchTokens(fields.canonicalBrand);
+  const documentTokens = getSearchTokens(fields.canonicalDocument);
+
+  if (SEARCH_TV_SIZE_TOKENS.has(token)) {
+    return getSearchTokens(fields.canonicalSize).includes(token) ? { matched: true, score: 1500, kind: 'size' } : { matched: false, score: 0 };
   }
 
-  let score = 0;
+  if (brandTokens.includes(token)) return { matched: true, score: 1800, kind: 'brand-exact' };
+  if (documentTokens.includes(token)) return { matched: true, score: 800, kind: 'text-exact' };
 
-  if (fields.model === normalizedQuery) score += 5000;
-  else if (fields.model.includes(normalizedQuery) || normalizedQuery.includes(fields.model)) score += 4200;
-  else if (hasAnyToken(fields.model, queryTokens)) score += 3200;
+  if (token.length >= 3 && documentTokens.some((word) => word.startsWith(token))) {
+    return { matched: true, score: 620, kind: 'text-prefix' };
+  }
 
-  const brandModelMatch = fields.brand && hasAnyToken(fields.brand, queryTokens) && (hasAnyToken(fields.model, queryTokens) || fields.fullName.includes(normalizedQuery));
-  if (brandModelMatch) score += 3000;
+  const allowedDistance = getAllowedTypoDistance(token);
+  if (!allowedDistance || !/^[a-z]+$/.test(token)) return { matched: false, score: 0 };
 
-  if (fields.fullName.includes(normalizedQuery)) score += 2400;
-  else if (includesAllTokens(fields.fullName, queryTokens)) score += 2100;
-  else if (hasAnyToken(fields.fullName, queryTokens)) score += 1600;
+  if (brandTokens.some((word) => (
+    Math.abs(word.length - token.length) <= allowedDistance
+    && getEditDistance(token, word) <= allowedDistance
+  ))) {
+    return { matched: true, score: 1450, kind: 'brand-typo' };
+  }
 
-  if (fields.brand.includes(normalizedQuery)) score += 1200;
-  else if (hasAnyToken(fields.brand, queryTokens)) score += 1000;
+  if (token.length >= 6 && documentTokens.some((word) => (
+    /^[a-z]+$/.test(word)
+    && Math.abs(word.length - token.length) <= allowedDistance
+    && getEditDistance(token, word) <= allowedDistance
+  ))) {
+    return { matched: true, score: 360, kind: 'text-typo' };
+  }
 
-  if (fields.size.includes(normalizedQuery)) score += 900;
-  else if (hasAnyToken(fields.size, queryTokens)) score += 700;
+  return { matched: false, score: 0 };
+};
 
-  if (fields.series.includes(normalizedQuery) || hasAnyToken(fields.series, queryTokens) || hasAnyToken(seriesTokens, queryTokens)) score += 650;
-  if (fields.type.includes(normalizedQuery)) score += 500;
-  if (fields.badge.includes(normalizedQuery)) score += 420;
-  if (fields.price.includes(normalizedQuery)) score += 380;
-  if (detailText.includes(normalizedQuery) || hasAnyToken(detailText, queryTokens)) score += 240;
-  if (queryTokens.length > 1 && includesAllTokens(detailText, queryTokens)) score += 300;
+const scoreSearchProduct = (product = {}, query = '') => {
+  const intent = getSearchIntent(query);
+  if (!intent.normalizedQuery) return 0;
+  const fields = getProductSearchFields(product);
+  if (intent.isModelQuery) return scoreModelSearchProduct(product, fields, intent);
+
+  const tokenMatches = intent.tokens.map((token) => getNaturalTokenMatch(token, fields));
+  if (!tokenMatches.length || tokenMatches.some((match) => !match.matched)) return 0;
+
+  let score = 1000 + tokenMatches.reduce((total, match) => total + match.score, 0);
+  const matchKinds = new Set(tokenMatches.map((match) => match.kind));
+  const hasBrandMatch = matchKinds.has('brand-exact') || matchKinds.has('brand-typo');
+  const hasSizeMatch = matchKinds.has('size');
+
+  if (hasBrandMatch && hasSizeMatch) score += 12000;
+  else if (hasSizeMatch) score += 7000;
+  else if (hasBrandMatch) score += 5000;
+
+  if (fields.canonicalFullName === intent.canonicalQuery) score += 8000;
+  else if (fields.canonicalFullName.startsWith(intent.canonicalQuery)) score += 5200;
+  else if (fields.canonicalFullName.includes(intent.canonicalQuery)) score += 4200;
+  else if (fields.canonicalDocument.includes(intent.canonicalQuery)) score += 2400;
 
   if (fields.image) score += 18;
   if (product.isFeatured) score += 12;
   score += Math.max(0, 10 - Math.min(Number(product.sortOrder) || 0, 10));
-
-  if (firstToken && fields.model.startsWith(firstToken)) score += 220;
-  if (firstToken && fields.brand.startsWith(firstToken)) score += 120;
-
   return score;
 };
 
@@ -1034,6 +1237,8 @@ const getSearchSuggestions = (query, sourceProducts = products, limit = 4) => {
     .slice(0, limit)
     .map(({ product }) => product);
 };
+
+const getSearchSuggestionLimit = () => (mobileSearchMedia.matches ? 6 : 8);
 
 const renderSearchSuggestionCard = (product, index) => {
   const brand = product.brand || 'Anh Minh Store';
@@ -1148,11 +1353,14 @@ const renderSearchSuggestions = (results = [], query = dom.searchInput?.value ||
 const updateSearchSuggestions = (force = false) => {
   if (!dom.searchInput) return;
   const query = dom.searchInput.value.trim();
+  const requestId = ++searchSuggestionsRequestId;
   if (searchSuggestionsTimer) {
     window.clearTimeout(searchSuggestionsTimer);
     searchSuggestionsTimer = null;
   }
   const run = () => {
+    if (requestId !== searchSuggestionsRequestId) return;
+    if (normalizeSearchText(dom.searchInput?.value || '') !== normalizeSearchText(query)) return;
     const normalizedQuery = normalizeSearchText(query);
     if (!normalizedQuery) {
       closeSearchSuggestions();
@@ -1160,7 +1368,7 @@ const updateSearchSuggestions = (force = false) => {
       searchSuggestionsState = [];
       return;
     }
-    const results = getSearchSuggestions(normalizedQuery, products, 4);
+    const results = getSearchSuggestions(normalizedQuery, products, getSearchSuggestionLimit());
     searchSuggestionsState = results;
     renderSearchSuggestions(results, normalizedQuery);
   };
@@ -1170,7 +1378,7 @@ const updateSearchSuggestions = (force = false) => {
     return;
   }
 
-  searchSuggestionsTimer = window.setTimeout(run, 140);
+  searchSuggestionsTimer = window.setTimeout(run, 200);
 };
 
 const submitSearch = ({ openHighlightedSuggestion = false } = {}) => {
@@ -1909,7 +2117,16 @@ const syncSectionSizeRow = (sectionKey) => {
 
 const productMatchesSearch = (product) => {
   if (!searchTerm) return true;
-  return normalizeSearchText(getProductSearchText(product)).includes(searchTerm);
+  return scoreSearchProduct(product, searchTerm) > 0;
+};
+
+const sortProductsBySearchRelevance = (items = []) => {
+  if (!searchTerm) return items;
+  return [...items].sort((a, b) => {
+    const scoreDifference = scoreSearchProduct(b, searchTerm) - scoreSearchProduct(a, searchTerm);
+    if (scoreDifference !== 0) return scoreDifference;
+    return (a.sortOrder || 0) - (b.sortOrder || 0);
+  });
 };
 
 const productMatchesSectionFilter = (product, filterState) => {
@@ -1927,13 +2144,13 @@ const getSectionProducts = (sectionKey, filterState = {}) => {
       : getOldTvProducts(products);
 
   if (sectionKey === 'featured') {
-    return sectionProducts.filter((product) => {
+    return sortProductsBySearchRelevance(sectionProducts.filter((product) => {
       const matchesType = activeType ? normalizeProductType(product) === normalizeProductType({ type: activeType }) : true;
       return productMatchesGlobalFilters(product) && matchesType && productMatchesSearch(product);
-    });
+    }));
   }
 
-  return sectionProducts.filter((product) => productMatchesSectionFilter(product, filterState));
+  return sortProductsBySearchRelevance(sectionProducts.filter((product) => productMatchesSectionFilter(product, filterState)));
 };
 
 const updateLoadMoreButton = (button, sectionKey, totalProducts) => {
