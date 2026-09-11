@@ -413,6 +413,19 @@ p { line-height: 1.65; }
 .section-heading span, .section-kicker { color: var(--color-primary-highlight); font-weight: 600; letter-spacing: 0.01em; text-transform: uppercase; }
 .section-heading h2, .info-copy h2, .contact h2 { margin: 6px 0 10px; color: var(--color-primary-deep); font-size: clamp(1.55rem, 3vw, 2.2rem); font-weight: 700; line-height: 1.18; letter-spacing: -0.015em; }
 .section-heading p, .info-copy p { color: var(--color-gray-700); margin: 0; line-height: 1.65; }
+.search-results-section { background: var(--color-gray-50); }
+body.search-mode .size-filter { display: block; }
+.search-results-section[hidden],
+.tv-catalog-section[hidden] { display: none; }
+.search-results-header { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: var(--space-5); }
+.search-results-header__copy { min-width: 0; }
+.search-results-header h2 { margin: 6px 0 8px; overflow-wrap: anywhere; color: var(--color-primary-deep); font-size: clamp(1.55rem, 3vw, 2.2rem); line-height: 1.18; letter-spacing: -0.015em; }
+.search-results-header p { margin: 0; color: var(--color-gray-700); font-weight: 700; }
+.search-results-clear { flex: 0 0 auto; }
+.search-results-empty { display: grid; grid-column: 1 / -1; justify-items: center; gap: 12px; margin: 0; border: 1px dashed var(--color-gray-200); border-radius: var(--radius-md); padding: clamp(28px, 6vw, 56px) 20px; background: var(--color-white); color: var(--color-gray-700); text-align: center; }
+.search-results-empty strong { color: var(--color-primary-deep); font-size: 1.05rem; }
+.search-results-empty p { margin: 0; }
+.search-results-empty .btn { min-height: 44px; }
 .info-copy .service-hotline { margin-top: var(--space-3); color: var(--color-primary-deep); font-weight: 700; }
 .info-copy .service-hotline strong { color: var(--color-accent); }
 .product-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 16px; }
@@ -524,6 +537,9 @@ p { line-height: 1.65; }
 }
 
 @media (max-width: 640px) {
+  .search-results-header { align-items: stretch; flex-direction: column; gap: 14px; }
+  .search-results-clear { width: 100%; }
+
   .load-more-wrap {
     margin-top: 20px;
   }

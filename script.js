@@ -166,6 +166,10 @@ const dom = {
   searchInput: document.querySelector('#search-input'),
   searchClear: document.querySelector('[data-search-clear]'),
   searchSuggestions: document.querySelector('[data-search-suggestions]'),
+  searchResultsSection: document.querySelector('[data-search-results-section]'),
+  searchResultsTitle: document.querySelector('[data-search-results-title]'),
+  searchResultsCount: document.querySelector('[data-search-results-count]'),
+  catalogSections: document.querySelectorAll('[data-catalog-section]'),
   backToTop: document.querySelector('.back-to-top'),
   mobileCall: document.querySelector('[data-call-button]'),
   brandList: document.querySelector('[data-brand-list]'),
@@ -204,7 +208,10 @@ let activeBrand = '';
 let activeType = '';
 let featuredSelectedBrand = '';
 let featuredSelectedSize = activeSize;
-let searchTerm = '';
+let searchInputValue = dom.searchInput?.value || '';
+let submittedSearchTerm = '';
+let submittedSearchQuery = '';
+let isSearchMode = false;
 let productsReady = false;
 let searchSuggestionsState = [];
 let searchSuggestionsIndex = -1;
@@ -1381,6 +1388,44 @@ const updateSearchSuggestions = (force = false) => {
   searchSuggestionsTimer = window.setTimeout(run, 200);
 };
 
+const shouldRefreshFocusedSearchPreview = () => Boolean(
+  dom.searchInput
+  && document.activeElement === dom.searchInput
+  && (!isSearchMode || normalizeSearchText(dom.searchInput.value) !== submittedSearchTerm)
+);
+
+const getSearchQueryFromUrl = () => {
+  try {
+    return new URL(window.location.href).searchParams.get('search')?.trim() || '';
+  } catch (_error) {
+    return '';
+  }
+};
+
+const updateSearchUrl = (query = '', { replace = false } = {}) => {
+  const url = new URL(window.location.href);
+  const trimmedQuery = String(query || '').trim();
+  if (trimmedQuery) url.searchParams.set('search', trimmedQuery);
+  else url.searchParams.delete('search');
+  if (url.hash === '#ket-qua-tim-kiem' && !trimmedQuery) url.hash = '';
+  const encodedSearch = url.search.replace(/\+/g, '%20');
+  window.history[replace ? 'replaceState' : 'pushState']({ search: trimmedQuery }, '', `${url.pathname}${encodedSearch}${url.hash}`);
+};
+
+const syncSearchModeUi = () => {
+  document.body.classList.toggle('search-mode', isSearchMode);
+  if (dom.searchResultsSection) dom.searchResultsSection.hidden = !isSearchMode;
+  dom.catalogSections.forEach((section) => { section.hidden = isSearchMode; });
+};
+
+const setSubmittedSearch = (query = '') => {
+  submittedSearchQuery = String(query || '').trim();
+  submittedSearchTerm = normalizeSearchText(submittedSearchQuery);
+  isSearchMode = Boolean(submittedSearchTerm);
+  resetVisibleCount('featured');
+  syncSearchModeUi();
+};
+
 const submitSearch = ({ openHighlightedSuggestion = false } = {}) => {
   const query = dom.searchInput?.value.trim() || '';
   if (openHighlightedSuggestion && searchSuggestionsIndex >= 0 && searchSuggestionsState[searchSuggestionsIndex]) {
@@ -1388,19 +1433,40 @@ const submitSearch = ({ openHighlightedSuggestion = false } = {}) => {
     return;
   }
 
-  searchTerm = normalizeSearchText(query);
-  if (dom.featuredSelectedSize) dom.featuredSelectedSize.textContent = searchTerm ? `Tìm: ${query}` : (featuredSelectedSize || featuredSelectedBrand || 'Tất cả');
+  searchInputValue = query;
+  if (!normalizeSearchText(query)) {
+    resetSearchInput();
+    return;
+  }
+
+  setSubmittedSearch(query);
+  if (dom.featuredSelectedSize) dom.featuredSelectedSize.textContent = featuredSelectedSize || featuredSelectedBrand || 'Tất cả';
   applyProductFilters();
   closeSearchSuggestions();
-  scrollToHash('#san-pham');
+  updateSearchUrl(query);
+  dom.searchResultsSection?.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
 };
 
-const resetSearchInput = () => {
+const resetSearchInput = ({ updateHistory = true } = {}) => {
   if (dom.searchInput) dom.searchInput.value = '';
-  searchTerm = '';
+  if (dom.searchClear) dom.searchClear.hidden = true;
+  searchInputValue = '';
+  const wasSearchMode = isSearchMode;
+  setSubmittedSearch('');
   searchSuggestionsState = [];
   closeSearchSuggestions();
   if (dom.featuredSelectedSize) dom.featuredSelectedSize.textContent = featuredSelectedSize || featuredSelectedBrand || 'Tất cả';
+  if (updateHistory && (wasSearchMode || getSearchQueryFromUrl())) updateSearchUrl('');
+  applyProductFilters();
+};
+
+const restoreSearchFromUrl = () => {
+  const query = getSearchQueryFromUrl();
+  searchInputValue = query;
+  if (dom.searchInput) dom.searchInput.value = query;
+  if (dom.searchClear) dom.searchClear.hidden = !query;
+  setSubmittedSearch(query);
+  closeSearchSuggestions();
   applyProductFilters();
 };
 
@@ -2116,14 +2182,14 @@ const syncSectionSizeRow = (sectionKey) => {
 };
 
 const productMatchesSearch = (product) => {
-  if (!searchTerm) return true;
-  return scoreSearchProduct(product, searchTerm) > 0;
+  if (!isSearchMode || !submittedSearchTerm) return true;
+  return scoreSearchProduct(product, submittedSearchTerm) > 0;
 };
 
 const sortProductsBySearchRelevance = (items = []) => {
-  if (!searchTerm) return items;
+  if (!isSearchMode || !submittedSearchTerm) return items;
   return [...items].sort((a, b) => {
-    const scoreDifference = scoreSearchProduct(b, searchTerm) - scoreSearchProduct(a, searchTerm);
+    const scoreDifference = scoreSearchProduct(b, submittedSearchTerm) - scoreSearchProduct(a, submittedSearchTerm);
     if (scoreDifference !== 0) return scoreDifference;
     return (a.sortOrder || 0) - (b.sortOrder || 0);
   });
@@ -2138,7 +2204,7 @@ const productMatchesSectionFilter = (product, filterState) => {
 
 const getSectionProducts = (sectionKey, filterState = {}) => {
   const sectionProducts = sectionKey === 'featured'
-    ? getFeaturedProducts(products)
+    ? (isSearchMode ? products.filter(isPublicProduct) : getFeaturedProducts(products))
     : sectionKey === 'newTv'
       ? getNewTvProducts(products)
       : getOldTvProducts(products);
@@ -2317,8 +2383,11 @@ const applyBrandFilter = (brand = '') => {
   activeSize = '';
   featuredSelectedSize = '';
   activeType = '';
-  searchTerm = '';
-  if (dom.searchInput) dom.searchInput.value = '';
+  if (!isSearchMode) {
+    searchInputValue = '';
+    if (dom.searchInput) dom.searchInput.value = '';
+    closeSearchSuggestions();
+  }
   if (dom.featuredSelectedSize) dom.featuredSelectedSize.textContent = nextBrand || FILTER_ALL_LABEL;
   dom.sizeOptions?.querySelectorAll('.size-pill').forEach((button) => {
     const isActive = !(button.dataset.size || '');
@@ -2691,15 +2760,27 @@ document.addEventListener('click', (event) => {
 
 const renderProductCards = () => {
   if (!dom.productGrid) return;
+  syncSearchModeUi();
+  if (!isSearchMode) {
+    dom.productGrid.innerHTML = '';
+    updateLoadMoreButton(dom.featuredLoadMoreButton, 'featured', 0);
+    return;
+  }
+
+  if (dom.searchResultsTitle) dom.searchResultsTitle.textContent = `Kết quả tìm kiếm cho “${submittedSearchQuery}”`;
   if (!products.length) {
-    dom.productGrid.innerHTML = `<p class="empty-state">${PUBLIC_PRODUCTS_EMPTY_MESSAGE}</p>`;
+    dom.productGrid.innerHTML = productsReady
+      ? `<div class="search-results-empty"><strong>Không tìm thấy sản phẩm phù hợp.</strong><p>Hãy thử tên hãng, model hoặc kích thước khác.</p><button class="btn btn--primary" type="button" data-search-results-clear>Xóa tìm kiếm</button></div>`
+      : '<p class="empty-state">Đang tải sản phẩm...</p>';
+    if (dom.searchResultsCount) dom.searchResultsCount.textContent = productsReady ? 'Tìm thấy 0 sản phẩm' : 'Đang tải kết quả...';
     updateLoadMoreButton(dom.featuredLoadMoreButton, 'featured', 0);
     return;
   }
 
   const filteredProducts = getSectionProducts('featured');
+  if (dom.searchResultsCount) dom.searchResultsCount.textContent = `Tìm thấy ${filteredProducts.length} sản phẩm`;
   if (!filteredProducts.length) {
-    dom.productGrid.innerHTML = `<p class="empty-state">${PUBLIC_PRODUCTS_EMPTY_MESSAGE}</p>`;
+    dom.productGrid.innerHTML = `<div class="search-results-empty"><strong>Không tìm thấy sản phẩm phù hợp.</strong><p>Hãy thử tên hãng, model hoặc kích thước khác.</p><button class="btn btn--primary" type="button" data-search-results-clear>Xóa tìm kiếm</button></div>`;
     updateLoadMoreButton(dom.featuredLoadMoreButton, 'featured', 0);
     return;
   }
@@ -2753,6 +2834,11 @@ const applyFiltersForSection = (sectionKey) => {
 renderBrandPanel();
 renderBrandFilterRow({ container: dom.usedTvBrandRow, sectionType: 'used' });
 renderBrandFilterRow({ container: dom.newTvBrandRow, sectionType: 'new' });
+const initialSearchQuery = getSearchQueryFromUrl();
+searchInputValue = initialSearchQuery;
+if (dom.searchInput) dom.searchInput.value = initialSearchQuery;
+if (dom.searchClear) dom.searchClear.hidden = !initialSearchQuery;
+setSubmittedSearch(initialSearchQuery);
 applyFiltersAndRender();
 
 dom.sizeOptions?.addEventListener('click', (event) => {
@@ -2777,6 +2863,7 @@ dom.searchForm?.addEventListener('submit', (event) => {
 });
 
 dom.searchInput?.addEventListener('input', () => {
+  searchInputValue = dom.searchInput.value;
   if (dom.searchClear) dom.searchClear.hidden = !dom.searchInput.value.trim();
   updateSearchSuggestions();
 });
@@ -2807,6 +2894,13 @@ dom.searchInput?.addEventListener('keydown', (event) => {
 dom.searchClear?.addEventListener('click', () => {
   resetSearchInput();
   dom.searchInput?.focus();
+});
+
+document.addEventListener('click', (event) => {
+  const clearButton = event.target.closest('[data-search-results-clear]');
+  if (!clearButton) return;
+  resetSearchInput();
+  dom.searchInput?.focus({ preventScroll: true });
 });
 
 dom.searchForm?.addEventListener('click', (event) => {
@@ -2851,6 +2945,8 @@ window.addEventListener('resize', () => {
   updateSearchSuggestions(true);
 });
 
+window.addEventListener('popstate', restoreSearchFromUrl);
+
 if (dom.searchClear) dom.searchClear.hidden = !dom.searchInput?.value.trim();
 
 dom.productFilterLinks.forEach((link) => {
@@ -2863,8 +2959,11 @@ dom.productFilterLinks.forEach((link) => {
     activeBrand = filterType === 'brand' ? filterValue : '';
     featuredSelectedBrand = activeBrand;
         activeType = filterType === 'type' ? filterValue : '';
-    searchTerm = '';
-    if (dom.searchInput) dom.searchInput.value = '';
+    if (!isSearchMode) {
+      searchInputValue = '';
+      if (dom.searchInput) dom.searchInput.value = '';
+      closeSearchSuggestions();
+    }
 
     dom.sizeOptions?.querySelectorAll('.size-pill').forEach((button) => {
       const isActive = filterType === 'size' && (button.dataset.size || '') === filterValue;
@@ -2892,7 +2991,7 @@ const refreshPublicProductsFromSupabase = async () => {
   if (!storeSupabase?.isConfigured || !storeSupabase.client) {
     publishProductsForChatbot();
     productsReady = true;
-    updateSearchSuggestions(true);
+    if (shouldRefreshFocusedSearchPreview()) updateSearchSuggestions(true);
     return;
   }
 
@@ -2918,7 +3017,7 @@ const refreshPublicProductsFromSupabase = async () => {
     console.warn('Không thể tải sản phẩm từ Supabase. Website công khai sẽ không dùng dữ liệu demo products.js.', error);
   } finally {
     productsReady = true;
-    updateSearchSuggestions(true);
+    if (shouldRefreshFocusedSearchPreview()) updateSearchSuggestions(true);
   }
 };
 
