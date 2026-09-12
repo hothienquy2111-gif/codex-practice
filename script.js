@@ -166,10 +166,6 @@ const dom = {
   searchInput: document.querySelector('#search-input'),
   searchClear: document.querySelector('[data-search-clear]'),
   searchSuggestions: document.querySelector('[data-search-suggestions]'),
-  searchResultsSection: document.querySelector('[data-search-results-section]'),
-  searchResultsTitle: document.querySelector('[data-search-results-title]'),
-  searchResultsCount: document.querySelector('[data-search-results-count]'),
-  catalogSections: document.querySelectorAll('[data-catalog-section]'),
   backToTop: document.querySelector('.back-to-top'),
   mobileCall: document.querySelector('[data-call-button]'),
   brandList: document.querySelector('[data-brand-list]'),
@@ -208,10 +204,6 @@ let activeBrand = '';
 let activeType = '';
 let featuredSelectedBrand = '';
 let featuredSelectedSize = activeSize;
-let searchInputValue = dom.searchInput?.value || '';
-let submittedSearchTerm = '';
-let submittedSearchQuery = '';
-let isSearchMode = false;
 let productsReady = false;
 let searchSuggestionsState = [];
 let searchSuggestionsIndex = -1;
@@ -965,13 +957,69 @@ const SEARCH_TV_SIZE_TOKENS = new Set([
 ]);
 
 const canonicalizeSearchText = (value = '') => normalizeSearchText(value)
+  .replace(/\bqd\s+mini\s+led\b/g, 'qd miniled')
   .replace(/\bmini\s+led\b/g, 'miniled')
+  .replace(/\bq\s+led\b/g, 'qled')
   .replace(/\bfull\s+hd\b/g, 'fhd')
   .replace(/\bultra\s+hd\b/g, '4k')
   .replace(/\b(?:uhd|4k)\b/g, '4k')
   .replace(/\b(?:television|tv)\b/g, 'tivi')
   .replace(/\s+/g, ' ')
   .trim();
+
+const SEARCH_TECHNOLOGY_LABELS = Object.freeze({
+  'qled': 'QLED',
+  'mini-led': 'Mini LED',
+  'qd-mini-led': 'QD-Mini LED',
+  'oled': 'OLED',
+  'led': 'LED',
+  '4k-uhd': '4K/UHD',
+  'full-hd': 'Full HD',
+  'hd': 'HD',
+});
+
+const getProductTechnologyTaxonomy = (product = {}) => {
+  const officialName = normalizeSearchText([
+    product.category,
+    product.subcategory,
+    product.fullName,
+    product.full_name,
+    product.name,
+  ].map(stringifySearchPart).join(' '));
+  const compactName = officialName.replace(/\s+/g, '');
+  const technologies = new Set();
+  const hasQdMiniLed = compactName.includes('qdminiled');
+  const hasMiniLed = !hasQdMiniLed && compactName.includes('miniled');
+  const hasQled = !hasQdMiniLed && !hasMiniLed && compactName.includes('qled');
+  const hasOled = !hasQdMiniLed && !hasMiniLed && !hasQled && compactName.includes('oled');
+
+  if (hasQdMiniLed) technologies.add('qd-mini-led');
+  else if (hasMiniLed) technologies.add('mini-led');
+  else if (hasQled) technologies.add('qled');
+  else if (hasOled) technologies.add('oled');
+  else if (/\bled\b/.test(officialName)) technologies.add('led');
+
+  if (/\b(?:4k|uhd|ultra hd)\b/.test(officialName)) technologies.add('4k-uhd');
+  if (/\b(?:full hd|fhd)\b/.test(officialName)) technologies.add('full-hd');
+  else if (/\bhd\b/.test(officialName) && !technologies.has('4k-uhd')) technologies.add('hd');
+  return [...technologies];
+};
+
+const getTechnologyQueryIntent = (query = '') => {
+  const normalizedQuery = normalizeSearchText(query);
+  const compactQuery = normalizedQuery.replace(/\s+/g, '');
+  const technologies = [];
+  if (compactQuery.includes('qdminiled')) technologies.push('qd-mini-led');
+  else if (compactQuery.includes('miniled')) technologies.push('mini-led');
+  else if (compactQuery.includes('qled')) technologies.push('qled');
+  else if (compactQuery.includes('oled')) technologies.push('oled');
+  else if (/\bled\b/.test(normalizedQuery)) technologies.push('led');
+
+  if (/\b(?:full hd|fhd)\b/.test(normalizedQuery)) technologies.push('full-hd');
+  else if (/\b(?:4k|uhd|ultra hd)\b/.test(normalizedQuery)) technologies.push('4k-uhd');
+  else if (/\bhd\b/.test(normalizedQuery)) technologies.push('hd');
+  return [...new Set(technologies)];
+};
 
 const getEditDistance = (left = '', right = '') => {
   const a = String(left);
@@ -1076,6 +1124,7 @@ const getSearchIntent = (query = '') => {
     sizeTokens,
     isModelQuery: modelCodes.length > 0,
     modelCodes: [...new Set(modelCodes)].sort((a, b) => b.length - a.length),
+    technologyIntent: getTechnologyQueryIntent(query),
   };
 };
 
@@ -1200,6 +1249,8 @@ const scoreSearchProduct = (product = {}, query = '') => {
   const intent = getSearchIntent(query);
   if (!intent.normalizedQuery) return 0;
   const fields = getProductSearchFields(product);
+  const productTechnologies = new Set(getProductTechnologyTaxonomy(product));
+  if (intent.technologyIntent.some((technology) => !productTechnologies.has(technology))) return 0;
   if (intent.isModelQuery) return scoreModelSearchProduct(product, fields, intent);
 
   const tokenMatches = intent.tokens.map((token) => getNaturalTokenMatch(token, fields));
@@ -1213,6 +1264,7 @@ const scoreSearchProduct = (product = {}, query = '') => {
   if (hasBrandMatch && hasSizeMatch) score += 12000;
   else if (hasSizeMatch) score += 7000;
   else if (hasBrandMatch) score += 5000;
+  if (intent.technologyIntent.length) score += 16000;
 
   if (fields.canonicalFullName === intent.canonicalQuery) score += 8000;
   else if (fields.canonicalFullName.startsWith(intent.canonicalQuery)) score += 5200;
@@ -1225,7 +1277,7 @@ const scoreSearchProduct = (product = {}, query = '') => {
   return score;
 };
 
-const getSearchSuggestions = (query, sourceProducts = products, limit = 4) => {
+const getRankedSearchProducts = (query, sourceProducts = products) => {
   const normalizedQuery = normalizeSearchText(query);
   if (!normalizedQuery) return [];
 
@@ -1241,9 +1293,10 @@ const getSearchSuggestions = (query, sourceProducts = products, limit = 4) => {
       if (imageB !== imageA) return Number(imageB) - Number(imageA);
       return (a.product.sortOrder || 0) - (b.product.sortOrder || 0);
     })
-    .slice(0, limit)
     .map(({ product }) => product);
 };
+
+const getSearchSuggestions = (query, sourceProducts = products, limit = 4) => getRankedSearchProducts(query, sourceProducts).slice(0, limit);
 
 const getSearchSuggestionLimit = () => (mobileSearchMedia.matches ? 6 : 8);
 
@@ -1391,40 +1444,11 @@ const updateSearchSuggestions = (force = false) => {
 const shouldRefreshFocusedSearchPreview = () => Boolean(
   dom.searchInput
   && document.activeElement === dom.searchInput
-  && (!isSearchMode || normalizeSearchText(dom.searchInput.value) !== submittedSearchTerm)
 );
 
-const getSearchQueryFromUrl = () => {
-  try {
-    return new URL(window.location.href).searchParams.get('search')?.trim() || '';
-  } catch (_error) {
-    return '';
-  }
-};
-
-const updateSearchUrl = (query = '', { replace = false } = {}) => {
-  const url = new URL(window.location.href);
-  const trimmedQuery = String(query || '').trim();
-  if (trimmedQuery) url.searchParams.set('search', trimmedQuery);
-  else url.searchParams.delete('search');
-  if (url.hash === '#ket-qua-tim-kiem' && !trimmedQuery) url.hash = '';
-  const encodedSearch = url.search.replace(/\+/g, '%20');
-  window.history[replace ? 'replaceState' : 'pushState']({ search: trimmedQuery }, '', `${url.pathname}${encodedSearch}${url.hash}`);
-};
-
-const syncSearchModeUi = () => {
-  document.body.classList.toggle('search-mode', isSearchMode);
-  if (dom.searchResultsSection) dom.searchResultsSection.hidden = !isSearchMode;
-  dom.catalogSections.forEach((section) => { section.hidden = isSearchMode; });
-};
-
-const setSubmittedSearch = (query = '') => {
-  submittedSearchQuery = String(query || '').trim();
-  submittedSearchTerm = normalizeSearchText(submittedSearchQuery);
-  isSearchMode = Boolean(submittedSearchTerm);
-  resetVisibleCount('featured');
-  syncSearchModeUi();
-};
+const isDedicatedSearchPage = () => document.body.hasAttribute('data-search-page');
+const createSearchPageUrl = (query = '') => `search.html${query ? `?search=${encodeURIComponent(query)}` : ''}`;
+const dispatchSearchPageSubmit = (query = '') => window.dispatchEvent(new CustomEvent('storefrontsearchsubmit', { detail: { query } }));
 
 const submitSearch = ({ openHighlightedSuggestion = false } = {}) => {
   const query = dom.searchInput?.value.trim() || '';
@@ -1433,41 +1457,25 @@ const submitSearch = ({ openHighlightedSuggestion = false } = {}) => {
     return;
   }
 
-  searchInputValue = query;
+  closeSearchSuggestions();
   if (!normalizeSearchText(query)) {
-    resetSearchInput();
+    if (isDedicatedSearchPage()) dispatchSearchPageSubmit('');
     return;
   }
 
-  setSubmittedSearch(query);
-  if (dom.featuredSelectedSize) dom.featuredSelectedSize.textContent = featuredSelectedSize || featuredSelectedBrand || 'Tất cả';
-  applyProductFilters();
-  closeSearchSuggestions();
-  updateSearchUrl(query);
-  dom.searchResultsSection?.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+  if (isDedicatedSearchPage()) {
+    dispatchSearchPageSubmit(query);
+    return;
+  }
+  window.location.assign(createSearchPageUrl(query));
 };
 
-const resetSearchInput = ({ updateHistory = true } = {}) => {
+const resetSearchInput = () => {
   if (dom.searchInput) dom.searchInput.value = '';
   if (dom.searchClear) dom.searchClear.hidden = true;
-  searchInputValue = '';
-  const wasSearchMode = isSearchMode;
-  setSubmittedSearch('');
   searchSuggestionsState = [];
   closeSearchSuggestions();
-  if (dom.featuredSelectedSize) dom.featuredSelectedSize.textContent = featuredSelectedSize || featuredSelectedBrand || 'Tất cả';
-  if (updateHistory && (wasSearchMode || getSearchQueryFromUrl())) updateSearchUrl('');
-  applyProductFilters();
-};
-
-const restoreSearchFromUrl = () => {
-  const query = getSearchQueryFromUrl();
-  searchInputValue = query;
-  if (dom.searchInput) dom.searchInput.value = query;
-  if (dom.searchClear) dom.searchClear.hidden = !query;
-  setSubmittedSearch(query);
-  closeSearchSuggestions();
-  applyProductFilters();
+  if (isDedicatedSearchPage()) dispatchSearchPageSubmit('');
 };
 
 const getBrandSeriesConfig = (brand = '') => {
@@ -2181,19 +2189,8 @@ const syncSectionSizeRow = (sectionKey) => {
   });
 };
 
-const productMatchesSearch = (product) => {
-  if (!isSearchMode || !submittedSearchTerm) return true;
-  return scoreSearchProduct(product, submittedSearchTerm) > 0;
-};
-
-const sortProductsBySearchRelevance = (items = []) => {
-  if (!isSearchMode || !submittedSearchTerm) return items;
-  return [...items].sort((a, b) => {
-    const scoreDifference = scoreSearchProduct(b, submittedSearchTerm) - scoreSearchProduct(a, submittedSearchTerm);
-    if (scoreDifference !== 0) return scoreDifference;
-    return (a.sortOrder || 0) - (b.sortOrder || 0);
-  });
-};
+const productMatchesSearch = () => true;
+const sortProductsBySearchRelevance = (items = []) => items;
 
 const productMatchesSectionFilter = (product, filterState) => {
   const matchesSectionSize = productMatchesSize(product, filterState.size);
@@ -2204,7 +2201,7 @@ const productMatchesSectionFilter = (product, filterState) => {
 
 const getSectionProducts = (sectionKey, filterState = {}) => {
   const sectionProducts = sectionKey === 'featured'
-    ? (isSearchMode ? products.filter(isPublicProduct) : getFeaturedProducts(products))
+    ? getFeaturedProducts(products)
     : sectionKey === 'newTv'
       ? getNewTvProducts(products)
       : getOldTvProducts(products);
@@ -2383,11 +2380,8 @@ const applyBrandFilter = (brand = '') => {
   activeSize = '';
   featuredSelectedSize = '';
   activeType = '';
-  if (!isSearchMode) {
-    searchInputValue = '';
-    if (dom.searchInput) dom.searchInput.value = '';
-    closeSearchSuggestions();
-  }
+  if (dom.searchInput) dom.searchInput.value = '';
+  closeSearchSuggestions();
   if (dom.featuredSelectedSize) dom.featuredSelectedSize.textContent = nextBrand || FILTER_ALL_LABEL;
   dom.sizeOptions?.querySelectorAll('.size-pill').forEach((button) => {
     const isActive = !(button.dataset.size || '');
@@ -2760,27 +2754,15 @@ document.addEventListener('click', (event) => {
 
 const renderProductCards = () => {
   if (!dom.productGrid) return;
-  syncSearchModeUi();
-  if (!isSearchMode) {
-    dom.productGrid.innerHTML = '';
-    updateLoadMoreButton(dom.featuredLoadMoreButton, 'featured', 0);
-    return;
-  }
-
-  if (dom.searchResultsTitle) dom.searchResultsTitle.textContent = `Kết quả tìm kiếm cho “${submittedSearchQuery}”`;
   if (!products.length) {
-    dom.productGrid.innerHTML = productsReady
-      ? `<div class="search-results-empty"><strong>Không tìm thấy sản phẩm phù hợp.</strong><p>Hãy thử tên hãng, model hoặc kích thước khác.</p><button class="btn btn--primary" type="button" data-search-results-clear>Xóa tìm kiếm</button></div>`
-      : '<p class="empty-state">Đang tải sản phẩm...</p>';
-    if (dom.searchResultsCount) dom.searchResultsCount.textContent = productsReady ? 'Tìm thấy 0 sản phẩm' : 'Đang tải kết quả...';
+    dom.productGrid.innerHTML = `<p class="empty-state">${PUBLIC_PRODUCTS_EMPTY_MESSAGE}</p>`;
     updateLoadMoreButton(dom.featuredLoadMoreButton, 'featured', 0);
     return;
   }
 
   const filteredProducts = getSectionProducts('featured');
-  if (dom.searchResultsCount) dom.searchResultsCount.textContent = `Tìm thấy ${filteredProducts.length} sản phẩm`;
   if (!filteredProducts.length) {
-    dom.productGrid.innerHTML = `<div class="search-results-empty"><strong>Không tìm thấy sản phẩm phù hợp.</strong><p>Hãy thử tên hãng, model hoặc kích thước khác.</p><button class="btn btn--primary" type="button" data-search-results-clear>Xóa tìm kiếm</button></div>`;
+    dom.productGrid.innerHTML = `<p class="empty-state">${PUBLIC_PRODUCTS_EMPTY_MESSAGE}</p>`;
     updateLoadMoreButton(dom.featuredLoadMoreButton, 'featured', 0);
     return;
   }
@@ -2831,14 +2813,28 @@ const applyFiltersForSection = (sectionKey) => {
   }
 };
 
+window.AnhMinhSearchRuntime = Object.freeze({
+  getProducts: () => products.filter(isPublicProduct),
+  isReady: () => productsReady,
+  searchProducts: (query = '') => getRankedSearchProducts(query, products),
+  scoreProduct: scoreSearchProduct,
+  normalizeText: normalizeSearchText,
+  normalizeBrand,
+  normalizeProductType,
+  getTechnologies: getProductTechnologyTaxonomy,
+  technologyLabels: SEARCH_TECHNOLOGY_LABELS,
+  renderProductCard: (product) => renderFeaturedProductCard(product),
+  bindProductImages: bindProductImageFallbacks,
+  updateCompareButtons,
+});
+
+const notifyStorefrontProductsReady = () => window.dispatchEvent(new CustomEvent('storefrontproductsready', {
+  detail: { count: products.filter(isPublicProduct).length },
+}));
+
 renderBrandPanel();
 renderBrandFilterRow({ container: dom.usedTvBrandRow, sectionType: 'used' });
 renderBrandFilterRow({ container: dom.newTvBrandRow, sectionType: 'new' });
-const initialSearchQuery = getSearchQueryFromUrl();
-searchInputValue = initialSearchQuery;
-if (dom.searchInput) dom.searchInput.value = initialSearchQuery;
-if (dom.searchClear) dom.searchClear.hidden = !initialSearchQuery;
-setSubmittedSearch(initialSearchQuery);
 applyFiltersAndRender();
 
 dom.sizeOptions?.addEventListener('click', (event) => {
@@ -2863,7 +2859,6 @@ dom.searchForm?.addEventListener('submit', (event) => {
 });
 
 dom.searchInput?.addEventListener('input', () => {
-  searchInputValue = dom.searchInput.value;
   if (dom.searchClear) dom.searchClear.hidden = !dom.searchInput.value.trim();
   updateSearchSuggestions();
 });
@@ -2894,13 +2889,6 @@ dom.searchInput?.addEventListener('keydown', (event) => {
 dom.searchClear?.addEventListener('click', () => {
   resetSearchInput();
   dom.searchInput?.focus();
-});
-
-document.addEventListener('click', (event) => {
-  const clearButton = event.target.closest('[data-search-results-clear]');
-  if (!clearButton) return;
-  resetSearchInput();
-  dom.searchInput?.focus({ preventScroll: true });
 });
 
 dom.searchForm?.addEventListener('click', (event) => {
@@ -2945,8 +2933,6 @@ window.addEventListener('resize', () => {
   updateSearchSuggestions(true);
 });
 
-window.addEventListener('popstate', restoreSearchFromUrl);
-
 if (dom.searchClear) dom.searchClear.hidden = !dom.searchInput?.value.trim();
 
 dom.productFilterLinks.forEach((link) => {
@@ -2959,11 +2945,8 @@ dom.productFilterLinks.forEach((link) => {
     activeBrand = filterType === 'brand' ? filterValue : '';
     featuredSelectedBrand = activeBrand;
         activeType = filterType === 'type' ? filterValue : '';
-    if (!isSearchMode) {
-      searchInputValue = '';
-      if (dom.searchInput) dom.searchInput.value = '';
-      closeSearchSuggestions();
-    }
+    if (dom.searchInput) dom.searchInput.value = '';
+    closeSearchSuggestions();
 
     dom.sizeOptions?.querySelectorAll('.size-pill').forEach((button) => {
       const isActive = filterType === 'size' && (button.dataset.size || '') === filterValue;
@@ -2992,6 +2975,7 @@ const refreshPublicProductsFromSupabase = async () => {
     publishProductsForChatbot();
     productsReady = true;
     if (shouldRefreshFocusedSearchPreview()) updateSearchSuggestions(true);
+    notifyStorefrontProductsReady();
     return;
   }
 
@@ -3018,6 +3002,7 @@ const refreshPublicProductsFromSupabase = async () => {
   } finally {
     productsReady = true;
     if (shouldRefreshFocusedSearchPreview()) updateSearchSuggestions(true);
+    notifyStorefrontProductsReady();
   }
 };
 
