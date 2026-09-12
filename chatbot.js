@@ -4,7 +4,8 @@
   const CHATBOT_ID = 'anh-minh-chatbot';
   const HISTORY_KEY = 'anhMinhChatHistory';
   const HISTORY_VERSION_KEY = 'anhMinhChatHistoryVersion';
-  const AM_CHATBOT_HISTORY_VERSION = 'customer-intents-v12';
+  const STATE_KEY = 'anhMinhSalesAssistantState';
+  const AM_CHATBOT_HISTORY_VERSION = 'smart-sales-v13';
   const MAX_HISTORY = 20;
   const AVATAR_SRC = 'linh%20v%E1%BA%ADt%20AM.jpeg';
   const REPAIR_PHONES = ['0905111223', '0774111223'];
@@ -13,20 +14,15 @@
   const STORE_ADDRESSES = ['100 Tiểu La, Hải Châu, Đà Nẵng', '540B Nguyễn Hữu Thọ, Cẩm Lệ, Đà Nẵng'];
   const WORKING_HOURS = '8:00 - 20:00 hằng ngày';
   const QUICK_REPLIES = [
-    'Tivi mới',
-    'Tivi cũ',
-    'Thu cũ đổi mới',
-    'Sửa tivi',
-    'Bảo hành',
-    'Khuyến mãi',
-    'Chọn kích thước',
-    'Còn hàng không?',
-    'Số điện thoại',
-    'Zalo',
+    'TV dưới 5 triệu',
+    'Samsung 55 inch',
+    'TV QLED',
+    'TV cũ giá tốt',
+    'Tư vấn kích thước',
   ];
-  const FALLBACK_QUICK_REPLIES = ['Tivi mới', 'Tivi cũ', 'Sửa tivi', 'Bảo hành', 'Khuyến mãi', 'Chọn kích thước', 'Số điện thoại', 'Zalo'];
-  const SMART_RECOMMENDER_QUICK_REPLIES = ['Tivi dưới 10 triệu', 'Tivi 55 inch', 'Tivi mới', 'Tivi cũ', 'Phòng ngủ', 'Phòng khách'];
-  const WELCOME_MESSAGE = 'Xin chào 👋 Mình là AM AI – trợ lý của Anh Minh Store. Mình có thể giúp bạn tìm tivi phù hợp, tư vấn tivi mới/tivi cũ, thu cũ đổi mới, sửa tivi, bảo hành và thông tin cửa hàng.';
+  const FALLBACK_QUICK_REPLIES = ['TV dưới 5 triệu', 'Samsung 55 inch', 'TV QLED', 'Tivi cũ', 'Sửa tivi'];
+  const SMART_RECOMMENDER_QUICK_REPLIES = ['Tivi dưới 10 triệu', 'Tivi 55 inch', 'Tivi mới', 'Tivi cũ', 'Phòng khách'];
+  const WELCOME_MESSAGE = 'Chào anh/chị 👋 Mình là AM AI, trợ lý tự động của Anh Minh Store. Mình có thể lọc TV theo ngân sách, hãng, kích thước hoặc model. Ví dụ: “Samsung 55 inch dưới 12 triệu”.';
   const START_MESSAGE = 'AM AI sẵn sàng tư vấn lại từ đầu ạ 👋 Bạn đang cần mua tivi mới, tivi cũ, hỏi bảo hành hay muốn tư vấn theo ngân sách?';
   const TV_BRANDS = ['samsung', 'lg', 'sony', 'toshiba', 'tcl', 'panasonic', 'sharp', 'xiaomi', 'casper', 'coocaa', 'skyworth', 'philips', 'hitachi', 'hisense'];
   const TV_BRAND_LABELS = {
@@ -44,6 +40,22 @@
     philips: 'Philips',
     hitachi: 'Hitachi',
     hisense: 'Hisense',
+  };
+  const TV_BRAND_ALIASES = {
+    samsung: ['samsung', 'samsng', 'samsumg', 'sam sung'],
+    lg: ['lg'],
+    sony: ['sony'],
+    toshiba: ['toshiba'],
+    tcl: ['tcl'],
+    panasonic: ['panasonic'],
+    sharp: ['sharp'],
+    xiaomi: ['xiaomi', 'xioami'],
+    casper: ['casper'],
+    coocaa: ['coocaa', 'cooca'],
+    skyworth: ['skyworth'],
+    philips: ['philips'],
+    hitachi: ['hitachi'],
+    hisense: ['hisense'],
   };
   const PRODUCT_SOURCE_PRIORITY = { dom: 3, live: 2, supabase: 2, unknown: 0 };
   const TV_SERIES_BY_BRAND_CHATBOT = {
@@ -688,6 +700,32 @@
   let elements = {};
   let chatHistory = [];
   let hasRenderedQuickReplies = false;
+  let chatbotCatalogCache = [];
+  let chatbotCatalogPromise = null;
+
+  const createConversationState = () => ({
+    budget: { min: null, max: null, target: null, strictMax: false, label: '', mode: '' },
+    size: null,
+    sizeIsSoft: false,
+    brand: '',
+    brandIsSoft: false,
+    technology: '',
+    technologyIsSoft: false,
+    condition: '',
+    useCases: [],
+    roomSize: null,
+    roomType: '',
+    viewingDistance: null,
+    priorities: [],
+    excludedBrands: [],
+    previouslyRecommendedModels: [],
+    comparedModels: [],
+    lastRecommendationPrices: [],
+    lastQuery: '',
+    lastIntent: '',
+  });
+
+  let conversationState = createConversationState();
 
   const normalizeVietnameseText = (text = '') => String(text)
     .toLowerCase()
@@ -708,15 +746,15 @@
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
 
-  const safeLocalStorage = {
+  const safeSessionStorage = {
     get(key) {
-      try { return window.localStorage.getItem(key); } catch (error) { return null; }
+      try { return window.sessionStorage.getItem(key); } catch (error) { return null; }
     },
     set(key, value) {
-      try { window.localStorage.setItem(key, value); } catch (error) { /* Chat still works without storage. */ }
+      try { window.sessionStorage.setItem(key, value); } catch (error) { /* Chat still works without storage. */ }
     },
     remove(key) {
-      try { window.localStorage.removeItem(key); } catch (error) { /* Chat still works without storage. */ }
+      try { window.sessionStorage.removeItem(key); } catch (error) { /* Chat still works without storage. */ }
     },
   };
 
@@ -771,7 +809,7 @@
 
   const formatPriceNumberForChatbot = (value) => {
     const priceNumber = parseVietnamesePriceToNumber(value);
-    return priceNumber ? `${priceNumber.toLocaleString('vi-VN')}đ` : formatPriceText(value);
+    return priceNumber ? `${priceNumber.toLocaleString('vi-VN')}đ` : 'Liên hệ để xác nhận giá';
   };
 
   const parseVietnamesePriceToNumber = (value) => {
@@ -790,17 +828,17 @@
     if (millionMatch) return Math.round(Number(millionMatch[1].replace(',', '.')) * 1000000);
 
     const compact = normalized.replace(/\s+/g, '');
-    const groupedMatches = compact.match(/\d{1,3}(?:[.,]\d{3}){1,3}/g);
-    if (groupedMatches?.length) {
-      const number = Number(groupedMatches[groupedMatches.length - 1].replace(/[.,]/g, ''));
+    if (/[.,]/.test(compact)) {
+      if (!/^\d{1,3}(?:[.,]\d{3}){1,3}$/.test(compact)) return null;
+      const number = Number(compact.replace(/[.,]/g, ''));
       if (Number.isFinite(number) && number > 0) return number;
+      return null;
     }
 
-    const digits = normalized.replace(/[^\d]/g, '');
-    if (!digits) return null;
-    const number = Number(digits);
+    if (!/^\d+$/.test(compact)) return null;
+    const number = Number(compact);
     if (!Number.isFinite(number) || number <= 0) return null;
-    return number < 1000 ? number * 1000000 : number;
+    return number;
   };
 
   const parseSizeToNumber = (value) => {
@@ -820,6 +858,9 @@
     const name = String(getProductValue(product, ['full_name', 'fullName', 'name', 'title', 'product_name', 'productName']) || model || brand || 'Sản phẩm tivi').trim();
     const size = getProductValue(product, ['size', 'screen_size', 'screenSize']);
     const type = String(getProductValue(product, ['type', 'product_type', 'productType', 'category']) || '').trim();
+    const category = String(getProductValue(product, ['category']) || '').trim();
+    const subcategory = String(getProductValue(product, ['subcategory', 'sub_category']) || '').trim();
+    const displayTechnology = String(getProductValue(product, ['technology', 'display_technology', 'displayTechnology', 'screen_type', 'screenType', 'panel_type', 'panelType']) || '').trim();
     const condition = String(getProductValue(product, ['condition', 'status']) || '').trim();
     const warranty = String(getProductValue(product, ['warranty', 'badge']) || '').trim();
     const stockStatus = String(getProductValue(product, ['stock_status', 'stockStatus', 'availability', 'inventory_status']) || '').trim();
@@ -833,6 +874,11 @@
       getProductValue(product, ['overview']),
       getProductValue(product, ['specifications']),
     ]);
+    const explicitSizeNumber = parseSizeToNumber(size);
+    const nameSizeNumber = parseSizeToNumber(name);
+    const modelSizeNumber = parseSizeToNumber(model);
+    const detectedSizeNumbers = Array.from(new Set([explicitSizeNumber, nameSizeNumber, modelSizeNumber].filter(Boolean)));
+    const resolvedSizeNumber = nameSizeNumber || explicitSizeNumber || modelSizeNumber || null;
     const normalizedProduct = {
       id: id ? String(id).trim() : '',
       brand,
@@ -840,13 +886,18 @@
       name,
       fullName: name,
       size: String(size || '').trim(),
-      sizeNumber: parseSizeToNumber(size || name || model),
+      sizeNumber: resolvedSizeNumber,
+      sizeConflict: detectedSizeNumbers.length > 1,
       type,
+      category,
+      subcategory,
+      displayTechnology,
       condition,
       warranty,
       stockStatus,
       priceNumber: parseVietnamesePriceToNumber(price),
       priceText: formatPriceNumberForChatbot(price),
+      invalidPrice: Boolean(price !== '' && price !== null && price !== undefined && !parseVietnamesePriceToNumber(price)),
       oldPriceNumber: parseVietnamesePriceToNumber(oldPrice),
       oldPriceText: oldPrice ? formatPriceNumberForChatbot(oldPrice) : '',
       image,
@@ -867,6 +918,9 @@
       normalizedProduct.name,
       normalizedProduct.size,
       normalizedProduct.type,
+      normalizedProduct.category,
+      normalizedProduct.subcategory,
+      normalizedProduct.displayTechnology,
       normalizedProduct.condition,
       normalizedProduct.warranty,
       normalizedProduct.stockStatus,
@@ -1073,12 +1127,17 @@
       fullName: primary.fullName || secondary.fullName,
       size: primary.size || secondary.size,
       sizeNumber: primary.sizeNumber || secondary.sizeNumber,
+      sizeConflict: Boolean(primary.sizeConflict || secondary.sizeConflict),
       type: primary.type || secondary.type,
+      category: primary.category || secondary.category,
+      subcategory: primary.subcategory || secondary.subcategory,
+      displayTechnology: primary.displayTechnology || secondary.displayTechnology,
       condition: primary.condition || secondary.condition,
       warranty: primary.warranty || secondary.warranty,
       stockStatus: primary.stockStatus || secondary.stockStatus,
       priceNumber: primary.priceNumber,
       priceText: primary.priceText,
+      invalidPrice: primary.invalidPrice,
       oldPriceNumber: primary.oldPriceNumber,
       oldPriceText: primary.oldPriceText,
       image: primary.image || secondary.image,
@@ -1099,6 +1158,7 @@
   }, {});
 
   const getAvailableProductsForChatbot = () => {
+    if (chatbotCatalogCache.length) return chatbotCatalogCache;
     const rawProducts = [];
     try {
       const currentKeys = [
@@ -1113,10 +1173,9 @@
         'productCache',
         'cachedProducts',
       ];
-      rawProducts.push(...readDomProductsForChatbot());
-
+      const liveProducts = [];
       currentKeys.forEach((key) => {
-        if (Array.isArray(window[key])) rawProducts.push(...cloneProductsWithSource(window[key], `window.${key}`, PRODUCT_SOURCE_PRIORITY.live));
+        if (Array.isArray(window[key])) liveProducts.push(...cloneProductsWithSource(window[key], `window.${key}`, PRODUCT_SOURCE_PRIORITY.live));
       });
 
       [
@@ -1127,7 +1186,10 @@
         window.anhMinhProductStore,
         window.AnhMinhSupabase,
         window.anhMinhSupabase,
-      ].forEach((state, index) => collectProductArraysFromObject(state, rawProducts, `state${index + 1}`, PRODUCT_SOURCE_PRIORITY.supabase));
+      ].forEach((state, index) => collectProductArraysFromObject(state, liveProducts, `state${index + 1}`, PRODUCT_SOURCE_PRIORITY.supabase));
+
+      if (liveProducts.length) rawProducts.push(...liveProducts);
+      else rawProducts.push(...readDomProductsForChatbot());
 
     } catch (error) {
       console.warn('[AM AI] Không thể lấy dữ liệu sản phẩm cho chatbot.', error);
@@ -1155,6 +1217,35 @@
       if (['unavailable', 'out_of_stock', 'out of stock', 'het hang', 'ngung kinh doanh'].some((value) => stock.includes(value))) return false;
       return product.name || product.model || product.priceNumber;
     });
+  };
+
+  const loadAuthoritativeChatbotCatalog = async () => {
+    if (chatbotCatalogCache.length) return chatbotCatalogCache;
+    if (chatbotCatalogPromise) return chatbotCatalogPromise;
+    chatbotCatalogPromise = (async () => {
+      const storeSupabase = window.AnhMinhSupabase || window.anhMinhSupabase;
+      if (storeSupabase?.isConfigured && storeSupabase.client) {
+        try {
+          const { data, error } = await storeSupabase.client
+            .from('products')
+            .select('*')
+            .eq('is_active', true)
+            .order('sort_order', { ascending: true });
+          if (error) throw error;
+          if (Array.isArray(data)) {
+            chatbotCatalogCache = data
+              .map((item, index) => normalizeProductForChatbot({ ...item, __chatbotSource: 'supabase.active', __chatbotPriority: PRODUCT_SOURCE_PRIORITY.supabase }, index))
+              .filter((product) => product.isActive !== false);
+            return chatbotCatalogCache;
+          }
+        } catch (error) {
+          console.warn('[AM AI] Không thể tải catalog active; chatbot dùng catalog đã publish trên trang.', { stage: 'catalog_load', message: error?.message || String(error) });
+        }
+      }
+      chatbotCatalogCache = getAvailableProductsForChatbot();
+      return chatbotCatalogCache;
+    })();
+    return chatbotCatalogPromise;
   };
 
   const getRecommendedRangeForArea = (area, roomType) => {
@@ -1603,7 +1694,10 @@
     const normalizedMessage = normalizeVietnameseText(message);
     const entities = detectComparisonEntities(normalizedMessage);
     const need = parseTvCustomerNeed(message);
-    if (!isComparisonIntent(normalizedMessage)) return null;
+    const modelQueries = extractModelQueries(message);
+    const hasDirectModelChoice = modelQueries.length >= 2 && hasAny(normalizedMessage, ['hay', 'voi', 'so sanh', 'khac']);
+    if (!isComparisonIntent(normalizedMessage) && !hasDirectModelChoice) return null;
+    if (!hasFinancialContext(conversationState, need)) return buildBudgetDiscoveryReply(message, need);
     if (hasDurabilityComparisonIntent(normalizedMessage)) {
       if (entities.series.length >= 2) return buildDurabilityComparisonReply(entities.series[0], entities.series[1], need, message);
       if (entities.standaloneBrands.length >= 2) return buildDurabilityComparisonReply(entities.standaloneBrands[0], entities.standaloneBrands[1], need, message);
@@ -1673,50 +1767,135 @@
     return [need.seriesLabel, ...aliases].some((alias) => textHasAlias(haystack, alias));
   };
 
+  const detectBrandFromMessage = (normalizedMessage = '') => {
+    const match = Object.entries(TV_BRAND_ALIASES).find(([, aliases]) => aliases.some((alias) => new RegExp(`(^|[^a-z0-9])${escapeRegExp(alias)}([^a-z0-9]|$)`).test(normalizedMessage)));
+    return match ? TV_BRAND_LABELS[match[0]] : '';
+  };
+
+  const normalizeTechnologyText = (value = '') => normalizeVietnameseText(value)
+    .replace(/\bqd[\s-]*mini[\s-]*led\b/g, 'qd mini led')
+    .replace(/\bmini[\s-]*led\b/g, 'mini led')
+    .replace(/\bq[\s-]*led\b/g, 'qled')
+    .replace(/\bfull[\s-]*hd\b/g, 'full hd');
+
+  const detectTechnologyIntent = (value = '') => {
+    const text = normalizeTechnologyText(value);
+    if (/\bqd mini led\b/.test(text)) return 'qd-mini-led';
+    if (/\bmini led\b/.test(text)) return 'mini-led';
+    if (/\bneo qled\b|\bqled\b/.test(text)) return 'qled';
+    if (/\boled\b/.test(text)) return 'oled';
+    if (/\bfull hd\b/.test(text)) return 'full-hd';
+    if (/\b4k\b|\bultra hd\b|\buhd\b/.test(text)) return '4k';
+    if (/\bhd\b/.test(text)) return 'hd';
+    if (/\bled\b/.test(text)) return 'led';
+    return '';
+  };
+
+  const getProductTechnologies = (product = {}) => {
+    const officialText = normalizeTechnologyText([
+      product.name,
+      product.fullName,
+      product.full_name,
+      product.category,
+      product.subcategory,
+      product.displayTechnology,
+      product.type,
+    ].filter(Boolean).join(' '));
+    const compact = officialText.replace(/[^a-z0-9]/g, '');
+    const technologies = [];
+    if (compact.includes('qdminiled')) technologies.push('qd-mini-led');
+    else if (compact.includes('miniled')) technologies.push('mini-led');
+    else if (compact.includes('qled')) technologies.push('qled');
+    else if (compact.includes('oled')) technologies.push('oled');
+    else if (/(^|\s)led($|\s)/.test(officialText)) technologies.push('led');
+    if (/\b4k\b|\bultra hd\b|\buhd\b/.test(officialText)) technologies.push('4k');
+    else if (/\bfull hd\b/.test(officialText)) technologies.push('full-hd');
+    else if (/\bhd\b/.test(officialText)) technologies.push('hd');
+    return technologies;
+  };
+
   const parseBudgetFromMessage = (message, normalizedMessage) => {
     const need = {};
-    const toMillion = (numberText) => Math.round(Number(String(numberText).replace(',', '.')) * 1000000);
-    const rangeMatch = normalizedMessage.match(/(?:tu\s*)?(\d+(?:[.,]\d+)?)\s*(?:-|den|toi|–)\s*(\d+(?:[.,]\d+)?)\s*(trieu|tr\b|m\b)?/);
+    if (hasAny(normalizedMessage, ['khong gioi han ngan sach', 'ngan sach khong gioi han', 'khong gioi han nua', 'gia nao cung duoc'])) {
+      need.budgetMode = 'unrestricted';
+      need.budgetLabel = 'không giới hạn ngân sách';
+      return need;
+    }
+    const toMoney = (numberText, unit = 'trieu') => {
+      const value = Number(String(numberText).replace(',', '.'));
+      if (!Number.isFinite(value) || value <= 0) return null;
+      return Math.round(value * (/^(k|nghin|ngan)$/.test(unit) ? 1000 : 1000000));
+    };
+    const rangeMatch = normalizedMessage.match(/(?:tu\s*)?(\d+(?:[.,]\d+)?)\s*(trieu|tr\b|m\b|cu\b|k\b|nghin\b|ngan\b)?\s*(?:-|den|toi|–)\s*(\d+(?:[.,]\d+)?)\s*(trieu|tr\b|m\b|cu\b|k\b|nghin\b|ngan\b)/);
     if (rangeMatch) {
-      need.minBudget = toMillion(rangeMatch[1]);
-      need.maxBudget = toMillion(rangeMatch[2]);
-      need.budgetLabel = `${rangeMatch[1]}–${rangeMatch[2]} triệu`;
+      const unit = rangeMatch[4] || rangeMatch[2] || 'trieu';
+      need.minBudget = toMoney(rangeMatch[1], rangeMatch[2] || unit);
+      need.maxBudget = toMoney(rangeMatch[3], unit);
+      need.budgetLabel = `${rangeMatch[1]}–${rangeMatch[3]} ${/^(k|nghin|ngan)$/.test(unit) ? 'nghìn' : 'triệu'}`;
       return need;
     }
 
-    const belowMatch = normalizedMessage.match(/(?:duoi|khong qua|toi da|duoi muc|nho hon|be hon)\s*(\d+(?:[.,]\d+)?)\s*(trieu|tr\b|m\b)?|(?:tam|khoang)?\s*(\d+(?:[.,]\d+)?)\s*(trieu|tr\b|m\b)?\s*(?:do lai|tro xuong|tro lai|quay dau)/);
+    const belowMatch = normalizedMessage.match(/(?:duoi|khong qua|toi da|duoi muc|nho hon|be hon)\s*(\d+(?:[.,]\d+)?)\s*(trieu|tr\b|m\b|cu\b|k\b|nghin\b|ngan\b)|(?:tam|khoang)?\s*(\d+(?:[.,]\d+)?)\s*(trieu|tr\b|m\b|cu\b|k\b|nghin\b|ngan\b)\s*(?:do lai|tro xuong|tro lai|quay dau)/);
     if (belowMatch) {
       const valueText = belowMatch[1] || belowMatch[3];
       const value = Number(valueText.replace(',', '.'));
-      need.maxBudget = toMillion(valueText);
+      const unit = belowMatch[2] || belowMatch[4] || 'trieu';
+      need.maxBudget = toMoney(valueText, unit);
       need.isMaxBudgetStrict = true;
-      need.budgetLabel = `dưới ${value} triệu`;
+      need.budgetLabel = `không quá ${value} ${/^(k|nghin|ngan)$/.test(unit) ? 'nghìn' : 'triệu'}`;
       return need;
     }
 
-    const aroundMatch = normalizedMessage.match(/(?:tam|khoang|khoan|gan|tam gia|ngan sach|muc gia|budget)\s*(\d+(?:[.,]\d+)?)\s*(trieu|tr\b|m\b)/);
+    const belowBareMatch = normalizedMessage.match(/(?:duoi|khong qua|toi da|duoi muc|nho hon|be hon)\s*(\d{1,3})\b(?!\s*(?:inch|in|inh|m2|m\b))/);
+    if (belowBareMatch) {
+      const value = Number(belowBareMatch[1]);
+      need.maxBudget = Math.round(value * 1000000);
+      need.isMaxBudgetStrict = true;
+      need.budgetLabel = `không quá ${value} triệu`;
+      return need;
+    }
+
+    const aroundMatch = normalizedMessage.match(/(?:tam|khoang|khoan|gan|tam gia|ngan sach|muc gia|budget)\s*(\d+(?:[.,]\d+)?)\s*(trieu|tr\b|m\b|cu\b|k\b|nghin\b|ngan\b)/);
     if (aroundMatch) {
-      const value = Number(aroundMatch[1].replace(',', '.'));
-      need.targetBudget = Math.round(value * 1000000);
-      need.minBudget = Math.round(value * 0.85 * 1000000);
-      need.maxBudget = Math.round(value * 1.135 * 1000000);
+      const target = toMoney(aroundMatch[1], aroundMatch[2]);
+      need.targetBudget = target;
+      need.minBudget = Math.round(target * 0.85);
+      need.maxBudget = Math.round(target * 1.135);
+      need.budgetLabel = `tầm ${Number(aroundMatch[1].replace(',', '.'))} ${/^(k|nghin|ngan)$/.test(aroundMatch[2]) ? 'nghìn' : 'triệu'}`;
+      return need;
+    }
+
+    const aroundBareMatch = normalizedMessage.match(/(?:tam|khoang|khoan|gan|tam gia|ngan sach|muc gia|budget)\s*(\d{1,3})\b(?!\s*(?:inch|in|inh|m2|m\b))/);
+    if (aroundBareMatch) {
+      const value = Number(aroundBareMatch[1]);
+      const target = Math.round(value * 1000000);
+      need.targetBudget = target;
+      need.minBudget = Math.round(target * 0.85);
+      need.maxBudget = Math.round(target * 1.135);
       need.budgetLabel = `tầm ${value} triệu`;
       return need;
     }
 
-    const millionMatch = normalizedMessage.match(/\b(\d+(?:[.,]\d+)?)\s*(trieu|tr\b|m\b)/);
+    const millionMatch = normalizedMessage.match(/\b(\d+(?:[.,]\d+)?)\s*(trieu|tr\b|m\b|cu\b|k\b|nghin\b|ngan\b)/);
     if (millionMatch) {
-      const value = Number(millionMatch[1].replace(',', '.'));
-      need.targetBudget = Math.round(value * 1000000);
-      need.maxBudget = Math.round(value * 1.125 * 1000000);
-      need.budgetLabel = `khoảng ${value} triệu`;
+      const target = toMoney(millionMatch[1], millionMatch[2]);
+      need.targetBudget = target;
+      need.maxBudget = Math.round(target * 1.125);
+      need.budgetLabel = `khoảng ${Number(millionMatch[1].replace(',', '.'))} ${/^(k|nghin|ngan)$/.test(millionMatch[2]) ? 'nghìn' : 'triệu'}`;
     }
 
-    if (hasAny(normalizedMessage, ['gia re', 're', 'tiết kiệm', 'tiet kiem'])) {
+    const directBudgetAnswer = normalizedMessage.match(/^\s*(\d{1,3})\s*$/);
+    if (!need.targetBudget && directBudgetAnswer && conversationState.lastIntent === 'budget_discovery') {
+      const value = Number(directBudgetAnswer[1]);
+      need.targetBudget = value * 1000000;
+      need.minBudget = Math.round(need.targetBudget * 0.85);
+      need.maxBudget = Math.round(need.targetBudget * 1.135);
+      need.budgetLabel = `tầm ${value} triệu`;
+    }
+
+    if (hasAny(normalizedMessage, ['gia re', 're nhat', 'tiết kiệm', 'tiet kiem'])) {
       need.budgetPreference = 'cheap';
       need.budgetLabel = need.budgetLabel || 'ưu tiên giá rẻ';
-      need.maxBudget = need.maxBudget || 10000000;
-      need.isMaxBudgetStrict = need.isMaxBudgetStrict || !need.targetBudget;
     }
     if (hasAny(normalizedMessage, ['cao cap', 'hang xin', 'premium'])) {
       need.budgetPreference = 'premium';
@@ -1740,8 +1919,16 @@
     };
 
     need.hasBuyingIntent = RECOMMENDATION_INTENT_KEYWORDS.some((keyword) => normalizedMessage.includes(normalizeVietnameseText(keyword)));
-    const brand = TV_BRANDS.find((item) => normalizedMessage.includes(item));
-    if (brand) need.brand = TV_BRAND_LABELS[brand];
+    const detectedBrand = detectBrandFromMessage(normalizedMessage);
+    if (detectedBrand) {
+      need.brand = detectedBrand;
+      need.brandIsSoft = hasAny(normalizedMessage, ['uu tien', 'thich', 'neu duoc', 'neu co']);
+    }
+
+    need.excludedBrands = Object.entries(TV_BRAND_ALIASES)
+      .filter(([, aliases]) => aliases.some((alias) => new RegExp(`(?:khong|ko|k)\\s+(?:thich\\s+)?${escapeRegExp(alias)}\\b|tru\\s+${escapeRegExp(alias)}\\b`).test(normalizedMessage)))
+      .map(([brand]) => TV_BRAND_LABELS[brand]);
+    if (need.brand && need.excludedBrands.includes(need.brand)) delete need.brand;
 
     const detectedSeries = detectTvSeriesFromMessage(normalizedMessage, need.brand);
     if (detectedSeries) {
@@ -1771,13 +1958,22 @@
     if (distanceRange) need.recommendedRange = distanceRange;
 
     const sizeMatch = normalizedMessage.match(/\b(32|40|42|43|49|50|55|58|60|65|70|75|77|85|86|98)\s*(inch|in|inh|\")?\b/);
-    if (sizeMatch) need.requestedSize = Number(sizeMatch[1]);
+    if (sizeMatch) {
+      need.requestedSize = Number(sizeMatch[1]);
+      need.sizeIsSoft = hasAny(normalizedMessage, ['tam', 'khoang', 'uu tien', 'neu duoc']);
+    }
 
     Object.assign(need, parseBudgetFromMessage(originalMessage, normalizedMessage));
 
     const isNewOldChoiceQuestion = hasAny(normalizedMessage, ['tivi moi hay cu', 'tivi cu hay moi', 'mua cu hay mua moi', 'tivi cu voi tivi moi']);
     if (!isNewOldChoiceQuestion && hasAny(normalizedMessage, ['tivi moi', 'tv moi', 'hang moi', 'moi 100%', 'chinh hang'])) need.type = 'Tivi mới';
     if (!isNewOldChoiceQuestion && hasAny(normalizedMessage, ['tivi cu', 'tv cu', 'da qua su dung', 'second hand'])) need.type = 'Tivi cũ';
+
+    need.technology = detectTechnologyIntent(normalizedMessage);
+    need.technologyIsSoft = Boolean(need.technology && hasAny(normalizedMessage, ['uu tien', 'thich', 'neu duoc', 'neu co']));
+    need.requestedRecommendationCount = hasAny(normalizedMessage, ['chi 1', 'mot lua chon', '1 lua chon', 'chon 1']) ? 1 : 3;
+    need.wantsAllResults = hasAny(normalizedMessage, ['xem tat ca', 'tat ca ket qua', 'xem them']);
+    need.valuePreference = hasAny(normalizedMessage, ['dang tien', 'ngon trong tam gia', 'can bang']) ? 'value' : hasAny(normalizedMessage, ['re nhat', 'gia thap nhat']) ? 'cheapest' : hasAny(normalizedMessage, ['tot nhat', 'cao cap nhat']) ? 'best' : '';
 
     if (hasAny(normalizedMessage, ['xem phim', 'xem netflix', 'netflix', 'xem phim nhieu', 'mua tivi xem phim', 'giai tri gia dinh'])) need.usage.push('movies');
     if (hasAny(normalizedMessage, ['bong da', 'world cup', 'the thao', 'xem da banh', 'chuyen dong muot', 'mua tivi xem bong da'])) need.usage.push('sports');
@@ -1790,10 +1986,10 @@
     ['qled', 'oled', 'mini led', '4k', 'google tv', 'android tv', 'tizen', 'webos', 'am thanh tot', 'hinh anh dep', 'tiet kiem dien', 'bao hanh lau'].forEach((preference) => {
       if (normalizedMessage.includes(preference)) need.preferences.push(preference);
     });
-    if (hasAny(normalizedMessage, ['gia re', 're'])) need.usage.push('cheap');
+    if (hasAny(normalizedMessage, ['gia re', 're nhat', 'tiết kiệm', 'tiet kiem'])) need.usage.push('cheap');
     if (hasAny(normalizedMessage, ['cao cap'])) need.usage.push('premium');
 
-    const meaningfulSignals = [need.brand, need.seriesLabel, need.requestedSize, need.roomArea, need.roomType, need.viewingDistance, need.minBudget, need.maxBudget, need.targetBudget, need.type, ...need.usage, ...need.preferences].filter(Boolean).length;
+    const meaningfulSignals = [need.brand, need.technology, need.seriesLabel, need.requestedSize, need.roomArea, need.roomType, need.viewingDistance, need.minBudget, need.maxBudget, need.targetBudget, need.type, ...need.usage, ...need.preferences].filter(Boolean).length;
     const broadBuyingRequest = hasAny(normalizedMessage, [
       'tu van tivi', 'tu van chon tivi', 'chon tivi', 'tu van mua tivi', 'tu van mua tv',
       'shop tu van tivi', 'can mua tivi', 'can mua tv', 'minh can mua tivi', 'toi muon mua tivi',
@@ -1807,9 +2003,11 @@
 
   const productMatchesType = (product, type) => {
     if (!type) return false;
-    const haystack = normalizeVietnameseText([product.type, product.condition, product.searchableText].join(' '));
-    if (type === 'Tivi mới') return /\b(tivi moi|tv moi|hang moi|moi 100|chinh hang|moi)\b/.test(haystack);
-    if (type === 'Tivi cũ') return /\b(tivi cu|tv cu|da qua su dung|second hand|cu)\b/.test(haystack);
+    const explicitType = normalizeVietnameseText([product.type, product.category, product.subcategory].join(' '));
+    const fallbackType = normalizeVietnameseText([product.name, product.condition].join(' '));
+    const haystack = explicitType || fallbackType;
+    if (type === 'Tivi mới') return /\b(tivi moi|tv moi|hang moi|moi 100|chinh hang)\b/.test(haystack);
+    if (type === 'Tivi cũ') return /\b(tivi cu|tv cu|da qua su dung|second hand)\b/.test(haystack);
     return false;
   };
 
@@ -2052,6 +2250,7 @@
   const recommendProductsForMessage = (message = '') => {
     const need = parseTvCustomerNeed(message);
     if (!need.hasBuyingIntent) return null;
+    if (!hasFinancialContext(conversationState, need)) return buildBudgetDiscoveryReply(message, need);
 
     if (need.isVagueAdvice) {
       return {
@@ -2072,6 +2271,10 @@
     const eligibleProducts = products.filter((product) => {
       if (need.isMaxBudgetStrict && need.maxBudget && (!product.priceNumber || product.priceNumber > need.maxBudget)) return false;
       if (need.type && !productMatchesType(product, need.type)) return false;
+      if (need.brand && !need.brandIsSoft && !productBrandMatches(product, need.brand)) return false;
+      if (need.requestedSize && !need.sizeIsSoft && product.sizeNumber !== need.requestedSize) return false;
+      if (need.technology && !need.technologyIsSoft && !getProductTechnologies(product).includes(need.technology)) return false;
+      if ((need.excludedBrands || []).some((brand) => productBrandMatches(product, brand))) return false;
       return true;
     });
 
@@ -2121,6 +2324,10 @@
     const normalizedMessage = normalizeText(message);
     const products = getAvailableProductsForChatbot();
     if (!normalizedMessage || !products.length) return [];
+    if (!hasFinancialContext(conversationState, parseTvCustomerNeed(message))) return [];
+
+    const strictModelMatches = findStrictModelMatches(message, products);
+    if (strictModelMatches.length) return strictModelMatches.slice(0, 3);
 
     const words = normalizedMessage.split(' ').filter((word) => word.length >= 2);
     const brandHits = TV_BRANDS.filter((brand) => normalizedMessage.includes(brand));
@@ -2142,6 +2349,457 @@
     }).filter((item) => item.score >= 3);
 
     return scored.sort((a, b) => b.score - a.score).slice(0, 3).map((item) => item.product);
+  };
+
+  const normalizeModelToken = (value = '') => normalizeVietnameseText(value).toUpperCase().replace(/[^A-Z0-9]/g, '');
+
+  const MODEL_QUERY_STOP_TOKENS = new Set([
+    '4K', '8K', 'HD', 'FHD', 'UHD', 'TV', 'TIVI', 'QLED', 'OLED', 'MINILED', 'SMART', 'GOOGLETV', 'ANDROIDTV',
+  ]);
+
+  const extractModelQueries = (message = '') => {
+    const normalized = normalizeVietnameseText(message).toUpperCase();
+    const candidates = normalized.match(/[A-Z0-9][A-Z0-9-]{2,}/g) || [];
+    return Array.from(new Set(candidates
+      .map(normalizeModelToken)
+      .filter((token) => token.length >= 4
+        && /[A-Z]/.test(token)
+        && /\d/.test(token)
+        && !MODEL_QUERY_STOP_TOKENS.has(token)
+        && !/^\d+(TR|TRIEU|M|CU|K|NGHIN|NGAN|INCH|INH)$/.test(token))));
+  };
+
+  const productMatchesModelToken = (product = {}, token = '') => {
+    const normalizedToken = normalizeModelToken(token);
+    if (!normalizedToken) return false;
+    const model = normalizeModelToken(product.model);
+    if (model && model.includes(normalizedToken)) return true;
+    const name = normalizeModelToken(product.name || product.fullName);
+    return Boolean(name && name.includes(normalizedToken));
+  };
+
+  const findStrictModelMatches = (message = '', products = getAvailableProductsForChatbot()) => {
+    if (!hasFinancialContext(conversationState, parseTvCustomerNeed(message))) return [];
+    const tokens = extractModelQueries(message);
+    if (!tokens.length) return [];
+    return products.filter((product) => tokens.some((token) => productMatchesModelToken(product, token)));
+  };
+
+  const saveConversationState = () => {
+    safeSessionStorage.set(STATE_KEY, JSON.stringify(conversationState));
+  };
+
+  const loadConversationState = () => {
+    const raw = safeSessionStorage.get(STATE_KEY);
+    if (!raw) return createConversationState();
+    try {
+      const parsed = JSON.parse(raw);
+      const clean = createConversationState();
+      return {
+        ...clean,
+        ...(parsed && typeof parsed === 'object' ? parsed : {}),
+        budget: { ...clean.budget, ...(parsed?.budget || {}) },
+        useCases: Array.isArray(parsed?.useCases) ? parsed.useCases.slice(0, 8) : [],
+        priorities: Array.isArray(parsed?.priorities) ? parsed.priorities.slice(0, 8) : [],
+        excludedBrands: Array.isArray(parsed?.excludedBrands) ? parsed.excludedBrands.slice(0, 8) : [],
+        previouslyRecommendedModels: Array.isArray(parsed?.previouslyRecommendedModels) ? parsed.previouslyRecommendedModels.slice(-12) : [],
+        comparedModels: Array.isArray(parsed?.comparedModels) ? parsed.comparedModels.slice(-6) : [],
+        lastRecommendationPrices: Array.isArray(parsed?.lastRecommendationPrices) ? parsed.lastRecommendationPrices.slice(-6) : [],
+      };
+    } catch (error) {
+      return createConversationState();
+    }
+  };
+
+  const hasFinancialContext = (state = conversationState, parsedNeed = {}) => Boolean(
+    state?.budget?.mode === 'unrestricted'
+    || state?.budget?.min
+    || state?.budget?.max
+    || state?.budget?.target
+    || parsedNeed?.budgetMode === 'unrestricted'
+    || parsedNeed?.minBudget
+    || parsedNeed?.maxBudget
+    || parsedNeed?.targetBudget
+  );
+
+  const isBudgetRefusal = (normalizedMessage = '') => hasAny(normalizedMessage, [
+    'khong biet', 'chua biet', 'cu tu van di', 'tien khong quan trong', 'bao nhieu cung duoc',
+  ]);
+
+  const buildBudgetDiscoveryReply = (message = '', parsedNeed = {}) => {
+    const normalizedMessage = normalizeVietnameseText(message);
+    conversationState.lastIntent = 'budget_discovery';
+    saveConversationState();
+    if (isBudgetRefusal(normalizedMessage)) {
+      return {
+        id: 'budget_discovery',
+        text: 'Không sao ạ. Mình chốt một tầm trước nhé: dưới 7 triệu, khoảng 7–12 triệu hoặc trên 12 triệu. Anh/chị muốn mình đi theo tầm nào?',
+        actions: [],
+        quickReplies: ['Dưới 7 triệu', 'Tầm 10 triệu', 'Tầm 15 triệu'],
+        products: [],
+      };
+    }
+    const knownNeed = [
+      parsedNeed.brand || conversationState.brand,
+      (parsedNeed.requestedSize || conversationState.size) ? `${parsedNeed.requestedSize || conversationState.size} inch` : '',
+      (parsedNeed.technology || conversationState.technology) ? getTechnologyLabel(parsedNeed.technology || conversationState.technology) : '',
+    ].filter(Boolean).join(' ');
+    return {
+      id: 'budget_discovery',
+      text: knownNeed
+        ? `Dạ được ạ. Anh/chị dự kiến ngân sách khoảng bao nhiêu cho TV ${knownNeed} để mình lọc đúng phân khúc?`
+        : 'Dạ được ạ. Anh/chị dự kiến khoảng bao nhiêu tiền cho chiếc TV này để mình lọc đúng phân khúc trước?',
+      actions: [],
+      quickReplies: ['Dưới 7 triệu', 'Tầm 10 triệu', 'Tầm 15 triệu'],
+      products: [],
+    };
+  };
+
+  const NON_PRODUCT_SUPPORT_INTENTS = new Set([
+    'contact_phone', 'contact_zalo', 'store_overview', 'promotion_query', 'repair_symptom', 'repair_tv', 'warranty',
+    'trade_in', 'delivery_installation', 'payment', 'store_trust', 'human_support', 'off_topic_admin_web', 'address', 'opening_hours',
+  ]);
+
+  const isProductDiscoveryIntent = (message = '', normalizedMessage = '', parsedNeed = {}, detectedIntent = 'unknown') => {
+    if (NON_PRODUCT_SUPPORT_INTENTS.has(detectedIntent)) return false;
+    const isPureTechnologyFaq = detectedIntent === 'technology_question'
+      && hasAny(normalizedMessage, ['la gi', 'khac gi', 'khac nhau', 'giai thich', 'hoat dong the nao'])
+      && !parsedNeed.brand
+      && !parsedNeed.requestedSize
+      && !parsedNeed.type
+      && !parsedNeed.minBudget
+      && !parsedNeed.maxBudget
+      && !parsedNeed.targetBudget
+      && !parsedNeed.usage?.length;
+    if (isPureTechnologyFaq) return false;
+    if (extractModelQueries(message).length) return true;
+    if (['price_query', 'product_availability', 'size_recommendation', 'brand_question', 'series_comparison', 'buy_new_tv', 'buy_used_tv', 'budget_recommendation'].includes(detectedIntent)) return true;
+    if (conversationState.lastIntent === 'budget_discovery' && (parsedNeed.minBudget || parsedNeed.maxBudget || parsedNeed.targetBudget || parsedNeed.budgetMode || isBudgetRefusal(normalizedMessage))) return true;
+    if (/\b(tivi|tv)\b/.test(normalizedMessage)) return true;
+    return Boolean(
+      parsedNeed.hasBuyingIntent
+      || parsedNeed.brand
+      || parsedNeed.requestedSize
+      || parsedNeed.technology
+      || parsedNeed.type
+      || parsedNeed.minBudget
+      || parsedNeed.maxBudget
+      || parsedNeed.targetBudget
+      || parsedNeed.budgetMode
+      || parsedNeed.usage?.length
+    );
+  };
+
+  const uniqueValues = (values = []) => Array.from(new Set(values.filter(Boolean)));
+  const BRAND_DISPLAY_VALUES = Object.values(TV_BRAND_LABELS);
+
+  const mergeConversationState = (message = '', parsedNeed = parseTvCustomerNeed(message)) => {
+    const normalizedMessage = normalizeVietnameseText(message);
+    if (hasAny(normalizedMessage, ['bat dau lai', 'tu van lai', 'xoa nhu cau', 'reset nhu cau'])) {
+      conversationState = createConversationState();
+    }
+
+    const isBrandChange = hasAny(normalizedMessage, ['doi qua', 'chuyen qua', 'thoi chon', 'thoi doi', 'hang khac']);
+    if (parsedNeed.brand) {
+      conversationState.brand = parsedNeed.brand;
+      conversationState.brandIsSoft = Boolean(parsedNeed.brandIsSoft);
+      if (isBrandChange) conversationState.excludedBrands = conversationState.excludedBrands.filter((brand) => brand !== parsedNeed.brand);
+    }
+    if (parsedNeed.excludedBrands?.length) {
+      conversationState.excludedBrands = uniqueValues([...conversationState.excludedBrands, ...parsedNeed.excludedBrands]);
+      if (conversationState.excludedBrands.includes(conversationState.brand)) conversationState.brand = '';
+    }
+    if (parsedNeed.requestedSize) {
+      conversationState.size = parsedNeed.requestedSize;
+      conversationState.sizeIsSoft = Boolean(parsedNeed.sizeIsSoft);
+    }
+    if (parsedNeed.technology) {
+      conversationState.technology = parsedNeed.technology;
+      conversationState.technologyIsSoft = Boolean(parsedNeed.technologyIsSoft);
+    }
+    if (parsedNeed.type) conversationState.condition = parsedNeed.type;
+    if (parsedNeed.usage?.length) conversationState.useCases = uniqueValues([...conversationState.useCases, ...parsedNeed.usage]);
+    if (parsedNeed.preferences?.length) conversationState.priorities = uniqueValues([...conversationState.priorities, ...parsedNeed.preferences]);
+    if (parsedNeed.roomArea) conversationState.roomSize = parsedNeed.roomArea;
+    if (parsedNeed.roomType) conversationState.roomType = parsedNeed.roomType;
+    if (parsedNeed.viewingDistance) conversationState.viewingDistance = parsedNeed.viewingDistance;
+    if (parsedNeed.budgetMode === 'unrestricted') {
+      conversationState.budget = { min: null, max: null, target: null, strictMax: false, label: parsedNeed.budgetLabel || 'không giới hạn ngân sách', mode: 'unrestricted' };
+    } else if (parsedNeed.minBudget || parsedNeed.maxBudget || parsedNeed.targetBudget) {
+      conversationState.budget = {
+        min: parsedNeed.minBudget || null,
+        max: parsedNeed.maxBudget || null,
+        target: parsedNeed.targetBudget || null,
+        strictMax: Boolean(parsedNeed.isMaxBudgetStrict),
+        label: parsedNeed.budgetLabel || '',
+        mode: 'structured',
+      };
+    }
+
+    if (hasAny(normalizedMessage, ['mac qua', 'dat qua', 'gia cao qua', 're hon', 'giam ngan sach'])) {
+      const referencePrice = conversationState.budget.max
+        || Math.min(...conversationState.lastRecommendationPrices.filter((price) => Number.isFinite(price) && price > 0));
+      if (Number.isFinite(referencePrice)) {
+        const stricterMax = Math.max(1000000, Math.floor((referencePrice * 0.88) / 100000) * 100000);
+        conversationState.budget = { min: null, max: stricterMax, target: stricterMax, strictMax: true, label: `không quá ${Math.round(stricterMax / 1000000)} triệu`, mode: 'structured' };
+      }
+    }
+
+    const commonSizes = [32, 40, 43, 49, 50, 55, 58, 60, 65, 70, 75, 77, 85, 86, 98];
+    if (conversationState.size && hasAny(normalizedMessage, ['to qua', 'nho hon'])) {
+      conversationState.size = [...commonSizes].reverse().find((size) => size < conversationState.size) || conversationState.size;
+      conversationState.sizeIsSoft = false;
+    }
+    if (conversationState.size && hasAny(normalizedMessage, ['nho qua', 'to hon', 'lon hon'])) {
+      conversationState.size = commonSizes.find((size) => size > conversationState.size) || conversationState.size;
+      conversationState.sizeIsSoft = false;
+    }
+
+    conversationState.lastQuery = String(message || '').slice(0, 240);
+    saveConversationState();
+    return conversationState;
+  };
+
+  const stateToNeed = (state = conversationState, parsedNeed = {}) => ({
+    ...parsedNeed,
+    brand: state.brand || parsedNeed.brand || '',
+    brandIsSoft: Boolean(state.brandIsSoft),
+    requestedSize: state.size || parsedNeed.requestedSize || null,
+    sizeIsSoft: Boolean(state.sizeIsSoft),
+    technology: state.technology || parsedNeed.technology || '',
+    technologyIsSoft: Boolean(state.technologyIsSoft),
+    type: state.condition || parsedNeed.type || '',
+    usage: uniqueValues([...(state.useCases || []), ...(parsedNeed.usage || [])]),
+    preferences: uniqueValues([...(state.priorities || []), ...(parsedNeed.preferences || [])]),
+    excludedBrands: state.excludedBrands || [],
+    roomArea: state.roomSize || parsedNeed.roomArea || null,
+    roomType: state.roomType || parsedNeed.roomType || '',
+    viewingDistance: state.viewingDistance || parsedNeed.viewingDistance || null,
+    minBudget: state.budget?.min || parsedNeed.minBudget || null,
+    maxBudget: state.budget?.max || parsedNeed.maxBudget || null,
+    targetBudget: state.budget?.target || parsedNeed.targetBudget || null,
+    isMaxBudgetStrict: Boolean(state.budget?.strictMax),
+    budgetLabel: state.budget?.label || parsedNeed.budgetLabel || '',
+    budgetMode: state.budget?.mode || parsedNeed.budgetMode || '',
+  });
+
+  const productBrandMatches = (product = {}, brand = '') => normalizeVietnameseText(product.brand) === normalizeVietnameseText(brand)
+    || new RegExp(`(^|[^a-z0-9])${escapeRegExp(normalizeVietnameseText(brand))}([^a-z0-9]|$)`).test(product.searchableText || '');
+
+  const getTechnologyLabel = (technology = '') => ({
+    'qd-mini-led': 'QD‑Mini LED',
+    'mini-led': 'Mini LED',
+    qled: 'QLED',
+    oled: 'OLED',
+    led: 'LED',
+    'full-hd': 'Full HD',
+    hd: 'HD',
+    '4k': '4K',
+  }[technology] || technology);
+
+  const productMatchesSmartNeed = (product, need = {}) => {
+    if (product.isActive === false) return false;
+    if ((need.excludedBrands || []).some((brand) => productBrandMatches(product, brand))) return false;
+    if (need.brand && !need.brandIsSoft && !productBrandMatches(product, need.brand)) return false;
+    const size = product.sizeNumber || parseSizeToNumber([product.size, product.name, product.model].join(' '));
+    if (need.requestedSize && !need.sizeIsSoft && size !== need.requestedSize) return false;
+    const technologies = getProductTechnologies(product);
+    if (need.technology && !need.technologyIsSoft && !technologies.includes(need.technology)) return false;
+    if (need.type && !productMatchesType(product, need.type)) return false;
+    if (need.isMaxBudgetStrict && need.maxBudget && (!product.priceNumber || product.priceNumber > need.maxBudget)) return false;
+    return true;
+  };
+
+  const scoreSmartProduct = (product, need = {}) => {
+    let score = 0;
+    const reasons = [];
+    const size = product.sizeNumber || parseSizeToNumber([product.size, product.name, product.model].join(' '));
+    const technologies = getProductTechnologies(product);
+    const searchable = product.searchableText || '';
+    if (need.brand && productBrandMatches(product, need.brand)) { score += 40; reasons.push(`đúng hãng ${need.brand}`); }
+    if (need.requestedSize && size) {
+      const diff = Math.abs(size - need.requestedSize);
+      if (diff === 0) { score += 45; reasons.push(`đúng ${need.requestedSize} inch`); }
+      else if (need.sizeIsSoft && diff <= 5) { score += 18; reasons.push(`gần ${need.requestedSize} inch`); }
+    }
+    if (need.technology && technologies.includes(need.technology)) { score += 45; reasons.push(`đúng công nghệ ${getTechnologyLabel(need.technology)}`); }
+    if (need.type && productMatchesType(product, need.type)) { score += 30; reasons.push(need.type.toLowerCase()); }
+    if (product.priceNumber) {
+      if (need.maxBudget && product.priceNumber <= need.maxBudget) { score += 36; reasons.push(`trong mức ${need.budgetLabel || 'ngân sách'}`); }
+      if (need.targetBudget) score += Math.max(0, 24 - Math.round(Math.abs(product.priceNumber - need.targetBudget) / Math.max(500000, need.targetBudget * 0.06)));
+    } else if (need.maxBudget || need.targetBudget) score -= 80;
+    const featureRules = [
+      ['movies', /hdr|dolby|oled|qled|mini led|4k/, 'phù hợp xem phim theo thông tin sản phẩm'],
+      ['sports', /120hz|144hz|motion|memc|qled|mini led|4k/, 'hợp xem thể thao theo thông tin sản phẩm'],
+      ['gaming', /120hz|144hz|allm|freesync|hdmi 2\.1|game/, 'có tính năng hỗ trợ chơi game'],
+      ['youtube', /youtube|google tv|android tv|smart|webos|tizen/, 'phù hợp xem YouTube'],
+      ['elderly', /youtube|google tv|android tv|smart|webos|tizen/, 'có nền tảng smart phổ biến'],
+    ];
+    featureRules.forEach(([useCase, pattern, reason]) => {
+      if ((need.usage || []).includes(useCase) && pattern.test(searchable)) { score += 10; reasons.push(reason); }
+    });
+    if (product.isFeatured) score += 4;
+    if (product.invalidPrice) score -= 30;
+    return { product, score, reasons: uniqueValues(reasons).slice(0, 2) };
+  };
+
+  const selectSmartRecommendations = (need = {}, limit = 3) => {
+    if (!hasFinancialContext(conversationState, need)) return [];
+    let candidates = getAvailableProductsForChatbot().filter((product) => productMatchesSmartNeed(product, need));
+    if (!candidates.length && (need.brandIsSoft || need.sizeIsSoft || need.technologyIsSoft)) {
+      const relaxedNeed = { ...need, brand: need.brandIsSoft ? '' : need.brand, requestedSize: need.sizeIsSoft ? null : need.requestedSize, technology: need.technologyIsSoft ? '' : need.technology };
+      candidates = getAvailableProductsForChatbot().filter((product) => productMatchesSmartNeed(product, relaxedNeed));
+    }
+    const scored = candidates.map((product) => scoreSmartProduct(product, need));
+    scored.sort((a, b) => {
+      if (need.valuePreference === 'cheapest') return (a.product.priceNumber || Infinity) - (b.product.priceNumber || Infinity);
+      const scoreDiff = b.score - a.score;
+      if (scoreDiff) return scoreDiff;
+      if (need.targetBudget) return Math.abs((a.product.priceNumber || Infinity) - need.targetBudget) - Math.abs((b.product.priceNumber || Infinity) - need.targetBudget);
+      return (a.product.priceNumber || Infinity) - (b.product.priceNumber || Infinity);
+    });
+    return scored.slice(0, Math.max(1, Math.min(limit, 3))).map((item) => ({
+      ...item.product,
+      reason: item.reasons.join(' • ') || 'khớp gần nhất với nhu cầu đã trao đổi',
+    }));
+  };
+
+  const getFullSearchAction = (query = '') => createAction('Xem toàn bộ kết quả', `index.html?search=${encodeURIComponent(String(query || '').trim())}#tivi-cu`, false);
+
+  const describeProductForComparison = (product = {}) => {
+    const technologies = getProductTechnologies(product).map(getTechnologyLabel);
+    return [
+      product.model || product.name,
+      product.sizeNumber ? `${product.sizeNumber} inch` : '',
+      technologies.join(', '),
+      product.type || '',
+      product.priceNumber ? product.priceText : 'giá cần xác nhận',
+      product.warranty ? `BH ${product.warranty}` : '',
+    ].filter(Boolean).join(' • ');
+  };
+
+  const getStrictModelReply = (message = '') => {
+    const products = getAvailableProductsForChatbot();
+    const tokens = extractModelQueries(message);
+    if (!tokens.length) return null;
+    const parsedNeed = parseTvCustomerNeed(message);
+    if (!hasFinancialContext(conversationState, parsedNeed)) return buildBudgetDiscoveryReply(message, parsedNeed);
+    if (parsedNeed.minBudget || parsedNeed.maxBudget || parsedNeed.targetBudget || parsedNeed.budgetMode) mergeConversationState(message, parsedNeed);
+    const normalizedMessage = normalizeVietnameseText(message);
+    const matchesByToken = tokens.map((token) => ({ token, products: products.filter((product) => productMatchesModelToken(product, token)) }));
+    const matchedGroups = matchesByToken.filter((group) => group.products.length);
+    if (!matchedGroups.length) {
+      return {
+        id: 'strict_model_no_match',
+        text: `Mình chưa thấy model “${tokens.join(' / ')}” trong danh mục đang hoạt động. AM AI không tự đoán model gần giống để tránh tư vấn nhầm ạ.`,
+        actions: [getFullSearchAction(message), salesZaloAction(false)],
+        products: [],
+      };
+    }
+    const isCompare = tokens.length >= 2 && hasAny(normalizedMessage, ['so sanh', 'voi', 'hay', 'khac gi', 'chon']);
+    if (isCompare && matchedGroups.length >= 2) {
+      const compared = matchedGroups.slice(0, 2).map((group) => group.products[0]);
+      conversationState.comparedModels = compared.map((product) => product.model).filter(Boolean);
+      saveConversationState();
+      return {
+        id: 'strict_model_comparison',
+        text: `So nhanh theo dữ liệu hiện có:\n• ${describeProductForComparison(compared[0])}\n• ${describeProductForComparison(compared[1])}\nKhông có mẫu nào tốt tuyệt đối: nên chốt theo kích thước, công nghệ và mức giá hợp nhu cầu hơn. Tồn kho thực tế cần shop xác nhận trước khi mua.`,
+        actions: [getFullSearchAction(message), salesZaloAction(false)],
+        products: compared.map((product) => ({ ...product, reason: 'model được chọn để so sánh' })),
+      };
+    }
+    const matched = uniqueValues(matchedGroups.flatMap((group) => group.products).map(getProductRecommendationKey))
+      .map((key) => products.find((product) => getProductRecommendationKey(product) === key))
+      .filter(Boolean)
+      .slice(0, 3);
+    return {
+      id: 'strict_model_match',
+      text: matched.length === 1
+        ? `Mình tìm thấy đúng mẫu ${matched[0].model || matched[0].name}. Giá hiển thị theo dữ liệu hiện tại; tồn kho thực tế cần shop xác nhận trước khi chốt.`
+        : `Mình tìm thấy ${matched.length} mẫu khớp đúng chuỗi model bạn nhập.`,
+      actions: [getFullSearchAction(message), salesZaloAction(false)],
+      products: matched.map((product) => ({ ...product, reason: 'khớp đúng model bạn nhập' })),
+    };
+  };
+
+  const getSmartSalesReply = (message = '') => {
+    const normalizedMessage = normalizeVietnameseText(message);
+    const parsedNeed = parseTvCustomerNeed(message);
+    const detectedIntent = detectCustomerIntent(normalizedMessage);
+    const productDiscoveryIntent = isProductDiscoveryIntent(message, normalizedMessage, parsedNeed, detectedIntent);
+    if (productDiscoveryIntent && !hasFinancialContext(conversationState, parsedNeed)) {
+      mergeConversationState(message, parsedNeed);
+      return buildBudgetDiscoveryReply(message, parsedNeed);
+    }
+    if (productDiscoveryIntent && (parsedNeed.minBudget || parsedNeed.maxBudget || parsedNeed.targetBudget || parsedNeed.budgetMode)) {
+      mergeConversationState(message, parsedNeed);
+    }
+    const strictModelReply = getStrictModelReply(message);
+    if (strictModelReply) return strictModelReply;
+
+    const hasContext = Boolean(conversationState.brand || conversationState.size || conversationState.technology || conversationState.condition || hasFinancialContext(conversationState) || conversationState.useCases.length);
+    const isObjection = hasAny(normalizedMessage, ['mac qua', 'dat qua', 'gia cao qua', 're hon', 'to qua', 'nho qua', 'doi qua', 'chuyen qua', 'khong samsung', 'khong lg', 'khong sony']);
+    const hasCurrentSignal = Boolean(parsedNeed.brand || parsedNeed.requestedSize || parsedNeed.technology || parsedNeed.type || parsedNeed.minBudget || parsedNeed.maxBudget || parsedNeed.targetBudget || parsedNeed.budgetMode || parsedNeed.usage.length || parsedNeed.hasBuyingIntent);
+    if (!hasCurrentSignal && !isObjection && !hasContext) return null;
+    if (!hasCurrentSignal && !isObjection && !hasAny(normalizedMessage, ['mau nao', 'con mau', 'chon cai nao', 'goi y tiep', 'con nua khong'])) return null;
+
+    const state = mergeConversationState(message, parsedNeed);
+    const need = stateToNeed(state, parsedNeed);
+    const isNewVsUsed = hasAny(normalizedMessage, ['tivi moi hay cu', 'tivi cu hay moi', 'mua cu hay mua moi', 'moi voi cu']);
+    if (isNewVsUsed) {
+      return {
+        id: 'new_vs_used',
+        text: 'Tivi mới phù hợp khi bạn ưu tiên bảo hành rõ và ít phải kiểm tra tình trạng. Tivi cũ tiết kiệm hơn nhưng nên xem kỹ màn hình, lịch sử sửa chữa và bảo hành riêng của từng máy. Nếu ngân sách là ưu tiên chính, mình có thể lọc cả hai nhóm để bạn so giá.',
+        actions: [newTvAction(), oldTvAction(), salesZaloAction(false)],
+        products: [],
+      };
+    }
+
+    if (hasFinancialContext(state, parsedNeed) && !need.requestedSize) {
+      conversationState.lastIntent = 'size_discovery';
+      saveConversationState();
+      return {
+        id: 'size_discovery',
+        text: `Mình đã ghi nhận ngân sách ${need.budgetLabel || 'không giới hạn'}. Anh/chị muốn chọn khoảng bao nhiêu inch?`,
+        actions: [],
+        quickReplies: ['43 inch', '55 inch', '65 inch'],
+        products: [],
+      };
+    }
+
+    const meaningful = Boolean(need.brand || need.requestedSize || need.technology || need.type || need.maxBudget || need.targetBudget || need.usage.length || need.roomArea || need.roomType || need.viewingDistance);
+    if (!meaningful) {
+      return {
+        id: 'single_follow_up',
+        text: 'Dạ được ạ. Ngân sách dự kiến của anh/chị khoảng bao nhiêu để AM AI lọc mẫu sát nhất?',
+        actions: [salesZaloAction(false)],
+        quickReplies: ['Dưới 5 triệu', 'Tầm 10 triệu', 'Khoảng 15 triệu'],
+        products: [],
+      };
+    }
+
+    const recommendations = selectSmartRecommendations(need, parsedNeed.requestedRecommendationCount || 3);
+    if (!recommendations.length) {
+      const constraints = [need.brand, need.requestedSize ? `${need.requestedSize} inch` : '', need.technology ? getTechnologyLabel(need.technology) : '', need.budgetLabel].filter(Boolean).join(', ');
+      return {
+        id: 'smart_no_match',
+        text: `Hiện danh mục đang hoạt động chưa có mẫu khớp đủ${constraints ? ` các điều kiện: ${constraints}` : ' nhu cầu này'}. Mình không nới điều kiện cứng hoặc đưa mẫu sai công nghệ; anh/chị có thể đổi một tiêu chí hoặc nhờ shop kiểm tra thêm.`,
+        actions: [getFullSearchAction(message), salesZaloAction(false), salesCallAction(false)],
+        products: [],
+      };
+    }
+
+    conversationState.previouslyRecommendedModels = uniqueValues([...conversationState.previouslyRecommendedModels, ...recommendations.map((product) => product.model)]).slice(-12);
+    conversationState.lastRecommendationPrices = recommendations.map((product) => product.priceNumber).filter(Boolean);
+    conversationState.lastIntent = 'product_recommendation';
+    saveConversationState();
+    const understood = [need.brand, need.requestedSize ? `${need.requestedSize} inch` : '', need.technology ? getTechnologyLabel(need.technology) : '', need.type, need.budgetLabel, need.usage.includes('sports') ? 'xem thể thao' : '', need.usage.includes('movies') ? 'xem phim' : ''].filter(Boolean).join(', ');
+    return {
+      id: 'smart_product_recommendation',
+      text: `Mình hiểu bạn đang ưu tiên ${understood || 'mẫu phù hợp trong danh mục hiện có'}. Đây là ${recommendations.length} lựa chọn khớp nhất theo dữ liệu sản phẩm đang hoạt động. Tồn kho thực tế cần shop xác nhận trước khi chốt.`,
+      actions: [getFullSearchAction(message), salesZaloAction(false)],
+      products: recommendations,
+    };
   };
 
   const getBrandReply = (normalizedMessage) => {
@@ -2412,19 +3070,33 @@
     };
   };
 
-  const buildRepairReply = () => ({
-    id: 'repair_tv',
-    text: `Dạ bên em có hỗ trợ tư vấn/kiểm tra sửa tivi tại Đà Nẵng ạ. Anh/chị gửi giúp em: hãng TV, kích thước, tình trạng lỗi, ảnh/video lỗi nếu có và địa chỉ khu vực.\nKỹ thuật sẽ tư vấn/kiểm tra trước qua: ${formatPhoneGroup(REPAIR_PHONES)}.\nBên em chưa báo giá sửa chính xác khi chưa kiểm tra tình trạng máy ạ.`,
-    actions: [repairCallAction(true), repairZaloAction(false)],
-    products: [],
-  });
+  const buildRepairReply = (normalizedMessage = '') => {
+    const asksHomeService = hasAny(normalizedMessage, ['sua tai nha', 'sua tan nha', 'den nha sua', 'qua nha sua', 'co sua tai nha']);
+    return {
+      id: 'repair_tv',
+      text: asksHomeService
+        ? `Dạ hiện cửa hàng không hỗ trợ sửa tivi tận nhà ạ. Anh/chị vui lòng mang máy đến cửa hàng, hoặc gửi trước hãng, kích thước và ảnh/video lỗi qua Zalo để kỹ thuật tư vấn cách xử lý.\nKỹ thuật - sửa chữa: ${formatPhoneGroup(REPAIR_PHONES)}. Bên em chỉ báo chi phí chính xác sau khi kiểm tra máy.`
+        : `Dạ bên em có hỗ trợ kiểm tra và sửa tivi tại Đà Nẵng. Anh/chị gửi giúp hãng, kích thước, tình trạng lỗi và ảnh/video lỗi nếu có qua Zalo trước khi mang máy đến cửa hàng.\nKỹ thuật - sửa chữa: ${formatPhoneGroup(REPAIR_PHONES)}. Bên em chưa báo chi phí chính xác khi chưa kiểm tra máy.`,
+      actions: [repairZaloAction(true), repairCallAction(false)],
+      products: [],
+    };
+  };
 
-  const buildWarrantyReply = () => ({
-    id: 'warranty',
-    text: `Dạ bảo hành sẽ tuỳ sản phẩm, model và tình trạng thực tế nên bên em không hứa trước khi chưa kiểm tra ạ. Anh/chị gửi giúp em model TV, số điện thoại mua hàng, hình ảnh/phiếu bảo hành nếu có.\nBộ phận sửa chữa - kỹ thuật - bảo hành: ${formatPhoneGroup(REPAIR_PHONES)}.\nBạn cũng có thể vào mục Tra cứu bảo hành trên website nếu đang có thông tin đơn hàng.`,
-    actions: [repairCallAction(true), repairZaloAction(false)],
-    products: [],
-  });
+  const buildWarrantyReply = (normalizedMessage = '') => {
+    const asksNew = hasAny(normalizedMessage, ['tivi moi', 'tv moi', 'hang moi', 'moi 100']);
+    const asksUsed = hasAny(normalizedMessage, ['tivi cu', 'tv cu', 'da qua su dung', 'second hand']);
+    const asksRepaired = hasAny(normalizedMessage, ['sau sua', 'qua sua chua', 'da sua', 'loi da sua']);
+    let policy = 'Tivi mới bảo hành 2 năm; tivi cũ có thời hạn riêng theo từng sản phẩm; phần lỗi đã sửa được bảo hành 6 tháng theo chính sách hiện đăng trên website.';
+    if (asksNew) policy = 'Tivi mới được bảo hành 2 năm theo chính sách hiện đăng trên website và điều kiện áp dụng của sản phẩm.';
+    if (asksUsed) policy = 'Tivi cũ có thời hạn bảo hành riêng theo từng sản phẩm, nên cần xem đúng trang chi tiết hoặc xác nhận với shop trước khi mua.';
+    if (asksRepaired) policy = 'Phần lỗi đã sửa được bảo hành 6 tháng theo chính sách hiện đăng trên website; phạm vi áp dụng cần đối chiếu tình trạng máy và phiếu sửa.';
+    return {
+      id: 'warranty',
+      text: `Dạ ${policy}\nĐể kiểm tra đúng trường hợp, anh/chị gửi model TV, số điện thoại mua hàng và phiếu bảo hành/phiếu sửa nếu có. Bộ phận bảo hành: ${formatPhoneGroup(REPAIR_PHONES)}.`,
+      actions: [repairCallAction(true), repairZaloAction(false)],
+      products: [],
+    };
+  };
 
   const buildTradeInReply = () => ({
     id: 'trade_in',
@@ -2435,9 +3107,9 @@
 
   const buildBroadBuyingReply = (type = '') => ({
     id: type === 'old' ? 'buy_used_tv' : type === 'new' ? 'buy_new_tv' : 'budget_recommendation',
-    text: `Dạ bên em tư vấn được ạ. Anh/chị cho mình xin nhanh 3 thông tin:\n1. Bạn muốn tivi mới hay tivi cũ?\n2. Bạn cần khoảng bao nhiêu inch?\n3. Ngân sách tầm bao nhiêu?\nNếu cần kiểm tra hàng nhanh, mình gọi ${formatPhoneGroup(SALES_PHONES)} nha.`,
+    text: 'Dạ được ạ. Ngân sách dự kiến của anh/chị khoảng bao nhiêu để AM AI lọc mẫu sát nhất?',
     actions: [newTvAction(), oldTvAction(), salesCallAction(false), salesZaloAction(false)],
-    quickReplies: ['Tivi dưới 10 triệu', 'Tivi 55 inch', 'Mua tivi mới', 'Mua tivi cũ'],
+    quickReplies: ['Dưới 5 triệu', 'Tầm 10 triệu', 'Khoảng 15 triệu'],
     products: [],
   });
 
@@ -2544,10 +3216,10 @@
     if (hasAny(normalizedMessage, ['dia chi', 'shop o dau', 'cua hang o dau', 'cong ty o dau', 'den xem truc tiep', 'xem truc tiep duoc khong'])) return 'address';
     if (hasAny(normalizedMessage, ['may gio mo cua', 'gio lam viec', 'hom nay mo khong', 'chu nhat mo khong', 'mo cua', 'dong cua'])) return 'opening_hours';
     if (hasAny(normalizedMessage, ['bao hanh', 'chinh sach bao hanh', 'tra cuu bao hanh', 'con bao hanh', 'doi tra', 'loi thi sao', 'loi thi doi', 'doi duoc khong', 'tra hang'])) return 'warranty';
-    if (hasAny(normalizedMessage, ['sua tivi', 'sua tv', 'tivi bi soc', 'soc man', 'khong len nguon', 'mat hinh', 'co tieng khong hinh', 'vo man', 'be man', 'man hinh bi den', 'bi nhay', 'bi chop', 'bi treo logo', 'remote khong bam', 'wifi tivi loi', 'youtube khong vao', 'sua tai nha', 'kiem tra tivi', 'tivi hong'])) return 'repair_tv';
+    if (hasAny(normalizedMessage, ['sua tivi', 'sua tv', 'tivi bi soc', 'soc man', 'khong len nguon', 'mat hinh', 'co tieng khong hinh', 'vo man', 'be man', 'man hinh bi den', 'bi nhay', 'bi chop', 'bi treo logo', 'remote khong bam', 'wifi tivi loi', 'youtube khong vao', 'sua tai nha', 'sua tan nha', 'den nha sua', 'qua nha sua', 'kiem tra tivi', 'tivi hong'])) return 'repair_tv';
     if (hasAny(normalizedMessage, ['thu tivi cu', 'thu cu doi moi', 'doi tivi', 'ban tivi cu', 'mua lai tivi', 'tivi hu co thu', 'thu xac tivi', 'dinh gia tivi', 'cu doi moi'])) return 'trade_in';
     if (hasAny(normalizedMessage, ['con hang', 'mau nay con', 'con mau', 'co san', 'con tivi', 'con samsung', 'con lg', 'con sony'])) return 'product_availability';
-    if (hasAny(normalizedMessage, ['giao hang', 'giao tan nha', 'giao tan noi', 'lap dat', 'treo tuong', 'ship da nang', 'ship', 'giao trong ngay', 'lap chan de'])) return 'delivery_installation';
+    if (hasAny(normalizedMessage, ['giao hang', 'giao tan nha', 'giao tan noi', 'giao lap tan noi', 'giao lap', 'lap dat', 'treo tuong', 'ship da nang', 'ship', 'giao trong ngay', 'lap chan de'])) return 'delivery_installation';
     if (hasAny(normalizedMessage, ['thanh toan', 'chuyen khoan', 'tien mat', 'tra gop', 'coc', 'quet the', 'cod'])) return 'payment';
     if (hasAny(normalizedMessage, ['uy tin', 'co cua hang', 'dia chi that', 'anh minh store la gi', 'cong ty', 'co bao hanh khong'])) return 'store_trust';
     if (hasAny(normalizedMessage, ['phong ngu', 'phong khach', 'phong nho', 'phong lon', 'may inch', 'bao nhieu inch', 'khoang cach', 'ngoi cach', 'nen mua 55 hay 65']) || /\bphong\s*\d{1,2}\s*(m2|m\s*2|met vuong)\b/.test(normalizedMessage) || /\b\d(?:[.,]\d)?\s*m\b/.test(normalizedMessage)) return 'size_recommendation';
@@ -2574,8 +3246,8 @@
     if (intent === 'off_topic_admin_web') return buildOffTopicReply();
     if (intent === 'address') return buildAddressHoursReply('address');
     if (intent === 'opening_hours') return buildAddressHoursReply('opening_hours');
-    if (intent === 'repair_tv' || intent === 'complaint_or_problem') return buildRepairReply();
-    if (intent === 'warranty') return buildWarrantyReply();
+    if (intent === 'repair_tv' || intent === 'complaint_or_problem') return buildRepairReply(normalizedMessage);
+    if (intent === 'warranty') return buildWarrantyReply(normalizedMessage);
     if (intent === 'trade_in') return buildTradeInReply();
     if (intent === 'product_availability') return buildAvailabilityReply(originalMessage);
     if (intent === 'delivery_installation') return buildDeliveryReply();
@@ -2588,8 +3260,6 @@
       if (brandReply) return { id: intent, text: brandReply, actions: [featuredAction(), salesZaloAction(false), salesCallAction(false)], products: [] };
     }
     if (intent === 'buy_new_tv' || intent === 'buy_used_tv' || intent === 'budget_recommendation') {
-      const recommendation = recommendProductsForMessage(originalMessage);
-      if (recommendation) return { id: intent, ...recommendation };
       return buildBroadBuyingReply(intent === 'buy_used_tv' ? 'old' : intent === 'buy_new_tv' ? 'new' : '');
     }
 
@@ -2610,38 +3280,40 @@
     const earlyConversationReply = (normalizedMessage !== 'alo' && (isMainlyGreeting(normalizedMessage) || isMainlyThanks(normalizedMessage))) ? getConversationIntent(normalizedMessage) : null;
     if (earlyConversationReply) return earlyConversationReply;
 
+    const parsedNeed = parseTvCustomerNeed(message);
+    const detectedIntent = detectCustomerIntent(normalizedMessage);
+    if (isProductDiscoveryIntent(message, normalizedMessage, parsedNeed, detectedIntent) && !hasFinancialContext(conversationState, parsedNeed)) {
+      mergeConversationState(message, parsedNeed);
+      return buildBudgetDiscoveryReply(message, parsedNeed);
+    }
+
     const supportIntentReply = getSupportIntentReply(normalizedMessage, message);
-    const strongProductIntent = hasStrongProductRecommendationIntent(message);
-    const isTechnologyComparison = supportIntentReply?.id === 'technology_question'
-      && hasAny(normalizedMessage, ['khac', 'khac gi', 'khac nhau', 'so sanh', 'voi']);
-    const hasExplicitBudgetSignal = /(?:duoi|khong qua|toi da|tam|khoang|ngan sach|muc gia)\s*\d+(?:[.,]\d+)?|\b\d+(?:[.,]\d+)?\s*(trieu|tr\b)\b/.test(normalizedMessage);
+    const modelReply = getStrictModelReply(message);
+    if (modelReply) return modelReply;
+
+    const hasExplicitBudgetSignal = /(?:duoi|khong qua|toi da|tam|khoang|ngan sach|muc gia)\s*\d+(?:[.,]\d+)?|\b\d+(?:[.,]\d+)?\s*(trieu|tr\b|m\b|cu\b)\b/.test(normalizedMessage);
     const hasExplicitSizeSignal = /\b(32|40|42|43|49|50|55|58|60|65|70|75|77|85|86|98)\s*(inch|in|inh|\")?\b/.test(normalizedMessage);
     const isTechnologyInfoQuestion = supportIntentReply?.id === 'technology_question' && !hasExplicitBudgetSignal && !hasExplicitSizeSignal;
-    if (supportIntentReply && !isTechnologyComparison && (supportIntentReply.id === 'size_recommendation' || isTechnologyInfoQuestion || !strongProductIntent)) return supportIntentReply;
+    if (isTechnologyInfoQuestion) return supportIntentReply;
+
+    const immediateSupportIds = new Set([
+      'contact_phone', 'contact_zalo', 'store_overview', 'promotion_query', 'repair_symptom', 'repair_tv', 'warranty',
+      'trade_in', 'product_availability', 'delivery_installation', 'payment', 'store_trust', 'human_support', 'off_topic_admin_web',
+    ]);
+    if (supportIntentReply && immediateSupportIds.has(supportIntentReply.id)) return supportIntentReply;
 
     const comparisonReply = getComparisonReply(message);
-    if (comparisonReply) return comparisonReply;
-    if (isTechnologyComparison && supportIntentReply) return supportIntentReply;
+    if (comparisonReply && !hasExplicitBudgetSignal && !hasExplicitSizeSignal) return comparisonReply;
 
-    const recommendationReply = recommendProductsForMessage(message);
-    if (recommendationReply) {
-      if (supportIntentReply?.id === 'product_availability' && recommendationReply.products?.length) {
+    const smartSalesReply = getSmartSalesReply(message);
+    if (smartSalesReply) {
+      if (hasDurabilityIntent(normalizedMessage) && smartSalesReply.products?.length) {
         return {
-          ...recommendationReply,
-          text: `${recommendationReply.text}
-Dạ để chắc chắn mẫu còn hàng tại kho, bạn bấm xem chi tiết rồi nhắn Zalo/gọi hotline để Anh Minh Store kiểm tra nhanh nha.`,
-          actions: [featuredAction(), salesZaloAction(false), salesCallAction(false)],
+          ...smartSalesReply,
+          text: `${smartSalesReply.text}\nLưu ý về độ bền: nên so theo model, tình trạng máy và bảo hành; AM AI không khẳng định hãng nào bền tuyệt đối.`,
         };
       }
-      if (hasDurabilityIntent(normalizedMessage)) {
-        return {
-          ...recommendationReply,
-          text: `${recommendationReply.text}
-
-Lưu ý thêm về độ bền: nên chọn model có bảo hành rõ, kiểm tra tình trạng máy kỹ (đặc biệt với tivi cũ) và dùng đúng môi trường; AM AI không khẳng định hãng/dòng nào bền tuyệt đối ạ.`,
-        };
-      }
-      return recommendationReply;
+      return smartSalesReply;
     }
 
     const conversationReply = getConversationIntent(normalizedMessage);
@@ -2727,17 +3399,17 @@ Lưu ý thêm về độ bền: nên chọn model có bảo hành rõ, kiểm tr
       actions: item.actions || [],
       quickReplies: item.quickReplies || [],
     }));
-    safeLocalStorage.set(HISTORY_VERSION_KEY, AM_CHATBOT_HISTORY_VERSION);
-    safeLocalStorage.set(HISTORY_KEY, JSON.stringify(safeHistory));
+    safeSessionStorage.set(HISTORY_VERSION_KEY, AM_CHATBOT_HISTORY_VERSION);
+    safeSessionStorage.set(HISTORY_KEY, JSON.stringify(safeHistory));
   };
 
   const loadChatHistory = () => {
-    if (safeLocalStorage.get(HISTORY_VERSION_KEY) !== AM_CHATBOT_HISTORY_VERSION) {
-      safeLocalStorage.remove(HISTORY_KEY);
-      safeLocalStorage.set(HISTORY_VERSION_KEY, AM_CHATBOT_HISTORY_VERSION);
+    if (safeSessionStorage.get(HISTORY_VERSION_KEY) !== AM_CHATBOT_HISTORY_VERSION) {
+      safeSessionStorage.remove(HISTORY_KEY);
+      safeSessionStorage.set(HISTORY_VERSION_KEY, AM_CHATBOT_HISTORY_VERSION);
       return [];
     }
-    const raw = safeLocalStorage.get(HISTORY_KEY);
+    const raw = safeSessionStorage.get(HISTORY_KEY);
     if (!raw) return [];
     try {
       const parsed = JSON.parse(raw);
@@ -2767,10 +3439,12 @@ Lưu ý thêm về độ bền: nên chọn model có bảo hành rõ, kiểm tr
   };
 
   const renderProductSuggestionCards = (products = []) => {
-    if (!products.length) return '';
+    if (!products.length || !hasFinancialContext(conversationState)) return '';
     return `<div class="am-chatbot-product-list">${products.map((product) => {
       const name = product.name || product.fullName || product.model || 'Sản phẩm tivi';
-      const meta = [product.model, product.size].filter(Boolean).join(' • ');
+      const technology = getProductTechnologies(product).map(getTechnologyLabel).join(', ');
+      const size = product.sizeNumber ? `${product.sizeNumber} inch` : product.size;
+      const meta = [product.brand, product.model, size, technology, product.type].filter(Boolean).join(' • ');
       const reason = product.reason || 'Phù hợp với nhu cầu bạn vừa hỏi.';
       const href = product.detailUrl || product.href || createProductDetailUrl(product);
       const image = product.image || '';
@@ -2778,7 +3452,7 @@ Lưu ý thêm về độ bền: nên chọn model có bảo hành rõ, kiểm tr
         ? `<img src="${escapeHtml(image)}" alt="${escapeHtml(name)}" loading="lazy" decoding="async">`
         : '<span class="am-chatbot-product-placeholder" aria-hidden="true">TV</span>';
       const detailButton = href ? `<a class="am-chatbot-product-detail" href="${escapeHtml(href)}">Xem chi tiết</a>` : '';
-      const oldPrice = product.oldPriceText || product.oldPrice || product.old_price || '';
+      const oldPrice = product.oldPriceNumber ? formatPriceNumberForChatbot(product.oldPriceNumber) : '';
       const oldPriceHtml = oldPrice ? `<span class="am-chatbot-product-old-price">Giá cũ: ${escapeHtml(oldPrice)}</span>` : '';
       return `<article class="am-chatbot-product-card"><div class="am-chatbot-product-thumb">${imageHtml}</div><div class="am-chatbot-product-info"><strong>${escapeHtml(name)}</strong><span class="am-chatbot-product-meta">${escapeHtml(meta || 'Sản phẩm tivi')}</span><span class="am-chatbot-product-price">${escapeHtml(product.priceText || product.price || 'Giá đang cập nhật')}</span>${oldPriceHtml}<p>${escapeHtml(reason)}</p>${detailButton}</div></article>`;
     }).join('')}</div>`;
@@ -2820,16 +3494,23 @@ Lưu ý thêm về độ bền: nên chọn model có bảo hành rõ, kiểm tr
     return typing;
   };
 
-  const handleUserMessage = (message) => {
+  const handleUserMessage = async (message) => {
     const trimmed = String(message || '').trim();
     if (!trimmed) return;
     appendMessage('user', trimmed);
     const typing = showTypingIndicator();
+    const startedAt = performance.now();
+    try {
+      await loadAuthoritativeChatbotCatalog();
+    } catch (error) {
+      console.warn('[AM AI] Catalog fallback được sử dụng.', { stage: 'message_catalog', message: error?.message || String(error) });
+    }
+    const remainingDelay = Math.max(0, 260 - (performance.now() - startedAt));
     window.setTimeout(() => {
       typing.remove();
       const reply = getBotReply(trimmed);
       appendMessage('bot', reply.text, reply.actions, reply.products, true, reply.quickReplies || []);
-    }, 400 + Math.floor(Math.random() * 300));
+    }, remainingDelay);
   };
 
   const openChatbot = () => {
@@ -2839,10 +3520,11 @@ Lưu ý thêm về độ bền: nên chọn model có bảo hành rõ, kiểm tr
     window.setTimeout(() => elements.input?.focus(), 120);
   };
 
-  const closeChatbot = () => {
+  const closeChatbot = (restoreFocus = false) => {
     elements.window?.classList.remove('open');
     elements.button?.classList.remove('is-open');
     elements.button?.setAttribute('aria-expanded', 'false');
+    if (restoreFocus) elements.button?.focus();
   };
 
   const toggleChatbot = () => {
@@ -2853,8 +3535,10 @@ Lưu ý thêm về độ bền: nên chọn model có bảo hành rõ, kiểm tr
   const resetChatbotConversation = (welcomeText = WELCOME_MESSAGE) => {
     chatHistory = [];
     hasRenderedQuickReplies = false;
-    safeLocalStorage.remove(HISTORY_KEY);
-    safeLocalStorage.set(HISTORY_VERSION_KEY, AM_CHATBOT_HISTORY_VERSION);
+    conversationState = createConversationState();
+    safeSessionStorage.remove(HISTORY_KEY);
+    safeSessionStorage.remove(STATE_KEY);
+    safeSessionStorage.set(HISTORY_VERSION_KEY, AM_CHATBOT_HISTORY_VERSION);
     elements.body.innerHTML = '';
     appendMessage('bot', welcomeText);
     renderQuickReplies();
@@ -2874,10 +3558,10 @@ Lưu ý thêm về độ bền: nên chọn model có bảo hành rõ, kiểm tr
     root.id = CHATBOT_ID;
     root.className = 'am-chatbot-root';
     root.innerHTML = `
-      <section class="am-chatbot-window" aria-label="AM AI - Trợ lý tư vấn" aria-live="polite">
+      <section class="am-chatbot-window" role="dialog" aria-modal="false" aria-label="AM AI - Trợ lý tư vấn">
         <header class="am-chatbot-header">
           <span class="am-chatbot-avatar-frame am-chatbot-avatar-frame--small"><img class="am-chatbot-avatar" src="${AVATAR_SRC}" alt="AM AI" loading="lazy" decoding="async"></span>
-          <span class="am-chatbot-title-wrap"><strong class="am-chatbot-title">AM AI</strong><span class="am-chatbot-subtitle">Trợ lý tư vấn của Anh Minh Store</span><span class="am-chatbot-header-status">Đang hỗ trợ</span></span>
+          <span class="am-chatbot-title-wrap"><strong class="am-chatbot-title">AM AI</strong><span class="am-chatbot-subtitle">Trợ lý tư vấn của Anh Minh Store</span><span class="am-chatbot-header-status">Trợ lý tự động</span></span>
           <button class="am-chatbot-close" type="button" aria-label="Đóng chatbot">×</button>
         </header>
         <div class="am-chatbot-body" role="log" aria-live="polite"></div>
@@ -2904,7 +3588,7 @@ Lưu ý thêm về độ bền: nên chọn model có bảo hành rõ, kiểm tr
 
   const bindEvents = () => {
     elements.button.addEventListener('click', toggleChatbot);
-    elements.close.addEventListener('click', closeChatbot);
+    elements.close.addEventListener('click', () => closeChatbot(true));
     elements.clear.addEventListener('click', clearChatHistory);
     elements.start.addEventListener('click', startChatbotConversation);
     elements.form.addEventListener('submit', (event) => {
@@ -2919,7 +3603,7 @@ Lưu ý thêm về độ bền: nên chọn model có bảo hành rõ, kiểm tr
       if (quickButton) handleUserMessage(quickButton.dataset.chatbotQuick);
     });
     document.addEventListener('keydown', (event) => {
-      if (event.key === 'Escape') closeChatbot();
+      if (event.key === 'Escape' && elements.window?.classList.contains('open')) closeChatbot(true);
     });
   };
 
@@ -2938,6 +3622,8 @@ Lưu ý thêm về độ bền: nên chọn model có bảo hành rõ, kiểm tr
       start: root.querySelector('.am-chatbot-start'),
     };
 
+    try { window.localStorage.removeItem(HISTORY_KEY); } catch (error) { /* Legacy history may be unavailable. */ }
+    conversationState = loadConversationState();
     chatHistory = loadChatHistory();
     if (chatHistory.length) {
       chatHistory.forEach((item) => appendMessage(item.role, item.content, item.actions, item.products, false, item.quickReplies || []));
@@ -2946,6 +3632,7 @@ Lưu ý thêm về độ bền: nên chọn model có bảo hành rõ, kiểm tr
       renderQuickReplies();
     }
     bindEvents();
+    loadAuthoritativeChatbotCatalog();
   };
 
   window.initAnhMinhChatbot = initAnhMinhChatbot;
@@ -2970,6 +3657,20 @@ Lưu ý thêm về độ bền: nên chọn model có bảo hành rõ, kiểm tr
   window.scoreProductForNeed = scoreProductForNeed;
   window.recommendProductsForMessage = recommendProductsForMessage;
   window.renderProductSuggestionCards = renderProductSuggestionCards;
+  window.AnhMinhSalesAssistant = Object.freeze({
+    getState: () => JSON.parse(JSON.stringify(conversationState)),
+    reset: () => {
+      conversationState = createConversationState();
+      safeSessionStorage.remove(STATE_KEY);
+      return JSON.parse(JSON.stringify(conversationState));
+    },
+    parseNeed: parseTvCustomerNeed,
+    parsePrice: parseVietnamesePriceToNumber,
+    getProductTechnologies,
+    findStrictModelMatches,
+    loadCatalog: loadAuthoritativeChatbotCatalog,
+    reply: getBotReply,
+  });
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initAnhMinhChatbot, { once: true });

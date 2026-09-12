@@ -211,6 +211,8 @@ let searchSuggestionsIndex = -1;
 let searchSuggestionsTimer = null;
 let searchSuggestionsRequestId = 0;
 
+const initialSearchQuery = new URLSearchParams(window.location.search || '').get('search')?.trim() || '';
+
 const mobileSearchMedia = window.matchMedia('(max-width: 767px)');
 const MOBILE_SEARCH_TOP_THRESHOLD = 40;
 const MOBILE_SEARCH_HIDE_THRESHOLD = 12;
@@ -919,6 +921,13 @@ const normalizeSearchText = (value = '') => normalizeText(value)
   .replace(/[^a-z0-9]+/g, ' ')
   .replace(/\s+/g, ' ')
   .trim();
+
+if (initialSearchQuery && dom.searchInput) {
+  dom.searchInput.value = initialSearchQuery;
+  searchTerm = normalizeSearchText(initialSearchQuery);
+  if (dom.searchClear) dom.searchClear.hidden = false;
+  if (dom.featuredSelectedSize) dom.featuredSelectedSize.textContent = `Tìm: ${initialSearchQuery}`;
+}
 
 const normalizeModelCode = (value = '') => normalizeText(value)
   .replace(/[\s\-_.\/]+/g, '')
