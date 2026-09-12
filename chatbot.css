@@ -180,6 +180,13 @@
   line-height: 1;
 }
 
+.am-chatbot-close:focus-visible,
+.am-chatbot-send:focus-visible,
+.am-chatbot-product-detail:focus-visible {
+  outline: 3px solid rgba(142, 232, 255, 0.9);
+  outline-offset: 2px;
+}
+
 .am-chatbot-body {
   flex: 1 1 auto;
   min-height: 250px;
@@ -340,6 +347,10 @@
 
 .am-chatbot-product-card strong {
   display: block;
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
   overflow-wrap: anywhere;
   color: var(--am-chatbot-blue);
   font-size: 0.9rem;
@@ -442,6 +453,8 @@
 }
 
 .am-chatbot-send {
+  min-width: 48px;
+  min-height: 44px;
   border: 0;
   border-radius: 999px;
   background: linear-gradient(135deg, #f05a28, #ff824f);
@@ -496,6 +509,7 @@
     width: calc(100vw - 28px);
     max-width: 420px;
     max-height: calc(100vh - 172px);
+    max-height: calc(100dvh - 172px);
     border-radius: 22px;
   }
 
@@ -541,6 +555,7 @@
 @media (max-width: 390px) {
   .am-chatbot-window {
     max-height: calc(100vh - 116px);
+    max-height: calc(100dvh - 116px);
     bottom: 84px;
   }
 
@@ -614,7 +629,7 @@
   .am-chatbot-root .am-chatbot-button-wrap {
     left: 14px !important;
     right: auto !important;
-    bottom: 14px !important;
+    bottom: max(14px, env(safe-area-inset-bottom)) !important;
   }
 
   .am-chatbot-root .am-chatbot-label {
@@ -637,6 +652,7 @@
     width: calc(100vw - 28px) !important;
     max-width: 420px !important;
     max-height: calc(100vh - 110px) !important;
+    max-height: calc(100dvh - 110px) !important;
   }
 }
 
