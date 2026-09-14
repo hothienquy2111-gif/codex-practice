@@ -38,6 +38,34 @@
         </div>
       </section>
 
+      <section class="admin-login admin-pin-gate" data-admin-pin hidden aria-labelledby="admin-pin-title">
+        <div class="admin-login__card admin-pin-gate__card">
+          <p class="admin-eyebrow">ANH MINH STORE</p>
+          <h1 id="admin-pin-title">Xác minh bảo mật</h1>
+          <p class="admin-muted">Nhập mã PIN quản trị để tiếp tục.</p>
+          <form class="admin-form" data-pin-form novalidate>
+            <div class="admin-field">
+              <label for="admin-pin">Mã PIN quản trị</label>
+              <input
+                id="admin-pin"
+                name="pin"
+                class="admin-pin-gate__input"
+                type="password"
+                inputmode="numeric"
+                pattern="[0-9]{6}"
+                maxlength="6"
+                autocomplete="off"
+                aria-describedby="admin-pin-message"
+                required
+              />
+            </div>
+            <p class="admin-message" id="admin-pin-message" data-pin-message aria-live="polite"></p>
+            <button class="btn btn--primary admin-submit" type="submit" data-pin-button>Xác nhận</button>
+            <button class="btn btn--ghost admin-submit" type="button" data-pin-logout>Đăng xuất</button>
+          </form>
+        </div>
+      </section>
+
       <section class="admin-dashboard" data-admin-dashboard hidden aria-labelledby="admin-dashboard-title">
         <aside class="admin-sidebar" aria-label="Điều hướng quản trị">
           <div class="admin-sidebar__brand">

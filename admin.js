@@ -34,6 +34,9 @@
   const ADMIN_IDLE_WARNING_MS = 12 * 60 * 1000;
   const GENERIC_LOGIN_ERROR = 'Không thể đăng nhập. Vui lòng kiểm tra tài khoản, mật khẩu hoặc quyền quản trị.';
   const IDLE_TIMEOUT_MESSAGE = 'Phiên quản trị đã hết hạn do không hoạt động. Vui lòng đăng nhập lại.';
+  const PIN_INVALID_MESSAGE = 'Mã PIN không đúng. Vui lòng thử lại.';
+  const PIN_LOCKED_MESSAGE = 'Bạn đã thử quá nhiều lần. Vui lòng thử lại sau.';
+  const PIN_UNAVAILABLE_MESSAGE = 'Không thể xác minh bảo mật lúc này. Vui lòng thử lại.';
 
   const dom = {
     loginSection: document.querySelector('[data-admin-login]'),
@@ -41,6 +44,12 @@
     loginForm: document.querySelector('[data-login-form]'),
     loginButton: document.querySelector('[data-login-button]'),
     loginMessage: document.querySelector('[data-login-message]'),
+    pinSection: document.querySelector('[data-admin-pin]'),
+    pinForm: document.querySelector('[data-pin-form]'),
+    pinInput: document.querySelector('#admin-pin'),
+    pinButton: document.querySelector('[data-pin-button]'),
+    pinMessage: document.querySelector('[data-pin-message]'),
+    pinLogoutButton: document.querySelector('[data-pin-logout]'),
     adminMessage: document.querySelector('[data-admin-message]'),
     adminStatus: document.querySelector('[data-admin-status]'),
     products: document.querySelector('[data-admin-products]'),
@@ -183,6 +192,8 @@
   let authStateListenerAttached = false;
   let isLoginRequestPending = false;
   let isRoleRecheckPending = false;
+  let isPinRequestPending = false;
+  let pendingAdminUser = null;
 
   const orderStatusLabels = {
     new: 'Đơn mới',
@@ -1045,14 +1056,31 @@
     if (passwordInput && 'value' in passwordInput) passwordInput.value = '';
   };
 
+  const clearPinInput = () => {
+    if (dom.pinInput) dom.pinInput.value = '';
+  };
+
   const showLoginOnly = ({ clearPassword = true } = {}) => {
     if (dom.loginSection) dom.loginSection.hidden = false;
+    if (dom.pinSection) dom.pinSection.hidden = true;
     if (dom.dashboard) dom.dashboard.hidden = true;
     if (dom.adminStatus) {
       dom.adminStatus.hidden = true;
       dom.adminStatus.textContent = 'Đang đăng nhập quyền quản trị';
     }
     if (clearPassword) clearLoginPassword();
+    clearPinInput();
+    showMessage(dom.pinMessage, '');
+  };
+
+  const showPinOnly = (user = null, message = '', type = '') => {
+    pendingAdminUser = user;
+    if (dom.loginSection) dom.loginSection.hidden = true;
+    if (dom.pinSection) dom.pinSection.hidden = false;
+    if (dom.dashboard) dom.dashboard.hidden = true;
+    clearPinInput();
+    showMessage(dom.pinMessage, message, type);
+    window.setTimeout(() => dom.pinInput?.focus(), 0);
   };
 
   const updateAdminStatus = (user = null) => {
@@ -1064,7 +1092,11 @@
 
   const showDashboard = (user = null) => {
     if (dom.loginSection) dom.loginSection.hidden = true;
+    if (dom.pinSection) dom.pinSection.hidden = true;
     if (dom.dashboard) dom.dashboard.hidden = false;
+    pendingAdminUser = null;
+    clearPinInput();
+    showMessage(dom.pinMessage, '');
     updateAdminStatus(user);
   };
 
@@ -1104,6 +1136,8 @@
   const clearAdminState = () => {
     isAdminVerified = false;
     isRoleRecheckPending = false;
+    isPinRequestPending = false;
+    pendingAdminUser = null;
     stopIdleTimer();
     closeAdminUi();
     products = [];
@@ -1155,9 +1189,31 @@
     showMessage(dom.loginMessage, message, message ? 'error' : '');
   };
 
+  const getFunctionErrorStatus = (error) => Number(error?.context?.status || error?.status || 0);
+
+  const invokeAdminPin = async (action, pin = '') => {
+    const body = pin ? { action, pin } : { action };
+    const { data, error } = await client.functions.invoke('verify-admin-pin', { body });
+    return {
+      data: data && typeof data === 'object' ? data : {},
+      error,
+      status: error ? getFunctionErrorStatus(error) : 200,
+    };
+  };
+
+  const revokeSecondaryPinVerification = async () => {
+    if (!client?.functions?.invoke) return;
+    try {
+      await invokeAdminPin('revoke');
+    } catch {
+      console.warn('ADMIN_PIN_REVOKE_FAILED');
+    }
+  };
+
   const signOutCurrentAdmin = async () => {
     if (!client?.auth?.signOut) return;
     try {
+      await revokeSecondaryPinVerification();
       const { error } = await client.auth.signOut({ scope: 'local' });
       if (error) console.warn('ADMIN_LOCAL_SIGN_OUT_FAILED');
     } catch {
@@ -1191,6 +1247,23 @@
     const { data, error } = await client.from('profiles').select('role').eq('id', user.id).maybeSingle();
     if (error) throw new Error('ADMIN_ROLE_VALIDATION_FAILED');
     return data?.role === 'admin' ? user : null;
+  };
+
+  const unlockAdminDashboard = async (user) => {
+    isAdminVerified = true;
+    showDashboard(user);
+    resetIdleTimer();
+    await loadAdminData();
+  };
+
+  const getSecondaryPinStatus = async () => {
+    try {
+      const result = await invokeAdminPin('status');
+      if (result.error) return { verified: false, status: result.status };
+      return { verified: result.data?.verified === true, status: 200 };
+    } catch {
+      return { verified: false, status: 0 };
+    }
   };
 
   const renderStickerAssetOptions = () => {
@@ -1281,11 +1354,31 @@
   const activateDashboardAfterPasswordSignIn = async () => {
     const user = await getVerifiedAdminUser();
     if (!user) return false;
-    isAdminVerified = true;
-    showDashboard(user);
-    resetIdleTimer();
-    await loadAdminData();
+    showPinOnly(user);
     return true;
+  };
+
+  const restoreAuthenticatedAdminSession = async () => {
+    try {
+      const { data: { session }, error: sessionError } = await client.auth.getSession();
+      if (sessionError || !session) {
+        showLoginOnly();
+        return;
+      }
+      const user = await getVerifiedAdminUser();
+      if (!user) {
+        await endAdminSession(GENERIC_LOGIN_ERROR);
+        return;
+      }
+      const pinStatus = await getSecondaryPinStatus();
+      if (pinStatus.verified) {
+        await unlockAdminDashboard(user);
+        return;
+      }
+      showPinOnly(user, pinStatus.status === 429 ? PIN_LOCKED_MESSAGE : '', pinStatus.status === 429 ? 'error' : '');
+    } catch {
+      await endAdminSession(GENERIC_LOGIN_ERROR);
+    }
   };
 
   const loadProducts = async () => {
@@ -3422,6 +3515,12 @@
         await endAdminSession(GENERIC_LOGIN_ERROR);
         return;
       }
+      const pinStatus = await getSecondaryPinStatus();
+      if (!pinStatus.verified) {
+        clearAdminState();
+        showPinOnly(user, pinStatus.status === 429 ? PIN_LOCKED_MESSAGE : '', pinStatus.status === 429 ? 'error' : '');
+        return;
+      }
       updateAdminStatus(user);
     } catch {
       await endAdminSession(GENERIC_LOGIN_ERROR);
@@ -3437,21 +3536,11 @@
         handleSignedOut();
         return;
       }
-      if (event === 'INITIAL_SESSION') {
-        showLoginOnly();
-        return;
-      }
-      if (event === 'SIGNED_IN') return;
+      if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') return;
       if (event === 'TOKEN_REFRESHED') {
-        if (!isAdminVerified) {
-          handleSignedOut();
-          window.setTimeout(() => {
-            void signOutCurrentAdmin();
-          }, 0);
-          return;
-        }
         window.setTimeout(() => {
-          void recheckVerifiedAdminRole();
+          if (isAdminVerified) void recheckVerifiedAdminRole();
+          else void restoreAuthenticatedAdminSession();
         }, 0);
       }
     });
@@ -3489,6 +3578,7 @@
     showLoginOnly();
     if (!requireSupabase()) return;
     attachAuthStateListener();
+    void restoreAuthenticatedAdminSession();
   };
   const toggleCampaignProduct = async (product) => {
     try {
@@ -3529,6 +3619,49 @@
       dom.loginButton.disabled = false;
       dom.loginButton.removeAttribute('aria-busy');
     }
+  });
+
+  dom.pinInput?.addEventListener('input', () => {
+    const digits = dom.pinInput.value.replace(/\D/g, '').slice(0, 6);
+    if (dom.pinInput.value !== digits) dom.pinInput.value = digits;
+  });
+
+  dom.pinForm?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (isPinRequestPending || !pendingAdminUser || !requireSupabase()) return;
+    isPinRequestPending = true;
+    dom.pinButton.disabled = true;
+    dom.pinButton.setAttribute('aria-busy', 'true');
+    showMessage(dom.pinMessage, 'Đang xác minh...', 'info');
+    try {
+      const pin = dom.pinInput?.value || '';
+      const result = await invokeAdminPin('verify', pin);
+      clearPinInput();
+      if (!result.error && result.data?.verified === true) {
+        await unlockAdminDashboard(pendingAdminUser);
+        return;
+      }
+      if (result.status === 401) {
+        await endAdminSession(GENERIC_LOGIN_ERROR);
+        return;
+      }
+      showPinOnly(
+        pendingAdminUser,
+        result.status === 429 ? PIN_LOCKED_MESSAGE : result.status === 403 ? PIN_INVALID_MESSAGE : PIN_UNAVAILABLE_MESSAGE,
+        'error',
+      );
+    } catch {
+      showPinOnly(pendingAdminUser, PIN_UNAVAILABLE_MESSAGE, 'error');
+    } finally {
+      isPinRequestPending = false;
+      dom.pinButton.disabled = false;
+      dom.pinButton.removeAttribute('aria-busy');
+      dom.pinInput?.focus();
+    }
+  });
+
+  dom.pinLogoutButton?.addEventListener('click', async () => {
+    await endAdminSession();
   });
 
   dom.logoutButton?.addEventListener('click', async () => {

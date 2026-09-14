@@ -56,9 +56,11 @@
     try {
       client = window.supabase.createClient(supabaseUrl, supabaseKey, {
         auth: {
-          persistSession: false,
+          persistSession: true,
           autoRefreshToken: true,
           detectSessionInUrl: false,
+          storage: window.sessionStorage,
+          storageKey: 'anh-minh-admin-auth-session',
         },
       });
     } catch {
