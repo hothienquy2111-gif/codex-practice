@@ -10,6 +10,21 @@
   display: none !important;
 }
 
+.admin-pin-gate__card {
+  border-top: 4px solid var(--admin-orange, #f05a28);
+}
+
+.admin-pin-gate__input {
+  text-align: center;
+  font-size: 1.35rem !important;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.35em !important;
+}
+
+.admin-pin-gate__input::placeholder {
+  letter-spacing: normal;
+}
+
 .admin-product-search {
   display: grid;
   gap: 8px;
