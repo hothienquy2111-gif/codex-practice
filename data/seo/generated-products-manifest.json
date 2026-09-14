@@ -233,7 +233,7 @@
       "id": "samsung-qa55q7fa-55-inch",
       "slug": "samsung-qa55q7fa",
       "url": "/san-pham/samsung-qa55q7fa.html",
-      "sourceHash": "5342c29a2018aad4153bc9844b07de5d2f00084d8d0f8cf6dbc73cbe280df532"
+      "sourceHash": "2648152a5275350df971405164279afd29c7aadb379274191f1bf646880602cc"
     },
     {
       "id": "samsung-qa65q6fa-65-inch",
@@ -266,6 +266,12 @@
       "sourceHash": "96690e1fd98e2c41286782502b2177db9ce61bb98a7ef6da1022c01216a1b9a6"
     },
     {
+      "id": "samsung-qa75qn70f-75-inch",
+      "slug": "samsung-qa75qn70f",
+      "url": "/san-pham/samsung-qa75qn70f.html",
+      "sourceHash": "ac529f693478e57a99ddaf17b5ae6180fa1e22f059ab2aa0d220689afefe9d9f"
+    },
+    {
       "id": "samsung-qa85q7fa-85-inch",
       "slug": "samsung-qa85q7fa",
       "url": "/san-pham/samsung-qa85q7fa.html",
@@ -284,10 +290,22 @@
       "sourceHash": "aadea869eee388e644abcf4628c24b48f3efe792e8ed6f4ce3fafe83427512f2"
     },
     {
+      "id": "samsung-ua43u8500h-43-inch",
+      "slug": "samsung-ua43u8500h",
+      "url": "/san-pham/samsung-ua43u8500h.html",
+      "sourceHash": "01d897fb9f843044aefdab65fc5efc80f233f1feabb32f857867ff98e2e7bf80"
+    },
+    {
       "id": "samsung-ua50u8500f-50-inch",
       "slug": "samsung-ua50u8500f",
       "url": "/san-pham/samsung-ua50u8500f.html",
       "sourceHash": "11f493a350e3682f68a289f42bdb0a4bc7cd445f86674848d45362f0bb5c62bf"
+    },
+    {
+      "id": "samsung-ua50u8500h-50-inch",
+      "slug": "samsung-ua50u8500h",
+      "url": "/san-pham/samsung-ua50u8500h.html",
+      "sourceHash": "479d1252d69423a365a0999f0955addb8bbe7892716f161fd6155eb3c7b5d30c"
     },
     {
       "id": "samsung-ua55m77ha-55-inch",
@@ -302,10 +320,22 @@
       "sourceHash": "a988d5516a9683ee5770a216d4c8023b005e41a00db379f647d9694a9c354a16"
     },
     {
+      "id": "samsung-ua55u8500h-55-inch",
+      "slug": "samsung-ua55u8500h",
+      "url": "/san-pham/samsung-ua55u8500h.html",
+      "sourceHash": "a663f00af1a27fc382c81835f12de36b40486d9b0a748ff9c1095902812e04ab"
+    },
+    {
       "id": "samsung-ua65u8500f-65-inch",
       "slug": "samsung-ua65u8500f",
       "url": "/san-pham/samsung-ua65u8500f.html",
       "sourceHash": "f8ab9309166e2f26ae0238fb59ae16ea4f2a27af9f1789e7340028a2bed8e04c"
+    },
+    {
+      "id": "samsung-ua65u8500h-65-inch",
+      "slug": "samsung-ua65u8500h",
+      "url": "/san-pham/samsung-ua65u8500h.html",
+      "sourceHash": "c43ae7c18ec7c7e22077e071771423014154f2ff48233074f6962db7f32ae0cf"
     },
     {
       "id": "samsung-ua85bu8000-85-inch",
