@@ -32,6 +32,35 @@
       .replace(/\s+/g, ' ')
       .trim();
 
+  const KNOWN_STOCK_STATUSES = new Set(['available', 'sold', 'coming_soon', 'hidden']);
+  const getSchemaAvailability = (product = {}) => {
+    const rawStatus = String(product.stock_status ?? product.stockStatus ?? '').trim().toLowerCase();
+    const statusIsExplicit = typeof product.stockStatusExplicit === 'boolean'
+      ? product.stockStatusExplicit
+      : KNOWN_STOCK_STATUSES.has(rawStatus);
+    if (statusIsExplicit) {
+      if (rawStatus === 'available') return 'https://schema.org/InStock';
+      if (rawStatus === 'sold') return 'https://schema.org/SoldOut';
+      return '';
+    }
+
+    const condition = normalizeText(product.condition || '');
+    if (/^con hang(?:$|[\s(:-])/.test(condition)) return 'https://schema.org/InStock';
+    if (/^(?:het hang|da ban)(?:$|[\s(:-])/.test(condition)) return 'https://schema.org/OutOfStock';
+    return '';
+  };
+
+  const getSchemaItemCondition = (product = {}) => {
+    const type = normalizeText(product.type || '');
+    if (type.includes('tivi cu') || type.includes('tv cu') || type === 'used' || type.includes('da qua su dung')) {
+      return 'https://schema.org/UsedCondition';
+    }
+    if (type.includes('tivi moi') || type.includes('tv moi') || type === 'new') {
+      return 'https://schema.org/NewCondition';
+    }
+    return '';
+  };
+
   const getProductDetailUrl = (product = {}) => {
     const id = String(product.id || '').trim();
     const mappedUrl = window.AnhMinhProductUrlMap?.[id]?.url;
@@ -129,13 +158,18 @@
     };
     const price = parsePriceValue(product.price);
     if (price && price > 0) {
-      productSchema.offers = {
+      const offer = {
         '@type': 'Offer',
         url: canonicalUrl,
         priceCurrency: 'VND',
         price,
         seller: { '@id': `${SITE_ORIGIN}/#organization` },
       };
+      const availability = getSchemaAvailability(product);
+      if (availability) offer.availability = availability;
+      const itemCondition = getSchemaItemCondition(product);
+      if (itemCondition) offer.itemCondition = itemCondition;
+      productSchema.offers = offer;
     }
 
     setJsonLd({
@@ -380,6 +414,10 @@
     const badge = String(product.badge ?? '').trim();
     const description = String(product.description ?? 'Vui lòng liên hệ Anh Minh Store để được tư vấn chi tiết.').trim() || 'Vui lòng liên hệ Anh Minh Store để được tư vấn chi tiết.';
     const status = String(product.status ?? product.product_status ?? product.stock_status ?? product.stockStatus ?? '').trim();
+    const rawStockStatus = String(product.stock_status ?? product.stockStatus ?? '').trim().toLowerCase();
+    const stockStatusExplicit = typeof product.stockStatusExplicit === 'boolean'
+      ? product.stockStatusExplicit
+      : KNOWN_STOCK_STATUSES.has(rawStockStatus);
 
     return {
       id: String(product.id ?? '').trim(),
@@ -411,7 +449,8 @@
       specifications: normalizeSpecifications(product),
       isActive: Boolean(product.is_active ?? product.isActive ?? true),
       isFeatured: Boolean(product.is_featured ?? product.isFeatured ?? false),
-      stockStatus: normalizeStockStatus(product.stock_status ?? product.stockStatus),
+      stockStatus: normalizeStockStatus(rawStockStatus),
+      stockStatusExplicit,
       categoryStickerMode: product.categoryStickerMode ?? product.category_sticker_mode ?? 'auto',
       category_sticker_mode: product.category_sticker_mode ?? product.categoryStickerMode ?? 'auto',
       promoStickerMode: product.promoStickerMode ?? product.promo_sticker_mode ?? 'none',
