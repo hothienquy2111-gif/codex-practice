@@ -27,4 +27,6 @@ Khi một product từng được generate nhưng không còn public/indexable, 
 
 ## Readiness
 
-Không tạo rating/review giả. Không thêm availability, shipping hoặc return policy khi catalog/policy chưa có dữ liệu đáng tin. Merchant feed hiện không generate vì catalog public chưa có availability rõ ràng cho toàn bộ item.
+Không tạo rating/review giả. Offer chỉ nhận `availability` từ trạng thái tồn kho có cấu trúc (`available`/`sold`) hoặc nhãn tình trạng đang hiển thị và nhận diện rõ (`Còn hàng`/`Hết hàng`/`Đã bán`); trạng thái không rõ và `coming_soon` bị bỏ qua thay vì mặc định còn hàng. `itemCondition` được đặt trong `Offer` theo loại hàng mới/cũ.
+
+Không thêm `shippingDetails` hoặc `hasMerchantReturnPolicy` cho đến khi có phí, khu vực/thời gian giao hàng và điều khoản đổi trả cụ thể. Không thêm `aggregateRating`/`review` nếu không có đánh giá sản phẩm thật hiển thị trên trang. Merchant feed vẫn không được tạo vì độ mới và độ đầy đủ của tồn kho chưa được xác minh trên toàn catalog.

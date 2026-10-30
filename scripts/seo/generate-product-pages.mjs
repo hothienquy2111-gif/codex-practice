@@ -1,7 +1,7 @@
 import { mkdir, rename, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { fetchPublicProducts, isIndexableProduct, parsePrice } from './product-source.mjs';
+import { fetchPublicProducts, isIndexableProduct, normalizeText, parsePrice } from './product-source.mjs';
 import { assertCatalogContinuity, logCatalogContinuity } from './product-catalog-guard.mjs';
 import {
   SITE_ORIGIN, buildDescription, buildSlugBase, buildTitle, dataDirectory, escapeHtml,
@@ -145,6 +145,18 @@ const renderRelated = (product, related, map) => {
   return `<section class="product-seo-related" aria-labelledby="related-products-title"><h2 id="related-products-title">Sản phẩm liên quan</h2><ul>${related.map((item) => `<li><a href="${escapeHtml(map[item.id].url)}">${escapeHtml(item.fullName)}</a>${item.model ? `<span>${escapeHtml(item.model)}</span>` : ''}</li>`).join('')}</ul></section>`;
 };
 
+const getOfferAvailability = (product = {}) => {
+  const status = String(product.stockStatus || product.stock_status || '').trim().toLowerCase();
+  if (status === 'available') return 'https://schema.org/InStock';
+  if (status === 'sold') return 'https://schema.org/SoldOut';
+  if (status === 'coming_soon' || status === 'hidden') return '';
+
+  const condition = normalizeText(product.condition || '');
+  if (/^con hang(?:$|[\s(:-])/.test(condition)) return 'https://schema.org/InStock';
+  if (/^(?:het hang|da ban)(?:$|[\s(:-])/.test(condition)) return 'https://schema.org/OutOfStock';
+  return '';
+};
+
 const buildSchema = (product, map) => {
   const url = toAbsoluteProductUrl(map[product.id].slug);
   const description = productDescription(product);
@@ -158,10 +170,13 @@ const buildSchema = (product, map) => {
   };
   const price = parsePrice(product.price);
   if (price) {
-    productSchema.offers = { '@type': 'Offer', url, priceCurrency: 'VND', price, seller: { '@id': `${SITE_ORIGIN}/#organization` } };
+    const offer = { '@type': 'Offer', url, priceCurrency: 'VND', price, seller: { '@id': `${SITE_ORIGIN}/#organization` } };
+    const availability = getOfferAvailability(product);
+    if (availability) offer.availability = availability;
+    if (product.conditionType === 'new') offer.itemCondition = 'https://schema.org/NewCondition';
+    if (product.conditionType === 'used') offer.itemCondition = 'https://schema.org/UsedCondition';
+    productSchema.offers = offer;
   }
-  if (product.conditionType === 'new') productSchema.itemCondition = 'https://schema.org/NewCondition';
-  if (product.conditionType === 'used') productSchema.itemCondition = 'https://schema.org/UsedCondition';
   return { '@context': 'https://schema.org', '@graph': [
     { '@type': 'WebPage', '@id': `${url}#webpage`, url, name: productTitle(product), description, isPartOf: { '@id': `${SITE_ORIGIN}/#website` }, mainEntity: { '@id': `${url}#product` }, inLanguage: 'vi-VN' },
     productSchema,
